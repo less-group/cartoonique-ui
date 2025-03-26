@@ -2,6 +2,36 @@
 {{ 'pixar-transform-file-input.css' | asset_url | stylesheet_tag }}
 {{ 'image-cropper.css' | asset_url | stylesheet_tag }}
 
+<!-- Aurora theme compatibility styles -->
+<style>
+  /* Force pixar component visibility */
+  pixar-transform-file-input,
+  face-swap-file-input-wrapper {
+    display: block !important;
+  }
+  
+  /* Style for Aurora theme upload button */
+  #aurora-upload-button {
+    background-color: #4a7dbd;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 15px 25px;
+    font-size: 16px;
+    font-weight: bold;
+    width: 100%;
+    cursor: pointer;
+    display: block !important;
+    margin-top: 15px;
+  }
+  
+  /* Make sure popups appear above everything in Aurora theme */
+  #pixar-instructions-popup,
+  #pixar-loading-popup {
+    z-index: 9999999 !important;
+  }
+</style>
+
 <!-- Load component JS -->
 {{ 'image-cropper.js' | asset_url | script_tag }}
 {{ 'image-processing-manager.js' | asset_url | script_tag }}
@@ -9,7 +39,7 @@
 <!-- Two-popup approach: Instructions popup and Loading popup -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    console.log('PIXAR-ENHANCED: Loading optimized approach');
+    console.log('PIXAR-ENHANCED: Loading optimized approach for Aurora theme');
     
     // Prevent duplicate initialization
     if (window.pixarComponentInitialized) {

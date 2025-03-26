@@ -86,6 +86,12 @@
           "type": "quantity_selector",
           "disabled": true,
           "settings": {}
+        },
+        "custom_html": {
+          "type": "html",
+          "settings": {
+            "html": "<style>.file-input-wrapper__popup-open-btn { display: block !important; visibility: visible !important; opacity: 1 !important; }</style>"
+          }
         }
       },
       "block_order": [
@@ -99,7 +105,8 @@
         "description",
         "variant_picker",
         "buy_buttons",
-        "quantity_selector"
+        "quantity_selector",
+        "custom_html"
       ],
       "settings": {
         "full_width": true,

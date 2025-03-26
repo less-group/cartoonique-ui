@@ -113,6 +113,52 @@
       {% else %}
         {% render 'face-swap-file-input', product: product, section_id: section.id, customer: customer %}
       {% endif %}
+      
+      <!-- Direct upload button as a backup in Aurora theme -->
+      <div style="margin-top: 20px; width: 100%;">
+        <button id="aurora-upload-button" 
+          style="background-color: #4a7dbd; color: white; border: none; border-radius: 4px; padding: 15px 25px; font-size: 16px; font-weight: bold; width: 100%; cursor: pointer; display: block !important; margin-top: 10px;">
+          UPLOAD YOUR PHOTO
+        </button>
+      </div>
+      
+      <script>
+        // Aurora theme compatibility script
+        document.addEventListener('DOMContentLoaded', function() {
+          console.log('Aurora theme compatibility script loaded');
+          
+          // Find and force the button to be visible
+          var uploadButton = document.querySelector('.file-input-wrapper__popup-open-btn');
+          if (uploadButton) {
+            uploadButton.style.display = 'none';
+            console.log('Found original upload button, hiding it in favor of Aurora button');
+          }
+          
+          // Add click handler for Aurora button
+          var auroraButton = document.getElementById('aurora-upload-button');
+          if (auroraButton) {
+            auroraButton.addEventListener('click', function() {
+              if (uploadButton) {
+                console.log('Triggering click on original upload button');
+                uploadButton.click();
+              } else {
+                // Fallback - find component and trigger file selection directly
+                var component = document.querySelector('pixar-transform-file-input') || 
+                              document.querySelector('face-swap-file-input-wrapper');
+                if (component) {
+                  var fileInput = component.querySelector('input[type="file"]');
+                  if (fileInput) {
+                    console.log('Clicking file input directly');
+                    fileInput.click();
+                  }
+                } else {
+                  console.error('Could not find component or file input');
+                }
+              }
+            });
+          }
+        });
+      </script>
     {% endif %}
   </div>
 {%- endform -%}
