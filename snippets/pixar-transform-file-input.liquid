@@ -2,6 +2,41 @@
 {{ 'pixar-transform-file-input.css' | asset_url | stylesheet_tag }}
 {{ 'image-cropper.css' | asset_url | stylesheet_tag }}
 
+<!-- Force visibility of upload buttons -->
+<style>
+  /* Force-override any CSS that might hide the upload button */
+  .file-input-wrapper__popup-open-btn {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 10 !important;
+    pointer-events: auto !important;
+    overflow: visible !important;
+    height: auto !important;
+    width: auto !important;
+    clip: auto !important;
+    clip-path: none !important;
+    margin: 15px auto !important;
+  }
+  
+  /* Ensure the pixar component is visible */
+  pixar-transform-file-input,
+  face-swap-file-input-wrapper {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  /* Make sure any overlays don't block interaction */
+  .file-input-wrapper__overlay, 
+  [class*="overlay"] {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+</style>
+
 <!-- Load component JS -->
 {{ 'image-cropper.js' | asset_url | script_tag }}
 {{ 'image-processing-manager.js' | asset_url | script_tag }}
