@@ -53,7 +53,7 @@
       {%- if product.template_suffix contains 'with-faceswap' -%}
         {%- capture button_content -%}UPLOAD IMAGE & ADD TO CART{%- endcapture -%}
       {%- else -%}
-        {%- capture button_content -%}{{ 'product.general.add_to_cart_button' | t }}{%- endcapture -%}
+      {%- capture button_content -%}{{ 'product.general.add_to_cart_button' | t }}{%- endcapture -%}
       {%- endif -%}
     {%- endif -%}
   {%- else -%}

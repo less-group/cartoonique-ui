@@ -199,6 +199,66 @@
       document.body.appendChild(instructionsPopup);
       document.body.appendChild(loadingPopup);
       
+      // Connect component's openPopup method to our enhanced popup system
+      if (pixarComponent && typeof pixarComponent.openPopup === 'function') {
+        // Store the original method
+        const originalOpenPopup = pixarComponent.openPopup;
+        
+        // Override with our enhanced version
+        pixarComponent.openPopup = function() {
+          console.log('PIXAR-ENHANCED: Enhanced openPopup method called');
+          
+          // Reset error message
+          const errorElement = document.getElementById('pixar-error-message');
+          if (errorElement) {
+            errorElement.style.display = 'none';
+            errorElement.textContent = '';
+          }
+          
+          // Show instructions popup
+          document.getElementById('pixar-instructions-popup').style.display = 'block';
+          document.body.style.overflow = 'hidden';
+          
+          // Call original method for logging purposes
+          originalOpenPopup.call(pixarComponent);
+        };
+        
+        console.log('PIXAR-ENHANCED: Component openPopup method connected to enhanced popup system');
+      }
+      
+      // Set the component's popup reference explicitly
+      if (pixarComponent) {
+        // Set popup reference to our enhanced popup
+        pixarComponent.popup = instructionsPopup;
+        
+        // Also set processing content reference
+        pixarComponent.processingContent = loadingPopup;
+        
+        console.log('PIXAR-ENHANCED: Component popup references updated to use enhanced popups');
+        
+        // Ensure transformImage shows our enhanced loading popup
+        if (typeof pixarComponent.transformImage === 'function') {
+          const originalTransformImage = pixarComponent.transformImage;
+          
+          pixarComponent.transformImage = async function() {
+            console.log('PIXAR-ENHANCED: Enhanced transformImage method called');
+            
+            // Hide instructions popup
+            document.getElementById('pixar-instructions-popup').style.display = 'none';
+            
+            // Show loading popup immediately
+            document.getElementById('pixar-loading-popup').style.display = 'block';
+            document.getElementById('pixar-progress-bar').style.width = '10%';
+            document.getElementById('pixar-progress-text').textContent = 'Preparing your image...';
+            
+            // Call original method to do the actual processing
+            return originalTransformImage.apply(this, arguments);
+          };
+          
+          console.log('PIXAR-ENHANCED: Component transformImage method connected to enhanced popup system');
+        }
+      }
+      
       // Set up event listeners
       // 1. Main button click - Opens instructions popup
       if (mainButton) {
