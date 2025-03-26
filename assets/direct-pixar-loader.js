@@ -160,13 +160,143 @@
         console.log('⭐ Upload button clicked');
         
         // Find instructions popup first - this is the primary approach we want
-        const instructionsPopup = document.getElementById('pixar-instructions-popup');
-        if (instructionsPopup) {
-          console.log('⭐ Found instructions popup, showing it first');
-          instructionsPopup.style.display = 'block';
-          document.body.style.overflow = 'hidden';
-          return;
+        let instructionsPopup = document.getElementById('pixar-instructions-popup');
+        
+        if (!instructionsPopup) {
+          console.log('⭐ Instructions popup not found, creating it now');
+          
+          // Create the instructions popup dynamically
+          instructionsPopup = document.createElement('div');
+          instructionsPopup.id = 'pixar-instructions-popup';
+          instructionsPopup.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.98);
+            z-index: 99999999;
+            display: none;
+            overflow: auto;
+            padding: 20px;
+            box-sizing: border-box;
+          `;
+          
+          // Add content to the instructions popup
+          instructionsPopup.innerHTML = `
+            <div style="position: relative; max-width: 900px; margin: 30px auto; padding: 30px; background: white; border-radius: 8px; box-shadow: 0 0 30px rgba(0,0,0,0.2);">
+              <button id="pixar-close-button" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 30px; cursor: pointer; padding: 5px; color: #555;">&times;</button>
+              
+              <h2 style="text-align: center; font-size: 28px; margin-bottom: 20px; font-weight: bold;">UPLOAD A PHOTO FOR YOUR PIXAR PORTRAIT</h2>
+              
+              <div style="margin-bottom: 30px;">
+                <div style="margin-bottom: 30px;">
+                  <h3 style="color: #FF4444; text-align: center; font-size: 24px; margin-bottom: 15px; font-weight: bold;">BAD PHOTO EXAMPLES</h3>
+                  <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+                    <div style="text-align: center; width: 30%; min-width: 180px; margin-bottom: 15px;">
+                      <div style="position: relative; border: 2px solid #FF4444; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                        <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/bad_photo_far.jpg?v=1683712345" alt="Far/Blurry Example" style="width: 100%; height: 100%; object-fit: cover;">
+                        <div style="position: absolute; top: 5px; right: 5px; background-color: #FF4444; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✕</div>
+                      </div>
+                      <p style="font-weight: bold; color: #FF4444; margin: 0;">FAR/BLURRY</p>
+                    </div>
+                
+                    <div style="text-align: center; width: 30%; min-width: 180px; margin-bottom: 15px;">
+                      <div style="position: relative; border: 2px solid #FF4444; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                        <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/bad_photo_glasses.jpg?v=1683712345" alt="Glasses Example" style="width: 100%; height: 100%; object-fit: cover;">
+                        <div style="position: absolute; top: 5px; right: 5px; background-color: #FF4444; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✕</div>
+                      </div>
+                      <p style="font-weight: bold; color: #FF4444; margin: 0;">GLASSES</p>
+                    </div>
+                
+                    <div style="text-align: center; width: 30%; min-width: 180px; margin-bottom: 15px;">
+                      <div style="position: relative; border: 2px solid #FF4444; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                        <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/bad_photo_multiple.jpg?v=1683712345" alt="Multiple People Example" style="width: 100%; height: 100%; object-fit: cover;">
+                        <div style="position: absolute; top: 5px; right: 5px; background-color: #FF4444; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✕</div>
+                      </div>
+                      <p style="font-weight: bold; color: #FF4444; margin: 0;">2+ PEOPLE</p>
+                    </div>
+                  </div>
+                </div>
+              
+                <div style="margin-bottom: 30px;">
+                  <h3 style="color: #33CC66; text-align: center; font-size: 24px; margin-bottom: 15px; font-weight: bold;">GOOD PHOTO EXAMPLES</h3>
+                  <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+                    <div style="text-align: center; width: 30%; min-width: 180px; margin-bottom: 15px;">
+                      <div style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                        <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_closeup.jpg?v=1683712345" alt="Close-up Example" style="width: 100%; height: 100%; object-fit: cover;">
+                        <div style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>
+                      </div>
+                      <p style="font-weight: bold; color: #33CC66; margin: 0;">CLOSE-UP</p>
+                    </div>
+                
+                    <div style="text-align: center; width: 30%; min-width: 180px; margin-bottom: 15px;">
+                      <div style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                        <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_clear.jpg?v=1683712345" alt="Clear Example" style="width: 100%; height: 100%; object-fit: cover;">
+                        <div style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>
+                      </div>
+                      <p style="font-weight: bold; color: #33CC66; margin: 0;">CLEAR</p>
+                    </div>
+                
+                    <div style="text-align: center; width: 30%; min-width: 180px; margin-bottom: 15px;">
+                      <div style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                        <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_oneperson.jpg?v=1683712345" alt="One Person Example" style="width: 100%; height: 100%; object-fit: cover;">
+                        <div style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>
+                      </div>
+                      <p style="font-weight: bold; color: #33CC66; margin: 0;">1 PERSON</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <p style="text-align: center; font-size: 18px; margin-bottom: 30px; font-weight: bold;">
+                Please make sure to upload a clear, close-up photo of one person without glasses.
+              </p>
+
+              <div style="text-align: center;">
+                <button id="pixar-direct-upload-button" style="background-color: #4a7dbd; color: white; padding: 18px 40px; font-size: 20px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 10px auto; display: block; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">UPLOAD PHOTO</button>
+              </div>
+            </div>
+          `;
+          
+          // Add to body
+          document.body.appendChild(instructionsPopup);
+          
+          // Set up close button
+          setTimeout(function() {
+            const closeButton = document.getElementById('pixar-close-button');
+            if (closeButton) {
+              closeButton.addEventListener('click', function() {
+                instructionsPopup.style.display = 'none';
+                document.body.style.overflow = '';
+              });
+            }
+            
+            // Set up direct upload button
+            const directUploadButton = document.getElementById('pixar-direct-upload-button');
+            if (directUploadButton) {
+              directUploadButton.addEventListener('click', function() {
+                instructionsPopup.style.display = 'none';
+                
+                // Find file input
+                const fileInput = document.querySelector('#direct-pixar-component-container input[type="file"]');
+                if (fileInput) {
+                  fileInput.click();
+                } else {
+                  console.log('⭐ No file input found');
+                }
+              });
+            }
+          }, 100);
         }
+        
+        // Show popup
+        instructionsPopup.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        return;
+        
+        // NOTE: Code below will never execute since we return after showing the popup
+        // Kept for reference only
         
         // If no instructions popup, try component methods as fallback
         const component = window.pixarComponent || document.querySelector('pixar-transform-file-input');
@@ -293,22 +423,139 @@
           e.preventDefault();
           
           // Show instructions popup instead of direct file input click
-          const instructionsPopup = document.getElementById('pixar-instructions-popup');
-          if (instructionsPopup) {
-            console.log('⭐ Showing instructions popup');
-            instructionsPopup.style.display = 'block';
-            document.body.style.overflow = 'hidden';
-          } else {
-            console.log('⭐ Instructions popup not found');
-            // Only as last resort, try direct file input
-            const fileInput = document.querySelector('#direct-pixar-component-container input[type="file"]');
-            if (fileInput) {
-              console.log('⭐ Fallback: Clicking file input directly');
-              fileInput.click();
-            } else {
-              console.log('⭐ No file input found');
-            }
+          let instructionsPopup = document.getElementById('pixar-instructions-popup');
+          
+          if (!instructionsPopup) {
+            console.log('⭐ Instructions popup not found, creating it now');
+            
+            // Create the instructions popup dynamically
+            instructionsPopup = document.createElement('div');
+            instructionsPopup.id = 'pixar-instructions-popup';
+            instructionsPopup.style.cssText = `
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background-color: rgba(255, 255, 255, 0.98);
+              z-index: 99999999;
+              display: none;
+              overflow: auto;
+              padding: 20px;
+              box-sizing: border-box;
+            `;
+            
+            // Add content to the instructions popup
+            instructionsPopup.innerHTML = `
+              <div style="position: relative; max-width: 900px; margin: 30px auto; padding: 30px; background: white; border-radius: 8px; box-shadow: 0 0 30px rgba(0,0,0,0.2);">
+                <button id="pixar-close-button" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 30px; cursor: pointer; padding: 5px; color: #555;">&times;</button>
+                
+                <h2 style="text-align: center; font-size: 28px; margin-bottom: 20px; font-weight: bold;">UPLOAD A PHOTO FOR YOUR PIXAR PORTRAIT</h2>
+                
+                <div style="margin-bottom: 30px;">
+                  <div style="margin-bottom: 30px;">
+                    <h3 style="color: #FF4444; text-align: center; font-size: 24px; margin-bottom: 15px; font-weight: bold;">BAD PHOTO EXAMPLES</h3>
+                    <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+                      <div style="text-align: center; width: 30%; min-width: 180px; margin-bottom: 15px;">
+                        <div style="position: relative; border: 2px solid #FF4444; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                          <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/bad_photo_far.jpg?v=1683712345" alt="Far/Blurry Example" style="width: 100%; height: 100%; object-fit: cover;">
+                          <div style="position: absolute; top: 5px; right: 5px; background-color: #FF4444; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✕</div>
+                        </div>
+                        <p style="font-weight: bold; color: #FF4444; margin: 0;">FAR/BLURRY</p>
+                      </div>
+                  
+                      <div style="text-align: center; width: 30%; min-width: 180px; margin-bottom: 15px;">
+                        <div style="position: relative; border: 2px solid #FF4444; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                          <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/bad_photo_glasses.jpg?v=1683712345" alt="Glasses Example" style="width: 100%; height: 100%; object-fit: cover;">
+                          <div style="position: absolute; top: 5px; right: 5px; background-color: #FF4444; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✕</div>
+                        </div>
+                        <p style="font-weight: bold; color: #FF4444; margin: 0;">GLASSES</p>
+                      </div>
+                  
+                      <div style="text-align: center; width: 30%; min-width: 180px; margin-bottom: 15px;">
+                        <div style="position: relative; border: 2px solid #FF4444; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                          <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/bad_photo_multiple.jpg?v=1683712345" alt="Multiple People Example" style="width: 100%; height: 100%; object-fit: cover;">
+                          <div style="position: absolute; top: 5px; right: 5px; background-color: #FF4444; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✕</div>
+                        </div>
+                        <p style="font-weight: bold; color: #FF4444; margin: 0;">2+ PEOPLE</p>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div style="margin-bottom: 30px;">
+                    <h3 style="color: #33CC66; text-align: center; font-size: 24px; margin-bottom: 15px; font-weight: bold;">GOOD PHOTO EXAMPLES</h3>
+                    <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+                      <div style="text-align: center; width: 30%; min-width: 180px; margin-bottom: 15px;">
+                        <div style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                          <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_closeup.jpg?v=1683712345" alt="Close-up Example" style="width: 100%; height: 100%; object-fit: cover;">
+                          <div style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>
+                        </div>
+                        <p style="font-weight: bold; color: #33CC66; margin: 0;">CLOSE-UP</p>
+                      </div>
+                  
+                      <div style="text-align: center; width: 30%; min-width: 180px; margin-bottom: 15px;">
+                        <div style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                          <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_clear.jpg?v=1683712345" alt="Clear Example" style="width: 100%; height: 100%; object-fit: cover;">
+                          <div style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>
+                        </div>
+                        <p style="font-weight: bold; color: #33CC66; margin: 0;">CLEAR</p>
+                      </div>
+                  
+                      <div style="text-align: center; width: 30%; min-width: 180px; margin-bottom: 15px;">
+                        <div style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                          <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_oneperson.jpg?v=1683712345" alt="One Person Example" style="width: 100%; height: 100%; object-fit: cover;">
+                          <div style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>
+                        </div>
+                        <p style="font-weight: bold; color: #33CC66; margin: 0;">1 PERSON</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <p style="text-align: center; font-size: 18px; margin-bottom: 30px; font-weight: bold;">
+                  Please make sure to upload a clear, close-up photo of one person without glasses.
+                </p>
+
+                <div style="text-align: center;">
+                  <button id="pixar-direct-upload-button" style="background-color: #4a7dbd; color: white; padding: 18px 40px; font-size: 20px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 10px auto; display: block; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">UPLOAD PHOTO</button>
+                </div>
+              </div>
+            `;
+            
+            // Add to body
+            document.body.appendChild(instructionsPopup);
+            
+            // Set up close button
+            setTimeout(function() {
+              const closeButton = document.getElementById('pixar-close-button');
+              if (closeButton) {
+                closeButton.addEventListener('click', function() {
+                  instructionsPopup.style.display = 'none';
+                  document.body.style.overflow = '';
+                });
+              }
+              
+              // Set up direct upload button
+              const directUploadButton = document.getElementById('pixar-direct-upload-button');
+              if (directUploadButton) {
+                directUploadButton.addEventListener('click', function() {
+                  instructionsPopup.style.display = 'none';
+                  
+                  // Find file input
+                  const fileInput = document.querySelector('#direct-pixar-component-container input[type="file"]');
+                  if (fileInput) {
+                    fileInput.click();
+                  } else {
+                    console.log('⭐ No file input found');
+                  }
+                });
+              }
+            }, 100);
           }
+          
+          // Show popup
+          instructionsPopup.style.display = 'block';
+          document.body.style.overflow = 'hidden';
           
           return false;
         } else {
