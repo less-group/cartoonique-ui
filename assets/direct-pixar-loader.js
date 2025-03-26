@@ -159,23 +159,22 @@
       uploadButton.addEventListener('click', function() {
         console.log('⭐ Upload button clicked');
         
-        // Find component
-        const component = window.pixarComponent || document.querySelector('pixar-transform-file-input');
+        // Find instructions popup first - this is the primary approach we want
+        const instructionsPopup = document.getElementById('pixar-instructions-popup');
+        if (instructionsPopup) {
+          console.log('⭐ Found instructions popup, showing it first');
+          instructionsPopup.style.display = 'block';
+          document.body.style.overflow = 'hidden';
+          return;
+        }
         
+        // If no instructions popup, try component methods as fallback
+        const component = window.pixarComponent || document.querySelector('pixar-transform-file-input');
         if (component) {
           // Use proper popup flow if available
           if (typeof component.openPopup === 'function') {
             console.log('⭐ Using component\'s native openPopup method');
             component.openPopup();
-            return;
-          }
-          
-          // Try to find and show enhanced popup first
-          const instructionsPopup = document.getElementById('pixar-instructions-popup');
-          if (instructionsPopup) {
-            console.log('⭐ Found enhanced instructions popup, showing it');
-            instructionsPopup.style.display = 'block';
-            document.body.style.overflow = 'hidden';
             return;
           }
           
@@ -190,14 +189,9 @@
           }
         }
         
-        // Fallback to direct file input click
-        const fileInput = document.querySelector('#direct-pixar-component-container input[type="file"]');
-        if (fileInput) {
-          console.log('⭐ Fallback: Clicking file input directly');
-          fileInput.click();
-        } else {
-          console.log('⭐ No file input found');
-        }
+        // If absolutely nothing else works, show a message
+        console.log('⭐ Could not display popup - please check implementation');
+        alert('Please refresh the page and try again. If the issue persists, contact support.');
       });
       
       uploadContainer.appendChild(uploadButton);
@@ -298,12 +292,22 @@
           console.log('⭐ Preventing form submission until image is uploaded');
           e.preventDefault();
           
-          // Trigger file selection
-          const fileInput = document.querySelector('#direct-pixar-component-container input[type="file"]');
-          if (fileInput) {
-            fileInput.click();
+          // Show instructions popup instead of direct file input click
+          const instructionsPopup = document.getElementById('pixar-instructions-popup');
+          if (instructionsPopup) {
+            console.log('⭐ Showing instructions popup');
+            instructionsPopup.style.display = 'block';
+            document.body.style.overflow = 'hidden';
           } else {
-            console.log('⭐ No file input found');
+            console.log('⭐ Instructions popup not found');
+            // Only as last resort, try direct file input
+            const fileInput = document.querySelector('#direct-pixar-component-container input[type="file"]');
+            if (fileInput) {
+              console.log('⭐ Fallback: Clicking file input directly');
+              fileInput.click();
+            } else {
+              console.log('⭐ No file input found');
+            }
           }
           
           return false;
