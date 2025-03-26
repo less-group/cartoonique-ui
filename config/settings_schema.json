@@ -2769,5 +2769,120 @@
         "label": "t:settings_schema.advanced.overlay_blur.label"
       }
     ]
+  },
+  {
+    "name": "Pixar Transformation",
+    "settings": [
+      {
+        "type": "header",
+        "content": "Pixar Transformation Settings"
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_pixar_transform",
+        "label": "Enable Pixar Transform",
+        "default": true,
+        "info": "Enable Pixar transformation functionality for products with 'with-faceswap' template."
+      },
+      {
+        "type": "image_picker",
+        "id": "watermark_image",
+        "label": "Watermark Image",
+        "info": "Image used as a watermark on transformed images."
+      },
+      {
+        "type": "range",
+        "id": "watermark_image_width",
+        "min": 50,
+        "max": 500,
+        "step": 10,
+        "default": 200,
+        "unit": "px",
+        "label": "Watermark Width"
+      },
+      {
+        "type": "range",
+        "id": "watermark_image_height",
+        "min": 50,
+        "max": 500,
+        "step": 10,
+        "default": 200,
+        "unit": "px",
+        "label": "Watermark Height"
+      },
+      {
+        "type": "range",
+        "id": "space_between_watermarks",
+        "min": 50,
+        "max": 500,
+        "step": 10,
+        "default": 200,
+        "unit": "px",
+        "label": "Space Between Watermarks"
+      },
+      {
+        "type": "select",
+        "id": "faceswap_result_image_type",
+        "label": "FaceSwap Result Image Type",
+        "options": [
+          {
+            "value": "preview_image",
+            "label": "Preview Image"
+          },
+          {
+            "value": "print_image",
+            "label": "Print Image"
+          }
+        ],
+        "default": "print_image"
+      },
+      {
+        "type": "select",
+        "id": "pixar_result_image_type",
+        "label": "Pixar Result Image Type",
+        "options": [
+          {
+            "value": "preview_image",
+            "label": "Preview Image"
+          },
+          {
+            "value": "print_image",
+            "label": "Print Image"
+          }
+        ],
+        "default": "print_image"
+      },
+      {
+        "type": "header",
+        "content": "Progress Bar Settings"
+      },
+      {
+        "type": "color",
+        "id": "progressbar_container_background_color",
+        "label": "Progress Bar Container Color",
+        "default": "#f3f3f3"
+      },
+      {
+        "type": "color",
+        "id": "progressbar_background_color",
+        "label": "Progress Bar Color",
+        "default": "#4a7dbd"
+      },
+      {
+        "type": "color",
+        "id": "progressbar_text_color",
+        "label": "Progress Bar Text Color",
+        "default": "#ffffff"
+      },
+      {
+        "type": "range",
+        "id": "progressbar_speed",
+        "min": 10,
+        "max": 100,
+        "step": 5,
+        "default": 35,
+        "label": "Progress Bar Animation Speed"
+      }
+    ]
   }
 ]
