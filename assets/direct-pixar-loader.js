@@ -158,9 +158,33 @@
       
       uploadButton.addEventListener('click', function() {
         console.log('⭐ Upload button clicked');
-        // Trigger file selection
+        
+        // Find component
+        const component = window.pixarComponent || document.querySelector('pixar-transform-file-input');
+        
+        if (component) {
+          // Use proper popup flow if available
+          if (typeof component.openPopup === 'function') {
+            console.log('⭐ Using component\'s native openPopup method');
+            component.openPopup();
+            return;
+          }
+          
+          // Try to find and show popup
+          const popup = document.querySelector('.file-input-wrapper__popup');
+          if (popup) {
+            console.log('⭐ Found popup element, showing it directly');
+            popup.style.display = 'block';
+            popup.style.visibility = 'visible';
+            popup.style.opacity = '1';
+            return;
+          }
+        }
+        
+        // Fallback to direct file input click
         const fileInput = document.querySelector('#direct-pixar-component-container input[type="file"]');
         if (fileInput) {
+          console.log('⭐ Fallback: Clicking file input directly');
           fileInput.click();
         } else {
           console.log('⭐ No file input found');

@@ -13,11 +13,38 @@
     pixar-transform-file-input, 
     face-swap-file-input-wrapper,
     .file-input-wrapper, 
-    .file-input-wrapper__popup,
     .file-input-wrapper__popup-open-btn {
       display: block !important;
       visibility: visible !important;
       opacity: 1 !important;
+    }
+    
+    /* Make popup fully visible and properly styled */
+    .file-input-wrapper__popup {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      background-color: rgba(0, 0, 0, 0.7) !important;
+      z-index: 9999 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+    }
+    
+    /* Style the popup content */
+    .file-input-wrapper__popup-content {
+      background-color: white !important;
+      padding: 20px !important;
+      border-radius: 8px !important;
+      max-width: 90% !important;
+      width: 500px !important;
+      max-height: 90% !important;
+      overflow-y: auto !important;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
     }
     
     /* Hide component area but keep it accessible */
@@ -73,7 +100,7 @@
 
   <!-- Dedicated upload button for Aurora theme -->
   <button type="button" id="pixar-upload-button">
-    📸 UPLOAD YOUR PHOTO FIRST
+    📸 UPLOAD YOUR PHOTO
   </button>
 
   <script>
@@ -137,6 +164,7 @@
           if (component) {
             debug.log('Found component in DOM: ' + component.tagName);
             window.pixarComponent = component;
+            window.pixarComponentReady = true;
             return component;
           }
         }
@@ -155,6 +183,7 @@
             componentArea.appendChild(newComponent);
             debug.log('Created new component programmatically');
             window.pixarComponent = newComponent;
+            window.pixarComponentReady = true;
             return newComponent;
           }
         } catch (error) {
@@ -175,10 +204,27 @@
           return;
         }
         
+        // Check if component has native popup method and use it
+        if (typeof component.openPopup === 'function') {
+          debug.log('Using component\'s native openPopup method');
+          component.openPopup();
+          return;
+        }
+        
+        // If no openPopup method, try to find popup element and show it
+        const popup = document.querySelector('.file-input-wrapper__popup');
+        if (popup) {
+          debug.log('Found popup element, showing it');
+          popup.style.display = 'flex';
+          popup.style.visibility = 'visible';
+          popup.style.opacity = '1';
+          return;
+        }
+        
         // Try to find file input
         const fileInput = component.querySelector('input[type="file"]');
         if (fileInput) {
-          debug.log('Found file input, clicking it');
+          debug.log('No popup method found, clicking file input directly');
           fileInput.click();
         } else {
           debug.log('ERROR: Could not find file input in component');
@@ -310,6 +356,12 @@
           debug.log('Forced visibility for: ' + component.tagName);
         });
         
+        // Also ensure popup visibility
+        const popups = document.querySelectorAll('.file-input-wrapper__popup');
+        if (popups.length > 0) {
+          debug.log('Found ' + popups.length + ' popups, ensuring visibility when needed');
+        }
+        
         // Also check for file inputs
         const fileInputs = document.querySelectorAll('input[type="file"]');
         debug.log('Found ' + fileInputs.length + ' file inputs');
@@ -327,8 +379,12 @@
         
         if (component) {
           debug.log('Component tag: ' + component.tagName);
+          debug.log('Component has openPopup method: ' + (typeof component.openPopup === 'function'));
           debug.log('Component visible: ' + (component.offsetHeight > 0));
         }
+        
+        const popups = document.querySelectorAll('.file-input-wrapper__popup');
+        debug.log('Popups on page: ' + popups.length);
         
         const fileInputs = document.querySelectorAll('input[type="file"]');
         debug.log('File inputs on page: ' + fileInputs.length);
