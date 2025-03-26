@@ -108,6 +108,10 @@
     </buy-buttons>
 
     {% if product.template_suffix contains 'with-faceswap' %}
+      <!-- Debug message to confirm the template suffix match -->
+      <div style="display: none; margin: 10px 0; padding: 5px; border: 1px dashed blue; font-size: 10px; color: blue;" id="debug-template-suffix">
+        Template suffix match: {{ product.template_suffix }}
+      </div>
       {% if settings.enable_pixar_transform %}
         {% render 'pixar-transform-file-input', product: product, section_id: section.id, customer: customer %}
       {% else %}
