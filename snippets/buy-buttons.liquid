@@ -107,122 +107,12 @@
       {%- endif -%}
     </buy-buttons>
 
-    <!-- Debug message to confirm the template suffix match -->
-    <div style="margin: 10px 0; padding: 5px; border: 1px dashed blue; font-size: 10px; color: blue;" id="debug-template-suffix">
-      Product template suffix: {{ product.template_suffix }}
-    </div>
-    
-    <!-- Rendering pixar transform components for all products (for testing) -->
-    {% if settings.enable_pixar_transform %}
-      {% render 'pixar-transform-file-input', product: product, section_id: section.id, customer: customer %}
-    {% else %}
-      {% render 'face-swap-file-input', product: product, section_id: section.id, customer: customer %}
+    {% if product.template_suffix contains 'with-faceswap' %}
+      {% if settings.enable_pixar_transform %}
+        {% render 'pixar-transform-file-input', product: product, section_id: section.id, customer: customer %}
+      {% else %}
+        {% render 'face-swap-file-input', product: product, section_id: section.id, customer: customer %}
+      {% endif %}
     {% endif %}
-    
-    <!-- Direct fallback upload button with multiple approaches -->
-    <div style="margin-top: 20px; width: 100%;">
-      <button id="direct-upload-button" 
-        style="background-color: #4a7dbd; color: white; border: none; border-radius: 4px; padding: 15px 25px; font-size: 16px; font-weight: bold; width: 100%; cursor: pointer; display: block !important; visibility: visible !important; opacity: 1 !important;">
-        UPLOAD YOUR PHOTO
-      </button>
-    </div>
-
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        console.log('=== DEBUGGING PIXAR BUTTON ===');
-        
-        // Force-display the direct button
-        var directButton = document.getElementById('direct-upload-button');
-        if (directButton) {
-          directButton.style.display = 'block';
-          directButton.style.visibility = 'visible';
-          directButton.style.opacity = '1';
-          
-          directButton.addEventListener('click', function() {
-            // Try multiple approaches to trigger file selection
-            
-            // Approach 1: Find and click the hidden button
-            var hiddenButton = document.querySelector('.file-input-wrapper__popup-open-btn');
-            if (hiddenButton) {
-              console.log('Found hidden button, clicking it now');
-              hiddenButton.click();
-              return;
-            }
-            
-            // Approach 2: Find component and interact with its file input
-            var pixarComponent = document.querySelector('pixar-transform-file-input') || 
-                               document.querySelector('face-swap-file-input-wrapper');
-            if (pixarComponent) {
-              console.log('Found component:', pixarComponent.tagName);
-              
-              // Find the file input inside the component
-              var fileInput = pixarComponent.querySelector('input[type="file"]');
-              if (fileInput) {
-                console.log('Found and clicking file input directly');
-                fileInput.click();
-                return;
-              }
-              
-              // Try to trigger a custom event if component exists
-              console.log('Dispatching custom event to component');
-              var customEvent = new CustomEvent('trigger-file-select');
-              pixarComponent.dispatchEvent(customEvent);
-              return;
-            }
-            
-            // Approach
-            console.log('Fallback: Creating temporary file input');
-            var input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.click();
-            
-            input.onchange = function(e) {
-              if (input.files && input.files[0]) {
-                console.log('File selected through fallback input');
-                
-                // Try to find the component again
-                var component = document.querySelector('pixar-transform-file-input') || 
-                              document.querySelector('face-swap-file-input-wrapper');
-                
-                if (component && typeof component.handleFileSelect === 'function') {
-                  console.log('Calling handleFileSelect on component');
-                  component.handleFileSelect({ target: { files: input.files } });
-                } else {
-                  console.error('Component or handler not found for selected file');
-                  alert('Photo upload functionality is not fully loaded. Please refresh the page and try again.');
-                }
-              }
-            };
-          });
-        }
-        
-        // Force original button to be visible
-        setTimeout(function() {
-          var originalButton = document.querySelector('.file-input-wrapper__popup-open-btn');
-          if (originalButton) {
-            originalButton.setAttribute('style', 'display: block !important; visibility: visible !important; opacity: 1 !important;');
-            console.log('Force-displayed original button');
-          }
-          
-          // Log all potential elements for debugging
-          console.log('Direct button exists:', !!document.getElementById('direct-upload-button'));
-          console.log('Hidden button exists:', !!document.querySelector('.file-input-wrapper__popup-open-btn'));
-          console.log('Pixar component exists:', !!document.querySelector('pixar-transform-file-input'));
-          console.log('Face swap component exists:', !!document.querySelector('face-swap-file-input-wrapper'));
-          
-          // Log any file inputs inside components
-          var pixarComp = document.querySelector('pixar-transform-file-input');
-          if (pixarComp) {
-            console.log('File inputs in pixar component:', pixarComp.querySelectorAll('input[type="file"]').length);
-          }
-          
-          var faceSwapComp = document.querySelector('face-swap-file-input-wrapper');
-          if (faceSwapComp) {
-            console.log('File inputs in face-swap component:', faceSwapComp.querySelectorAll('input[type="file"]').length);
-          }
-        }, 1000);
-      });
-    </script>
   </div>
 {%- endform -%}
