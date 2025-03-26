@@ -704,7 +704,7 @@ class PixarTransformFileInput extends HTMLElement {
         this.showError('Error processing image: ' + error.message);
       }
     }
-    
+
     /**
      * This is the main transformation method that handles the API call
      */
@@ -784,7 +784,7 @@ class PixarTransformFileInput extends HTMLElement {
       window.imageProcessingManager.handleFileSelected(fakeEvent);
       
       // The manager will handle everything from here
-      this.requestInProgress = false;
+        this.requestInProgress = false;
     }
     
     /**
@@ -825,7 +825,7 @@ class PixarTransformFileInput extends HTMLElement {
         
         // Update progress to show processing starting
         this.updateProgress(30);
-        this.state.isUploading = false;
+          this.state.isUploading = false;
         this.state.isProcessing = true;
         
         // Get job ID from response

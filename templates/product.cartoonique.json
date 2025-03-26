@@ -1,0 +1,338 @@
+{
+  "sections": {
+    "ff03a7f7-70a4-4aa2-8e65-56be8e7dbefc": {
+      "type": "breadcrumbs",
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "large",
+        "show_breadcrumbs_product_title": true,
+        "add_side_paddings": true,
+        "section_spacing_top": 16,
+        "section_spacing_bottom": 0
+      }
+    },
+    "main": {
+      "type": "product",
+      "blocks": {
+        "vendor": {
+          "type": "vendor",
+          "disabled": true,
+          "settings": {}
+        },
+        "title": {
+          "type": "title",
+          "settings": {
+            "heading_size": "h1"
+          }
+        },
+        "price": {
+          "type": "price",
+          "settings": {
+            "price_size": "xs",
+            "show_currency_code": true,
+            "show_compared_at_price": true,
+            "show_tax_status": false,
+            "show_sale_amount_badge": true,
+            "highlight_sale_price": true
+          }
+        },
+        "d3d427d0-4e7d-4f81-9057-c64f65a4f183": {
+          "type": "variant_picker",
+          "settings": {
+            "option_type": "button-solid",
+            "show_swatches": false,
+            "primary_swatch_option_type": "swatches",
+            "secondary_swatch_option_type": "swatches",
+            "hide_single_value_options": true,
+            "option_name": "",
+            "information_drawer_button_label": "",
+            "text": "",
+            "page": "",
+            "image_width": 60
+          }
+        },
+        "quantity_selector": {
+          "type": "quantity_selector",
+          "disabled": true,
+          "settings": {}
+        },
+        "buy_buttons": {
+          "type": "buy_buttons",
+          "settings": {
+            "show_dynamic_checkout": false,
+            "enable_pickup_availability": false,
+            "enable_gift_card": false,
+            "show_payment_icons": false,
+            "show_sticky_btn_on_mobile": true,
+            "buttons_size": "md",
+            "add_to_cart_btn_style": "solid",
+            "checkout_btn_style": "outline"
+          }
+        },
+        "cartoonique_transform_block": {
+          "type": "liquid",
+          "settings": {
+            "liquid": "{% render 'aurora-pixar-integration', product: product, section_id: section.id, customer: customer %}"
+          }
+        },
+        "collapsible_row_Mgp6qD": {
+          "type": "collapsible_row",
+          "settings": {
+            "style": "collapsible_row_closed",
+            "title": "Delivery Information",
+            "heading_size": "caption3",
+            "icon": "none",
+            "icon_size": 24,
+            "text": "<p>Our shipping is so fast that you'll think we're shipping directly from next door. And the best part: We ship directly from local warehouses! Most orders arrive within 3-6 days.</p>",
+            "page": "",
+            "body_size": "body3",
+            "image_width": 60
+          }
+        },
+        "collapsible_row_Kq99fL": {
+          "type": "collapsible_row",
+          "settings": {
+            "style": "collapsible_row_closed",
+            "title": "Material",
+            "heading_size": "caption3",
+            "icon": "none",
+            "icon_size": 24,
+            "text": "<p>Our clothes are made of 100% high-quality cotton - for a pleasantly soft texture and extra long durability. For special designs or collections, we sometimes use other material mixes, but we always clearly state this on the product page.</p>",
+            "page": "",
+            "body_size": "body3",
+            "image_width": 60
+          }
+        },
+        "collapsible_row_jMxXFX": {
+          "type": "collapsible_row",
+          "settings": {
+            "style": "collapsible_row_closed",
+            "title": "Care Instructions",
+            "heading_size": "caption3",
+            "icon": "none",
+            "icon_size": 24,
+            "text": "<p>To ensure the print lasts a long time and the quality remains high, we recommend washing the T-shirt inside out - preferably at 30 degrees. Avoid using the dryer and don't iron directly over the print. With these simple tips, your shirt will stay fresh and the print will look like new.</p>",
+            "page": "",
+            "body_size": "body3",
+            "image_width": 60
+          }
+        }
+      },
+      "block_order": [
+        "vendor",
+        "title",
+        "price",
+        "d3d427d0-4e7d-4f81-9057-c64f65a4f183",
+        "quantity_selector",
+        "buy_buttons",
+        "cartoonique_transform_block",
+        "collapsible_row_Mgp6qD",
+        "collapsible_row_Kq99fL",
+        "collapsible_row_jMxXFX"
+      ],
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "medium",
+        "media_to_content_ratio": "fixed",
+        "img_ratio": "square",
+        "layout": "thumbnails-bottom",
+        "desktop_space_between_media": 20,
+        "thumbnails_size": 80,
+        "mobile_layout": "thumbnails-bottom-overlay",
+        "mobile_space_between_media": 16,
+        "show_only_selected_variants": false,
+        "enable_image_zoom": true,
+        "enable_video_autoplay": true,
+        "enable_video_controls": false,
+        "enable_video_looping": false,
+        "scale_video": true,
+        "add_side_paddings": true,
+        "desktop_spacing_top": 32,
+        "desktop_spacing_bottom": 48,
+        "mobile_spacing_top": 12,
+        "mobile_spacing_bottom": 12
+      }
+    },
+    "cartoonique-how-it-works": {
+      "type": "images-with-text",
+      "blocks": {
+        "image-block-1": {
+          "type": "image",
+          "settings": {
+            "image": ""
+          }
+        }
+      },
+      "block_order": [
+        "image-block-1"
+      ],
+      "settings": {
+        "color_scheme": "accent-1",
+        "container_size": "page-width",
+        "content_layout": "left",
+        "image_layout": "collage",
+        "img_ratio": 0.8,
+        "rotate_images": false,
+        "icon": "none",
+        "subheading": "",
+        "heading": "How It Works",
+        "heading_size": "h2",
+        "body": "<p>1. Upload your photo<br>2. Our AI transforms it into a cartoonish style<br>3. Customize with text if desired<br>4. Order your personalized item</p>",
+        "body_size": "body3",
+        "content_alignment": "left",
+        "desktop_content_width": 440,
+        "first_button_text": "",
+        "first_button_link": "",
+        "first_button_style": "solid",
+        "second_button_text": "",
+        "second_button_link": "",
+        "second_button_style": "solid",
+        "add_side_paddings": true,
+        "section_spacing_top": 20,
+        "section_spacing_bottom": 20
+      }
+    },
+    "cartoonique-examples": {
+      "type": "images-with-text",
+      "blocks": {
+        "example-image-1": {
+          "type": "image",
+          "settings": {
+            "image": ""
+          }
+        }
+      },
+      "block_order": [
+        "example-image-1"
+      ],
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "page-width",
+        "content_layout": "right",
+        "image_layout": "collage",
+        "img_ratio": 0.8,
+        "rotate_images": false,
+        "icon": "none",
+        "subheading": "",
+        "heading": "Turn Photos Into Unique Art",
+        "heading_size": "h2",
+        "body": "<p>Our AI-powered transformation creates stunning cartoon-style portraits from your photos. Perfect for gifts, home decor, or just to make someone smile.</p>",
+        "body_size": "body3",
+        "content_alignment": "left",
+        "desktop_content_width": 440,
+        "first_button_text": "",
+        "first_button_link": "",
+        "first_button_style": "solid",
+        "second_button_text": "",
+        "second_button_link": "",
+        "second_button_style": "solid",
+        "add_side_paddings": true,
+        "section_spacing_top": 20,
+        "section_spacing_bottom": 20
+      }
+    },
+    "related-products": {
+      "type": "product-recommendations",
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "full-screen",
+        "title": "See also:",
+        "heading_size": "h5",
+        "alignment": "center",
+        "product_recommendations_type": "auto",
+        "featured_collection": "",
+        "featured_products": [],
+        "img_ratio": "portrait",
+        "desktop_layout": "carousel",
+        "mobile_layout": "carousel",
+        "product_card_align": "center",
+        "cards_to_show": 18,
+        "desktop_columns": 4,
+        "desktop_space_between_cards": 12,
+        "mobile_space_between_cards": 16,
+        "show_navigation_on_hover": true,
+        "autoplay_mode": "disabled",
+        "autoplay_interval": 3,
+        "add_side_paddings": true,
+        "section_spacing_top": 48,
+        "section_spacing_bottom": 48
+      }
+    },
+    "cartoonique-faq": {
+      "type": "faq",
+      "blocks": {
+        "faq-question-1": {
+          "type": "question",
+          "settings": {
+            "title": "What types of photos work best?",
+            "heading_size": "caption2",
+            "icon": "none",
+            "icon_size": 24,
+            "text": "<p>The best photos are well-lit, clear images where faces are easily visible. Selfies or portrait-style photos work great!</p>",
+            "page": "",
+            "body_size": "body3",
+            "image_width": 100
+          }
+        },
+        "faq-question-2": {
+          "type": "question",
+          "settings": {
+            "title": "How long does the transformation take?",
+            "heading_size": "caption2",
+            "icon": "none",
+            "icon_size": 24,
+            "text": "<p>The AI transformation usually takes 1-2 minutes to complete.</p>",
+            "page": "",
+            "body_size": "body3",
+            "image_width": 100
+          }
+        },
+        "faq-question-3": {
+          "type": "question",
+          "settings": {
+            "title": "Can I edit my transformation?",
+            "heading_size": "caption2",
+            "icon": "none",
+            "icon_size": 24,
+            "text": "<p>Yes, you can crop your image and add custom text to personalize your design further.</p>",
+            "page": "",
+            "body_size": "body3",
+            "image_width": 100
+          }
+        }
+      },
+      "block_order": [
+        "faq-question-1",
+        "faq-question-2",
+        "faq-question-3"
+      ],
+      "settings": {
+        "color_scheme": "accent-2",
+        "enable_background_around_container": true,
+        "color_tabs": "content_tabs_separately",
+        "container_size": "xsmall",
+        "section_layout": "bottom-tabs",
+        "expand_first_tab": false,
+        "title": "Frequently Asked Questions",
+        "heading_size": "h3",
+        "text": "",
+        "body_size": "body3",
+        "content_alignment": "center",
+        "btn_text": "",
+        "btn_url": "",
+        "btn_style": "solid",
+        "add_side_paddings": true,
+        "section_spacing_top": 20,
+        "section_spacing_bottom": 20
+      }
+    }
+  },
+  "order": [
+    "ff03a7f7-70a4-4aa2-8e65-56be8e7dbefc",
+    "main",
+    "cartoonique-how-it-works",
+    "cartoonique-examples",
+    "related-products",
+    "cartoonique-faq"
+  ]
+} 
