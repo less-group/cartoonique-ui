@@ -30,6 +30,36 @@
   #pixar-loading-popup {
     z-index: 9999999 !important;
   }
+  
+  /* Enhanced popup styles */
+  #pixar-instructions-popup,
+  #pixar-loading-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.98);
+    transition: opacity 0.3s ease;
+  }
+  
+  #pixar-upload-button {
+    transition: background-color 0.3s ease;
+  }
+  
+  #pixar-upload-button:hover {
+    background-color: #3a6ca9;
+  }
+  
+  @media (max-width: 768px) {
+    #pixar-instructions-popup .good-bad-examples {
+      flex-direction: column;
+    }
+    #pixar-instructions-popup .example-item {
+      width: 100%;
+      margin-bottom: 15px;
+    }
+  }
 </style>
 
 <!-- Load component JS -->
@@ -85,82 +115,82 @@
       
       // Add content to the instructions popup
       instructionsPopup.innerHTML = `
-        <div style="position: relative; max-width: 900px; margin: 0 auto; padding: 30px; background: white; border-radius: 8px; box-shadow: 0 0 30px rgba(0,0,0,0.2);">
+        <div style="position: relative; max-width: 900px; margin: 30px auto; padding: 30px; background: white; border-radius: 8px; box-shadow: 0 0 30px rgba(0,0,0,0.2);">
           <button id="pixar-close-button" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 30px; cursor: pointer; padding: 5px; color: #555;">&times;</button>
           
-          <h2 style="text-align: center; font-size: 28px; margin-bottom: 20px; font-weight: bold;">KOSTENLOSE VORSCHAU, ERSTELLE DEINS JETZT:</h2>
+          <h2 style="text-align: center; font-size: 28px; margin-bottom: 20px; font-weight: bold;">UPLOAD A PHOTO FOR YOUR PIXAR PORTRAIT</h2>
           
           <div style="margin-bottom: 30px;">
             <!-- Good and Bad photo sections -->
             <div style="margin-bottom: 30px;">
-              <h3 style="color: #FF4444; text-align: center; font-size: 24px; margin-bottom: 15px; font-weight: bold;">BAD PHOTO</h3>
-              <div style="display: flex; justify-content: space-around;">
-                <div style="text-align: center; width: 30%;">
+              <h3 style="color: #FF4444; text-align: center; font-size: 24px; margin-bottom: 15px; font-weight: bold;">BAD PHOTO EXAMPLES</h3>
+              <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+                <div style="text-align: center; width: 30%; min-width: 180px; margin-bottom: 15px;">
                   <div style="position: relative; border: 2px solid #FF4444; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
                     <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/bad_photo_far.jpg?v=1683712345" alt="Far/Blurry Example" style="width: 100%; height: 100%; object-fit: cover;">
                     <div style="position: absolute; top: 5px; right: 5px; background-color: #FF4444; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✕</div>
-              </div>
+                  </div>
                   <p style="font-weight: bold; color: #FF4444; margin: 0;">FAR/BLURRY</p>
-            </div>
+                </div>
             
-                <div style="text-align: center; width: 30%;">
+                <div style="text-align: center; width: 30%; min-width: 180px; margin-bottom: 15px;">
                   <div style="position: relative; border: 2px solid #FF4444; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
                     <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/bad_photo_glasses.jpg?v=1683712345" alt="Glasses Example" style="width: 100%; height: 100%; object-fit: cover;">
                     <div style="position: absolute; top: 5px; right: 5px; background-color: #FF4444; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✕</div>
-              </div>
+                  </div>
                   <p style="font-weight: bold; color: #FF4444; margin: 0;">GLASSES</p>
-            </div>
+                </div>
             
-                <div style="text-align: center; width: 30%;">
+                <div style="text-align: center; width: 30%; min-width: 180px; margin-bottom: 15px;">
                   <div style="position: relative; border: 2px solid #FF4444; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
                     <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/bad_photo_multiple.jpg?v=1683712345" alt="Multiple People Example" style="width: 100%; height: 100%; object-fit: cover;">
                     <div style="position: absolute; top: 5px; right: 5px; background-color: #FF4444; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✕</div>
-              </div>
+                  </div>
                   <p style="font-weight: bold; color: #FF4444; margin: 0;">2+ PEOPLE</p>
                 </div>
+              </div>
             </div>
-          </div>
           
             <div style="margin-bottom: 30px;">
-              <h3 style="color: #33CC66; text-align: center; font-size: 24px; margin-bottom: 15px; font-weight: bold;">GOOD PHOTO</h3>
-              <div style="display: flex; justify-content: space-around;">
-                <div style="text-align: center; width: 30%;">
+              <h3 style="color: #33CC66; text-align: center; font-size: 24px; margin-bottom: 15px; font-weight: bold;">GOOD PHOTO EXAMPLES</h3>
+              <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+                <div style="text-align: center; width: 30%; min-width: 180px; margin-bottom: 15px;">
                   <div style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
                     <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_closeup.jpg?v=1683712345" alt="Close-up Example" style="width: 100%; height: 100%; object-fit: cover;">
                     <div style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>
-              </div>
+                  </div>
                   <p style="font-weight: bold; color: #33CC66; margin: 0;">CLOSE-UP</p>
-            </div>
+                </div>
             
-                <div style="text-align: center; width: 30%;">
+                <div style="text-align: center; width: 30%; min-width: 180px; margin-bottom: 15px;">
                   <div style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
                     <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_clear.jpg?v=1683712345" alt="Clear Example" style="width: 100%; height: 100%; object-fit: cover;">
                     <div style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>
-              </div>
+                  </div>
                   <p style="font-weight: bold; color: #33CC66; margin: 0;">CLEAR</p>
-            </div>
+                </div>
             
-                <div style="text-align: center; width: 30%;">
+                <div style="text-align: center; width: 30%; min-width: 180px; margin-bottom: 15px;">
                   <div style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
                     <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_oneperson.jpg?v=1683712345" alt="One Person Example" style="width: 100%; height: 100%; object-fit: cover;">
                     <div style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>
-              </div>
+                  </div>
                   <p style="font-weight: bold; color: #33CC66; margin: 0;">1 PERSON</p>
                 </div>
+              </div>
             </div>
           </div>
-        </div>
 
           <p style="text-align: center; font-size: 18px; margin-bottom: 30px; font-weight: bold;">
-          Please make sure to upload a clear, close-up photo.
-        </p>
+            Please make sure to upload a clear, close-up photo of one person without glasses.
+          </p>
 
           <div id="pixar-upload-buttons" style="text-align: center;">
             <button id="pixar-upload-button" style="background-color: #4a7dbd; color: white; padding: 18px 40px; font-size: 20px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 10px auto; display: block; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">UPLOAD PHOTO</button>
           </div>
           
           <div id="pixar-error-message" style="display: none; text-align: center; color: red; margin-top: 20px;"></div>
-          </div>
+        </div>
       `;
       
       // Create loading popup (second popup for processing)
@@ -182,7 +212,7 @@
       
       // Add content to the loading popup - improved and cleaner
       loadingPopup.innerHTML = `
-        <div style="position: relative; max-width: 700px; margin: 0 auto; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.1); margin-top: 100px;">
+        <div style="position: relative; max-width: 700px; margin: 100px auto; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.1);">
           <h3 style="text-align: center; font-size: 26px; margin-bottom: 30px; color: #333; font-weight: bold;">Generating, please wait...</h3>
           
           <div style="width: 90%; max-width: 500px; height: 12px; background-color: #f5f5f5; border-radius: 20px; margin: 30px auto; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
@@ -198,6 +228,41 @@
       // Add the popups to the document
       document.body.appendChild(instructionsPopup);
       document.body.appendChild(loadingPopup);
+      
+      // Listen for transform complete events
+      document.addEventListener('pixar-transform-complete', function(event) {
+        console.log('PIXAR-ENHANCED: Transform complete event received', event);
+        
+        // Hide loading popup
+        document.getElementById('pixar-loading-popup').style.display = 'none';
+        document.body.style.overflow = '';
+        
+        // Update upload button text
+        const uploadButton = document.querySelector('#direct-pixar-loader-container button');
+        if (uploadButton) {
+          uploadButton.textContent = '✅ IMAGE UPLOADED - READY TO ADD TO CART';
+          uploadButton.style.backgroundColor = '#4CAF50';
+        }
+      });
+      
+      // Also listen for ImageProcessingManager's custom events
+      document.addEventListener('image-transform-complete', function(event) {
+        console.log('PIXAR-ENHANCED: Image transform complete event from ImageProcessingManager received', event);
+        
+        // Hide loading popup
+        document.getElementById('pixar-loading-popup').style.display = 'none';
+        document.body.style.overflow = '';
+        
+        // Mark transform as complete for component
+        window.pixarTransformComplete = true;
+        
+        // Update upload button text
+        const uploadButton = document.querySelector('#direct-pixar-loader-container button');
+        if (uploadButton) {
+          uploadButton.textContent = '✅ IMAGE UPLOADED - READY TO ADD TO CART';
+          uploadButton.style.backgroundColor = '#4CAF50';
+        }
+      });
       
       // Connect component's openPopup method to our enhanced popup system
       if (pixarComponent && typeof pixarComponent.openPopup === 'function') {
@@ -256,6 +321,51 @@
           };
           
           console.log('PIXAR-ENHANCED: Component transformImage method connected to enhanced popup system');
+        }
+        
+        // Also override updateProgress to show in our enhanced popup
+        if (typeof pixarComponent.updateProgress === 'function') {
+          const originalUpdateProgress = pixarComponent.updateProgress;
+          
+          pixarComponent.updateProgress = function(progress) {
+            console.log('PIXAR-ENHANCED: Progress update:', progress);
+            
+            // Update our enhanced progress bar
+            const progressBar = document.getElementById('pixar-progress-bar');
+            const progressText = document.getElementById('pixar-progress-text');
+            
+            if (progressBar && progressText) {
+              // Ensure progress is between 0 and 100
+              const clampedProgress = Math.min(100, Math.max(0, progress));
+              
+              // Apply visual progress with easing
+              let visualProgress = clampedProgress;
+              if (clampedProgress < 100) {
+                visualProgress = clampedProgress * 0.8; // Cap at 80% until truly complete
+              }
+              
+              // Update progress bar
+              progressBar.style.width = `${visualProgress}%`;
+              
+              // Update text based on progress stage
+              if (progress < 20) {
+                progressText.textContent = 'Preparing your image...';
+              } else if (progress < 40) {
+                progressText.textContent = 'Analyzing facial features...';
+              } else if (progress < 60) {
+                progressText.textContent = 'Applying Pixar style...';
+              } else if (progress < 80) {
+                progressText.textContent = 'Adding final touches...';
+              } else {
+                progressText.textContent = 'Almost done!';
+              }
+            }
+            
+            // Call the original method
+            return originalUpdateProgress.call(this, progress);
+          };
+          
+          console.log('PIXAR-ENHANCED: Progress tracking connected to enhanced popup');
         }
       }
       

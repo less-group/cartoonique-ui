@@ -170,10 +170,19 @@
             return;
           }
           
-          // Try to find and show popup
+          // Try to find and show enhanced popup first
+          const instructionsPopup = document.getElementById('pixar-instructions-popup');
+          if (instructionsPopup) {
+            console.log('⭐ Found enhanced instructions popup, showing it');
+            instructionsPopup.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            return;
+          }
+          
+          // Fall back to original popup if enhanced not found
           const popup = document.querySelector('.file-input-wrapper__popup');
           if (popup) {
-            console.log('⭐ Found popup element, showing it directly');
+            console.log('⭐ Found original popup element, showing it directly');
             popup.style.display = 'block';
             popup.style.visibility = 'visible';
             popup.style.opacity = '1';
