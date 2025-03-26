@@ -9,6 +9,10 @@
 (function() {
   console.log('⭐ Direct Pixar Component Loader initializing...');
 
+  // Expose the processImageWithRunPod function globally to ensure it's accessible
+  window.processImageWithRunPod = processImageWithRunPod;
+  console.log('⭐ processImageWithRunPod function exposed globally');
+
   // Function to check for and create instructions popup if needed
   function checkForInstructionsPopup() {
     // Check if popup already exists
@@ -286,6 +290,13 @@
         }
       }));
       
+      console.log('⭐ Sending image to Railway API at:', 'https://letzteshemd-faceswap-api-production.up.railway.app/transform');
+      console.log('⭐ Payload structure:', { 
+        imageLength: imageBase64.length,
+        style: payload.style,
+        watermark: payload.watermark
+      });
+      
       // Call the RunPod API endpoint
       fetch('https://letzteshemd-faceswap-api-production.up.railway.app/transform', {
         method: 'POST',
@@ -306,6 +317,8 @@
           }
         }));
         
+        console.log('⭐ Railway API response status:', response.status);
+        
         if (!response.ok) {
           throw new Error(`Server error: ${response.status} ${response.statusText}`);
         }
@@ -323,7 +336,7 @@
           }
         }));
         
-        console.log('⭐ RunPod processing complete:', data);
+        console.log('⭐ RunPod processing complete - received response from Railway API:', data);
         
         // Handle successful response
         if (data && data.image) {

@@ -637,16 +637,65 @@ class PixarTransformFileInput extends HTMLElement {
     }
     
     /**
-     * File input change handler
+     * Handle file input change
      */
     handleFileInputChange(event) {
-      if (event.target.files && event.target.files.length > 0) {
-        const file = event.target.files[0];
-        this.log('File selected:', file.name);
-        
-        this.state.file = file;
+      if (!event || !event.target || !event.target.files || event.target.files.length === 0) {
+        this.log('No files selected');
+        return;
+      }
+      
+      const file = event.target.files[0];
+      
+      this.log('File selected:', file.name);
+      
+      // Store the selected file
+      this.state.file = file;
+      
+      // Update UI
+      this.updateUI();
+      
+      // If we're configured to transform directly, do it now
+      if (this.getAttribute('data-auto-transform') === 'true') {
+        this.log('Auto-transform enabled, processing immediately');
         this.transformImage();
       }
+    }
+    
+    /**
+     * Handle file select
+     */
+    handleFileSelect(event) {
+      this.log('Handle file select called');
+      
+      // Check if event has files
+      if (!event || !event.target || !event.target.files || event.target.files.length === 0) {
+        this.log('No files in event');
+        return;
+      }
+      
+      // Get the file
+      const file = event.target.files[0];
+      
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+      if (!validTypes.includes(file.type)) {
+        this.log('Invalid file type:', file.type);
+        this.showError('Please select a valid image file (JPEG or PNG).');
+        return;
+      }
+      
+      // Store the file
+      this.state.file = file;
+      
+      // Show processing content
+      this.showProcessingContent();
+      
+      // Reset error state
+      this.state.error = null;
+      
+      // Start transformation
+      this.transformImage();
     }
     
     /**
@@ -706,7 +755,7 @@ class PixarTransformFileInput extends HTMLElement {
     }
 
     /**
-     * This is the main transformation method that handles the API call
+     * Transform the image
      */
     async transformImage() {
       // Get file from file input
@@ -742,6 +791,9 @@ class PixarTransformFileInput extends HTMLElement {
       this.updateUI();
       
       try {
+        this.log('Starting transformation process - text dialog will appear after cropping');
+        this.log('Clearing previous result');
+        
         // Use image processing manager if available
         if (window.imageProcessingManager) {
           this.log('Using ImageProcessingManager for processing');
@@ -756,8 +808,16 @@ class PixarTransformFileInput extends HTMLElement {
           return;
         }
         
+        // Try direct processing with RunPod if other methods are unavailable
+        if (typeof window.processImageWithRunPod === 'function') {
+          this.log('Using direct processImageWithRunPod function');
+          window.processImageWithRunPod(this.state.file);
+          this.requestInProgress = false;
+          return;
+        }
+        
         // Both methods unavailable
-        throw new Error('No processing method available');
+        throw new Error('No processing method available - Cannot find UnifiedApiClient, ImageProcessingManager, or processImageWithRunPod');
         
       } catch (error) {
         console.error('[PixarTransformFileInput] Transform error:', error);
@@ -784,7 +844,7 @@ class PixarTransformFileInput extends HTMLElement {
       window.imageProcessingManager.handleFileSelected(fakeEvent);
       
       // The manager will handle everything from here
-        this.requestInProgress = false;
+      this.requestInProgress = false;
     }
     
     /**

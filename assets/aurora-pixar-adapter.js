@@ -322,6 +322,30 @@ class AuroraPixarAdapter {
     // Check if the processImageWithRunPod function exists
     if (typeof window.processImageWithRunPod === 'function') {
       this.log('RunPod processing function already exists');
+      
+      // Preserve the original function to ensure we don't break existing functionality
+      if (!window.originalProcessImageWithRunPod) {
+        window.originalProcessImageWithRunPod = window.processImageWithRunPod;
+        
+        // Wrap the function to ensure events are dispatched for the adapter
+        window.processImageWithRunPod = (file) => {
+          this.log('Enhanced processImageWithRunPod called with file:', file.name);
+          
+          // Dispatch start event 
+          document.dispatchEvent(new CustomEvent('runpod-processing-started', {
+            detail: {
+              filename: file.name,
+              timestamp: Date.now(),
+              adapter: 'aurora'
+            }
+          }));
+          
+          // Call the original function
+          return window.originalProcessImageWithRunPod(file);
+        };
+        
+        this.log('Enhanced processImageWithRunPod function installed');
+      }
     } else {
       this.log('RunPod processing function not found, checking direct-pixar-loader.js');
       
@@ -330,6 +354,31 @@ class AuroraPixarAdapter {
       const checkInterval = setInterval(() => {
         if (typeof window.processImageWithRunPod === 'function') {
           this.log('RunPod processing function found on retry');
+          
+          // Wrap the function if not already wrapped
+          if (!window.originalProcessImageWithRunPod) {
+            window.originalProcessImageWithRunPod = window.processImageWithRunPod;
+            
+            // Wrap the function to ensure events are dispatched for the adapter
+            window.processImageWithRunPod = (file) => {
+              this.log('Enhanced processImageWithRunPod called with file:', file.name);
+              
+              // Dispatch start event 
+              document.dispatchEvent(new CustomEvent('runpod-processing-started', {
+                detail: {
+                  filename: file.name,
+                  timestamp: Date.now(),
+                  adapter: 'aurora'
+                }
+              }));
+              
+              // Call the original function
+              return window.originalProcessImageWithRunPod(file);
+            };
+            
+            this.log('Enhanced processImageWithRunPod function installed');
+          }
+          
           clearInterval(checkInterval);
         }
       }, 500);
@@ -339,6 +388,132 @@ class AuroraPixarAdapter {
         clearInterval(checkInterval);
         if (typeof window.processImageWithRunPod !== 'function') {
           this.log('RunPod processing function never found - this may indicate an issue with script loading order');
+          
+          // Define our own processImageWithRunPod as a last resort
+          window.processImageWithRunPod = (file) => {
+            this.log('Using fallback processImageWithRunPod implementation');
+            
+            // Show loading or progress indicator if needed
+            this.updateProgressUI(10);
+            
+            // Dispatch start event
+            document.dispatchEvent(new CustomEvent('runpod-processing-started', {
+              detail: {
+                filename: file.name,
+                timestamp: Date.now(),
+                adapter: 'aurora-fallback'
+              }
+            }));
+            
+            // Read the file as data URL
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+              const imageBase64 = e.target.result;
+              this.updateProgressUI(30);
+              
+              // Create the payload for the RunPod API
+              const payload = {
+                image: imageBase64,
+                style: 'pixar',
+                watermark: {
+                  url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/watermark.png",
+                  width: 200,
+                  height: 100,
+                  spaceBetweenWatermarks: 100
+                }
+              };
+              
+              this.log('Sending image directly to Railway API');
+              
+              // Call the RunPod API endpoint
+              fetch('https://letzteshemd-faceswap-api-production.up.railway.app/transform', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+              })
+              .then(response => {
+                this.updateProgressUI(60);
+                this.log('Railway API response status:', response.status);
+                
+                if (!response.ok) {
+                  throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                }
+                return response.json();
+              })
+              .then(data => {
+                this.updateProgressUI(90);
+                this.log('RunPod processing complete - received response from Railway API:', data);
+                
+                if (data && data.image) {
+                  this.updateProgressUI(100);
+                  
+                  // Store the processed image URL
+                  const processedImageUrl = data.image;
+                  
+                  // Update product gallery
+                  this.updateProductGallery(processedImageUrl);
+                  
+                  // Dispatch the success events
+                  document.dispatchEvent(new CustomEvent('pixar-transform-complete', {
+                    detail: {
+                      imageUrl: processedImageUrl,
+                      timestamp: Date.now()
+                    }
+                  }));
+                  
+                  document.dispatchEvent(new CustomEvent('runpod-processing-complete', {
+                    detail: {
+                      imageUrl: processedImageUrl,
+                      timestamp: Date.now(),
+                      adapter: 'aurora-fallback'
+                    }
+                  }));
+                  
+                  // Store for form submission
+                  window.processedImageUrl = processedImageUrl;
+                  
+                  // Add to form if available
+                  this.handleTransformComplete({
+                    imageUrl: processedImageUrl,
+                    timestamp: Date.now()
+                  });
+                } else {
+                  throw new Error('Invalid response from server: No image URL received');
+                }
+              })
+              .catch(error => {
+                console.error('Error processing image:', error);
+                
+                // Dispatch error event
+                document.dispatchEvent(new CustomEvent('pixar-transform-error', {
+                  detail: {
+                    error: error.message,
+                    timestamp: Date.now()
+                  }
+                }));
+              });
+            };
+            
+            reader.onerror = (error) => {
+              console.error('Error reading file:', error);
+              
+              // Dispatch error event
+              document.dispatchEvent(new CustomEvent('pixar-transform-error', {
+                detail: {
+                  error: 'Error reading file',
+                  timestamp: Date.now()
+                }
+              }));
+            };
+            
+            // Start reading the file
+            reader.readAsDataURL(file);
+          };
+          
+          this.log('Fallback processImageWithRunPod function installed');
         }
       }, 10000);
     }
@@ -352,9 +527,45 @@ class AuroraPixarAdapter {
       // Verify this matches the expected URL
       if (apiUrl !== 'https://letzteshemd-faceswap-api-production.up.railway.app') {
         this.log('Warning: API URL doesn\'t match expected Railway URL');
+        
+        // Fix the URL if incorrect
+        window.unifiedConfig.api.development.baseUrl = 'https://letzteshemd-faceswap-api-production.up.railway.app';
+        window.unifiedConfig.api.production.baseUrl = 'https://letzteshemd-faceswap-api-production.up.railway.app';
+        
+        this.log('Corrected API URL to use Railway endpoint');
       }
     } else {
       this.log('API URL configuration not found');
+      
+      // Create a minimal config if missing
+      if (!window.unifiedConfig) {
+        window.unifiedConfig = {
+          api: {
+            development: {
+              baseUrl: 'https://letzteshemd-faceswap-api-production.up.railway.app',
+              timeout: 120000,
+              pollingInterval: 1000,
+              maxPollingAttempts: 120
+            },
+            production: {
+              baseUrl: 'https://letzteshemd-faceswap-api-production.up.railway.app',
+              timeout: 120000,
+              pollingInterval: 2000,
+              maxPollingAttempts: 60
+            },
+            current() {
+              return this.production;
+            }
+          },
+          endpoints: {
+            transform: '/transform',
+            status: '/status/',
+            pixarTransform: '/transform'
+          }
+        };
+        
+        this.log('Created minimal unifiedConfig with Railway API URL');
+      }
     }
   }
   

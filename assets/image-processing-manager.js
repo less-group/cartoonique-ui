@@ -2307,11 +2307,88 @@ if (!window.imageProcessingManager) {
 if (window.processImageWithRunPod && !window.originalProcessImageWithRunPod) {
   window.originalProcessImageWithRunPod = window.processImageWithRunPod;
   window.processImageWithRunPod = function(file) {
+    console.log('🖼️ Image Processing Manager intercepted processImageWithRunPod call for file:', file.name);
+    
     // Call the original function to send to backend
     if (window.originalProcessImageWithRunPod) {
+      console.log('🖼️ Delegating to original processImageWithRunPod implementation');
       window.originalProcessImageWithRunPod(file);
     }
   };
+} else {
+  console.log('🖼️ processImageWithRunPod not found at initialization time, will check later');
+  
+  // Try to set it up after a short delay to ensure it's available
+  setTimeout(() => {
+    if (window.processImageWithRunPod && !window.originalProcessImageWithRunPod) {
+      console.log('🖼️ Found processImageWithRunPod on retry, setting up interception');
+      window.originalProcessImageWithRunPod = window.processImageWithRunPod;
+      window.processImageWithRunPod = function(file) {
+        console.log('🖼️ Image Processing Manager intercepted processImageWithRunPod call for file:', file.name);
+        
+        // Call the original function to send to backend
+        if (window.originalProcessImageWithRunPod) {
+          console.log('🖼️ Delegating to original processImageWithRunPod implementation');
+          window.originalProcessImageWithRunPod(file);
+        }
+      };
+    } else {
+      console.log('🖼️ processImageWithRunPod still not available after delay');
+    }
+  }, 1000);
+}
+
+// When the cropping is complete, we need to ensure the file gets sent to Railway
+const originalHandleCropComplete = ImageProcessingManager.prototype.handleCropComplete;
+if (originalHandleCropComplete) {
+  ImageProcessingManager.prototype.handleCropComplete = function(croppedImage) {
+    console.log('🖼️ Enhanced handleCropComplete called with cropped image');
+    
+    // Call the original method first
+    originalHandleCropComplete.call(this, croppedImage);
+    
+    // After cropping is complete, ensure we send to Railway
+    if (this.processedImage && !this.sentToRailway) {
+      console.log('🖼️ Cropping complete, preparing to send to Railway');
+      this.sentToRailway = true;
+      
+      // Convert data URL to File object for processImageWithRunPod
+      const byteString = atob(this.processedImage.split(',')[1]);
+      const mimeType = this.processedImage.split(',')[0].split(':')[1].split(';')[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      
+      const blob = new Blob([ab], { type: mimeType });
+      const filename = 'cropped-image-' + Date.now() + '.png';
+      const file = new File([blob], filename, { type: mimeType });
+      
+      console.log('🖼️ Created File object from cropped image data URL');
+      
+      // Now send to Railway via processImageWithRunPod
+      if (typeof window.processImageWithRunPod === 'function') {
+        console.log('🖼️ Calling processImageWithRunPod with cropped image file');
+        window.processImageWithRunPod(file);
+      } else if (typeof window.pixarComponent?.handleFileSelect === 'function') {
+        console.log('🖼️ processImageWithRunPod not found, trying pixarComponent.handleFileSelect');
+        // Create a fake event object
+        const fakeEvent = {
+          target: {
+            files: [file]
+          }
+        };
+        window.pixarComponent.handleFileSelect(fakeEvent);
+      } else {
+        console.error('🖼️ Failed to find method to send image to Railway after cropping');
+      }
+    }
+  };
+  console.log('🖼️ Enhanced handleCropComplete method installed');
+} else {
+  console.log('🖼️ Original handleCropComplete method not found');
 }
 
 // Export the manager for direct use
