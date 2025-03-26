@@ -146,6 +146,56 @@
         var debugInfo = document.getElementById('debug-info-content');
         if (debugInfo) debugInfo.innerHTML = '<p>Buy button handler initialized</p>';
         
+        // Check if this is a faceswap product and add a dedicated upload button if needed
+        var templateSuffix = '{{ product.template_suffix }}'.trim();
+        if (templateSuffix.includes('with-faceswap')) {
+          console.log('🔄 This is a faceswap product, adding dedicated upload button');
+          
+          // Find the Add to Cart button container
+          var buyButtonsContainer = document.querySelector('.buy-buttons');
+          if (buyButtonsContainer) {
+            // Create the dedicated upload button
+            var uploadButton = document.createElement('button');
+            uploadButton.type = 'button'; // Not a submit button
+            uploadButton.id = 'dedicated-upload-button';
+            uploadButton.className = 'button button--primary button--xl';
+            uploadButton.style.marginBottom = '15px';
+            uploadButton.style.backgroundColor = '#4a7dbd'; // Blue color
+            uploadButton.style.color = 'white';
+            uploadButton.style.fontWeight = 'bold';
+            uploadButton.style.display = 'block';
+            uploadButton.style.width = '100%';
+            uploadButton.innerHTML = '📸 UPLOAD YOUR PHOTO FIRST';
+            
+            // Add click handler
+            uploadButton.addEventListener('click', function() {
+              console.log('🔄 Dedicated upload button clicked');
+              // Initialize image processing if needed
+              if (typeof window.triggerImageUpload !== 'function') {
+                initializeImageProcessing();
+              }
+              
+              // Trigger image upload
+              if (typeof window.triggerImageUpload === 'function') {
+                window.triggerImageUpload();
+              } else {
+                console.error('🔄 Error: triggerImageUpload function not available');
+              }
+            });
+            
+            // Insert button before the original Add to Cart button
+            var atcButton = buyButtonsContainer.querySelector('button');
+            if (atcButton) {
+              atcButton.parentNode.insertBefore(uploadButton, atcButton);
+              console.log('🔄 Dedicated upload button added to the page');
+              
+              // Update the Add to Cart button
+              atcButton.textContent = 'ADD TO CART';
+              atcButton.setAttribute('data-requires-upload', 'true');
+            }
+          }
+        }
+        
         // Register image processing handlers
         function initializeImageProcessing() {
           // Create global references
@@ -306,12 +356,82 @@
         // Set up form submission interception for with-faceswap products
         var productForm = document.querySelector('form[is="product-form"]');
         if (productForm) {
-          var templateSuffix = '{{ product.template_suffix }}';
+          // Clean up the template suffix string to handle any whitespace issues
+          var rawTemplateSuffix = '{{ product.template_suffix }}';
+          var templateSuffix = rawTemplateSuffix.trim();
           
-          if (templateSuffix.includes('with-faceswap')) {
+          console.log('🛑 DEBUG: Product template suffix is:', templateSuffix);
+          console.log('🛑 DEBUG: Raw template suffix is:', rawTemplateSuffix);
+          console.log('🛑 DEBUG: Product form found:', productForm);
+          
+          // Force a check for specific elements on the page that would indicate a faceswap product
+          var isFaceswapPage = templateSuffix.includes('with-faceswap') || 
+                              document.querySelector('.file-input-wrapper') !== null ||
+                              document.querySelector('pixar-transform-file-input') !== null;
+          
+          console.log('🛑 DEBUG: Is faceswap page detected:', isFaceswapPage);
+          
+          if (isFaceswapPage) {
+            console.log('🛑 DEBUG: This is a faceswap product, setting up interception');
+            
+            // Apply direct interception to all buttons in the form to be extra safe
+            var allButtons = productForm.querySelectorAll('button[type="submit"]');
+            console.log('🛑 DEBUG: Found ' + allButtons.length + ' submit buttons in the form');
+            
+            allButtons.forEach(function(button, index) {
+              console.log('🛑 DEBUG: Setting up interception for button #' + index);
+              
+              // Override the button's click handler
+              button.addEventListener('click', function(e) {
+                console.log('🛑 DEBUG: Button #' + index + ' clicked');
+                
+                // Check if this is a faceswap product and no image uploaded yet
+                if (!window.imageUploaded) {
+                  console.log('🛑 DEBUG: Preventing button click and triggering image upload');
+                  e.preventDefault();
+                  e.stopPropagation();
+                  
+                  // Trigger image upload
+                  if (typeof window.triggerImageUpload === 'function') {
+                    window.triggerImageUpload();
+                  } else {
+                    console.error('🛑 ERROR: triggerImageUpload function not available');
+                  }
+                  
+                  return false;
+                } else {
+                  console.log('🛑 DEBUG: Image already uploaded, allowing button click');
+                }
+              }, true); // Use capturing phase to ensure this runs first
+            });
+            
+            // Also set a global click handler on the document to catch any other potential add to cart buttons
+            document.addEventListener('click', function(e) {
+              // If the click is on a button inside the product form
+              if (e.target.tagName === 'BUTTON' && productForm.contains(e.target) && !window.imageUploaded) {
+                console.log('🛑 DEBUG: Caught click on button inside product form');
+                
+                // Check if this looks like an add to cart button
+                var buttonText = e.target.textContent.toLowerCase();
+                if (buttonText.includes('add to cart') || buttonText.includes('upload')) {
+                  console.log('🛑 DEBUG: Button appears to be an Add to Cart button');
+                  e.preventDefault();
+                  e.stopPropagation();
+                  
+                  if (typeof window.triggerImageUpload === 'function') {
+                    window.triggerImageUpload();
+                  }
+                  
+                  return false;
+                }
+              }
+            }, true);
+            
             productForm.addEventListener('submit', function(e) {
+              console.log('🛑 DEBUG: Form submit event triggered');
               // If this is a faceswap product and no image uploaded yet
               if (!window.imageUploaded) {
+                console.log('🛑 DEBUG: Preventing form submission and triggering image upload');
                 e.preventDefault();
                 e.stopPropagation();
                 
@@ -325,29 +445,67 @@
               
               // Otherwise continue with form submission
               return true;
-            });
-            
-            // Also intercept ATC button clicks directly
-            var atcButton = document.getElementById('atc-button');
-            if (atcButton) {
-              atcButton.addEventListener('click', function(e) {
-                if (!window.imageUploaded) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  
-                  // Trigger image upload
-                  if (typeof window.triggerImageUpload === 'function') {
-                    window.triggerImageUpload();
-                  }
-                  
-                  return false;
-                }
-              });
-            }
+            }, true); // Use capturing phase to ensure our handler runs first
             
             console.log('🔄 Form submission interception set up for faceswap product');
+          } else {
+            console.log('🛑 DEBUG: Not a faceswap product, template suffix does not match');
           }
+        } else {
+          console.log('🛑 DEBUG: Product form not found');
         }
+
+        // Set up mutation observer to watch for dynamically added buttons
+        var observer = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.addedNodes && mutation.addedNodes.length > 0) {
+              for (var i = 0; i < mutation.addedNodes.length; i++) {
+                var node = mutation.addedNodes[i];
+                
+                // Check if the added node is a button or contains buttons
+                if (node.nodeType === 1) { // ELEMENT_NODE
+                  if (node.tagName === 'BUTTON' || node.querySelector('button')) {
+                    console.log('🔄 Detected new button added to the page');
+                    
+                    // Find all buttons in the added node
+                    var buttons = node.tagName === 'BUTTON' ? [node] : node.querySelectorAll('button');
+                    
+                    // Apply our protection to each button
+                    buttons.forEach(function(button) {
+                      if (!button.hasAttribute('data-intercept-applied') && 
+                          (button.type === 'submit' || button.textContent.toLowerCase().includes('add to cart'))) {
+                        
+                        console.log('🔄 Applying interception to dynamically added button');
+                        
+                        // Mark this button as processed
+                        button.setAttribute('data-intercept-applied', 'true');
+                        
+                        // Add our click handler
+                        button.addEventListener('click', function(e) {
+                          if (!window.imageUploaded && templateSuffix.includes('with-faceswap')) {
+                            console.log('🔄 Intercepted click on dynamically added button');
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            // Trigger image upload
+                            if (typeof window.triggerImageUpload === 'function') {
+                              window.triggerImageUpload();
+                            }
+                            
+                            return false;
+                          }
+                        }, true);
+                      }
+                    });
+                  }
+                }
+              }
+            }
+          });
+        });
+        
+        // Start observing the document with the configured parameters
+        observer.observe(document.body, { childList: true, subtree: true });
       });
     </script>
   </div>
