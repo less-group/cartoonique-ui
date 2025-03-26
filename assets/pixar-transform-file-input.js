@@ -48,12 +48,29 @@ class PixarTransformFileInput extends HTMLElement {
       this.processedPrintImageUrl = null; 
       this.watermarkedImageUrl = null;
       
+      // Initialize event listeners and element references (will be set in connectedCallback)
+      this.popup = null;
+      this.popupContent = null;
+      this.processingContent = null;
+      this.progressBar = null;
+      this.fileInput = null;
+      this.openPopupButton = null;
+      this.closePopupButton = null;
+      this.resultWrapper = null;
+      this.resultHelpText = null;
+      this.resultImageWrapper = null;
+      this.tryAgainButton = null;
+      this.continueButton = null;
+      
       // Debugging
-      this.debug = true; // Always enable debug to troubleshoot upload issues
+      this.debug = true;
+      
+      // Log initial attributes
       this.log('Constructor initialized with attributes:', {
         sectionId: this.sectionId,
         productId: this.productId,
         productVariantId: this.productVariantId,
+        customerId: this.customerId,
         targetImageUrl: this.targetImageUrl,
         printImageUrl: this.printImageUrl,
         color: this.color
@@ -113,6 +130,11 @@ class PixarTransformFileInput extends HTMLElement {
         this.style.visibility = 'visible';
         this.style.opacity = '1';
         
+        // Make the open popup button visible
+        if (this.openPopupButton) {
+          this.openPopupButton.style.display = 'block';
+        }
+        
         this.log('Component setup complete');
       } catch (error) {
         console.error('[PixarTransformFileInput] Setup error:', error);
@@ -120,94 +142,134 @@ class PixarTransformFileInput extends HTMLElement {
     }
     
     /**
-     * Initialize UpCart listeners for cart integration with transformed images
+     * DisconnectedCallback lifecycle method
      */
-    initUpCartListeners() {
-      this.log('Initializing UpCart listeners for Pixar transformations');
+    disconnectedCallback() {
+      this.log('Component disconnected from DOM');
       
-      // Handle add to cart event from UpCart
-      window.upcartOnAddToCart = async (id, quantity, lineItem) => {
-        const upCartWrapper = document.getElementById('upCart');
+      // Clean up event listeners if needed
+    }
+    
+    /**
+     * Setup file inputs
+     */
+    setupFileInputs() {
+      this.log('Setting up file inputs');
+      
+      // Use input with specific ID instead of querying by type
+      this.fileInput = document.getElementById(`file-input-wrapper__input-${this.sectionId}`);
+      
+      if (!this.fileInput) {
+        this.log('File input not found by ID, falling back to generic query');
+        this.fileInput = this.querySelector('input[type="file"]');
+      }
+      
+      if (!this.fileInput) {
+        this.log('No file input found within component, creating a fallback input');
         
-        // Check if we have all necessary data
-        if (!upCartWrapper || !this.processedImageUrl || !this.watermarkedImageUrl || 
-            !this.productVariantId || !this.processedPrintImageUrl) {
-          this.log('Missing required data for cart integration, skipping cart update');
-          return;
-        }
-        
-        try {
-          // Modify cart data to include our processed images
-          window.upcartModifyCart = (cart) => {
-            for (const lineItem of cart.items) {
-              if (lineItem.variant_id !== Number(this.productVariantId || 0)) {
-                continue;
-              }
-              
-              this.log('Adding image properties to cart item:', lineItem.title);
-              
-              // Add image URLs as line item properties
-              lineItem.properties = {
-                _processed_image_url: this.processedImageUrl,
-                _watermarked_image_url: this.watermarkedImageUrl,
-                _processed_print_image_url: this.processedPrintImageUrl
-              };
-            }
-            
-            return cart;
-          };
-          
-          // Update existing line item to include our image URLs
-          this.log('Updating cart item with image properties');
-          await fetch('/cart/change.js', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              id: lineItem.key,
-              properties: {
-                _processed_image_url: this.processedImageUrl,
-                _watermarked_image_url: this.watermarkedImageUrl,
-                _processed_print_image_url: this.processedPrintImageUrl
-              }
-            })
+        // Create fallback input
+        this.fileInput = document.createElement('input');
+        this.fileInput.type = 'file';
+        this.fileInput.accept = 'image/*';
+        this.fileInput.setAttribute('id', `file-input-wrapper__input-fallback-${this.sectionId}`);
+        this.fileInput.style.display = 'none';
+        this.appendChild(this.fileInput);
+      }
+      
+      this.log('File input setup:', this.fileInput.id);
+    }
+    
+    /**
+     * Setup UI elements
+     */
+    setupUIElements() {
+      this.log('Setting up UI elements');
+      
+      // Popup elements
+      this.popup = this.querySelector('[data-pixar-popup]');
+      this.popupContent = this.querySelector('[data-popup-content]');
+      this.processingContent = this.querySelector('[data-processing-content]');
+      this.progressBar = this.querySelector('[data-progress-bar]');
+      
+      // Buttons
+      this.openPopupButton = this.querySelector('.file-input-wrapper__popup-open-btn');
+      this.closePopupButton = this.querySelector('[data-popup-close]');
+      this.tryAgainButton = this.querySelector('[data-try-again]');
+      this.continueButton = this.querySelector('[data-continue]');
+      
+      // Result elements
+      this.resultWrapper = this.querySelector('[data-result-wrapper]');
+      this.resultHelpText = this.querySelector('[data-help-result-text]');
+      this.resultImageWrapper = this.querySelector('[data-result-image-wrapper]');
+      
+      this.log('UI elements setup complete');
+    }
+    
+    /**
+     * Setup event listeners
+     */
+    setupEventListeners() {
+      this.log('Setting up event listeners');
+      
+      // Set up file input change event
+      if (this.fileInput) {
+        // Use a debounced function to prevent multiple triggers
+        const debouncedChange = this.debounce(this.handleFileInputChange.bind(this), 300);
+        this.fileInput.addEventListener('change', debouncedChange);
+        this.log('Added debounced change listener to file input');
+      }
+      
+      // Set up popup open button click event
+      if (this.openPopupButton) {
+        this.openPopupButton.addEventListener('click', this.openPopup.bind(this));
+        this.log('Added click listener to open popup button');
+      }
+      
+      // Set up popup close button click event
+      if (this.closePopupButton) {
+        this.closePopupButton.addEventListener('click', this.closePopup.bind(this));
+        this.log('Added click listener to close popup button');
+      }
+      
+      // Set up try again button click event
+      if (this.tryAgainButton) {
+        this.tryAgainButton.addEventListener('click', this.handleTryAgain.bind(this));
+        this.log('Added click listener to try again button');
+      }
+      
+      // Set up continue button click event
+      if (this.continueButton) {
+        this.continueButton.addEventListener('click', this.handleContinue.bind(this));
+        this.log('Added click listener to continue button');
+      }
+      
+      // Set up drag and drop events
+      if (this.popup) {
+        const uploadArea = this.popup.querySelector('.file-input-wrapper__upload-area');
+        if (uploadArea) {
+          // Prevent default to allow drop
+          uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.add('dragging');
           });
           
-          // Refresh the cart to show updated images
-          window.upcartRefreshCart && window.upcartRefreshCart();
+          uploadArea.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.add('dragging');
+          });
           
-          this.log('Cart updated successfully with transformed images');
-        } catch (error) {
-          console.error('Error occurred while updating cart with transformed images:', error);
+          uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragging');
+          });
+          
+          uploadArea.addEventListener('drop', this.handleDrop.bind(this));
+          this.log('Added drag and drop listeners to upload area');
         }
-      };
+      }
       
-      this.log('UpCart listeners initialized');
-    }
-    
-    /**
-     * Debounce function to prevent multiple calls in quick succession
-     * @param {Function} fn - Function to debounce
-     * @param {number} delay - Delay in ms
-     * @returns {Function} - Debounced function
-     */
-    debounce(fn, delay) {
-      let timer = null;
-      return (...args) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-          fn.apply(this, args);
-        }, delay);
-      };
-    }
-    
-    /**
-     * Generate a unique request ID
-     * @returns {string} - A unique ID for the current request
-     */
-    generateRequestId() {
-      return 'req_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
+      this.log('Event listeners setup complete');
     }
     
     /**
@@ -255,258 +317,217 @@ class PixarTransformFileInput extends HTMLElement {
     }
     
     /**
-     * Setup file inputs
+     * Initialize up cart listeners for Pixar transformations
      */
-    setupFileInputs() {
-      this.log('Setting up file inputs');
-      
-      // Use input with specific ID instead of querying by type
-      this.fileInput = document.getElementById(`file-input-wrapper__input-${this.sectionId}`);
-      
-      if (!this.fileInput) {
-        this.log('File input not found by ID, falling back to generic query');
-        this.fileInput = this.querySelector('input[type="file"]');
-      }
-      
-      if (!this.fileInput) {
-        this.log('No file input found within component, creating a fallback input');
-        
-        // Create fallback input
-        this.fileInput = document.createElement('input');
-        this.fileInput.type = 'file';
-        this.fileInput.accept = 'image/*';
-        this.fileInput.setAttribute('id', `file-input-wrapper__input-fallback-${this.sectionId}`);
-        this.fileInput.style.display = 'none';
-        this.appendChild(this.fileInput);
-      }
-      
-      this.log('File input setup:', this.fileInput.id);
-    }
-    
-    /**
-     * Setup UI elements
-     */
-    setupUIElements() {
-      this.log('Setting up UI elements');
-      
-      // Popup elements
-      this.popup = document.querySelector('[data-pixar-popup]');
-      this.popupContent = document.querySelector('[data-popup-content]');
-      this.processingContent = document.querySelector('[data-processing-content]');
-      this.progressBar = document.querySelector('[data-progress-bar]');
-      
-      // Buttons
-      this.openPopupButton = this.querySelector('.file-input-wrapper__popup-open-btn');
-      
-      // Result elements
-      this.resultWrapper = document.querySelector('[data-result-wrapper]');
-      this.resultHelpText = document.querySelector('[data-help-result-text]');
-      this.resultImageWrapper = document.querySelector('[data-result-image-wrapper]');
-      
-      this.log('UI elements setup complete');
-    }
-    
-    /**
-     * Setup event listeners
-     */
-    setupEventListeners() {
-      this.log('Setting up event listeners');
-      
-      // Debounce function for file input change
-      const debouncedFileInputChange = this.debounce(this.handleFileInputChange.bind(this), 300);
-      
-      // File input change event
-      if (this.fileInput) {
-        this.fileInput.addEventListener('change', debouncedFileInputChange);
-        this.log('Added debounced change listener to file input');
-      }
-      
-      // Open popup button click event - ONLY open popup, do NOT trigger file upload
-      if (this.openPopupButton) {
-        // Remove any existing click listeners to be safe
-        const newButton = this.openPopupButton.cloneNode(true);
-        if (this.openPopupButton.parentNode) {
-          this.openPopupButton.parentNode.replaceChild(newButton, this.openPopupButton);
-          this.openPopupButton = newButton;
-        }
-        
-        // Add new clean listener that ONLY opens popup
-        this.openPopupButton.addEventListener('click', (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          this.openPopup();
-          this.log('Product page upload button clicked - opening popup ONLY');
-        });
-        this.log('Added clean click listener to open popup button');
-      }
-      
-      // Make sure any other product page buttons don't trigger file upload
-      const allProductButtons = document.querySelectorAll('button[id*="upload"], [class*="upload-button"]');
-      allProductButtons.forEach(button => {
-        if (button !== this.openPopupButton && !button.closest('.upload-popup')) {
-          // Skip buttons inside the popup
-          // Remove any existing listeners
-          const newButton = button.cloneNode(true);
-          if (button.parentNode) {
-            button.parentNode.replaceChild(newButton, button);
+    initUpCartListeners() {
+      this.log('Initializing UpCart listeners for Pixar transformations');
+      document.addEventListener('up:cart:add', (event) => {
+        // Only intercept for the product associated with this component
+        if (event.detail && event.detail.items && event.detail.items.length > 0) {
+          const items = event.detail.items;
+          if (items.some(item => String(item.id) === String(this.productVariantId) || String(item.id) === String(this.productId))) {
+            this.log('UpCart add event detected for this product');
+            
+            // Check if transformation is complete
+            if (this.processedImageUrl) {
+              this.log('Transformation complete, allowing cart add');
+            } else {
+              this.log('Transformation not complete, opening upload popup');
+              this.openPopup();
+              
+              // Prevent the default cart add
+              event.preventDefault();
+            }
           }
-          
-          // Add clean listener
-          newButton.addEventListener('click', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            this.openPopup();
-            this.log('Other product page button clicked - opening popup ONLY');
-          });
         }
       });
-      
-      // Close popup buttons
-      const closeButtons = document.querySelectorAll('[data-close-pixar-popup]');
-      closeButtons.forEach(button => {
-        button.addEventListener('click', this.closePopup.bind(this));
-        this.log('Added click listener to close button');
-      });
-      
-      // Add click handler for upload buttons INSIDE the popup
-      const popupUploadButtons = document.querySelectorAll('.upload-popup .file-input-label, .upload-popup [id^="upload-button-"]');
-      popupUploadButtons.forEach(button => {
-        button.addEventListener('click', () => {
-          this.log('Popup upload button clicked - triggering file selection');
-          if (this.fileInput) {
-            this.fileInput.click();
-          }
-        });
-        this.log('Added click listener to popup upload button');
-      });
-      
-      this.log('Event listeners setup complete');
+      this.log('UpCart listeners initialized');
     }
     
     /**
-     * File input change handler
-     */
-    handleFileInputChange(event) {
-      if (event.target.files && event.target.files.length > 0) {
-        const file = event.target.files[0];
-        this.log('File selected:', file.name);
-        
-        this.state.file = file;
-        this.transformImage();
-      }
-    }
-    
-    /**
-     * Open popup
+     * Open the upload popup
      */
     openPopup() {
       this.log('Opening popup');
       
       if (this.popup) {
-        this.popup.classList.add('active');
-        
-        const overlay = document.querySelector('.file-input-wrapper__overlay');
-        if (overlay) {
-          overlay.classList.add('active');
-        }
+        this.popup.style.display = 'flex';
       }
     }
     
     /**
-     * Close popup
+     * Close the upload popup
      */
     closePopup() {
       this.log('Closing popup');
       
       if (this.popup) {
-        this.popup.classList.remove('active');
-        
-        const overlay = document.querySelector('.file-input-wrapper__overlay');
-        if (overlay) {
-          overlay.classList.remove('active');
-        }
+        this.popup.style.display = 'none';
       }
     }
     
     /**
-     * Show processing UI
+     * Show the processing content
      */
-    showProcessingUI() {
-      this.log('Showing processing UI');
+    showProcessingContent() {
+      this.log('Showing processing content');
       
-      if (this.popupContent && this.processingContent) {
-        this.popupContent.style.display = 'none';
-        this.processingContent.style.display = 'block';
+      // Hide popup if it's open
+      if (this.popup) {
+        this.popup.style.display = 'none';
+      }
+      
+      // Show processing content
+      if (this.processingContent) {
+        this.processingContent.style.display = 'flex';
+      }
+      
+      // Reset progress bar
+      if (this.progressBar) {
+        this.progressBar.style.width = '0%';
+      }
+      
+      // Reset progress text
+      const percentageDisplay = this.querySelector('[data-progress-percentage]');
+      if (percentageDisplay) {
+        percentageDisplay.textContent = '0';
       }
     }
     
     /**
-     * Show content UI
+     * Hide the processing content
      */
-    showContentUI() {
-      this.log('Showing content UI');
+    hideProcessingContent() {
+      this.log('Hiding processing content');
       
-      if (this.popupContent && this.processingContent) {
+      if (this.processingContent) {
         this.processingContent.style.display = 'none';
-        this.popupContent.style.display = 'block';
       }
     }
     
     /**
-     * Update progress
+     * Show the result content
+     */
+    showResultContent(imageUrl) {
+      this.log('Showing result content with image:', imageUrl);
+      
+      // Hide processing content
+      this.hideProcessingContent();
+      
+      // Set up result image
+      if (this.resultImageWrapper) {
+        // Clear previous content
+        this.resultImageWrapper.innerHTML = '';
+        
+        // Create image element
+        const img = document.createElement('img');
+        img.src = imageUrl;
+        img.alt = 'Transformed image';
+        img.className = 'file-input-wrapper__result-image';
+        
+        // Add to wrapper
+        this.resultImageWrapper.appendChild(img);
+      }
+      
+      // Set result text
+      if (this.resultHelpText) {
+        this.resultHelpText.textContent = 'Your image has been successfully transformed into a Pixar-style portrait!';
+      }
+      
+      // Show result wrapper
+      if (this.resultWrapper) {
+        this.resultWrapper.style.display = 'flex';
+      }
+      
+      // Dispatch event for successful transformation
+      document.dispatchEvent(new CustomEvent('pixar-transform-complete', {
+        detail: {
+          imageUrl: imageUrl,
+          productId: this.productId,
+          productVariantId: this.productVariantId
+        },
+        bubbles: true
+      }));
+      
+      // Set transform complete flag in window
+      window.pixarTransformComplete = true;
+    }
+    
+    /**
+     * Hide the result content
+     */
+    hideResultContent() {
+      this.log('Hiding result content');
+      
+      if (this.resultWrapper) {
+        this.resultWrapper.style.display = 'none';
+      }
+    }
+    
+    /**
+     * Clear any previous result
+     */
+    clearResult() {
+      this.log('Clearing previous result');
+      
+      // Clear processed image URLs
+      this.processedImageUrl = null;
+      this.processedPrintImageUrl = null;
+      
+      // Clear result image wrapper
+      if (this.resultImageWrapper) {
+        this.resultImageWrapper.innerHTML = '';
+      }
+      
+      // Hide result wrapper
+      this.hideResultContent();
+    }
+    
+    /**
+     * Update UI based on current state
+     */
+    updateUI() {
+      this.log('Updating UI with state:', this.state);
+      
+      if (this.state.isUploading || this.state.isProcessing) {
+        // Show processing content
+        this.showProcessingContent();
+      } else if (this.processedImageUrl) {
+        // Show result content
+        this.showResultContent(this.processedImageUrl);
+      } else {
+        // Show upload popup
+        this.openPopup();
+      }
+    }
+    
+    /**
+     * Update progress bar
      */
     updateProgress(progress) {
-      this.log('Updating progress:', progress);
+      // Ensure progress is between 0 and 100
+      const clampedProgress = Math.min(100, Math.max(0, progress));
       
-      this.state.progress = progress;
+      // Assign to state
+      this.state.progress = clampedProgress;
       
-      // Update the simplified progress bar
+      // Compute visual progress (smoother animation)
+      let visualProgress = clampedProgress;
+      
+      // If at 100%, maintain it, otherwise smooth out the progress
+      if (clampedProgress < 100) {
+        // Apply easing - start quickly, slow down as we approach 100%
+        visualProgress = clampedProgress * 0.8; // Cap at 80% until truly complete
+      }
+      
+      // Update progress bar
       if (this.progressBar) {
-        // Calculate the visual progress to complete in ~1 minute regardless of actual process time
-        // We'll use a non-linear curve to make it look more natural
-        const now = Date.now();
-        
-        // If this is the first progress update, save the start time
-        if (!this.progressStartTime) {
-          this.progressStartTime = now;
-        }
-        
-        // Calculate elapsed time in seconds
-        const elapsedSeconds = (now - this.progressStartTime) / 1000;
-        
-        // Target completing the visual progress bar in about 60 seconds
-        const targetTime = 60; // seconds
-        
-        // Calculate visual progress (non-linear, to give a feeling of progress)
-        // Use the square root function for a more natural curve
-        let visualProgress;
-        
-        if (progress < 100) {
-          // For in-progress, use time-based with a cap based on actual progress
-          visualProgress = Math.min(
-            // Cap at slightly less than actual progress to prevent showing ahead of actual state
-            progress - 5, 
-            // Time-based calculation: non-linear curve that approaches 100% as time reaches target
-            Math.min(95, Math.round(100 * Math.sqrt(elapsedSeconds / targetTime)))
-          );
-          
-          // Keep progress at least at 10% after starting
-          visualProgress = Math.max(10, visualProgress);
-        } else {
-          // For completed state, show 100%
-          visualProgress = 100;
-          
-          // Reset the start time for the next upload
-          this.progressStartTime = null;
-        }
-        
-        // Update the progress bar width
         this.progressBar.style.width = `${visualProgress}%`;
         
         // Update any percentage text displays
-        const percentageDisplay = document.querySelector('[data-progress-percentage]');
+        const percentageDisplay = this.querySelector('[data-progress-percentage]');
         if (percentageDisplay) {
-          percentageDisplay.textContent = `${visualProgress}%`;
+          percentageDisplay.textContent = `${Math.round(visualProgress)}`;
         }
       }
       
@@ -525,34 +546,43 @@ class PixarTransformFileInput extends HTMLElement {
     }
     
     /**
-     * Show error
+     * Handle Try Again button click
      */
-    showError(message) {
-      this.log('Showing error:', message);
+    handleTryAgain() {
+      this.log('Try Again button clicked');
       
-      this.state.error = message;
+      // Clear previous result
+      this.clearResult();
       
-      // Show error in help text
-      const helpText = document.getElementById('upload-popup__help-text');
-      if (helpText) {
-        helpText.textContent = message;
-        helpText.style.display = 'block';
+      // Reset state
+      this.state.file = null;
+      this.state.isUploading = false;
+      this.state.isProcessing = false;
+      this.state.progress = 0;
+      this.state.jobId = null;
+      this.state.error = null;
+      
+      // Show upload popup
+      this.openPopup();
+    }
+    
+    /**
+     * Handle Continue button click
+     */
+    handleContinue() {
+      this.log('Continue button clicked');
+      
+      // Hide result content
+      this.hideResultContent();
+      
+      // Trigger form submission
+      const form = this.closest('form');
+      if (form) {
+        this.log('Submitting form');
+        form.submit();
+      } else {
+        this.log('No form found to submit');
       }
-      
-      // Show content UI if we're in processing state
-      this.showContentUI();
-      
-      // Reset request flags
-      this.requestInProgress = false;
-      this.currentRequestId = null;
-      
-      // Dispatch error event
-      this.dispatchEvent(new CustomEvent('pixar-transform-error', {
-        detail: {
-          message: message
-        },
-        bubbles: true
-      }));
     }
     
     /**
@@ -591,240 +621,32 @@ class PixarTransformFileInput extends HTMLElement {
     }
     
     /**
-     * Show result image
+     * Debounce helper to prevent multiple function calls
      */
-    showResult(imageUrl) {
-      this.log('Showing result image:', imageUrl);
-      
-      // Close popup
-      this.closePopup();
-      
-      // Create and show result image
-      if (this.resultImageWrapper) {
-        this.resultImageWrapper.innerHTML = '';
-        
-        const img = document.createElement('img');
-        img.src = imageUrl;
-        img.alt = 'Transformed image';
-        img.className = 'result-image';
-        img.style.maxWidth = '100%';
-        
-        this.resultImageWrapper.appendChild(img);
-        
-        // Show result wrapper
-        if (this.resultWrapper) {
-          this.resultWrapper.style.display = 'block';
-          
-          // Hide open popup button
-          if (this.openPopupButton) {
-            this.openPopupButton.style.display = 'none';
-          }
-        }
-      }
-      
-      // Reset request flags
-      this.requestInProgress = false;
-      this.currentRequestId = null;
-      
-      // Dispatch complete event
-      this.dispatchEvent(new CustomEvent('pixar-transform-complete', {
-        detail: {
-          imageUrl: imageUrl
-        },
-        bubbles: true
-      }));
-      
-      this.log('Result image shown');
-    }
-
-    /**
-     * This is the main transformation method that handles the API call
-     */
-    async transformImage() {
-      // Get file from file input
-      if (!this.state.file) {
-        this.log('No file selected');
-        return;
-      }
-      
-      // Check if a request is already in progress
-      if (this.requestInProgress) {
-        this.log('Request already in progress, ignoring');
-        return;
-      }
-      
-      // Check for rate limiting
-      const now = Date.now();
-      if (now - this.lastRequestTime < this.requestCooldown) {
-        this.log('Request rate limited, ignoring request');
-        return;
-      }
-      
-      this.lastRequestTime = now;
-      this.requestInProgress = true;
-      this.state.isUploading = true;
-      this.state.isProcessing = false;
-      this.state.progress = 0;
-      this.state.error = null;
-      
-      // Clear previous results
-      this.clearResult();
-      
-      // Update UI to show upload in progress
-      this.updateUI();
-      
-      try {
-        // Create API client - use UnifiedApiClient
-        const ApiClient = window.UnifiedApiClient;
-        if (!ApiClient) {
-          throw new Error('UnifiedApiClient not found! Make sure unified-api-client.js is loaded before this component.');
-        }
-  
-        // Initialize the API client with configuration
-        const apiClient = new ApiClient({
-          baseUrl: window.pixarApiUrl || window.unifiedConfig?.api?.current()?.baseUrl,
-          mockMode: window.mockMode || false
-        });
-  
-        // Get watermark configuration
-        const watermarkConfig = window.watermarkImage || {
-          url: 'https://cdn.shopify.com/s/files/1/0626/3416/4430/files/letzteshemd-watermark.png',
-          width: 200,
-          height: 200,
-          spaceBetweenWatermarks: 100
+    debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
         };
         
-        // Transform image with progress reporting
-        this.log('Submitting image for transformation', {
-          fileSize: this.state.file.size,
-          fileType: this.state.file.type,
-          fileName: this.state.file.name
-        });
-        
-        // Use transform method with progress callback
-        const result = await apiClient.transform({
-          sourceImage: this.state.file,
-          watermark: watermarkConfig
-        }, (progress) => {
-          this.log(`Progress update: ${progress}%`);
-          this.state.progress = progress;
-          this.updateUI();
-        });
-        
-        this.log('Transformation completed successfully:', result);
-        
-        // Store the job ID
-        this.state.jobId = result.jobId;
-        
-        // Store URLs for cart integration
-        this.processedImageUrl = result.processedImageUrl;
-        this.processedPrintImageUrl = result.processedPrintImageUrl;
-        this.watermarkedImageUrl = result.watermarkedImageUrlToShow || result.watermarkedOriginalImageUrl;
-        
-        // Update UI state
-        this.state.isUploading = false;
-        this.state.isProcessing = false;
-        this.state.progress = 100;
-        
-        // Append the result to the component
-        this.appendResult(result.watermarkedImageUrlToShow || result.watermarkedOriginalImageUrl || result.imageUrl);
-        
-        // Update UI
-        this.updateUI();
-        
-        // Fire success event
-        this.dispatchEvent(new CustomEvent('pixar-transform-success', {
-          bubbles: true,
-          detail: {
-            result: result,
-            processedImageUrl: this.processedImageUrl,
-            processedPrintImageUrl: this.processedPrintImageUrl,
-            watermarkedImageUrl: this.watermarkedImageUrl,
-            productVariantId: this.productVariantId
-          }
-        }));
-      } catch (error) {
-        this.log('Error during transformation:', error);
-        
-        // Show error
-        this.showError(error.message || 'Transformation failed');
-        
-        // Update state
-        this.state.isUploading = false;
-        this.state.isProcessing = false;
-        
-        // Fire error event
-        this.dispatchEvent(new CustomEvent('pixar-transform-error', {
-          bubbles: true,
-          detail: {
-            error: error
-          }
-        }));
-      } finally {
-        // Reset request state
-        this.requestInProgress = false;
-      }
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
     }
-
+    
     /**
-     * Show a direct preview of the selected image for testing/fallback
+     * File input change handler
      */
-    showDirectPreview(file) {
-      this.log('Showing direct preview of file (fallback method):', file.name);
-      
-      // Create a FileReader
-      const reader = new FileReader();
-      
-      reader.onload = (event) => {
-        // Create preview in result area
-        if (this.resultImageWrapper) {
-          this.resultImageWrapper.innerHTML = '';
-          
-          const img = document.createElement('img');
-          img.src = event.target.result;
-          img.alt = 'Selected image';
-          img.style.maxWidth = '100%';
-          
-          this.resultImageWrapper.appendChild(img);
-          
-          // Show result wrapper
-          if (this.resultWrapper) {
-            this.resultWrapper.style.display = 'block';
-            
-            // Hide open popup button
-            if (this.openPopupButton) {
-              this.openPopupButton.style.display = 'none';
-            }
-          }
-          
-          // Close the popup
-          this.closePopup();
-          
-          // Update state
-          this.state.isUploading = false;
-          this.state.isProcessing = false;
-          this.state.progress = 100;
-          
-          // Reset request flags
-          this.requestInProgress = false;
-          this.currentRequestId = null;
-          
-          // Dispatch complete event for compatibility
-          this.dispatchEvent(new CustomEvent('pixar-transform-complete', {
-            detail: {
-              imageUrl: event.target.result
-            },
-            bubbles: true
-          }));
-        }
-      };
-      
-      reader.onerror = (event) => {
-        this.log('FileReader error:', event.target.error);
-        this.showError('Fehler beim Lesen der Datei. Bitte versuchen Sie es erneut.');
-      };
-      
-      reader.readAsDataURL(file);
+    handleFileInputChange(event) {
+      if (event.target.files && event.target.files.length > 0) {
+        const file = event.target.files[0];
+        this.log('File selected:', file.name);
+        
+        this.state.file = file;
+        this.transformImage();
+      }
     }
     
     /**
@@ -881,6 +703,215 @@ class PixarTransformFileInput extends HTMLElement {
         console.error('[PixarTransformFileInput] Error processing base64 image:', error);
         this.showError('Error processing image: ' + error.message);
       }
+    }
+    
+    /**
+     * This is the main transformation method that handles the API call
+     */
+    async transformImage() {
+      // Get file from file input
+      if (!this.state.file) {
+        this.log('No file selected');
+        return;
+      }
+      
+      // Check if a request is already in progress
+      if (this.requestInProgress) {
+        this.log('Request already in progress, ignoring');
+        return;
+      }
+      
+      // Check for rate limiting
+      const now = Date.now();
+      if (now - this.lastRequestTime < this.requestCooldown) {
+        this.log('Request rate limited, ignoring request');
+        return;
+      }
+      
+      this.lastRequestTime = now;
+      this.requestInProgress = true;
+      this.state.isUploading = true;
+      this.state.isProcessing = false;
+      this.state.progress = 0;
+      this.state.error = null;
+      
+      // Clear previous results
+      this.clearResult();
+      
+      // Update UI to show upload in progress
+      this.updateUI();
+      
+      try {
+        // Use image processing manager if available
+        if (window.imageProcessingManager) {
+          this.log('Using ImageProcessingManager for processing');
+          this.useImageProcessingManager();
+          return;
+        }
+        
+        // Otherwise use unified API client
+        if (window.unifiedApiClient) {
+          this.log('Using UnifiedApiClient for processing');
+          await this.useUnifiedApiClient();
+          return;
+        }
+        
+        // Both methods unavailable
+        throw new Error('No processing method available');
+        
+      } catch (error) {
+        console.error('[PixarTransformFileInput] Transform error:', error);
+        this.showError('Error processing image: ' + error.message);
+      } finally {
+        this.requestInProgress = false;
+      }
+    }
+    
+    /**
+     * Use the Image Processing Manager for transformation
+     */
+    useImageProcessingManager() {
+      this.log('Delegating to ImageProcessingManager');
+      
+      // Create a fake event to pass to the manager
+      const fakeEvent = {
+        target: {
+          files: [this.state.file]
+        }
+      };
+      
+      // Call the manager's file selection handler
+      window.imageProcessingManager.handleFileSelected(fakeEvent);
+      
+      // The manager will handle everything from here
+      this.requestInProgress = false;
+    }
+    
+    /**
+     * Use the Unified API Client for transformation
+     */
+    async useUnifiedApiClient() {
+      this.log('Using UnifiedApiClient for transformation');
+      
+      try {
+        // Get the API client
+        const apiClient = window.unifiedApiClient;
+        
+        if (!apiClient) {
+          throw new Error('Unified API Client not available');
+        }
+        
+        // Update progress to show upload starting
+        this.updateProgress(10);
+        
+        // Prepare form data for upload
+        const formData = new FormData();
+        formData.append('file', this.state.file);
+        formData.append('productId', this.productId);
+        formData.append('variantId', this.productVariantId);
+        if (this.customerId) {
+          formData.append('customerId', this.customerId);
+        }
+        
+        // Start the upload
+        this.log('Starting upload via UnifiedApiClient');
+        const uploadResponse = await apiClient.uploadImage(formData);
+        
+        if (!uploadResponse || !uploadResponse.success) {
+          throw new Error('Upload failed: ' + (uploadResponse?.message || 'Unknown error'));
+        }
+        
+        this.log('Upload successful:', uploadResponse);
+        
+        // Update progress to show processing starting
+        this.updateProgress(30);
+        this.state.isUploading = false;
+        this.state.isProcessing = true;
+        
+        // Get job ID from response
+        this.state.jobId = uploadResponse.jobId;
+        
+        if (!this.state.jobId) {
+          throw new Error('No job ID returned from upload');
+        }
+        
+        // Poll for job completion
+        let isComplete = false;
+        let attempts = 0;
+        const maxAttempts = 30; // Maximum polling attempts
+        
+        while (!isComplete && attempts < maxAttempts) {
+          attempts++;
+          
+          // Wait before polling again
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          // Get job status
+          const statusResponse = await apiClient.getTransformStatus(this.state.jobId);
+          
+          if (!statusResponse || !statusResponse.success) {
+            throw new Error('Status check failed: ' + (statusResponse?.message || 'Unknown error'));
+          }
+          
+          this.log('Status check result:', statusResponse);
+          
+          // Update progress based on status
+          const jobProgress = statusResponse.progress || 0;
+          this.updateProgress(30 + (jobProgress * 0.6)); // Scale to 30-90%
+          
+          // Check if job is complete
+          if (statusResponse.status === 'completed' && statusResponse.imageUrl) {
+            isComplete = true;
+            this.processedImageUrl = statusResponse.imageUrl;
+            this.processedPrintImageUrl = statusResponse.printImageUrl || null;
+            
+            // Update progress to show completion
+            this.updateProgress(100);
+            
+            // Show the result
+            this.state.isProcessing = false;
+            this.showResultContent(this.processedImageUrl);
+            break;
+          }
+          
+          // Check for errors
+          if (statusResponse.status === 'failed') {
+            throw new Error('Processing failed: ' + (statusResponse.message || 'Unknown error'));
+          }
+        }
+        
+        // Check if we exceeded max attempts
+        if (!isComplete) {
+          throw new Error('Processing timed out after ' + maxAttempts + ' attempts');
+        }
+        
+      } catch (error) {
+        console.error('[PixarTransformFileInput] UnifiedApiClient error:', error);
+        this.showError('Error processing image: ' + error.message);
+      } finally {
+        this.requestInProgress = false;
+      }
+    }
+    
+    /**
+     * Show an error message
+     */
+    showError(message) {
+      this.log('Showing error:', message);
+      
+      // Set error in state
+      this.state.error = message;
+      this.state.isUploading = false;
+      this.state.isProcessing = false;
+      
+      // Hide processing content
+      this.hideProcessingContent();
+      
+      // Show error message
+      alert('Error: ' + message);
+      
+      // Reopen popup
+      this.openPopup();
     }
   }
 

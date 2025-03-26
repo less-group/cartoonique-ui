@@ -1018,17 +1018,90 @@
   data-print-image-url="{{ print_image_url }}" 
   data-color="{{ current_product_color | strip | downcase }}">
   
-  <!-- File input -->
-  <input type="file" accept="image/*" id="{{ file_input_id }}" name="inputFile-{{ section_id }}" class="pixar-file-input" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; opacity: 0; visibility: hidden;">
-
-  <!-- Open popup button with main product call-to-action -->
-  {%- render 'button', id: open_popup_button_id, class: 'file-input-wrapper__popup-open-btn w-full', content: 'Bild hochladen', type: 'button', size: 'xl', disabled: false, subdued: false -%}
-
-  <!-- Result display area -->
-  <div data-result-wrapper class="file-input-wrapper__result result-wrapper" style="display: none;">
-    <div data-help-result-text class="result-wrapper__help-text"></div>
-    <div data-result-image-wrapper class="result-wrapper__image-wrapper"></div>
+  <!-- Popup for file upload -->
+  <div class="file-input-wrapper__popup" data-pixar-popup style="display: none;">
+    <div class="file-input-wrapper__popup-content" data-popup-content>
+      <div class="file-input-wrapper__popup-header">
+        <h3 class="file-input-wrapper__popup-title">Upload Your Photo</h3>
+        <button class="file-input-wrapper__popup-close-btn" data-popup-close>✕</button>
+      </div>
+      <div class="file-input-wrapper__popup-body">
+        <p class="file-input-wrapper__popup-text">
+          Select an image to transform into a Pixar-style portrait.
+          For best results, choose a clear, well-lit photo showing your face.
+        </p>
+        <div class="file-input-wrapper__upload-area">
+          <input 
+            type="file" 
+            id="file-input-wrapper__input-{{ section_id }}" 
+            class="file-input-wrapper__file-input" 
+            accept="image/*"
+            aria-label="Upload image file" 
+          />
+          <label for="file-input-wrapper__input-{{ section_id }}" class="file-input-wrapper__upload-label">
+            <span class="file-input-wrapper__upload-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M17 8L12 3L7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 3V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="file-input-wrapper__upload-text">Select File</span>
+          </label>
+          <p class="file-input-wrapper__help-text">Or drag and drop your file here</p>
+        </div>
+      </div>
+    </div>
   </div>
+  
+  <!-- Processing content -->
+  <div class="file-input-wrapper__processing" data-processing-content style="display: none;">
+    <div class="file-input-wrapper__processing-content">
+      <h3 class="file-input-wrapper__processing-title">Transforming Your Image</h3>
+      <p class="file-input-wrapper__processing-text">
+        Please wait while we transform your photo into a Pixar-style portrait.
+        This process may take a moment.
+      </p>
+      <div class="file-input-wrapper__progress-container">
+        <div class="file-input-wrapper__progress-bar" data-progress-bar style="width: 0%;"></div>
+      </div>
+      <p class="file-input-wrapper__progress-text">
+        <span data-progress-percentage>0</span>% complete
+      </p>
+    </div>
+  </div>
+  
+  <!-- Result display -->
+  <div class="file-input-wrapper__result" data-result-wrapper style="display: none;">
+    <div class="file-input-wrapper__result-content">
+      <h3 class="file-input-wrapper__result-title">Transformation Complete!</h3>
+      <p class="file-input-wrapper__result-text" data-help-result-text>
+        Your image has been successfully transformed.
+      </p>
+      <div class="file-input-wrapper__result-image-container" data-result-image-wrapper>
+        <!-- Transformed image will be inserted here -->
+      </div>
+      <div class="file-input-wrapper__result-actions">
+        <button class="file-input-wrapper__result-action-btn file-input-wrapper__try-again-btn" data-try-again>
+          Try Another Image
+        </button>
+        <button class="file-input-wrapper__result-action-btn file-input-wrapper__continue-btn" data-continue>
+          Continue
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Button to open popup -->
+  <button 
+    id="{{ open_popup_button_id }}" 
+    class="file-input-wrapper__popup-open-btn" 
+    aria-label="Upload image"
+    aria-haspopup="dialog"
+    style="display: none;"
+  >
+    Upload Your Photo
+  </button>
 </pixar-transform-file-input>
 
 <!-- Simple popup styling -->
