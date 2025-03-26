@@ -107,55 +107,55 @@
       {%- endif -%}
     </buy-buttons>
 
-    {% if product.template_suffix contains 'with-faceswap' %}
-      <!-- Debug message to confirm the template suffix match -->
-      <div style="display: none; margin: 10px 0; padding: 5px; border: 1px dashed blue; font-size: 10px; color: blue;" id="debug-template-suffix">
-        Template suffix match: {{ product.template_suffix }}
-      </div>
-      {% if settings.enable_pixar_transform %}
-        {% render 'pixar-transform-file-input', product: product, section_id: section.id, customer: customer %}
-      {% else %}
-        {% render 'face-swap-file-input', product: product, section_id: section.id, customer: customer %}
-      {% endif %}
-      
-      <!-- Direct upload button that works with this theme -->
-      <div style="margin-top: 20px; width: 100%;">
-        <button id="theme-upload-button" style="background-color: #4a7dbd; color: white; border: none; border-radius: 4px; padding: 15px 25px; font-size: 16px; font-weight: bold; width: 100%; cursor: pointer;">Upload Your Photo</button>
-      </div>
-      <script>
-        document.addEventListener('DOMContentLoaded', function() {
-          var themeButton = document.getElementById('theme-upload-button');
-          if (themeButton) {
-            themeButton.addEventListener('click', function() {
-              var hiddenButton = document.querySelector('.file-input-wrapper__popup-open-btn');
-              if (hiddenButton) {
-                hiddenButton.click();
-              } else {
-                console.error('Original upload button not found');
-                // Create a temporary file input as fallback
-                var input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'image/*';
-                input.click();
-                
-                input.onchange = function(e) {
-                  if (input.files && input.files[0]) {
-                    // Try to find the custom component
-                    var component = document.querySelector('pixar-transform-file-input') || 
-                                   document.querySelector('face-swap-file-input-wrapper');
-                    if (component) {
-                      // Try to manually set the file
-                      if (typeof component.handleFileSelect === 'function') {
-                        component.handleFileSelect({ target: { files: input.files } });
-                      }
+    <!-- Debug message to confirm the template suffix match -->
+    <div style="margin: 10px 0; padding: 5px; border: 1px dashed blue; font-size: 10px; color: blue;" id="debug-template-suffix">
+      Product template suffix: {{ product.template_suffix }}
+    </div>
+    
+    <!-- Rendering pixar transform components for all products (for testing) -->
+    {% if settings.enable_pixar_transform %}
+      {% render 'pixar-transform-file-input', product: product, section_id: section.id, customer: customer %}
+    {% else %}
+      {% render 'face-swap-file-input', product: product, section_id: section.id, customer: customer %}
+    {% endif %}
+    
+    <!-- Direct upload button that works with this theme -->
+    <div style="margin-top: 20px; width: 100%;">
+      <button id="theme-upload-button" style="background-color: #4a7dbd; color: white; border: none; border-radius: 4px; padding: 15px 25px; font-size: 16px; font-weight: bold; width: 100%; cursor: pointer;">Upload Your Photo</button>
+    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var themeButton = document.getElementById('theme-upload-button');
+        if (themeButton) {
+          themeButton.addEventListener('click', function() {
+            var hiddenButton = document.querySelector('.file-input-wrapper__popup-open-btn');
+            if (hiddenButton) {
+              hiddenButton.click();
+            } else {
+              console.error('Original upload button not found');
+              // Create a temporary file input as fallback
+              var input = document.createElement('input');
+              input.type = 'file';
+              input.accept = 'image/*';
+              input.click();
+              
+              input.onchange = function(e) {
+                if (input.files && input.files[0]) {
+                  // Try to find the custom component
+                  var component = document.querySelector('pixar-transform-file-input') || 
+                                document.querySelector('face-swap-file-input-wrapper');
+                  if (component) {
+                    // Try to manually set the file
+                    if (typeof component.handleFileSelect === 'function') {
+                      component.handleFileSelect({ target: { files: input.files } });
                     }
                   }
-                };
-              }
-            });
-          }
-        });
-      </script>
-    {% endif %}
+                }
+              };
+            }
+          });
+        }
+      });
+    </script>
   </div>
 {%- endform -%}
