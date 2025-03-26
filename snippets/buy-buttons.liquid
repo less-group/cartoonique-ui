@@ -271,6 +271,29 @@
             if (debugInfo) debugInfo.innerHTML = '<p>Image upload triggered</p>';
             console.log('🔄 Image upload triggered');
             
+            // First check if we can find the pixarComponent
+            var pixarComponent = document.querySelector('pixar-transform-file-input') || 
+                                document.querySelector('face-swap-file-input-wrapper');
+            
+            if (pixarComponent && typeof pixarComponent.openPopup === 'function') {
+              // Use the component's openPopup method to show instructions first
+              console.log('🔄 Using component openPopup method to show instructions');
+              if (debugInfo) debugInfo.innerHTML += '<p>Opening instructions popup</p>';
+              pixarComponent.openPopup();
+              return;
+            }
+            
+            // If instructions popup is available directly, try to show it
+            var instructionsPopup = document.getElementById('pixar-instructions-popup');
+            if (instructionsPopup) {
+              console.log('🔄 Found instructions popup, displaying it');
+              if (debugInfo) debugInfo.innerHTML += '<p>Opening instructions popup directly</p>';
+              instructionsPopup.style.display = 'block';
+              document.body.style.overflow = 'hidden';
+              return;
+            }
+            
+            // Fallback to original behavior if no popup methods are available
             // Try to find existing file input
             var fileInput = findFileInput();
             

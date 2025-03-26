@@ -415,6 +415,19 @@
       let currentJobId = null; // Store the RunPod job ID
       
       if (fileInput) {
+        // Prevent direct clicks on the file input from bypassing the instructions popup
+        fileInput.addEventListener('click', function(e) {
+          // If the instructions popup isn't showing, prevent the default file dialog
+          // and show the instructions popup instead
+          if (document.getElementById('pixar-instructions-popup').style.display !== 'block') {
+            e.preventDefault();
+            console.log('PIXAR-ENHANCED: Preventing direct file input click, showing instructions first');
+            document.getElementById('pixar-instructions-popup').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            return false;
+          }
+        });
+        
         fileInput.addEventListener('change', function(e) {
           if (isFileSelectionInProgress) return;
           
