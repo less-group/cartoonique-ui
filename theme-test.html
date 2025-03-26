@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Theme - Pixar Test</title>
+  <link rel="stylesheet" href="assets/pixar-transform-file-input.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      color: #333333;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      background-color: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    
+    h1 {
+      color: #4a7dbd;
+      margin-bottom: 10px;
+    }
+    
+    .component-container {
+      border: 1px solid #e7e7e7;
+      padding: 30px;
+      border-radius: 8px;
+      background-color: #fff;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      margin-bottom: 30px;
+    }
+    
+    .component-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #4a7dbd;
+    }
+    
+    .test-button {
+      background-color: #4a7dbd;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    
+    .test-button:hover {
+      background-color: #3a6ca9;
+    }
+    
+    .theme-info {
+      background-color: #f0f5ff;
+      border-left: 4px solid #4a7dbd;
+      padding: 15px;
+      margin-top: 30px;
+    }
+    
+    .color-samples {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .color-sample {
+      width: 100px;
+      height: 50px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>New Theme - Pixar Transformation Test</h1>
+    <p>This page tests the Pixar transformation component with the new theme styling</p>
+  </div>
+  
+  <div class="component-container">
+    <div class="component-title">Pixar Transform Component</div>
+    <p>The button below should have the new theme's blue color (#4a7dbd):</p>
+    
+    <!-- Component markup here will be loaded via JavaScript -->
+    <div id="pixar-component-container"></div>
+    
+    <button class="test-button" id="load-component">Load Pixar Component</button>
+  </div>
+  
+  <div class="theme-info">
+    <h2>Theme Information</h2>
+    <p>The new theme uses a modern blue-grey color palette with the following key colors:</p>
+    
+    <div class="color-samples">
+      <div class="color-sample" style="background-color: #4a7dbd">#4a7dbd</div>
+      <div class="color-sample" style="background-color: #3a6ca9">#3a6ca9</div>
+      <div class="color-sample" style="background-color: #333333; color: white;">#333333</div>
+    </div>
+  </div>
+  
+  <script>
+    // Load the component dynamically
+    document.getElementById('load-component').addEventListener('click', function() {
+      const componentContainer = document.getElementById('pixar-component-container');
+      
+      // Create the component element
+      const pixarComponent = document.createElement('div');
+      pixarComponent.className = 'file-input-wrapper';
+      
+      // Add button with class that has styling
+      const button = document.createElement('button');
+      button.className = 'file-input-wrapper__popup-open-btn';
+      button.textContent = 'Upload Photo';
+      
+      // Add to the component
+      pixarComponent.appendChild(button);
+      
+      // Add to container
+      componentContainer.innerHTML = '';
+      componentContainer.appendChild(pixarComponent);
+      
+      // Show success message
+      const message = document.createElement('p');
+      message.textContent = 'Component loaded! The button should have the new theme blue color.';
+      message.style.marginTop = '20px';
+      message.style.color = '#4a7dbd';
+      message.style.fontWeight = 'bold';
+      componentContainer.appendChild(message);
+      
+      // Hide the load button
+      this.style.display = 'none';
+    });
+  </script>
+</body>
+</html> 

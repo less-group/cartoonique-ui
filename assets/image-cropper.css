@@ -165,13 +165,13 @@
 }
 
 .image-cropper-apply {
-  background-color: #4CAF50;
+  background-color: #4a7dbd;
   color: white;
   border: none;
 }
 
 .image-cropper-apply:hover {
-  background-color: #3d8b40;
+  background-color: #3a6ca9;
 }
 
 .image-cropper-cancel {
@@ -276,4 +276,56 @@
   .image-cropper-area {
     max-height: 50vh;
   }
+}
+
+.cropper-container {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.image-crop-button {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #4a7dbd;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.image-crop-button:hover {
+  background-color: #3a6ca9;
+}
+
+.cropper-view-box {
+  outline: 1px solid #4a7dbd;
+  outline-color: rgba(74, 125, 189, 0.75);
+}
+
+.cropper-point.point-se {
+  cursor: se-resize;
+  background-color: #4a7dbd;
+  border-radius: 50%;
+}
+
+.cropper-point.point-sw {
+  cursor: sw-resize;
+  background-color: #4a7dbd;
+  border-radius: 50%;
+}
+
+.cropper-point.point-nw {
+  cursor: nw-resize;
+  background-color: #4a7dbd;
+  border-radius: 50%;
+}
+
+.cropper-point.point-ne {
+  cursor: ne-resize;
+  background-color: #4a7dbd;
+  border-radius: 50%;
 } 

@@ -97,7 +97,7 @@ if (typeof window.unifiedConfig === 'undefined') {
       showProgressBar: true, // Show progress bar during transformations
       progressBar: {
         containerBackgroundColor: '#f3f3f3',
-        backgroundColor: '#4caf50',
+        backgroundColor: '#4a7dbd',
         textColor: '#fff',
         speed: 1
       },
