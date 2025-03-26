@@ -49,7 +49,12 @@
     {%- if product.template_suffix contains 'pre-order' -%}
       {%- capture button_content -%}{{ 'product.general.pre_order_button' | t }}{%- endcapture -%}
     {%- else -%}
-      {%- capture button_content -%}{{ 'product.general.add_to_cart_button' | t }}{%- endcapture -%}
+      {%- comment -%}Change text to reflect image upload for face swap products{%- endcomment -%}
+      {%- if product.template_suffix contains 'with-faceswap' -%}
+        {%- capture button_content -%}UPLOAD IMAGE & ADD TO CART{%- endcapture -%}
+      {%- else -%}
+        {%- capture button_content -%}{{ 'product.general.add_to_cart_button' | t }}{%- endcapture -%}
+      {%- endif -%}
     {%- endif -%}
   {%- else -%}
     {%- capture button_content -%}{{ 'product.general.sold_out_button' | t }}{%- endcapture -%}
@@ -84,7 +89,17 @@
     {%- endif -%}
 
     <buy-buttons class="buy-buttons {% if show_payment_button %}buy-buttons--multiple{% endif %}" template="{{ product.template_suffix | escape }}" form="{{ form_id }}">
-      {%- render 'button', content: button_content, type: 'submit', size: button_size, disabled: button_disabled, secondary: show_payment_button, subdued: button_disabled, background: atc_button_background, text_color: atc_button_text_color -%}
+      <button 
+        id="atc-button"
+        type="submit" 
+        class="button {% if show_payment_button %}button--secondary{% endif %} {% if button_disabled %}button--disabled{% endif %} button--{{ button_size }}"
+        {% if button_disabled %}disabled{% endif %}
+        {% if atc_button_background != blank and atc_button_background != 'rgba(0,0,0,0)' %}
+          style="--button-background: {{ atc_button_background.rgb }}; --button-text-color: {{ atc_button_text_color.rgb }};"
+        {% endif %}
+      >
+        {{ button_content }}
+      </button>
 
       {%- if show_payment_button -%}
         {{- form | payment_button -}}
@@ -107,348 +122,232 @@
       {%- endif -%}
     </buy-buttons>
 
-    <!-- Force display pixar/faceswap components for all products during debug -->
-    <div id="pixar-upload-container" style="margin-top: 20px; width: 100%;">
-      <!-- Create a direct upload button -->
-      <button id="direct-upload-button" 
-        style="background-color: #4a7dbd; color: white; border: none; border-radius: 4px; padding: 15px 25px; font-size: 16px; font-weight: bold; width: 100%; cursor: pointer; display: block !important; visibility: visible !important; opacity: 1 !important;">
-        UPLOAD YOUR PHOTO
-      </button>
-      
-      <!-- Component debug area -->
-      <div id="pixar-component-debug" style="margin-top: 10px; border: 1px dashed #ccc; padding: 10px; font-size: 11px; display: none;">
-        <p>Debugging information:</p>
-        <div id="debug-info-content"></div>
-      </div>
-    </div>
-
-    <!-- Explicitly render component with high visibility -->
-    <div id="pixar-component-container" style="display: block !important; margin: 20px 0;">
+    <!-- Hidden area for pixar components and debug info -->
+    <div id="pixar-component-area" style="height: 0; overflow: hidden; position: absolute; visibility: hidden;">
       {% if settings.enable_pixar_transform %}
         {% render 'pixar-transform-file-input', product: product, section_id: section.id, customer: customer %}
       {% else %}
         {% render 'face-swap-file-input', product: product, section_id: section.id, customer: customer %}
       {% endif %}
+      
+      <div id="pixar-component-debug" style="display: none;">
+        <div id="debug-info-content"></div>
+      </div>
     </div>
 
     <script>
-      // Force component visibility and setup on DOMContentLoaded
+      // Initialize processing state variable
+      window.imageUploaded = false;
+      
       document.addEventListener('DOMContentLoaded', function() {
-        console.log('⭐ Pixar direct initialization script loaded');
+        console.log('🔄 Buy button handler initialized');
         
-        // Show debug area during development
-        document.getElementById('pixar-component-debug').style.display = 'block';
+        // Set up debugging
         var debugInfo = document.getElementById('debug-info-content');
-        debugInfo.innerHTML = '<p>Pixar component initialization started...</p>';
+        if (debugInfo) debugInfo.innerHTML = '<p>Buy button handler initialized</p>';
         
-        // Register direct global handlers to ensure ImageProcessingManager can find our components
-        window.pixarComponentReady = false;
-        window.pixarComponent = null;
-        
-        // Set up the direct upload button
-        var directButton = document.getElementById('direct-upload-button');
-        if (directButton) {
-          directButton.addEventListener('click', function() {
-            console.log('⭐ Direct upload button clicked');
-            uploadPhoto();
-          });
-        }
-        
-        // Define a global pixar component finder function with expanded search
-        window.findPixarComponent = function() {
-          var components = [
-            document.querySelector('pixar-transform-file-input'),
-            document.querySelector('face-swap-file-input-wrapper'),
-            document.querySelector('#pixar-component-container pixar-transform-file-input'),
-            document.querySelector('#pixar-component-container face-swap-file-input-wrapper'),
-            document.querySelector('[data-pixar-component]'),
-            document.querySelector('.file-input-wrapper')
-          ];
+        // Register image processing handlers
+        function initializeImageProcessing() {
+          // Create global references
+          window.pixarComponentReady = false;
+          window.pixarComponent = findComponent();
           
-          // Return first non-null component
-          for (var i = 0; i < components.length; i++) {
-            if (components[i]) {
-              // Store in global reference for other scripts to find
-              window.pixarComponent = components[i];
-              window.pixarComponentReady = true;
-              
-              // Expose component methods globally for ImageProcessingManager
-              if (typeof components[i].handleFileSelect === 'function') {
-                window.handlePixarFileSelect = components[i].handleFileSelect.bind(components[i]);
+          // Define component finder function
+          function findComponent() {
+            var components = [
+              document.querySelector('pixar-transform-file-input'),
+              document.querySelector('face-swap-file-input-wrapper'),
+              document.querySelector('.file-input-wrapper')
+            ];
+            
+            for (var i = 0; i < components.length; i++) {
+              if (components[i]) {
+                if (debugInfo) debugInfo.innerHTML += '<p>Found component: ' + components[i].tagName + '</p>';
+                return components[i];
               }
+            }
+            return null;
+          }
+          
+          // Try to find input element
+          function findFileInput() {
+            // Try component first
+            var component = window.pixarComponent || findComponent();
+            if (component) {
+              var fileInput = component.querySelector('input[type="file"]');
+              if (fileInput) return fileInput;
               
-              return components[i];
+              if (debugInfo) debugInfo.innerHTML += '<p>Component found but no file input inside</p>';
             }
-          }
-          return null;
-        };
-        
-        // Force component visibility repeatedly
-        function forceComponentVisibility() {
-          var selectors = [
-            'pixar-transform-file-input', 
-            'face-swap-file-input-wrapper',
-            '.file-input-wrapper', 
-            '.file-input-wrapper__popup',
-            '.file-input-wrapper__popup-open-btn'
-          ];
-          
-          selectors.forEach(function(selector) {
-            var elements = document.querySelectorAll(selector);
-            if (elements.length) {
-              debugInfo.innerHTML += '<p>Found ' + elements.length + ' elements matching: ' + selector + '</p>';
-              elements.forEach(function(el) {
-                el.style.display = 'block !important';
-                el.style.visibility = 'visible !important';
-                el.style.opacity = '1 !important';
-                el.setAttribute('data-pixar-component', 'true');
-              });
-            }
-          });
-        }
-        
-        // Function to upload a photo using various methods
-        function uploadPhoto() {
-          debugInfo.innerHTML = '<p>Started photo upload process...</p>';
-          
-          // Try multiple methods to trigger file selection
-          
-          // 1. First try to find and click original upload button
-          var originalButton = document.querySelector('.file-input-wrapper__popup-open-btn');
-          if (originalButton) {
-            debugInfo.innerHTML += '<p>Found original upload button, clicking it</p>';
-            console.log('⭐ Found original button, clicking it');
-            originalButton.click();
-            return;
-          }
-          
-          // 2. Find component and try to click its file input
-          var pixarComponent = window.findPixarComponent();
-          if (pixarComponent) {
-            debugInfo.innerHTML += '<p>Found pixar component: ' + pixarComponent.tagName + '</p>';
-            console.log('⭐ Found pixar component:', pixarComponent.tagName);
             
-            // Find file input and click it
-            var fileInput = pixarComponent.querySelector('input[type="file"]');
-            if (fileInput) {
-              debugInfo.innerHTML += '<p>Found file input, clicking it</p>';
-              console.log('⭐ Found file input, clicking it');
-              fileInput.click();
-              return;
-            } else {
-              debugInfo.innerHTML += '<p>No file input found in component</p>';
-              console.log('⭐ No file input found in component');
+            // Try known selectors
+            var inputs = [
+              document.querySelector('.file-input-wrapper__file-input'),
+              document.querySelector('input[type="file"]')
+            ];
+            
+            for (var i = 0; i < inputs.length; i++) {
+              if (inputs[i]) {
+                if (debugInfo) debugInfo.innerHTML += '<p>Found file input directly</p>';
+                return inputs[i];
+              }
             }
-          } else {
-            debugInfo.innerHTML += '<p>No pixar component found</p>';
-            console.log('⭐ No pixar component found');
+            
+            return null;
           }
           
-          // 3. Try to use ImageProcessingManager directly
-          if (window.imageProcessingManager) {
-            debugInfo.innerHTML += '<p>Trying ImageProcessingManager directly</p>';
-            
-            // Create and click a temporary file input
+          // Create a fallback input if needed
+          function createFallbackInput() {
             var input = document.createElement('input');
             input.type = 'file';
             input.accept = 'image/*';
+            input.id = 'fallback-file-input';
+            input.style.display = 'none';
+            document.body.appendChild(input);
             
+            // Set up change listener
             input.addEventListener('change', function(e) {
               if (input.files && input.files[0]) {
-                var file = input.files[0];
-                debugInfo.innerHTML += '<p>File selected through direct input: ' + file.name + '</p>';
-                
-                // Try to use ImageProcessingManager directly
-                if (typeof window.imageProcessingManager.handleFileSelect === 'function') {
-                  window.imageProcessingManager.handleFileSelect({ target: { files: [file] } });
-                  return;
-                }
+                handleSelectedFile(input.files[0]);
               }
             });
             
-            input.click();
-            return;
+            if (debugInfo) debugInfo.innerHTML += '<p>Created fallback file input</p>';
+            return input;
           }
-          
-          // 4. Fallback to creating our own file input
-          debugInfo.innerHTML += '<p>Using fallback file input</p>';
-          console.log('⭐ Using fallback file input');
-          
-          var input = document.createElement('input');
-          input.type = 'file';
-          input.accept = 'image/*';
-          
-          // Listen for file selection
-          input.addEventListener('change', function(e) {
-            if (input.files && input.files[0]) {
-              var file = input.files[0];
-              debugInfo.innerHTML += '<p>File selected: ' + file.name + '</p>';
-              console.log('⭐ File selected:', file.name);
-              
-              // Try to pass the file to any available handler
-              tryHandleFile(file);
-            }
-          });
           
           // Trigger file selection
-          input.click();
-        }
-        
-        // Function to try passing the file to various handlers
-        function tryHandleFile(file) {
-          // 1. Try our global handler if available
-          if (typeof window.handlePixarFileSelect === 'function') {
-            debugInfo.innerHTML += '<p>Using global handlePixarFileSelect function</p>';
-            window.handlePixarFileSelect({ target: { files: [file] } });
-            return;
-          }
-          
-          // 2. Try component's handleFileSelect method
-          var pixarComponent = window.findPixarComponent();
-          if (pixarComponent && typeof pixarComponent.handleFileSelect === 'function') {
-            debugInfo.innerHTML += '<p>Using component\'s handleFileSelect method</p>';
-            console.log('⭐ Using component\'s handleFileSelect method');
-            pixarComponent.handleFileSelect({ target: { files: [file] } });
-            return;
-          }
-          
-          // 3. Try ImageProcessingManager
-          var imageManager = window.imageProcessingManager;
-          if (imageManager && typeof imageManager.handleFileSelect === 'function') {
-            debugInfo.innerHTML += '<p>Using ImageProcessingManager\'s handleFileSelect method</p>';
-            console.log('⭐ Using ImageProcessingManager\'s handleFileSelect method');
-            imageManager.handleFileSelect({ target: { files: [file] } });
-            return;
-          }
-          
-          // 4. Last resort - Convert to base64 and display
-          debugInfo.innerHTML += '<p>No handlers found, using direct image display</p>';
-          console.log('⭐ No handlers found, using direct image display');
-          
-          var reader = new FileReader();
-          reader.onload = function(e) {
-            var imageUrl = e.target.result;
-            debugInfo.innerHTML += '<p>Image loaded as base64, length: ' + imageUrl.length + '</p>';
+          window.triggerImageUpload = function() {
+            if (debugInfo) debugInfo.innerHTML = '<p>Image upload triggered</p>';
+            console.log('🔄 Image upload triggered');
             
-            // Find product images and replace them
-            var productImages = document.querySelectorAll('.product-gallery img, .product__media img');
-            if (productImages.length > 0) {
-              productImages.forEach(function(img) {
-                img.src = imageUrl;
-              });
-              debugInfo.innerHTML += '<p>Updated ' + productImages.length + ' product images</p>';
+            // Try to find existing file input
+            var fileInput = findFileInput();
+            
+            // Create fallback if needed
+            if (!fileInput) {
+              if (debugInfo) debugInfo.innerHTML += '<p>No file input found, creating fallback</p>';
+              fileInput = createFallbackInput();
+            }
+            
+            // Trigger click
+            if (fileInput) {
+              if (debugInfo) debugInfo.innerHTML += '<p>Clicking file input</p>';
+              fileInput.click();
             } else {
-              debugInfo.innerHTML += '<p>No product images found to update</p>';
+              if (debugInfo) debugInfo.innerHTML += '<p>ERROR: Could not find or create a file input</p>';
+              console.error('Could not find or create a file input');
             }
           };
-          reader.readAsDataURL(file);
-        }
-        
-        // Monitor for image-processing-manager initialization
-        var imageManagerCheckInterval = setInterval(function() {
-          if (window.imageProcessingManager) {
-            clearInterval(imageManagerCheckInterval);
-            debugInfo.innerHTML += '<p>ImageProcessingManager detected!</p>';
+          
+          // Handle the selected file
+          function handleSelectedFile(file) {
+            if (debugInfo) debugInfo.innerHTML += '<p>File selected: ' + file.name + '</p>';
+            console.log('🔄 File selected:', file.name);
             
-            // Override component finder in ImageProcessingManager if possible
-            if (window.imageProcessingManager._findTransformComponent) {
-              var originalFinder = window.imageProcessingManager._findTransformComponent;
-              window.imageProcessingManager._findTransformComponent = function() {
-                // Try our global component first
-                if (window.pixarComponentReady && window.pixarComponent) {
-                  debugInfo.innerHTML += '<p>Returning cached pixarComponent to ImageProcessingManager</p>';
-                  return window.pixarComponent;
-                }
-                
-                // Otherwise try our finding function
-                var component = window.findPixarComponent();
-                if (component) {
-                  debugInfo.innerHTML += '<p>Found component via our finder, returning to ImageProcessingManager</p>';
-                  return component;
-                }
-                
-                // Finally try original method
-                var originalResult = originalFinder.apply(window.imageProcessingManager);
-                if (originalResult) {
-                  window.pixarComponent = originalResult;
-                  window.pixarComponentReady = true;
-                }
-                return originalResult;
-              };
-              
-              debugInfo.innerHTML += '<p>Successfully overrode ImageProcessingManager._findTransformComponent</p>';
+            // Try built-in handlers first
+            var handled = false;
+            
+            // 1. Try component's handleFileSelect
+            var component = window.pixarComponent || findComponent();
+            if (component && typeof component.handleFileSelect === 'function') {
+              if (debugInfo) debugInfo.innerHTML += '<p>Using component\'s handleFileSelect</p>';
+              component.handleFileSelect({ target: { files: [file] } });
+              handled = true;
+            }
+            
+            // 2. Try image processing manager
+            if (!handled && window.imageProcessingManager && typeof window.imageProcessingManager.handleFileSelect === 'function') {
+              if (debugInfo) debugInfo.innerHTML += '<p>Using ImageProcessingManager</p>';
+              window.imageProcessingManager.handleFileSelect({ target: { files: [file] } });
+              handled = true;
+            }
+            
+            // 3. Fallback to basic image display
+            if (!handled) {
+              if (debugInfo) debugInfo.innerHTML += '<p>Using fallback image display</p>';
+              displayImageDirectly(file);
+            }
+            
+            // Mark as uploaded so form can submit
+            window.imageUploaded = true;
+            
+            // Update button text
+            var button = document.getElementById('atc-button');
+            if (button) {
+              button.textContent = 'IMAGE UPLOADED - ADD TO CART';
             }
           }
-        }, 500);
-        
-        // Initialize component detection and visibility forcing
-        setTimeout(function() {
-          forceComponentVisibility();
-          var pixarComponent = window.findPixarComponent();
           
-          if (pixarComponent) {
-            debugInfo.innerHTML += '<p>Pixar component found on initial check: ' + pixarComponent.tagName + '</p>';
-            console.log('⭐ Pixar component found on initial check:', pixarComponent.tagName);
-            
-            // Force visibility
-            pixarComponent.style.display = 'block !important';
-            pixarComponent.style.visibility = 'visible !important';
-            pixarComponent.style.opacity = '1 !important';
-          } else {
-            debugInfo.innerHTML += '<p>Pixar component NOT found on initial check</p>';
-            console.log('⭐ Pixar component NOT found on initial check');
-            
-            // Start polling for component
-            var checkCount = 0;
-            var componentInterval = setInterval(function() {
-              checkCount++;
-              forceComponentVisibility();
-              var foundComponent = window.findPixarComponent();
+          // Simple image display fallback
+          function displayImageDirectly(file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+              var imageUrl = e.target.result;
               
-              if (foundComponent) {
-                debugInfo.innerHTML += '<p>Pixar component found after ' + checkCount + ' attempts: ' + foundComponent.tagName + '</p>';
-                console.log('⭐ Pixar component found after ' + checkCount + ' attempts:', foundComponent.tagName);
-                clearInterval(componentInterval);
-                
-                // Force visibility
-                foundComponent.style.display = 'block !important';
-                foundComponent.style.visibility = 'visible !important';
-                foundComponent.style.opacity = '1 !important';
-              } else if (checkCount >= 20) {
-                debugInfo.innerHTML += '<p>Gave up looking for pixar component after ' + checkCount + ' attempts</p>';
-                console.log('⭐ Gave up looking for pixar component after ' + checkCount + ' attempts');
-                clearInterval(componentInterval);
+              // Find product images and replace them
+              var productImages = document.querySelectorAll('.product-gallery img, .product__media img');
+              if (productImages.length > 0) {
+                if (debugInfo) debugInfo.innerHTML += '<p>Updating ' + productImages.length + ' product images</p>';
+                productImages.forEach(function(img) {
+                  img.src = imageUrl;
+                });
+              } else {
+                if (debugInfo) debugInfo.innerHTML += '<p>No product images found to update</p>';
               }
-            }, 500);
+            };
+            reader.readAsDataURL(file);
           }
-        }, 500);
+        }
         
-        // Add component detection for the Pixar integration system
-        document.addEventListener('pixar-component-ready', function(event) {
-          debugInfo.innerHTML += '<p>Received pixar-component-ready event!</p>';
-          if (event.detail && event.detail.component) {
-            window.pixarComponent = event.detail.component;
-            window.pixarComponentReady = true;
-            debugInfo.innerHTML += '<p>Component stored from event: ' + window.pixarComponent.tagName + '</p>';
-          }
-        });
+        // Initialize image processing functionality
+        initializeImageProcessing();
         
-        // Add global CSS to force visibility of all Pixar components
-        var style = document.createElement('style');
-        style.textContent = `
-          pixar-transform-file-input, 
-          face-swap-file-input-wrapper,
-          .file-input-wrapper, 
-          .file-input-wrapper__popup,
-          .file-input-wrapper__popup-open-btn,
-          #pixar-component-container * {
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
+        // Set up form submission interception for with-faceswap products
+        var productForm = document.querySelector('form[is="product-form"]');
+        if (productForm) {
+          var templateSuffix = '{{ product.template_suffix }}';
+          
+          if (templateSuffix.includes('with-faceswap')) {
+            productForm.addEventListener('submit', function(e) {
+              // If this is a faceswap product and no image uploaded yet
+              if (!window.imageUploaded) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Trigger image upload
+                if (typeof window.triggerImageUpload === 'function') {
+                  window.triggerImageUpload();
+                }
+                
+                return false;
+              }
+              
+              // Otherwise continue with form submission
+              return true;
+            });
+            
+            // Also intercept ATC button clicks directly
+            var atcButton = document.getElementById('atc-button');
+            if (atcButton) {
+              atcButton.addEventListener('click', function(e) {
+                if (!window.imageUploaded) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  
+                  // Trigger image upload
+                  if (typeof window.triggerImageUpload === 'function') {
+                    window.triggerImageUpload();
+                  }
+                  
+                  return false;
+                }
+              });
+            }
+            
+            console.log('🔄 Form submission interception set up for faceswap product');
           }
-        `;
-        document.head.appendChild(style);
-        debugInfo.innerHTML += '<p>Added global CSS to force component visibility</p>';
+        }
       });
     </script>
   </div>
