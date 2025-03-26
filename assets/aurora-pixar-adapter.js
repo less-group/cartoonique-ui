@@ -9,7 +9,7 @@
 
 class AuroraPixarAdapter {
   constructor(options = {}) {
-    this.debug = options.debug || false;
+    this.debug = options.debug || true; // Set debug to true by default for easier troubleshooting
     this.initialized = false;
     this.sectionId = options.sectionId || '';
     this.productGallery = null;
@@ -60,6 +60,9 @@ class AuroraPixarAdapter {
     // Check for existing image processing manager
     this.connectToImageProcessingManager();
     
+    // Ensure RunPod connectivity
+    this.ensureRunPodIntegration();
+    
     this.initialized = true;
     this.log('Adapter initialization complete');
     
@@ -73,20 +76,21 @@ class AuroraPixarAdapter {
    * Find the main components needed for integration
    */
   findComponents() {
-    // Find product gallery
-    this.productGallery = document.querySelector('product-gallery');
+    // Find product gallery (Aurora specific)
+    this.productGallery = document.querySelector('product-gallery, .product__media-gallery');
     this.log('Product gallery found:', !!this.productGallery);
     
     // Find pixar component
     this.pixarComponent = document.querySelector('pixar-transform-file-input');
     this.log('Pixar component found:', !!this.pixarComponent);
     
-    // Find product form
-    this.productForm = document.querySelector('form[data-type="add-to-cart-form"]');
+    // Find product form (corrected selectors for Aurora theme)
+    // Try multiple selectors to ensure compatibility
+    this.productForm = document.querySelector('form[data-type="add-to-cart-form"], form[action="/cart/add"]');
     this.log('Product form found:', !!this.productForm);
     
-    // Find add to cart button
-    this.addToCartButton = document.querySelector('.product-form__btn');
+    // Find add to cart button (corrected selectors for Aurora theme)
+    this.addToCartButton = document.querySelector('.product-form__btn, .product-form__submit, button[type="submit"][name="add"]');
     this.log('Add to cart button found:', !!this.addToCartButton);
   }
   
@@ -118,6 +122,18 @@ class AuroraPixarAdapter {
       this.log('Setting up form submission handler');
       this.setupFormSubmissionHandler();
     }
+    
+    // Listen for any direct processing with RunPod
+    document.addEventListener('runpod-processing-started', (event) => {
+      this.log('RunPod processing started:', event.detail);
+    });
+    
+    document.addEventListener('runpod-processing-complete', (event) => {
+      this.log('RunPod processing complete:', event.detail);
+      if (event.detail && event.detail.imageUrl) {
+        this.updateProductGallery(event.detail.imageUrl);
+      }
+    });
   }
   
   /**
@@ -276,27 +292,74 @@ class AuroraPixarAdapter {
    * Connect to the Image Processing Manager
    */
   connectToImageProcessingManager() {
-    // Try to find the image processing manager
-    this.imageProcessingManager = window.imageProcessingManager;
-    
-    if (!this.imageProcessingManager) {
-      this.log('Image processing manager not found, waiting...');
+    if (window.imageProcessingManager) {
+      this.log('Found existing image processing manager');
+      this.imageProcessingManager = window.imageProcessingManager;
       
-      // Listen for it to be available
-      const checkInterval = setInterval(() => {
+      // Monitor for crop completion
+      if (typeof this.imageProcessingManager.addCropCompleteListener === 'function') {
+        this.imageProcessingManager.addCropCompleteListener((croppedImage) => {
+          this.log('Crop complete event received');
+          // No action needed - the manager will handle the rest of the flow
+        });
+      }
+    } else {
+      this.log('Image processing manager not found, will check again in 1 second');
+      // Retry after a delay as it might be loaded later
+      setTimeout(() => {
         if (window.imageProcessingManager) {
           this.imageProcessingManager = window.imageProcessingManager;
-          this.log('Image processing manager found');
-          clearInterval(checkInterval);
+          this.log('Image processing manager found on retry');
         }
-      }, 200);
-    } else {
-      this.log('Image processing manager found');
+      }, 1000);
     }
   }
   
   /**
-   * Enhance the pixar component with theme-specific functionality
+   * Ensure the RunPod integration is properly set up
+   */
+  ensureRunPodIntegration() {
+    // Check if the processImageWithRunPod function exists
+    if (typeof window.processImageWithRunPod === 'function') {
+      this.log('RunPod processing function already exists');
+    } else {
+      this.log('RunPod processing function not found, checking direct-pixar-loader.js');
+      
+      // If the main loader script is loaded after this adapter, we need to verify
+      // that the processImageWithRunPod function gets attached to the window
+      const checkInterval = setInterval(() => {
+        if (typeof window.processImageWithRunPod === 'function') {
+          this.log('RunPod processing function found on retry');
+          clearInterval(checkInterval);
+        }
+      }, 500);
+      
+      // Give up after 10 seconds
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        if (typeof window.processImageWithRunPod !== 'function') {
+          this.log('RunPod processing function never found - this may indicate an issue with script loading order');
+        }
+      }, 10000);
+    }
+    
+    // Ensure API URL is correctly configured
+    if (window.unifiedConfig && window.unifiedConfig.api && 
+        window.unifiedConfig.api.current && window.unifiedConfig.api.current().baseUrl) {
+      const apiUrl = window.unifiedConfig.api.current().baseUrl;
+      this.log('API URL configured correctly:', apiUrl);
+      
+      // Verify this matches the expected URL
+      if (apiUrl !== 'https://letzteshemd-faceswap-api-production.up.railway.app') {
+        this.log('Warning: API URL doesn\'t match expected Railway URL');
+      }
+    } else {
+      this.log('API URL configuration not found');
+    }
+  }
+  
+  /**
+   * Enhance the pixar component
    */
   enhancePixarComponent() {
     if (!this.pixarComponent) return;
@@ -321,6 +384,26 @@ class AuroraPixarAdapter {
       
       this.log('Enhanced showResultContent method');
     }
+    
+    // Ensure transformImage method works with Aurora theme
+    if (!this.pixarComponent.originalTransformImage && this.pixarComponent.transformImage) {
+      this.pixarComponent.originalTransformImage = this.pixarComponent.transformImage;
+      
+      // Override to ensure proper integration
+      this.pixarComponent.transformImage = async function() {
+        this.log('Transform image called via enhanced method');
+        
+        try {
+          // Call original method
+          return await this.originalTransformImage.call(this);
+        } catch (error) {
+          console.error('Error in transformImage override:', error);
+          throw error;
+        }
+      };
+      
+      this.log('Enhanced transformImage method');
+    }
   }
   
   /**
@@ -339,9 +422,17 @@ class AuroraPixarAdapter {
     }
     
     // Fallback: Try to update the product gallery directly
+    // This needs to handle both Aurora's structure and legacy themes
     if (this.productGallery) {
-      const firstMediaItem = this.productGallery.querySelector('.product-gallery__media img');
-      if (firstMediaItem) {
+      // Aurora specific selectors
+      const mediaItems = this.productGallery.querySelectorAll(
+        '.product-gallery__media img, .product__media img, .product__media-item img'
+      );
+      
+      if (mediaItems && mediaItems.length > 0) {
+        // Update the first image
+        const firstMediaItem = mediaItems[0];
+        
         // Store the original image source
         if (!firstMediaItem.dataset.originalSrc) {
           firstMediaItem.dataset.originalSrc = firstMediaItem.src;
@@ -349,7 +440,18 @@ class AuroraPixarAdapter {
         
         // Update the image source
         firstMediaItem.src = imageUrl;
+        
+        // If mediaItems has srcset, update that too
+        if (firstMediaItem.srcset) {
+          firstMediaItem.srcset = '';
+        }
+        
         this.log('Updated product gallery image directly');
+        
+        // Dispatch event for theme-specific image handling
+        document.dispatchEvent(new CustomEvent('product:image-update', {
+          detail: { imageUrl }
+        }));
       }
     }
   }
@@ -381,11 +483,34 @@ class AuroraPixarAdapter {
       this.productForm.dataset.pixarTransformed = 'true';
       this.productForm.dataset.pixarJobId = jobId || '';
       this.productForm.dataset.pixarImageUrl = imageUrl || '';
+      
+      // Add hidden input fields to submit with the form
+      let hiddenInput = this.productForm.querySelector('input[name="properties[_processed_image_url]"]');
+      if (!hiddenInput) {
+        hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'properties[_processed_image_url]';
+        this.productForm.appendChild(hiddenInput);
+      }
+      hiddenInput.value = imageUrl || '';
+      
+      // Add job ID as property
+      if (jobId) {
+        let jobIdInput = this.productForm.querySelector('input[name="properties[_job_id]"]');
+        if (!jobIdInput) {
+          jobIdInput = document.createElement('input');
+          jobIdInput.type = 'hidden';
+          jobIdInput.name = 'properties[_job_id]';
+          this.productForm.appendChild(jobIdInput);
+        }
+        jobIdInput.value = jobId;
+      }
     }
     
     // Update add to cart button style
     if (this.addToCartButton) {
       this.addToCartButton.classList.add('btn--ready');
+      this.addToCartButton.textContent = this.addToCartButton.dataset.readyText || 'Add to Cart (Photo Uploaded)';
     }
   }
   
@@ -430,10 +555,20 @@ class AuroraPixarAdapter {
    */
   resetGallery() {
     if (this.productGallery) {
-      const firstMediaItem = this.productGallery.querySelector('.product-gallery__media img');
-      if (firstMediaItem && firstMediaItem.dataset.originalSrc) {
-        firstMediaItem.src = firstMediaItem.dataset.originalSrc;
-        this.log('Reset product gallery to original image');
+      const mediaItems = this.productGallery.querySelectorAll(
+        '.product-gallery__media img, .product__media img, .product__media-item img'
+      );
+      
+      if (mediaItems && mediaItems.length > 0) {
+        const firstMediaItem = mediaItems[0];
+        if (firstMediaItem && firstMediaItem.dataset.originalSrc) {
+          firstMediaItem.src = firstMediaItem.dataset.originalSrc;
+          // Clear any srcset to prevent other images from loading
+          if (firstMediaItem.srcset) {
+            firstMediaItem.srcset = '';
+          }
+          this.log('Reset product gallery to original image');
+        }
       }
     }
   }

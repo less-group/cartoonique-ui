@@ -246,6 +246,14 @@
     if (progressBar) progressBar.style.width = '10%';
     if (progressText) progressText.textContent = 'Reading your image...';
     
+    // Dispatch event that RunPod processing has started
+    document.dispatchEvent(new CustomEvent('runpod-processing-started', {
+      detail: {
+        filename: file.name,
+        timestamp: Date.now()
+      }
+    }));
+    
     // Read the file as data URL
     const reader = new FileReader();
     
@@ -270,6 +278,14 @@
       if (progressBar) progressBar.style.width = '30%';
       if (progressText) progressText.textContent = 'Uploading to server...';
       
+      // Dispatch progress event
+      document.dispatchEvent(new CustomEvent('pixar-transform-progress', {
+        detail: {
+          progress: 30,
+          stage: 'uploading'
+        }
+      }));
+      
       // Call the RunPod API endpoint
       fetch('https://letzteshemd-faceswap-api-production.up.railway.app/transform', {
         method: 'POST',
@@ -282,6 +298,14 @@
         if (progressBar) progressBar.style.width = '60%';
         if (progressText) progressText.textContent = 'Processing image...';
         
+        // Dispatch progress event
+        document.dispatchEvent(new CustomEvent('pixar-transform-progress', {
+          detail: {
+            progress: 60,
+            stage: 'processing'
+          }
+        }));
+        
         if (!response.ok) {
           throw new Error(`Server error: ${response.status} ${response.statusText}`);
         }
@@ -290,6 +314,14 @@
       .then(data => {
         if (progressBar) progressBar.style.width = '90%';
         if (progressText) progressText.textContent = 'Finalizing...';
+        
+        // Dispatch progress event
+        document.dispatchEvent(new CustomEvent('pixar-transform-progress', {
+          detail: {
+            progress: 90,
+            stage: 'finalizing'
+          }
+        }));
         
         console.log('⭐ RunPod processing complete:', data);
         
@@ -307,22 +339,38 @@
           const processedImageUrl = data.image;
           
           // Update product images if available
-          const productImages = document.querySelectorAll('.product-gallery img, .product__media img');
+          const productImages = document.querySelectorAll('.product-gallery img, .product__media img, .product__media-item img');
           if (productImages.length > 0) {
             productImages.forEach(img => {
               img.src = processedImageUrl;
+              // Clear srcset to ensure our processed image is shown
+              if (img.srcset) {
+                img.srcset = '';
+              }
             });
           }
           
           // Dispatch the transform complete event
           document.dispatchEvent(new CustomEvent('pixar-transform-complete', {
             detail: {
-              imageUrl: processedImageUrl
+              imageUrl: processedImageUrl,
+              timestamp: Date.now()
+            }
+          }));
+          
+          // Dispatch RunPod processing complete event specifically for the adapter
+          document.dispatchEvent(new CustomEvent('runpod-processing-complete', {
+            detail: {
+              imageUrl: processedImageUrl,
+              timestamp: Date.now()
             }
           }));
           
           // Mark upload as complete
           window.pixarTransformComplete = true;
+          
+          // Store processed image URL globally for form submission
+          window.processedImageUrl = processedImageUrl;
           
           // Update upload button text if available
           const uploadContainer = document.getElementById('direct-pixar-loader-container');
@@ -332,6 +380,26 @@
               uploadButton.textContent = '✅ IMAGE UPLOADED - READY TO ADD TO CART';
               uploadButton.style.backgroundColor = '#4CAF50';
             }
+          }
+          
+          // If we're in Aurora theme, find the form and add hidden inputs
+          const productForm = document.querySelector('form[action="/cart/add"], form[data-type="add-to-cart-form"]');
+          if (productForm) {
+            // Add hidden input for the processed image URL
+            let hiddenInput = productForm.querySelector('input[name="properties[_processed_image_url]"]');
+            if (!hiddenInput) {
+              hiddenInput = document.createElement('input');
+              hiddenInput.type = 'hidden';
+              hiddenInput.name = 'properties[_processed_image_url]';
+              productForm.appendChild(hiddenInput);
+            }
+            hiddenInput.value = processedImageUrl;
+            
+            // Mark the form as transformed
+            productForm.dataset.pixarTransformed = 'true';
+            productForm.dataset.pixarImageUrl = processedImageUrl;
+            
+            console.log('⭐ Updated form with processed image URL');
           }
         } else {
           throw new Error('Invalid response from server: No image URL received');
@@ -351,6 +419,14 @@
           errorElement.textContent = 'Error processing image: ' + error.message;
           errorElement.style.display = 'block';
         }
+        
+        // Dispatch error event
+        document.dispatchEvent(new CustomEvent('pixar-transform-error', {
+          detail: {
+            error: error.message,
+            timestamp: Date.now()
+          }
+        }));
       });
     };
     
@@ -366,6 +442,14 @@
         errorElement.textContent = 'Error reading file. Please try again with a different image.';
         errorElement.style.display = 'block';
       }
+      
+      // Dispatch error event
+      document.dispatchEvent(new CustomEvent('pixar-transform-error', {
+        detail: {
+          error: 'Error reading file',
+          timestamp: Date.now()
+        }
+      }));
     };
     
     // Start reading the file
@@ -428,6 +512,9 @@
       document.dispatchEvent(new CustomEvent('pixar-component-ready', {
         detail: { component: pixarComponent }
       }));
+      
+      // Set up form interception
+      setupFormInterception();
       
       return;
     }
@@ -656,73 +743,92 @@
       console.log('⭐ Could not find component container');
     }
     
-    // Set up form handling
-    const productForm = document.querySelector('form[action="/cart/add"]');
-    if (productForm) {
-      console.log('⭐ Setting up form interception');
-      
-      // Track if an image has been uploaded
-      window.pixarTransformComplete = false;
-      
-      // Listen for transform complete event
-      document.addEventListener('pixar-transform-complete', function() {
-        console.log('⭐ Transform complete event received');
-        window.pixarTransformComplete = true;
-        
-        // Update upload button
-        const uploadButton = uploadContainer.querySelector('button');
-        if (uploadButton) {
-          uploadButton.textContent = '✅ IMAGE UPLOADED - READY TO ADD TO CART';
-          uploadButton.style.backgroundColor = '#4CAF50';
-        }
-      });
-      
-      // Intercept form submission
-      productForm.addEventListener('submit', function(e) {
-        if (!window.pixarTransformComplete) {
-          console.log('⭐ Preventing form submission until image is uploaded');
-          e.preventDefault();
-          
-          // Ensure instructions popup exists and show it
-          checkForInstructionsPopup();
-          
-          // Show instructions popup instead of direct file input click
-          const instructionsPopup = document.getElementById('pixar-instructions-popup');
-          if (instructionsPopup) {
-            console.log('⭐ Showing instructions popup');
-            instructionsPopup.style.display = 'block';
-            document.body.style.overflow = 'hidden';
-          } else {
-            // If no popup, try using component methods
-            const component = window.pixarComponent || document.querySelector('pixar-transform-file-input');
-            if (component && typeof component.openPopup === 'function') {
-              console.log('⭐ Using component openPopup method');
-              component.openPopup();
-            } else {
-              console.log('⭐ Instructions popup not found');
-              // Only as last resort, try direct file input
-              const fileInput = document.querySelector('#direct-pixar-component-container input[type="file"]');
-              if (fileInput) {
-                console.log('⭐ Fallback: Clicking file input directly');
-                fileInput.click();
-              } else {
-                console.log('⭐ No file input found');
-              }
-            }
-          }
-          
-          return false;
-        } else {
-          console.log('⭐ Image already uploaded, allowing form submission');
-          return true;
-        }
-      }, true);
-      
-      console.log('⭐ Form interception set up');
-    } else {
-      console.log('⭐ Could not find product form');
-    }
+    // Set up form interception at the end
+    setupFormInterception();
     
     console.log('⭐ Direct Pixar Component Loader initialized successfully');
   });
+  
+  /**
+   * Find the add to cart form
+   */
+  function findAddToCartForm() {
+    // Try multiple selectors to support both Aurora and other themes
+    const formSelectors = [
+      'form[action="/cart/add"]', 
+      'form[data-type="add-to-cart-form"]',
+      'form.product-form'
+    ];
+    
+    for (const selector of formSelectors) {
+      const form = document.querySelector(selector);
+      if (form) {
+        console.log('⭐ Found add to cart form with selector:', selector);
+        return form;
+      }
+    }
+    
+    console.log('⭐ Could not find add to cart form with any selector');
+    return null;
+  }
+  
+  /**
+   * Set up interception of form submission to ensure image is transformed
+   */
+  function setupFormInterception() {
+    const form = findAddToCartForm();
+    if (!form) {
+      console.log('⭐ Could not find add to cart form');
+      return;
+    }
+    
+    console.log('⭐ Setting up form interception');
+    
+    // Listen for form submission
+    form.addEventListener('submit', function(event) {
+      // Check if we have a processed image URL
+      if (!window.processedImageUrl && !form.dataset.pixarTransformed) {
+        // Check if there's a loading popup visible
+        const loadingPopup = document.getElementById('pixar-loading-popup');
+        if (loadingPopup && loadingPopup.style.display === 'block') {
+          console.log('⭐ Processing in progress, preventing form submission');
+          event.preventDefault();
+          alert('Please wait for image processing to complete before adding to cart.');
+          return;
+        }
+        
+        // Open the file dialog 
+        console.log('⭐ No processed image, preventing form submission');
+        event.preventDefault();
+        
+        // Show alert to instruct user
+        alert('Please upload and transform your image before adding to cart.');
+        
+        // Open popup or click upload button
+        const uploadButton = document.getElementById('pixar-upload-button');
+        if (uploadButton) {
+          uploadButton.click();
+        }
+        return;
+      }
+      
+      // If we have a processed image URL but no hidden input, add one
+      if (window.processedImageUrl) {
+        let hiddenInput = form.querySelector('input[name="properties[_processed_image_url]"]');
+        if (!hiddenInput) {
+          hiddenInput = document.createElement('input');
+          hiddenInput.type = 'hidden';
+          hiddenInput.name = 'properties[_processed_image_url]';
+          form.appendChild(hiddenInput);
+        }
+        hiddenInput.value = window.processedImageUrl;
+        
+        console.log('⭐ Added processed image URL to form:', window.processedImageUrl);
+      }
+      
+      console.log('⭐ Form submission allowed with transformed image');
+    });
+    
+    console.log('⭐ Form interception setup complete');
+  }
 })(); 
