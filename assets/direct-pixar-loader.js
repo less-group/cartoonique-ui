@@ -174,6 +174,48 @@
         
         if (fileInput) {
           console.log('⭐ Upload button clicked, triggering file input');
+          
+          // Add a change handler to process the file after selection
+          fileInput.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files.length > 0) {
+              const file = e.target.files[0];
+              console.log('⭐ File selected for processing:', file.name);
+              
+              // Hide instructions popup 
+              const instructionsPopup = document.getElementById('pixar-instructions-popup');
+              if (instructionsPopup) {
+                instructionsPopup.style.display = 'none';
+              }
+              
+              // Show loading popup
+              const loadingPopup = document.getElementById('pixar-loading-popup');
+              if (loadingPopup) {
+                loadingPopup.style.display = 'block';
+                
+                // Update progress indicators
+                const progressBar = document.getElementById('pixar-progress-bar');
+                const progressText = document.getElementById('pixar-progress-text');
+                
+                if (progressBar) progressBar.style.width = '10%';
+                if (progressText) progressText.textContent = 'Uploading your image...';
+              }
+              
+              // Let the pixarComponent or ImageProcessingManager handle the file
+              if (pixarComponent && typeof pixarComponent.handleFileSelect === 'function') {
+                console.log('⭐ Using pixarComponent.handleFileSelect for processing');
+                pixarComponent.handleFileSelect(e);
+              } else if (window.imageProcessingManager && typeof window.imageProcessingManager.handleFileSelected === 'function') {
+                console.log('⭐ Using imageProcessingManager for processing');
+                window.imageProcessingManager.handleFileSelected(e);
+              } else {
+                console.log('⭐ No existing processing handler found, falling back to basic processing');
+                
+                // Provide a basic fallback for processing
+                processImageWithRunPod(file);
+              }
+            }
+          }, {once: true}); // Only run this handler once
+          
           fileInput.click();
         } else {
           console.log('⭐ No file input found');
@@ -185,6 +227,149 @@
         }
       });
     }
+  }
+
+  // Process image using RunPod service
+  function processImageWithRunPod(file) {
+    console.log('⭐ Processing image with RunPod:', file.name);
+    
+    // Show loading popup with initial progress
+    const loadingPopup = document.getElementById('pixar-loading-popup');
+    if (loadingPopup) {
+      loadingPopup.style.display = 'block';
+    }
+    
+    // Update progress indicators
+    const progressBar = document.getElementById('pixar-progress-bar');
+    const progressText = document.getElementById('pixar-progress-text');
+    
+    if (progressBar) progressBar.style.width = '10%';
+    if (progressText) progressText.textContent = 'Reading your image...';
+    
+    // Read the file as data URL
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+      if (progressBar) progressBar.style.width = '20%';
+      if (progressText) progressText.textContent = 'Preparing to upload...';
+      
+      const imageBase64 = e.target.result;
+      
+      // Create the payload for the RunPod API
+      const payload = {
+        image: imageBase64,
+        style: 'pixar',
+        watermark: {
+          url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/watermark.png",
+          width: 200,
+          height: 100,
+          spaceBetweenWatermarks: 100
+        }
+      };
+      
+      if (progressBar) progressBar.style.width = '30%';
+      if (progressText) progressText.textContent = 'Uploading to server...';
+      
+      // Call the RunPod API endpoint
+      fetch('https://letzteshemd-faceswap-api-production.up.railway.app/transform', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(response => {
+        if (progressBar) progressBar.style.width = '60%';
+        if (progressText) progressText.textContent = 'Processing image...';
+        
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status} ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (progressBar) progressBar.style.width = '90%';
+        if (progressText) progressText.textContent = 'Finalizing...';
+        
+        console.log('⭐ RunPod processing complete:', data);
+        
+        // Handle successful response
+        if (data && data.image) {
+          if (progressBar) progressBar.style.width = '100%';
+          if (progressText) progressText.textContent = 'Complete!';
+          
+          // Hide loading popup
+          if (loadingPopup) {
+            loadingPopup.style.display = 'none';
+          }
+          
+          // Store the processed image URL
+          const processedImageUrl = data.image;
+          
+          // Update product images if available
+          const productImages = document.querySelectorAll('.product-gallery img, .product__media img');
+          if (productImages.length > 0) {
+            productImages.forEach(img => {
+              img.src = processedImageUrl;
+            });
+          }
+          
+          // Dispatch the transform complete event
+          document.dispatchEvent(new CustomEvent('pixar-transform-complete', {
+            detail: {
+              imageUrl: processedImageUrl
+            }
+          }));
+          
+          // Mark upload as complete
+          window.pixarTransformComplete = true;
+          
+          // Update upload button text if available
+          const uploadContainer = document.getElementById('direct-pixar-loader-container');
+          if (uploadContainer) {
+            const uploadButton = uploadContainer.querySelector('button');
+            if (uploadButton) {
+              uploadButton.textContent = '✅ IMAGE UPLOADED - READY TO ADD TO CART';
+              uploadButton.style.backgroundColor = '#4CAF50';
+            }
+          }
+        } else {
+          throw new Error('Invalid response from server: No image URL received');
+        }
+      })
+      .catch(error => {
+        console.error('⭐ Error processing image:', error);
+        
+        // Update error display
+        if (progressText) progressText.textContent = 'Error: ' + error.message;
+        if (progressBar) progressBar.style.width = '100%';
+        progressBar.style.backgroundColor = '#FF4444';
+        
+        // Update error message in popup
+        const errorElement = document.getElementById('pixar-error-message');
+        if (errorElement) {
+          errorElement.textContent = 'Error processing image: ' + error.message;
+          errorElement.style.display = 'block';
+        }
+      });
+    };
+    
+    reader.onerror = function(error) {
+      console.error('⭐ Error reading file:', error);
+      
+      // Update error message
+      if (progressText) progressText.textContent = 'Error reading file';
+      
+      // Update error message in popup
+      const errorElement = document.getElementById('pixar-error-message');
+      if (errorElement) {
+        errorElement.textContent = 'Error reading file. Please try again with a different image.';
+        errorElement.style.display = 'block';
+      }
+    };
+    
+    // Start reading the file
+    reader.readAsDataURL(file);
   }
 
   // Wait for DOM to be ready
