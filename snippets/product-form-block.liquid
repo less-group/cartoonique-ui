@@ -50,7 +50,7 @@
 
 {%- if product != blank -%}
   <div class='' {{ block.shopify_attributes }}>
-    {% if product.template_suffix contains 'with-faceswap' %}
+    {% if product.template_suffix contains 'with-faceswap' or product.template_suffix contains 'pixar-transform' or product.template_suffix contains 'cartoonique' %}
       {% render 'aurora-pixar-integration', product: product, section: section, sectionId: sectionId %}
     {% endif %}
     
@@ -84,7 +84,7 @@
                 class='product-form__btn btn btn--{{buttons_size}} btn--{{add_to_cart_btn_style}}'
                 {% if available == false %}
                   disabled
-                {% elsif product.template_suffix contains 'with-faceswap' %}
+                {% elsif product.template_suffix contains 'with-faceswap' or product.template_suffix contains 'pixar-transform' or product.template_suffix contains 'cartoonique' %}
                   disabled
                   data-requires-image-upload="true"
                 {% endif %}
@@ -92,7 +92,7 @@
               >
                 <span data-button-text>
                   {%- if available -%}
-                    {%- if product.template_suffix contains 'with-faceswap' -%}
+                    {%- if product.template_suffix contains 'with-faceswap' or product.template_suffix contains 'pixar-transform' or product.template_suffix contains 'cartoonique' -%}
                       Upload Photo First
                     {%- else -%}
                       {{ add_to_cart_label }}
