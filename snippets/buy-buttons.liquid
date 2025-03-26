@@ -54,12 +54,11 @@
     {%- if product.template_suffix contains 'pre-order' -%}
       {%- capture button_content -%}{{ 'product.general.pre_order_button' | t }}{%- endcapture -%}
     {%- else -%}
-      {%- comment -%}Change text to reflect image upload for products requiring image transformation{%- endcomment -%}
-      {%- if is_transform_product -%}
-        {%- capture button_content -%}UPLOAD YOUR PHOTO FIRST{%- endcapture -%}
-        {%- assign button_disabled = true -%}
+      {%- comment -%}Change text to reflect image upload for face swap products{%- endcomment -%}
+      {%- if product.template_suffix contains 'with-faceswap' or product.template_suffix contains 'cartoonique' -%}
+        {%- capture button_content -%}UPLOAD IMAGE & ADD TO CART{%- endcapture -%}
       {%- else -%}
-        {%- capture button_content -%}{{ 'product.general.add_to_cart_button' | t }}{%- endcapture -%}
+      {%- capture button_content -%}{{ 'product.general.add_to_cart_button' | t }}{%- endcapture -%}
       {%- endif -%}
     {%- endif -%}
   {%- else -%}
@@ -99,11 +98,11 @@
         id="atc-button"
         type="submit" 
         class="button {% if show_payment_button %}button--secondary{% endif %} {% if button_disabled %}button--disabled{% endif %} button--{{ button_size }}"
-        {% if button_disabled or is_transform_product %}disabled{% endif %}
+        {% if button_disabled %}disabled{% endif %}
         {% if atc_button_background != blank and atc_button_background != 'rgba(0,0,0,0)' %}
           style="--button-background: {{ atc_button_background.rgb }}; --button-text-color: {{ atc_button_text_color.rgb }};"
         {% endif %}
-        {% if is_transform_product %}data-transform-required="true"{% endif %}
+        {% if product.template_suffix contains 'with-faceswap' or product.template_suffix contains 'pixar-transform' or product.template_suffix contains 'cartoonique' %}data-transform-required="true"{% endif %}
       >
         {{ button_content }}
       </button>
@@ -117,7 +116,7 @@
               display: none;
             {%- endunless -%}
 
-            {%- if is_transform_product -%}
+            {%- if product.template_suffix contains 'with-faceswap' or product.template_suffix contains 'pixar-transform' or product.template_suffix contains 'cartoonique' -%}
               display: none;
             {%- endif -%}
 
@@ -135,11 +134,11 @@
 
     <!-- Hidden area for components that aren't directly shown -->
     <div id="pixar-component-area" style="height: 0; overflow: hidden; position: absolute; visibility: hidden;">
-      {% if is_transform_product and product.template_suffix contains 'cartoonique' == false %}
-        {% if settings.enable_pixar_transform %}
-          {% render 'pixar-transform-file-input', product: product, section_id: section.id, customer: customer %}
-        {% else %}
-          {% render 'face-swap-file-input', product: product, section_id: section.id, customer: customer %}
+      {% if product.template_suffix contains 'with-faceswap' or product.template_suffix contains 'pixar-transform' %}
+      {% if settings.enable_pixar_transform %}
+        {% render 'pixar-transform-file-input', product: product, section_id: section.id, customer: customer %}
+      {% else %}
+        {% render 'face-swap-file-input', product: product, section_id: section.id, customer: customer %}
         {% endif %}
       {% endif %}
       
@@ -159,20 +158,31 @@
         var debugInfo = document.getElementById('debug-info-content');
         if (debugInfo) debugInfo.innerHTML = '<p>Buy button handler initialized</p>';
         
-        // Check if this is a transform product
+        // Check if this is a faceswap product and add a dedicated upload button if needed
         var templateSuffix = '{{ product.template_suffix }}'.trim();
-        var isTransformProduct = {{ is_transform_product | json }};
         
-        // For Cartoonique products, we use the aurora-pixar-integration snippet
-        // which provides its own button and handling logic
+        // Add cartoonique detection but preserve existing code
         if (templateSuffix.includes('cartoonique')) {
-          console.log('🔄 This is a Cartoonique product, using dedicated Aurora Pixar integration');
-          // The aurora-pixar-integration.liquid snippet handles this case separately
-          return;
+          console.log('🔄 This is a Cartoonique product, using dedicated Aurora integration');
+          
+          // Listen for transform completion event from Aurora integration
+          document.addEventListener('pixar-transform-complete', function(event) {
+            console.log('🔄 Cartoonique transform complete event received');
+            window.imageUploaded = true;
+          });
+          
+          return; // Let Aurora integration handle the rest
+        }
+        
+        if (templateSuffix.includes('with-faceswap')) {
+          console.log('🔄 This is a faceswap product, using dedicated pixar integration');
+          
+          // We're no longer adding a button here since we have a dedicated implementation
+          // in the Aurora pixar integration code below
         }
         
         // For other transform products, continue with standard handling
-        if (isTransformProduct) {
+        if (templateSuffix.includes('with-faceswap') || templateSuffix.includes('pixar-transform')) {
           console.log('🔄 This is a transform product, ensure proper integration');
           
           // Handle button state based on transform completion
@@ -292,7 +302,7 @@
           };
           
           // For traditional transform products, handle form submission
-          if (isTransformProduct) {
+          if (templateSuffix.includes('with-faceswap') || templateSuffix.includes('pixar-transform')) {
             var form = document.querySelector('form[action="/cart/add"]');
             if (form) {
               form.addEventListener('submit', function(event) {
@@ -302,7 +312,7 @@
                   event.stopPropagation();
                   
                   // Trigger the upload
-                  window.triggerImageUpload();
+                    window.triggerImageUpload();
                   return false;
                 }
               });
@@ -327,7 +337,7 @@
         
         // Initialize everything
         initializeImageProcessing();
-      });
-    </script>
+          });
+        </script>
   </div>
 {%- endform -%}
