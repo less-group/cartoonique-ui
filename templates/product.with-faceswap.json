@@ -71,6 +71,12 @@
             "size_chart_page": "grossentabelle"
           }
         },
+        "pixar_integration": {
+          "type": "html",
+          "settings": {
+            "html": "{% render 'aurora-pixar-integration', product: product, section: section %}"
+          }
+        },
         "buy_buttons": {
           "type": "buy_buttons",
           "settings": {
@@ -104,6 +110,7 @@
         "separator",
         "description",
         "variant_picker",
+        "pixar_integration",
         "buy_buttons",
         "quantity_selector",
         "custom_html"

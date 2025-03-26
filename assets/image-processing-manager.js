@@ -204,19 +204,45 @@ class ImageProcessingManager {
    * Find and set up the pixar transform file input component
    */
   findAndSetupPixarComponent() {
-    // Find the pixar component
+    // First try the Window reference if available
+    if (window.pixarComponentReady && window.pixarComponent) {
+      console.log('Pixar component found via global reference');
+      this.pixarComponent = window.pixarComponent;
+      this.setupPixarComponent(this.pixarComponent);
+      return;
+    }
+    
+    // Fallback to DOM query
     this.pixarComponent = document.querySelector('pixar-transform-file-input');
     
     if (!this.pixarComponent) {
       console.log('Pixar component not found yet, will try again later');
+      
+      // Listen for the custom event
+      document.addEventListener('pixar-component-ready', (event) => {
+        console.log('Received pixar-component-ready event');
+        this.pixarComponent = event.detail.component;
+        this.setupPixarComponent(this.pixarComponent);
+      }, { once: true });
+      
+      // Try again
       setTimeout(() => this.findAndSetupPixarComponent(), 500);
       return;
     }
     
     console.log('Pixar component found, setting up');
+    this.setupPixarComponent(this.pixarComponent);
+  }
+  
+  /**
+   * Setup the pixar component once found
+   * @param {HTMLElement} component - The pixar component to set up
+   */
+  setupPixarComponent(component) {
+    console.log('Setting up Pixar component:', component);
     
     // Hook into the original file input event
-    const fileInputs = this.pixarComponent.querySelectorAll('input[type="file"]');
+    const fileInputs = component.querySelectorAll('input[type="file"]');
     fileInputs.forEach(input => {
       // Store the original change handler if it exists
       const originalOnChange = input.onchange;
@@ -232,6 +258,11 @@ class ImageProcessingManager {
         }
       };
     });
+    
+    // Dispatch event to notify other systems
+    document.dispatchEvent(new CustomEvent('pixar-component-setup-complete', {
+      detail: { component: component }
+    }));
   }
   
   /**

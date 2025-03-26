@@ -1,0 +1,274 @@
+{% comment %}
+  Aurora Theme - Pixar Face Transform Integration
+  
+  This snippet handles the integration of the Pixar face transformation feature 
+  with the Aurora theme's Add to Cart flow.
+{% endcomment %}
+
+{% assign product_has_transform = product.template_suffix contains 'with-faceswap' %}
+
+{% if product_has_transform %}
+<style>
+  /* Ensure component visibility */
+  pixar-transform-file-input, 
+  face-swap-file-input-wrapper,
+  .file-input-wrapper, 
+  .file-input-wrapper__popup,
+  .file-input-wrapper__popup-open-btn {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  /* Hide component area but keep it accessible */
+  #pixar-component-area {
+    height: 0;
+    overflow: hidden;
+    position: absolute;
+    opacity: 0.001; /* Not 0 to keep it technically "visible" for JS */
+  }
+  
+  /* Style for the dedicated upload button */
+  #pixar-upload-button {
+    display: block;
+    width: 100%;
+    margin-bottom: 15px;
+    padding: 15px 25px;
+    font-size: 16px;
+    font-weight: bold;
+    background-color: #4a7dbd;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  /* Debug panel styling */
+  #pixar-debug-panel {
+    display: none;
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px dashed #ccc;
+    font-size: 12px;
+  }
+</style>
+
+<!-- Hidden component area -->
+<div id="pixar-component-area">
+  {% if settings.enable_pixar_transform %}
+    {% render 'pixar-transform-file-input', product: product, section_id: section.id, customer: customer %}
+  {% else %}
+    {% render 'face-swap-file-input', product: product, section_id: section.id, customer: customer %}
+  {% endif %}
+  
+  <div id="pixar-debug-panel">
+    <h4>Pixar Debug Info</h4>
+    <div id="pixar-debug-content"></div>
+  </div>
+</div>
+
+<!-- Dedicated upload button for Aurora theme -->
+<button type="button" id="pixar-upload-button">
+  📸 UPLOAD YOUR PHOTO FIRST
+</button>
+
+<script>
+  // Aurora theme - Pixar integration script
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('Aurora Pixar integration script loaded');
+    
+    // Debug helper
+    const debug = {
+      enabled: true,
+      panel: document.getElementById('pixar-debug-panel'),
+      content: document.getElementById('pixar-debug-content'),
+      
+      log: function(message) {
+        if (!this.enabled) return;
+        console.log('🔄 AURORA PIXAR:', message);
+        
+        if (this.content) {
+          const item = document.createElement('div');
+          item.textContent = message;
+          this.content.appendChild(item);
+        }
+      },
+      
+      show: function() {
+        if (this.panel) this.panel.style.display = 'block';
+      }
+    };
+    
+    // Show debug panel during development
+    if (debug.enabled) {
+      debug.show();
+    }
+    
+    // State tracking
+    window.pixarTransformComplete = false;
+    
+    // Find components and form
+    const productForm = document.querySelector('form[action="/cart/add"]');
+    const addToCartButton = productForm ? productForm.querySelector('button[type="submit"]') : null;
+    const uploadButton = document.getElementById('pixar-upload-button');
+    
+    debug.log('Initial setup - Form found: ' + !!productForm + ', Button found: ' + !!addToCartButton);
+    
+    // Function to find Pixar component
+    function findPixarComponent() {
+      // First check global reference
+      if (window.pixarComponent) {
+        debug.log('Found component via global reference');
+        return window.pixarComponent;
+      }
+      
+      // Check in DOM
+      const components = [
+        document.querySelector('pixar-transform-file-input'),
+        document.querySelector('face-swap-file-input-wrapper')
+      ];
+      
+      for (const component of components) {
+        if (component) {
+          debug.log('Found component in DOM: ' + component.tagName);
+          window.pixarComponent = component;
+          return component;
+        }
+      }
+      
+      debug.log('No component found');
+      return null;
+    }
+    
+    // Function to trigger file selection
+    function triggerImageUpload() {
+      debug.log('Triggering image upload');
+      
+      // Find component
+      const component = findPixarComponent();
+      if (!component) {
+        debug.log('ERROR: Could not find Pixar component');
+        return;
+      }
+      
+      // Try to find file input
+      const fileInput = component.querySelector('input[type="file"]');
+      if (fileInput) {
+        debug.log('Found file input, clicking it');
+        fileInput.click();
+      } else {
+        debug.log('ERROR: Could not find file input in component');
+      }
+    }
+    
+    // Set up upload button click
+    if (uploadButton) {
+      uploadButton.addEventListener('click', function() {
+        debug.log('Upload button clicked');
+        triggerImageUpload();
+      });
+    }
+    
+    // Listen for successful transform
+    document.addEventListener('pixar-transform-complete', function(event) {
+      debug.log('Transform complete event received');
+      window.pixarTransformComplete = true;
+      
+      // Update UI
+      if (uploadButton) {
+        uploadButton.textContent = '✅ IMAGE UPLOADED - READY TO ADD TO CART';
+        uploadButton.style.backgroundColor = '#4CAF50';
+      }
+      
+      debug.log('Transform complete, ready for cart submission');
+    });
+    
+    // Set up form submission interception
+    if (productForm) {
+      productForm.addEventListener('submit', function(event) {
+        debug.log('Form submit intercepted');
+        
+        if (!window.pixarTransformComplete) {
+          debug.log('Transform not complete, preventing submission');
+          event.preventDefault();
+          triggerImageUpload();
+          return false;
+        } else {
+          debug.log('Transform complete, allowing submission');
+        }
+      }, true); // Use capturing phase
+      
+      debug.log('Form submit interception set up');
+    }
+    
+    // Also intercept Add to Cart button click directly
+    if (addToCartButton) {
+      addToCartButton.addEventListener('click', function(event) {
+        debug.log('Add to Cart button clicked');
+        
+        if (!window.pixarTransformComplete) {
+          debug.log('Transform not complete, preventing click');
+          event.preventDefault();
+          event.stopPropagation();
+          
+          triggerImageUpload();
+          return false;
+        } else {
+          debug.log('Transform complete, allowing click');
+        }
+      }, true); // Use capturing phase
+      
+      debug.log('Add to Cart button interception set up');
+    }
+    
+    // Additional safety - monitor document for clicks on elements that might add to cart
+    document.addEventListener('click', function(event) {
+      // Check if the clicked element is a button inside the product form
+      if (event.target.tagName === 'BUTTON' && 
+          productForm && productForm.contains(event.target) &&
+          !window.pixarTransformComplete) {
+        
+        // Check if this looks like an add to cart button
+        const buttonText = event.target.textContent.toLowerCase();
+        if (buttonText.includes('add to cart') || 
+            buttonText.includes('add') || 
+            event.target.type === 'submit') {
+          
+          debug.log('Intercepted potential Add to Cart button click');
+          event.preventDefault();
+          event.stopPropagation();
+          
+          triggerImageUpload();
+          return false;
+        }
+      }
+    }, true); // Use capturing phase
+    
+    // Function to debug component status
+    function debugComponentStatus() {
+      debug.log('------------- COMPONENT STATUS CHECK -------------');
+      debug.log('Global pixarComponent: ' + !!window.pixarComponent);
+      debug.log('Global pixarComponentReady: ' + !!window.pixarComponentReady);
+      debug.log('Transform complete: ' + window.pixarTransformComplete);
+      
+      const component = findPixarComponent();
+      debug.log('Component found: ' + !!component);
+      
+      if (component) {
+        debug.log('Component tag: ' + component.tagName);
+        debug.log('Component visible: ' + (component.offsetHeight > 0));
+      }
+      
+      const fileInputs = document.querySelectorAll('input[type="file"]');
+      debug.log('File inputs on page: ' + fileInputs.length);
+      
+      debug.log('--------------------------------------------------');
+    }
+    
+    // Run component check after a delay
+    setTimeout(debugComponentStatus, 1000);
+    
+    debug.log('Aurora Pixar integration initialized');
+  });
+</script>
+{% endif %} 

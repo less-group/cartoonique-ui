@@ -81,6 +81,15 @@ class PixarTransformFileInput extends HTMLElement {
       this.log('Component connected to DOM');
       
       try {
+        // Explicitly register this component globally for easy access
+        window.pixarComponentReady = true;
+        window.pixarComponent = this;
+        
+        // Dispatch an event for other systems to listen for
+        document.dispatchEvent(new CustomEvent('pixar-component-ready', {
+          detail: { component: this }
+        }));
+        
         // Setup global handlers first for reliable operation
         this.setupGlobalHandlers();
         
@@ -98,6 +107,11 @@ class PixarTransformFileInput extends HTMLElement {
         
         // Initialize UpCart integration for cart image replacement
         this.initUpCartListeners();
+        
+        // Make component visible
+        this.style.display = 'block';
+        this.style.visibility = 'visible';
+        this.style.opacity = '1';
         
         this.log('Component setup complete');
       } catch (error) {
