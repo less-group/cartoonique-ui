@@ -50,6 +50,10 @@
 
 {%- if product != blank -%}
   <div class='' {{ block.shopify_attributes }}>
+    {% if product.template_suffix contains 'with-faceswap' %}
+      {% render 'aurora-pixar-integration', product: product, section: section, sectionId: sectionId %}
+    {% endif %}
+    
     <product-form data-product-id='{{ product.id }}' id='product-form-component-{{ product.id }}-{{ sectionId }}'>
       {%- form 'product',
         product,
@@ -80,12 +84,19 @@
                 class='product-form__btn btn btn--{{buttons_size}} btn--{{add_to_cart_btn_style}}'
                 {% if available == false %}
                   disabled
+                {% elsif product.template_suffix contains 'with-faceswap' %}
+                  disabled
+                  data-requires-image-upload="true"
                 {% endif %}
                 aria-label='{%- if available -%}{{ add_to_cart_label | strip_html | escape }}{%- else -%}{{ sold_out_label | strip_html | escape }}{%- endif -%}'
               >
                 <span data-button-text>
                   {%- if available -%}
-                    {{ add_to_cart_label }}
+                    {%- if product.template_suffix contains 'with-faceswap' -%}
+                      Upload Photo First
+                    {%- else -%}
+                      {{ add_to_cart_label }}
+                    {%- endif -%}
                   {%- else -%}
                     {{ sold_out_label }}
                   {%- endif -%}
