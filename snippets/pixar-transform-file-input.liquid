@@ -6,6 +6,65 @@
 {{ 'image-cropper.js' | asset_url | script_tag }}
 {{ 'image-processing-manager.js' | asset_url | script_tag }}
 
+<!-- Theme compatibility script to handle both product and main-product section types -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('PIXAR-ENHANCED: Initializing with theme compatibility layer');
+    
+    // Create a global variable to track initialization
+    window.pixarThemeCompatibility = window.pixarThemeCompatibility || {
+      initialized: false,
+      sectionType: null
+    };
+    
+    // Prevent multiple initialization
+    if (window.pixarThemeCompatibility.initialized) {
+      console.log('PIXAR-ENHANCED: Theme compatibility already initialized');
+      return;
+    }
+    
+    // Function to detect section type
+    function detectSectionType() {
+      // Check for main-product section
+      const mainProductSection = document.querySelector('.shopify-section--main-product');
+      if (mainProductSection) {
+        window.pixarThemeCompatibility.sectionType = 'main-product';
+        return 'main-product';
+      }
+      
+      // Check for product section (in the new theme)
+      const productSection = document.querySelector('[data-section-id="main"]');
+      if (productSection) {
+        window.pixarThemeCompatibility.sectionType = 'product';
+        return 'product';
+      }
+      
+      return null;
+    }
+    
+    // Detect the section type
+    const sectionType = detectSectionType();
+    console.log('PIXAR-ENHANCED: Detected section type:', sectionType);
+    
+    // Make file input button visible
+    setTimeout(() => {
+      const fileInputButton = document.querySelector('.file-input-wrapper__popup-open-btn');
+      if (fileInputButton) {
+        // Ensure button is visible - remove any display:none styling
+        fileInputButton.style.display = 'block';
+        fileInputButton.style.visibility = 'visible';
+        fileInputButton.style.opacity = '1';
+        console.log('PIXAR-ENHANCED: Made file input button visible');
+      } else {
+        console.log('PIXAR-ENHANCED: Could not find file input button');
+      }
+    }, 500);
+    
+    // Mark as initialized
+    window.pixarThemeCompatibility.initialized = true;
+  });
+</script>
+
 <!-- Two-popup approach: Instructions popup and Loading popup -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {

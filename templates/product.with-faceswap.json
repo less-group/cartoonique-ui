@@ -23,63 +23,68 @@
         "title": {
           "type": "title",
           "settings": {
-            "heading_tag": "h2"
+            "heading_size": "h1"
           }
-        },
-        "badges": {
-          "type": "badges",
-          "disabled": true,
-          "settings": {}
         },
         "price": {
           "type": "price",
           "settings": {
-            "show_taxes_notice": false
+            "price_size": "xs",
+            "show_currency_code": true,
+            "show_compared_at_price": true,
+            "show_tax_status": false,
+            "show_sale_amount_badge": true,
+            "highlight_sale_price": true
           }
         },
-        "rating": {
-          "type": "rating",
+        "inventory_status": {
+          "type": "inventory_status",
+          "disabled": true,
           "settings": {
-            "show_empty": false
+            "show_inventory_status": "always",
+            "inventory_threshhold": 11,
+            "inventory_notice_type": "label",
+            "high_inventory_text": "Many in stock",
+            "low_inventory_text": "Act now, few in stock!",
+            "show_progress_bar": true,
+            "progress_bar_type": "solid",
+            "progress_bar_size": "4",
+            "progress_bar_max_value": "50",
+            "high_inventory_label_color": "#000000",
+            "high_inventory_color": "#20d020",
+            "high_inventory_gradient": "",
+            "high_inventory_progress_bar_bg": "#f5f5f5",
+            "low_inventory_label_color": "#000000",
+            "low_inventory_color": "#ff3d3d",
+            "low_inventory_gradient": "",
+            "low_inventory_progress_bar_bg": "#f5f5f5"
           }
-        },
-        "payment_terms": {
-          "type": "payment_terms",
-          "disabled": true,
-          "settings": {}
-        },
-        "separator": {
-          "type": "separator",
-          "disabled": true,
-          "settings": {}
         },
         "description": {
           "type": "description",
           "disabled": true,
           "settings": {
-            "collapse_content": false
+            "block_style": "static",
+            "title": "",
+            "heading_size": "h3",
+            "body_size": "body6",
+            "icon": "none",
+            "icon_size": 24
           }
         },
         "variant_picker": {
           "type": "variant_picker",
           "settings": {
-            "hide_sold_out_variants": false,
-            "stack_blocks": true,
-            "selector_style": "block",
-            "swatch_selector_style": "swatch",
-            "variant_image_options": "",
-            "size_chart_page": "grossentabelle"
-          }
-        },
-        "buy_buttons": {
-          "type": "buy_buttons",
-          "settings": {
-            "show_payment_button": false,
-            "show_gift_card_recipient": true,
-            "atc_button_background": "",
-            "atc_button_text_color": "",
-            "payment_button_background": "",
-            "payment_button_text_color": ""
+            "option_type": "button-solid",
+            "show_swatches": false,
+            "primary_swatch_option_type": "swatches",
+            "secondary_swatch_option_type": "swatches",
+            "hide_single_value_options": true,
+            "option_name": "",
+            "information_drawer_button_label": "",
+            "text": "",
+            "page": "",
+            "image_width": 60
           }
         },
         "quantity_selector": {
@@ -88,43 +93,51 @@
           "settings": {
           }
         },
-        "custom_html": {
-          "type": "html",
+        "buy_buttons": {
+          "type": "buy_buttons",
           "settings": {
-            "html": "<div id=\"pixar-transform-container\" style=\"margin-top: 20px; width: 100%;\"><button id=\"pixar-manual-upload-button\" style=\"background-color: #4a7dbd; color: white; border: none; border-radius: 4px; padding: 15px 25px; font-size: 16px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 10px;\">Upload Your Photo</button><div id=\"debug-info\" style=\"margin-top: 20px; border: 1px solid #ddd; padding: 10px; font-size: 12px;\"></div></div><script>document.addEventListener('DOMContentLoaded', function() { var debugDiv = document.getElementById('debug-info'); debugDiv.innerHTML = '<p>Debugging information:</p>'; var templateSuffix = ''; try { templateSuffix = document.querySelector('buy-buttons').getAttribute('template') || 'unknown'; debugDiv.innerHTML += '<p>Template suffix: ' + templateSuffix + '</p>'; } catch(e) { debugDiv.innerHTML += '<p>Error getting template suffix: ' + e.message + '</p>'; } var fileInputWrapper = document.querySelector('pixar-transform-file-input') || document.querySelector('face-swap-file-input-wrapper'); if (fileInputWrapper) { debugDiv.innerHTML += '<p>Found file input wrapper: ' + (fileInputWrapper.tagName) + '</p>'; } else { debugDiv.innerHTML += '<p>File input wrapper not found!</p>'; } var mainButton = document.querySelector('.file-input-wrapper__popup-open-btn'); if (mainButton) { debugDiv.innerHTML += '<p>Found upload button, style: ' + (window.getComputedStyle(mainButton).display) + '</p>'; var btn = document.getElementById('pixar-manual-upload-button'); if (btn) { btn.addEventListener('click', function() { mainButton.click(); }); } } else { debugDiv.innerHTML += '<p>Upload button not found!</p>'; } });</script>"
+            "show_dynamic_checkout": false,
+            "enable_pickup_availability": false,
+            "enable_gift_card": false,
+            "show_payment_icons": false,
+            "show_sticky_btn_on_mobile": true,
+            "buttons_size": "xl",
+            "add_to_cart_btn_style": "solid",
+            "checkout_btn_style": "outline"
           }
         }
       },
       "block_order": [
         "vendor",
         "title",
-        "badges",
         "price",
-        "rating",
-        "payment_terms",
-        "separator",
+        "inventory_status",
         "description",
         "variant_picker",
-        "buy_buttons",
         "quantity_selector",
-        "custom_html"
+        "buy_buttons"
       ],
       "settings": {
-        "full_width": true,
-        "show_fixed_add_to_cart": true,
-        "desktop_media_width": 55,
-        "desktop_media_layout": "carousel_thumbnails_left",
-        "mobile_media_size": "expanded",
-        "mobile_carousel_control": "floating_dots",
-        "enable_video_autoplay": false,
-        "enable_video_looping": true,
+        "color_scheme": "black",
+        "container_size": "medium",
+        "media_to_content_ratio": "fixed",
+        "img_ratio": "square",
+        "layout": "thumbnails-bottom",
+        "desktop_space_between_media": 20,
+        "thumbnails_size": 80,
+        "mobile_layout": "thumbnails-bottom-overlay",
+        "mobile_space_between_media": 16,
+        "show_only_selected_variants": false,
         "enable_image_zoom": true,
-        "max_image_zoom_level": 3,
-        "background": "",
-        "background_gradient": "",
-        "text_color": "",
-        "input_background": "rgba(0,0,0,0)",
-        "input_text_color": ""
+        "enable_video_autoplay": true,
+        "enable_video_controls": false,
+        "enable_video_looping": false,
+        "scale_video": true,
+        "add_side_paddings": true,
+        "desktop_spacing_top": 32,
+        "desktop_spacing_bottom": 48,
+        "mobile_spacing_top": 12,
+        "mobile_spacing_bottom": 12
       }
     },
     "related-products": {
