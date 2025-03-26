@@ -70,6 +70,100 @@
           id='{{ product_form_id }}-IdInput-{{ form.id }}'
         >
         {{ form | payment_terms }}
+        
+        {%- comment -%}Pixar Transform component{%- endcomment -%}
+        {%- if product.tags contains 'cartoonique' or product.tags contains 'pixar-transform' -%}
+          <div class="pixar-transform-wrapper" style="margin-bottom: 20px;">
+            <pixar-transform-file-input 
+              data-section-id="{{ section.id }}" 
+              data-product-id="{{ product.id }}" 
+              data-product-variant-id="{{ selected_variant.id }}" 
+              data-customer-id="{{ customer.id | default: 'guest' }}">
+              <div class="file-input-wrapper">
+                <div class="file-input-wrapper__upload-area">
+                  <label for="file-input-wrapper__input-{{ section.id }}" class="file-input-wrapper__label">
+                    <div class="file-input-wrapper__content">
+                      <div class="file-input-wrapper__icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M17 8L12 3L7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M12 3V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </div>
+                      <div class="file-input-wrapper__text">
+                        <p>Upload your photo</p>
+                        <span>for Pixar-style transformation</span>
+                      </div>
+                    </div>
+                  </label>
+                  <input type="file" id="file-input-wrapper__input-{{ section.id }}" accept="image/*" class="file-input-wrapper__input" />
+                </div>
+                
+                <div data-pixar-popup class="file-input-wrapper__popup" style="display: none;">
+                  <div class="file-input-wrapper__popup-content">
+                    <button data-popup-close class="file-input-wrapper__popup-close-btn">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                    
+                    <div data-popup-content>
+                      <div class="file-input-wrapper__upload-area">
+                        <label for="file-input-wrapper__popup-input-{{ section.id }}">
+                          <div class="file-input-wrapper__content">
+                            <div class="file-input-wrapper__icon">
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M17 8L12 3L7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 3V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                              </svg>
+                            </div>
+                            <div class="file-input-wrapper__text">
+                              <p>Upload your photo</p>
+                              <span>Click or drag and drop</span>
+                            </div>
+                          </div>
+                        </label>
+                        <input type="file" id="file-input-wrapper__popup-input-{{ section.id }}" accept="image/*" class="file-input-wrapper__input" />
+                      </div>
+                    </div>
+                    
+                    <div data-processing-content style="display: none;">
+                      <div class="file-input-wrapper__processing">
+                        <div class="file-input-wrapper__processing-icon">
+                          <svg class="circular-loader" viewBox="25 25 50 50">
+                            <circle class="loader-path" cx="50" cy="50" r="20" fill="none" stroke-width="2" />
+                          </svg>
+                        </div>
+                        <div class="file-input-wrapper__processing-text">
+                          <p>Transforming your photo...</p>
+                          <div class="file-input-wrapper__progress-bar-wrapper">
+                            <div data-progress-bar class="file-input-wrapper__progress-bar"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div data-result-wrapper style="display: none;">
+                      <div class="file-input-wrapper__result">
+                        <div data-result-image-wrapper class="file-input-wrapper__result-image"></div>
+                        <div class="file-input-wrapper__result-text">
+                          <p data-help-result-text>Your photo has been transformed!</p>
+                        </div>
+                        <div class="file-input-wrapper__result-buttons">
+                          <button data-try-again class="file-input-wrapper__result-btn file-input-wrapper__result-btn--secondary">Try Again</button>
+                          <button data-continue class="file-input-wrapper__result-btn file-input-wrapper__result-btn--primary">Continue</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </pixar-transform-file-input>
+          </div>
+        {%- endif -%}
+        
         <div class='product-form__btns'>
           {% if template.name == 'product' and sectionId contains '---MainSection' %}
             <div class='product-form__btn-wrapper'>

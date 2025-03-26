@@ -18,8 +18,100 @@
 <script src="{{ 'pixar-text-manager.js' | asset_url }}" defer></script>
 <script src="{{ 'pixar-integration.js' | asset_url }}" defer></script>
 
+<!-- Image Processing Manager -->
+<script src="{{ 'image-processing-manager.js' | asset_url }}" defer></script>
+<script src="{{ 'image-cropper.js' | asset_url }}" defer></script>
+<script src="{{ 'image-cropper.css' | asset_url }}" stylesheet_tag></script>
+
+<!-- Aurora Theme Adapter -->
+<script src="{{ 'aurora-pixar-adapter.js' | asset_url }}" defer></script>
+
 <!-- Legacy FaceSwap Scripts -->
 <script src="{{ 'face-swap-file-input-wrapper.js' | asset_url }}" defer></script>
+
+<!-- Initialize Pixar Transformation -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Image Processing Manager
+    window.ASSET_BASE_URL = '{{ 'assets/' | asset_url }}';
+    
+    // Wait for components to be fully loaded
+    setTimeout(function() {
+      // Initialize image processing manager
+      if (typeof ImageProcessingManager !== 'undefined') {
+        window.imageProcessingManager = new ImageProcessingManager();
+        console.log('Aurora theme: Image Processing Manager initialized');
+      }
+      
+      // Initialize pixar integration
+      if (typeof PixarTextIntegration !== 'undefined') {
+        const pixarIntegration = new PixarTextIntegration({
+          sectionId: '{{ section.id }}',
+          debug: true
+        });
+        pixarIntegration.init();
+        console.log('Aurora theme: Pixar Text Integration initialized');
+      }
+      
+      // Form validation for pixar-transform products
+      const productForm = document.querySelector('#product-form-{{ product.id }}-{{ section.id }}');
+      if (productForm) {
+        {% if product.tags contains 'cartoonique' or product.tags contains 'pixar-transform' %}
+          console.log('Aurora theme: Setting up pixar-transform form validation');
+          productForm.addEventListener('submit', function(event) {
+            // Check if pixarComponent exists and has a transformed image
+            const pixarComponent = document.querySelector('pixar-transform-file-input');
+            if (pixarComponent && (!pixarComponent.processedImageUrl || !pixarComponent.state || pixarComponent.state.isProcessing)) {
+              event.preventDefault();
+              event.stopPropagation();
+              
+              // Open the pixar popup if not already processing
+              if (pixarComponent && !pixarComponent.state.isProcessing) {
+                alert('Please upload and transform your image before adding to cart');
+                setTimeout(() => {
+                  if (typeof pixarComponent.openPopup === 'function') {
+                    pixarComponent.openPopup();
+                  }
+                }, 100);
+              } else if (pixarComponent && pixarComponent.state.isProcessing) {
+                alert('Please wait for image transformation to complete');
+              }
+              
+              return false;
+            }
+            
+            // Let the form submit if everything is valid
+            return true;
+          });
+          
+          // Listen for the pixar-transform-complete event
+          document.addEventListener('pixar-transform-complete', function(event) {
+            console.log('Aurora theme: Pixar transform complete event received');
+            // Enable the add to cart button and update its appearance
+            const addToCartButton = document.querySelector('#product-buy-btn-{{ product.id }}-{{ section.id }}');
+            const stickyAddToCartButton = document.querySelector('#sticky-product-buy-btn-{{ product.id }}-{{ section.id }}');
+            
+            if (addToCartButton) {
+              addToCartButton.classList.add('btn--ready');
+              const buttonText = addToCartButton.querySelector('[data-button-text]');
+              if (buttonText) {
+                buttonText.textContent = '{{ 'product.store_front.add_to_cart' | t }}';
+              }
+            }
+            
+            if (stickyAddToCartButton) {
+              stickyAddToCartButton.classList.add('btn--ready');
+              const buttonText = stickyAddToCartButton.querySelector('[data-button-text]');
+              if (buttonText) {
+                buttonText.textContent = '{{ 'product.store_front.add_to_cart' | t }}';
+              }
+            }
+          });
+        {% endif %}
+      }
+    }, 500);
+  });
+</script>
 
 <style>
   #shopify-section-{{ section.id }} {
