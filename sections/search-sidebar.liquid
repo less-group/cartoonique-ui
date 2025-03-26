@@ -52,7 +52,7 @@
   {% render 'get-section-background-color', section: section %}
 {% endcapture %}
 
-{%- if settings.search_type == 'modal_and_page' -%}
+{%- if settings.search_type == 'modal_and_page' or settings.search_type == 'sidebar_only' -%}
   {%- unless template.name contains 'search' -%}
     <search-sidebar
       class='search-sidebar color-{{ color_scheme }}'
