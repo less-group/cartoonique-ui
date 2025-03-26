@@ -101,9 +101,15 @@
             "enable_gift_card": false,
             "show_payment_icons": false,
             "show_sticky_btn_on_mobile": true,
-            "buttons_size": "md",
+            "buttons_size": "xl",
             "add_to_cart_btn_style": "solid",
             "checkout_btn_style": "outline"
+          }
+        },
+        "custom_html": {
+          "type": "html",
+          "settings": {
+            "html": "<div id=\"pixar-transform-container\" style=\"margin-top: 20px; width: 100%;\"><button id=\"pixar-upload-photo-button\" style=\"background-color: #4a7dbd; color: white; border: none; border-radius: 4px; padding: 15px 25px; font-size: 16px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 10px;\">Upload Your Photo</button></div><script>document.addEventListener('DOMContentLoaded', function() { const uploadButton = document.getElementById('pixar-upload-photo-button'); if (uploadButton) { uploadButton.addEventListener('click', function() { const mainButton = document.querySelector('.file-input-wrapper__popup-open-btn'); if (mainButton) { mainButton.click(); } }); } });</script>"
           }
         }
       },
@@ -115,7 +121,8 @@
         "description",
         "variant_picker",
         "quantity_selector",
-        "buy_buttons"
+        "buy_buttons",
+        "custom_html"
       ],
       "settings": {
         "color_scheme": "black",
