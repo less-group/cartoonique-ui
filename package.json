@@ -1,0 +1,30 @@
+{
+  "name": "letzteshemd-ui",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "run-p -sr shopify:serve gulp:watch",
+    "shopify:serve": "shopify theme dev -s letzteshemd --theme-editor-sync --live-reload hot-reload",
+    "shopify:pull": "shopify theme pull -s letzteshemd",
+    "deploy": "run-s gulp:production && shopify theme push -s letzteshemd",
+    "deploy:new": "run-s gulp:production && shopify theme push --unpublished -s letzteshemd",
+    "gulp:watch": "gulp",
+    "gulp:production": "gulp production"
+  },
+  "dependencies": {
+    "bootstrap-scss": "^4.3.1",
+    "gulp": "^4.0.2",
+    "gulp-autoprefixer": "^8.0.0",
+    "gulp-babel": "^8.0.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-sass": "^5.1.0",
+    "gulp-sourcemaps": "^3.0.0",
+    "gulp-uglify": "^3.0.2",
+    "npm-run-all": "^4.1.5",
+    "sass": "^1.58.3"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.21.0",
+    "@babel/preset-env": "^7.20.2"
+  },
+  "license": "ISC"
+}

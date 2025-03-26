@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang='{{ request.locale.iso_code }}'>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width,initial-scale=1'>
+    <meta name='theme-color' content='{{ settings.default_color_scheme }}'>
+    {%- if page_description -%}
+      <meta name='description' content='{{ page_description | escape }}'>
+    {%- endif -%}
+    {%- if settings.favicon != blank -%}
+      <link rel='icon' type='image/png' href='{{ settings.favicon | image_url: width: 32, height: 32 }}'>
+    {%- endif -%}
+    {% render 'meta-tags' %}
+    <link rel='canonical' href='{{ canonical_url }}'>
+    <link rel='preconnect' href='https://cdn.shopify.com' crossorigin>
+    <link rel='preconnect' href='https://fonts.shopifycdn.com' crossorigin>
+
+    <title>
+      {{ page_title }}
+      {%- if current_tags %} &ndash; tagged "{{ current_tags | join: ', ' }}"{% endif -%}
+      {%- if current_page != 1 %} &ndash; Page {{ current_page }}{% endif -%}
+      {%- unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless -%}
+    </title>
+
+    {% render 'css-variables' %}
+    {{ 'bundle.js' | asset_url | preload_tag: as: 'script' }}
+    {{ 'bundle.css' | asset_url | stylesheet_tag: preload: true }}
+    {% render 'fonts' %}
+    
+    <!-- Pixar Transform Dependencies -->
+    {{ 'image-cropper.css' | asset_url | stylesheet_tag }}
+    {{ 'pixar-transform-file-input.css' | asset_url | stylesheet_tag }}
+    <script src="{{ 'unified-config.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'unified-api-client.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'pixar-config.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'pixar-utils.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'image-processing-manager.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'image-cropper.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'pixar-transform-file-input.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'pixar-text-manager.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'pixar-text-overlay.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'pixar-integration.js' | asset_url }}" defer="defer"></script>
+    <!-- End Pixar Transform Dependencies -->
+
+    {{ content_for_header }}
+  </head>
+  <body class='color-{{ settings.default_color_scheme }} round-level-{{ settings.round_level }} {% if settings.round_level != "0" %} round-style {% endif %}'>
+    <a id='SkipContent' class='visually-hidden skip-to-content-link btn btn--lg btn--solid' href='#MainContent'>
+      {{ 'accessibility.skip_to_text' | t }}
+    </a>
+
+    {% if template.name == 'password' %}
+      {% sections 'password-header-group' %}
+    {% else %}
+      {% sections 'main-header-group' %}
+      {% sections 'main-aside-group' %}
+    {% endif %}
+
+    {% sections 'popup-group' %}
+
+    <main id='MainContent'>
+      {{ content_for_layout }}
+    </main>
+
+    {%- if template.name == 'password' -%}
+      {% sections 'password-footer-group' %}
+    {%- else -%}
+      {% sections 'main-footer-group' %}
+    {%- endif -%}
+
+    {%- render 'dialog-components' -%}
+    {%- render 'interface-controls' -%}
+    {%- render 'page-overlays' -%}
+
+    <div id='Portal'></div>
+    {%- render 'inject-routes' -%}
+    {%- render 'save-global-data-in-global-scope' -%}
+    <script>
+      window.lazySizesConfig = window.lazySizesConfig || {}
+      window.lazySizesConfig.loadMode = 1
+    </script>
+
+    <script src='{{ 'bundle.js' | asset_url }}' defer='defer'></script>
+  </body>
+</html>

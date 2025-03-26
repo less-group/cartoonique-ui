@@ -1,0 +1,1871 @@
+{%- liquid
+  assign options = section.settings
+
+  assign color_scheme = options.color_scheme
+  assign add_side_paddings = options.add_side_paddings
+  assign section_spacing_top = options.section_spacing_top
+  assign section_spacing_bottom = options.section_spacing_bottom
+  assign title = options.title
+  assign text = options.text
+  assign container_size = options.container_size
+  assign body_size = options.body_size
+  assign content_alignment = options.content_alignment
+  assign heading_size = options.heading_size
+  assign btn_url = options.btn_url
+  assign btn_style = options.btn_style
+  assign btn_text = options.btn_text
+  assign section_layout = options.section_layout
+  assign color_tabs = options.color_tabs
+  assign enable_background_around_container = options.enable_background_around_container
+
+  assign first_question = section.blocks | where: 'type', 'question' | first
+
+  assign enable_content_slide_in = settings.enable_content_slide_in
+-%}
+
+{% capture css %}
+  {% style %}
+    .section-{{ section.id }} {
+      --gsc-section-spacing-top: {{ section_spacing_top }}px;
+      --gsc-section-spacing-bottom: {{ section_spacing_bottom }}px;
+    }
+
+    {% for block in section.blocks %}
+      .block-{{ block.id }} {
+        --gsc-image-width: {{ block.settings.image_width }}%;
+        --gsc-icon-size: {{ block.settings.icon_size }}px;
+      }
+    {% endfor %}
+  {% endstyle %}
+{% endcapture %}
+
+{% render 'inline-css-minifier', css: css %}
+
+<accordeon-container class='faq section-{{ section.id }} faq--{{ section_layout }} {% if title == blank and text == blank and btn_text == blank %} faq--without-content {% endif %} {% if enable_background_around_container == true %} section color-{{ color_scheme }} faq--with-background {% endif %}'>
+  <div class='container section-spacing container--{{ container_size }} {% if add_side_paddings == true %}container--with-aside-paddings{% endif %}'>
+    <div class='faq__container  {% if section_layout == 'left-tabs' %} faq__container--with-tabs-on-left-side {% elsif section_layout == 'right-tabs' %} faq__container--with-tabs-on-right-side {% elsif section_layout == 'bottom-tabs' %} faq__container--with-tabs-on-bottom-side {% endif %} {% if enable_background_around_container != true %} section color-{{ color_scheme }} faq__container--with-background {% endif %}'>
+      {%- if title != blank or text != blank or btn_text != blank -%}
+        <div class='faq__content {% if content_alignment != 'left' %}faq__content--align-{{content_alignment}}{% endif %} {% if container_size == 'full-screen' and settings.round_level != "0" %}{% if section_layout == 'left-tabs' %} faq__content--with-right-spacing {% elsif section_layout == 'right-tabs' %} faq__content--with-left-spacing {% endif %}{% endif %}'>
+          <div class='faq__content-body'>
+            {%- if title != blank -%}
+              <h2
+                class='{{ heading_size }} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 1;'
+                {% endif %}
+              >
+                {{ title }}
+              </h2>
+            {%- endif -%}
+            {%- if text != blank -%}
+              <div
+                class='rte {{ body_size }} {% if title != blank %} body-color {% endif %} faq__text body-font-weight-from-global-settings {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 2;'
+                {% endif %}
+              >
+                {{ text }}
+              </div>
+            {%- endif -%}
+
+            {%- if btn_text != blank -%}
+              {%- if btn_style == 'link' -%}
+                <a
+                  class='link faq__btn {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                  {% if enable_content_slide_in %}
+                    style='--gsc-animation-order: 3;'
+                  {% endif %}
+                  {% if btn_url != blank %}
+                    href='{{ btn_url }}'
+                  {% endif %}
+                  aria-label='{{ btn_text | strip_html | escape }}'
+                >
+                  <span class='link-parent-for-hover'>
+                    <span class='link__text'>{{ btn_text }}</span>
+                  </span>
+                  {%- render 'icon', icon_name: 'link-chevron', class: 'link__chevron' -%}
+                </a>
+              {%- else -%}
+                <a
+                  class='btn btn--{{ btn_style }} faq__btn {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                  {% if enable_content_slide_in %}
+                    style='--gsc-animation-order: 4;'
+                  {% endif %}
+                  {% if btn_url != blank %}
+                    href='{{ btn_url }}'
+                  {% endif %}
+                  aria-label='{{- btn_text | strip_html | escape -}}'
+                >
+                  {{- btn_text -}}
+                </a>
+              {%- endif -%}
+            {%- endif -%}
+          </div>
+        </div>
+      {%- endif -%}
+
+      {%- if section.blocks.size > 0 -%}
+        <div class='faq__blocks {% if color_tabs == 'all' %} faq__blocks--with-background faq__blocks--with-aside-spacing {% endif %} {% if color_tabs == 'none' %} faq__blocks--full-width {% endif %} {% if color_tabs contains 'separately' %} faq__blocks--with-separately-devided {% endif %}'>
+          {%- for block in section.blocks -%}
+            {%- assign icon = block.settings.icon -%}
+            {%- assign custom_icon_image = block.settings.custom_icon_image -%}
+
+            {%- case block.type -%}
+              {%- when 'category' -%}
+                <div
+                  class='faq__category block-{{ block.id }} {{ block.settings.category_heading_size }} {% if color_tabs == 'all' %} faq__category--all-without-aside-spacing {% endif %} {% if color_tabs == 'content_tabs_only' %} faq__category--without-aside-spacing {% endif %} {% if color_tabs == 'categories_only' or color_tabs == 'all_separately' %} faq__category--with-background {% endif %} {% if color_tabs == 'content_tabs_separately' %} faq__category--without-aside-spacing {% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                  {% if enable_content_slide_in %}
+                    style='--gsc-animation-order: {{forloop.index}};'
+                  {% endif %}
+                  {{ block.shopify_attributes }}
+                >
+                  {%- if custom_icon_image != blank -%}
+                    <img
+                      {% render 'image-attributes',
+                        image: custom_icon_image,
+                        size: 'small',
+                        class: 'faq__category-icon'
+                      %}
+                    >
+                  {%- elsif icon != 'none' -%}
+                    {% render 'icon-pack', icon: icon, class: 'faq__category-icon' %}
+                  {%- endif -%}
+
+                  {{ block.settings.title }}
+                </div>
+
+              {%- when 'question' -%}
+                {%- liquid
+                  assign image = block.settings.image
+                  assign video = block.settings.video
+                  assign page = block.settings.page
+                  assign prevIndex = forloop.index0 | minus: 1
+                  assign nextIndex = forloop.index0 | plus: 1
+                  assign isFirst = false
+                  assign isLast = false
+
+                  if section.blocks[prevIndex].type == 'category' or section.blocks[prevIndex].type == blank or forloop.index0 == 0
+                    assign isFirst = true
+                  endif
+
+                  if section.blocks[nextIndex].type == 'category' or section.blocks[nextIndex].type == blank
+                    assign isLast = true
+                  endif
+                -%}
+
+                <div
+                  class='faq__question faq__question--outer-container {% if color_tabs == 'all' %} faq__question--without-aside-spacing {% endif %} {% if color_tabs == 'categories_only' %} faq__question--full-width {% endif %} {% if color_tabs == 'content_tabs_only' %} faq__question--with-background {% endif %} {% if color_tabs == 'content_tabs_only' and isFirst %} faq__question--first {% endif %} {% if color_tabs == 'content_tabs_only' and  isLast %} faq__question--last {% endif %} {% if color_tabs == 'content_tabs_only' and isLast and isFirst %} faq__question--first-and-last {% endif %} {% if color_tabs contains 'separately' %} faq__question--with-separately-background {% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                  {% if enable_content_slide_in %}
+                    style='--gsc-animation-order: {{forloop.index}};'
+                  {% endif %}
+                >
+                  <accordeon-component
+                    class='faq__question faq__accordeon-plus accordeon-plus block-{{ block.id }} {% if color_tabs == 'none' or color_tabs == 'all' or isFirst != true %} accordeon-plus--top-bordered {% endif %}'
+                    data-aria-expanded='{% if section.settings.expand_first_tab and block.id == first_question.id %}true{% else %}false{% endif %}'
+                    data-section-id='{{ section.id }}'
+                    data-block-id='{{ block.id }}'
+                    {{ block.shopify_attributes }}
+                  >
+                    <accordeon-button
+                      class='faq__accordeon-plus-btn accordeon-plus__btn {{ block.settings.heading_size }} {% if color_tabs == 'categories_only' %} faq__accordeon-plus-btn--full-width {% endif %}'
+                      tabindex='0'
+                    >
+                      {%- if custom_icon_image != blank -%}
+                        <img
+                          {% render 'image-attributes',
+                            image: custom_icon_image,
+                            size: 'small',
+                            class: 'accordeon-plus__btn-icon'
+                          %}
+                        >
+                      {%- elsif icon != 'none' -%}
+                        {% render 'icon-pack', icon: icon, class: 'accordeon-plus__btn-icon' %}
+                      {%- endif -%}
+
+                      {{ block.settings.title }}
+
+                      {% render 'icon', icon_name: 'plus', class: 'accordeon-plus__icon' %}
+                    </accordeon-button>
+                    <div class='accordeon-plus__content-wrap' data-accordeon-content-wrap>
+                      <div
+                        class='faq__accordeon-plus-content body-color accordeon-plus__content body-font-weight-from-global-settings {% if color_tabs == 'categories_only' %} faq__accordeon-plus-content--full-width {% endif %}'
+                        data-accordeon-content
+                      >
+                        {% if block.settings.text != blank %}
+                          <div class='rte {{ block.settings.body_size }}'>
+                            {{ block.settings.text }}
+                          </div>
+                        {% endif %}
+                        {% if page != blank %}
+                          <div class='rte rte--page {{ block.settings.body_size }}'>
+                            {{ page.content }}
+                          </div>
+                        {% endif %}
+                        {%- if video != blank -%}
+                          {% render 'video-with-alt',
+                            video: video,
+                            class: 'faq__question-image',
+                            autoplay: true,
+                            loop: true,
+                            muted: true,
+                            controls: false,
+                            loading: 'lazy'
+                          %}
+                        {%- elsif image != blank -%}
+                          <img
+                            {% render 'image-attributes', image: image, class: 'faq__question-image' %}
+                          >
+                        {%- endif -%}
+                      </div>
+                    </div>
+                  </accordeon-component>
+                </div>
+            {%- endcase -%}
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+</accordeon-container>
+
+{% render 'save-section-data-in-global-scope', section: section %}
+
+{% schema %}
+{
+  "name": "t:sections.faq.name",
+  "tag": "section",
+  "class": "section--with-sticky-elements",
+  "settings": [
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:sections.general_section_settings.color_scheme_option_default_label"
+        },
+        {
+          "value": "primary",
+          "label": "t:sections.general_section_settings.color_scheme_option_primary_label"
+        },
+        {
+          "value": "secondary",
+          "label": "t:sections.general_section_settings.color_scheme_option_secondary_label"
+        },
+        {
+          "value": "custom-1",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_1_label"
+        },
+        {
+          "value": "custom-2",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_2_label"
+        },
+        {
+          "value": "custom-3",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_3_label"
+        },
+        {
+          "value": "white",
+          "label": "t:sections.general_section_settings.color_scheme_option_white_text_label"
+        },
+        {
+          "value": "black",
+          "label": "t:sections.general_section_settings.color_scheme_option_black_text_label"
+        },
+        {
+          "value": "custom-5",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_5_label"
+        }
+      ],
+      "default": "default",
+      "label": "t:sections.general_section_settings.color_scheme_label",
+      "info": "t:sections.general_section_settings.color_scheme_tip"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_background_around_container",
+      "default": false,
+      "label": "t:sections.general_section_settings.enable_background_around_container_label"
+    },
+    {
+      "type": "select",
+      "id": "color_tabs",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.faq.color_tabs.options.option_1"
+        },
+        {
+          "value": "all",
+          "label": "t:sections.faq.color_tabs.options.option_2"
+        },
+        {
+          "value": "categories_only",
+          "label": "t:sections.faq.color_tabs.options.option_3"
+        },
+        {
+          "value": "content_tabs_only",
+          "label": "t:sections.faq.color_tabs.options.option_4"
+        },
+        {
+          "value": "all_separately",
+          "label": "t:sections.faq.color_tabs.options.option_5"
+        },
+        {
+          "value": "content_tabs_separately",
+          "label": "t:sections.faq.color_tabs.options.option_6"
+        }
+      ],
+      "default": "content_tabs_separately",
+      "label": "t:sections.faq.color_tabs.label"
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "options": [
+        {
+          "value": "full-screen",
+          "label": "t:sections.general_section_settings.container_size.screen_width_option"
+        },
+        {
+          "value": "page-width",
+          "label": "t:sections.general_section_settings.container_size.page_width_option"
+        },
+        {
+          "value": "large",
+          "label": "t:sections.general_section_settings.container_size.large_width_option"
+        },
+        {
+          "value": "medium",
+          "label": "t:sections.general_section_settings.container_size.medium_width_option"
+        },
+        {
+          "value": "small",
+          "label": "t:sections.general_section_settings.container_size.small_width_option"
+        },
+        {
+          "value": "xsmall",
+          "label": "t:sections.general_section_settings.container_size.extra_small_width_option"
+        }
+      ],
+      "default": "xsmall",
+      "label": "t:sections.general_section_settings.container_size.label"
+    },
+    {
+      "type": "select",
+      "id": "section_layout",
+      "options": [
+        {
+          "value": "right-tabs",
+          "label": "t:sections.faq.section_layout_option_right_tabs_label"
+        },
+        {
+          "value": "left-tabs",
+          "label": "t:sections.faq.section_layout_option_left_tabs_label"
+        },
+        {
+          "value": "bottom-tabs",
+          "label": "t:sections.faq.section_layout_option_bottom_tabs_label"
+        }
+      ],
+      "default": "bottom-tabs",
+      "label": "t:sections.faq.section_layout_label",
+      "info": "t:sections.faq.section_layout_info"
+    },
+    {
+      "type": "checkbox",
+      "id": "expand_first_tab",
+      "default": false,
+      "label": "t:sections.faq.expand_first_tab.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.faq.content_settings_header"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "t:sections.faq.title_label",
+      "default": "FAQ"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "label": "t:sections.general_section_settings.label_for_heading_size_setting",
+      "options": [
+        {
+          "value": "display1",
+          "label": "t:sections.general_section_settings.display_size_1_option"
+        },
+        {
+          "value": "display2",
+          "label": "t:sections.general_section_settings.display_size_2_option"
+        },
+        {
+          "value": "display3",
+          "label": "t:sections.general_section_settings.display_size_3_option"
+        },
+        {
+          "value": "h1",
+          "label": "t:sections.general_section_settings.heading_size_1_option"
+        },
+        {
+          "value": "h2",
+          "label": "t:sections.general_section_settings.heading_size_2_option"
+        },
+        {
+          "value": "h3",
+          "label": "t:sections.general_section_settings.heading_size_3_option"
+        },
+        {
+          "value": "h4",
+          "label": "t:sections.general_section_settings.heading_size_4_option"
+        },
+        {
+          "value": "h5",
+          "label": "t:sections.general_section_settings.heading_size_5_option"
+        },
+        {
+          "value": "h6",
+          "label": "t:sections.general_section_settings.heading_size_6_option"
+        },
+        {
+          "value": "caption1",
+          "label": "t:sections.general_section_settings.caption_size_1_option"
+        },
+        {
+          "value": "caption2",
+          "label": "t:sections.general_section_settings.caption_size_2_option"
+        },
+        {
+          "value": "caption3",
+          "label": "t:sections.general_section_settings.caption_size_3_option"
+        }
+      ],
+      "default": "h5"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "text",
+      "default": "Answers to most common questions about products, orders, shipments, and payments.",
+      "label": "t:sections.faq.text_label"
+    },
+    {
+      "type": "select",
+      "id": "body_size",
+      "label": "t:sections.general_section_settings.label_for_body_size_setting",
+      "options": [
+        {
+          "value": "body0",
+          "label": "t:sections.general_section_settings.body_size_0_option"
+        },
+        {
+          "value": "body1",
+          "label": "t:sections.general_section_settings.body_size_1_option"
+        },
+        {
+          "value": "body2",
+          "label": "t:sections.general_section_settings.body_size_2_option"
+        },
+        {
+          "value": "body3",
+          "label": "t:sections.general_section_settings.body_size_3_option"
+        },
+        {
+          "value": "body4",
+          "label": "t:sections.general_section_settings.body_size_4_option"
+        },
+        {
+          "value": "body5",
+          "label": "t:sections.general_section_settings.body_size_5_option"
+        },
+        {
+          "value": "body6",
+          "label": "t:sections.general_section_settings.body_size_6_option"
+        }
+      ],
+      "default": "body3"
+    },
+    {
+      "type": "text_alignment",
+      "id": "content_alignment",
+      "label": "t:sections.general_section_settings.content_alignment.label",
+      "default": "center"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.faq.button_settings_header"
+    },
+    {
+      "type": "text",
+      "id": "btn_text",
+      "label": "t:sections.general_section_settings.button_text_label"
+    },
+    {
+      "type": "url",
+      "id": "btn_url",
+      "label": "t:sections.general_section_settings.button_link_label"
+    },
+    {
+      "type": "select",
+      "id": "btn_style",
+      "options": [
+        {
+          "value": "solid",
+          "label": "t:sections.general_section_settings.button_style_solid_option_label"
+        },
+        {
+          "value": "outline",
+          "label": "t:sections.general_section_settings.button_style_outline_option_label"
+        },
+        {
+          "value": "link",
+          "label": "t:sections.general_section_settings.button_style_link_option_label"
+        }
+      ],
+      "default": "solid",
+      "label": "t:sections.general_section_settings.button_style_label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.general_section_settings.paddings.header_title"
+    },
+    {
+      "type": "checkbox",
+      "id": "add_side_paddings",
+      "default": true,
+      "label": "t:sections.general_section_settings.paddings.add_side_paddings.label"
+    },
+    {
+      "type": "range",
+      "id": "section_spacing_top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 96,
+      "unit": "t:sections.general_section_settings.paddings.section_spacing_top.unit",
+      "label": "t:sections.general_section_settings.paddings.section_spacing_top.label"
+    },
+    {
+      "type": "range",
+      "id": "section_spacing_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 96,
+      "unit": "t:sections.general_section_settings.paddings.section_spacing_bottom.unit",
+      "label": "t:sections.general_section_settings.paddings.section_spacing_bottom.label"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "category",
+      "name": "t:sections.faq.category_block_name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:sections.faq.category_block_title_label",
+          "default": "Category"
+        },
+        {
+          "type": "select",
+          "id": "category_heading_size",
+          "label": "t:sections.general_section_settings.label_for_heading_size_setting",
+          "options": [
+            {
+              "value": "display1",
+              "label": "t:sections.general_section_settings.display_size_1_option"
+            },
+            {
+              "value": "display2",
+              "label": "t:sections.general_section_settings.display_size_2_option"
+            },
+            {
+              "value": "display3",
+              "label": "t:sections.general_section_settings.display_size_3_option"
+            },
+            {
+              "value": "h1",
+              "label": "t:sections.general_section_settings.heading_size_1_option"
+            },
+            {
+              "value": "h2",
+              "label": "t:sections.general_section_settings.heading_size_2_option"
+            },
+            {
+              "value": "h3",
+              "label": "t:sections.general_section_settings.heading_size_3_option"
+            },
+            {
+              "value": "h4",
+              "label": "t:sections.general_section_settings.heading_size_4_option"
+            },
+            {
+              "value": "h5",
+              "label": "t:sections.general_section_settings.heading_size_5_option"
+            },
+            {
+              "value": "h6",
+              "label": "t:sections.general_section_settings.heading_size_6_option"
+            },
+            {
+              "value": "caption1",
+              "label": "t:sections.general_section_settings.caption_size_1_option"
+            },
+            {
+              "value": "caption2",
+              "label": "t:sections.general_section_settings.caption_size_2_option"
+            },
+            {
+              "value": "caption3",
+              "label": "t:sections.general_section_settings.caption_size_3_option"
+            }
+          ],
+          "default": "h6"
+        },
+        {
+          "type": "select",
+          "id": "icon",
+          "options": [
+            {
+              "value": "none",
+              "label": "t:sections.general_section_settings.icon.none_icon_label"
+            },
+            {
+              "value": "settings",
+              "label": "t:sections.general_section_settings.icon.general_group.settings_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "search",
+              "label": "t:sections.general_section_settings.icon.general_group.search_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "eye",
+              "label": "t:sections.general_section_settings.icon.general_group.eye_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "eye-slash",
+              "label": "t:sections.general_section_settings.icon.general_group.eye_slash_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "user",
+              "label": "t:sections.general_section_settings.icon.general_group.user_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "love-outline",
+              "label": "t:sections.general_section_settings.icon.general_group.love_outline_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "love-solid",
+              "label": "t:sections.general_section_settings.icon.general_group.love_solid_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "like",
+              "label": "t:sections.general_section_settings.icon.general_group.like_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "dislike",
+              "label": "t:sections.general_section_settings.icon.general_group.dislike_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "lamp",
+              "label": "t:sections.general_section_settings.icon.general_group.lamp_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "star-outline",
+              "label": "t:sections.general_section_settings.icon.general_group.star_outline_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "star-solid",
+              "label": "t:sections.general_section_settings.icon.general_group.star_solid_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "trash",
+              "label": "t:sections.general_section_settings.icon.general_group.trash_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "document",
+              "label": "t:sections.general_section_settings.icon.general_group.document_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "copy",
+              "label": "t:sections.general_section_settings.icon.general_group.copy_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "share",
+              "label": "t:sections.general_section_settings.icon.general_group.share_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "plus",
+              "label": "t:sections.general_section_settings.icon.general_group.plus_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "minus",
+              "label": "t:sections.general_section_settings.icon.general_group.minus_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "checkmark",
+              "label": "t:sections.general_section_settings.icon.general_group.checkmark_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "arrow-right",
+              "label": "t:sections.general_section_settings.icon.general_group.arrow_right_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "arrow-left",
+              "label": "t:sections.general_section_settings.icon.general_group.arrow_left_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "undo",
+              "label": "t:sections.general_section_settings.icon.general_group.undo_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "redo",
+              "label": "t:sections.general_section_settings.icon.general_group.redo_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "refresh",
+              "label": "t:sections.general_section_settings.icon.general_group.refresh_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "notification",
+              "label": "t:sections.general_section_settings.icon.general_group.notification_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "clock",
+              "label": "t:sections.general_section_settings.icon.general_group.clock_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "calendar",
+              "label": "t:sections.general_section_settings.icon.general_group.calendar_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "information",
+              "label": "t:sections.general_section_settings.icon.general_group.information_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "bag",
+              "label": "t:sections.general_section_settings.icon.shop_group.bag_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "cart",
+              "label": "t:sections.general_section_settings.icon.shop_group.cart_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "barcode",
+              "label": "t:sections.general_section_settings.icon.shop_group.barcode_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "coupon",
+              "label": "t:sections.general_section_settings.icon.shop_group.coupon_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "gift",
+              "label": "t:sections.general_section_settings.icon.shop_group.gift_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "discount-outline",
+              "label": "t:sections.general_section_settings.icon.shop_group.discount_outline_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "discount-solid",
+              "label": "t:sections.general_section_settings.icon.shop_group.discount_solid_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "medal",
+              "label": "t:sections.general_section_settings.icon.shop_group.medal_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "pen-and-ruler",
+              "label": "t:sections.general_section_settings.icon.shop_group.pen_and_ruler_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "color-swatch",
+              "label": "t:sections.general_section_settings.icon.shop_group.color_swatch_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "car",
+              "label": "t:sections.general_section_settings.icon.shop_group.car_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "cup",
+              "label": "t:sections.general_section_settings.icon.shop_group.cup_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "cake",
+              "label": "t:sections.general_section_settings.icon.shop_group.cake_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "hanger",
+              "label": "t:sections.general_section_settings.icon.shop_group.hanger_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "t-shirt",
+              "label": "t:sections.general_section_settings.icon.shop_group.t_shirt_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "dress",
+              "label": "t:sections.general_section_settings.icon.shop_group.dress_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "jewelry",
+              "label": "t:sections.general_section_settings.icon.shop_group.jewelry_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "furniture",
+              "label": "t:sections.general_section_settings.icon.shop_group.furniture_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "toy",
+              "label": "t:sections.general_section_settings.icon.shop_group.toy_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "shipping-box",
+              "label": "t:sections.general_section_settings.icon.shipping_group.shipping_box_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "address-pin",
+              "label": "t:sections.general_section_settings.icon.shipping_group.address_pin_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "fast-delivery",
+              "label": "t:sections.general_section_settings.icon.shipping_group.fast_delivery_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "delivery-truck",
+              "label": "t:sections.general_section_settings.icon.shipping_group.delivery_truck_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "easy-returns",
+              "label": "t:sections.general_section_settings.icon.shipping_group.easy_returns_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "world",
+              "label": "t:sections.general_section_settings.icon.shipping_group.world_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "plane",
+              "label": "t:sections.general_section_settings.icon.shipping_group.plane_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "search-order",
+              "label": "t:sections.general_section_settings.icon.shipping_group.search_order_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "briefcase",
+              "label": "t:sections.general_section_settings.icon.shipping_group.briefcase_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "store",
+              "label": "t:sections.general_section_settings.icon.shipping_group.store_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "routing",
+              "label": "t:sections.general_section_settings.icon.shipping_group.routing_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+
+            {
+              "value": "credit-card",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.credit_card_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "lock",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.lock_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "shield",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.shield_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "secure-payment",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.secure_payment_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "wallet",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.wallet_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "cash",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.cash_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "receipt",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.receipt_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "tag",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.tag_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "list",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.list_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "scanner",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.scanner_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "phone",
+              "label": "t:sections.general_section_settings.icon.communication_group.phone_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "chat",
+              "label": "t:sections.general_section_settings.icon.communication_group.chat_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "message",
+              "label": "t:sections.general_section_settings.icon.communication_group.message_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "email-outline",
+              "label": "t:sections.general_section_settings.icon.communication_group.email_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "customer-support",
+              "label": "t:sections.general_section_settings.icon.communication_group.customer_support_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "printer-and-fax",
+              "label": "t:sections.general_section_settings.icon.communication_group.printer_and_fax_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "devices",
+              "label": "t:sections.general_section_settings.icon.communication_group.devices_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "mobile",
+              "label": "t:sections.general_section_settings.icon.communication_group.mobile_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "virus",
+              "label": "t:sections.general_section_settings.icon.ecology_group.virus_icon_label",
+              "group": "t:sections.general_section_settings.icon.ecology_group.label"
+            },
+            {
+              "value": "mask",
+              "label": "t:sections.general_section_settings.icon.ecology_group.mask_icon_label",
+              "group": "t:sections.general_section_settings.icon.ecology_group.label"
+            },
+            {
+              "value": "eco",
+              "label": "t:sections.general_section_settings.icon.ecology_group.eco_icon_label",
+              "group": "t:sections.general_section_settings.icon.ecology_group.label"
+            },
+            {
+              "value": "rabbit",
+              "label": "t:sections.general_section_settings.icon.ecology_group.rabbit_icon_label",
+              "group": "t:sections.general_section_settings.icon.ecology_group.label"
+            },
+            {
+              "value": "twitter",
+              "label": "t:sections.general_section_settings.icon.social_group.twitter_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "facebook",
+              "label": "t:sections.general_section_settings.icon.social_group.facebook_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "pinterest",
+              "label": "t:sections.general_section_settings.icon.social_group.pinterest_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "instagram",
+              "label": "t:sections.general_section_settings.icon.social_group.instagram_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "tiktok",
+              "label": "t:sections.general_section_settings.icon.social_group.tiktok_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "tumblr",
+              "label": "t:sections.general_section_settings.icon.social_group.tumblr_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "snapchat",
+              "label": "t:sections.general_section_settings.icon.social_group.snapchat_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "youtube",
+              "label": "t:sections.general_section_settings.icon.social_group.youtube_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "vimeo",
+              "label": "t:sections.general_section_settings.icon.social_group.vimeo_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "linkedin",
+              "label": "t:sections.general_section_settings.icon.social_group.linkedin_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "flickr",
+              "label": "t:sections.general_section_settings.icon.social_group.flickr_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "reddit",
+              "label": "t:sections.general_section_settings.icon.social_group.reddit_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "email-solid",
+              "label": "t:sections.general_section_settings.icon.social_group.email_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "behance",
+              "label": "t:sections.general_section_settings.icon.social_group.behance_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "discord",
+              "label": "t:sections.general_section_settings.icon.social_group.discord_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "dribbble",
+              "label": "t:sections.general_section_settings.icon.social_group.dribbble_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "medium",
+              "label": "t:sections.general_section_settings.icon.social_group.medium_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "twitch",
+              "label": "t:sections.general_section_settings.icon.social_group.twitch_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "whatsapp",
+              "label": "t:sections.general_section_settings.icon.social_group.whatsapp_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "viber",
+              "label": "t:sections.general_section_settings.icon.social_group.viber_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "telegram",
+              "label": "t:sections.general_section_settings.icon.social_group.telegram_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "coffee",
+              "label": "t:sections.general_section_settings.icon.general_group.coffee_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            }
+          ],
+          "default": "none",
+          "label": "t:sections.general_section_settings.icon.label",
+          "info": "t:sections.general_section_settings.icon.info"
+        },
+        {
+          "type": "image_picker",
+          "id": "custom_icon_image",
+          "label": "t:sections.general_section_settings.custom_icon_image.label"
+        },
+        {
+          "type": "range",
+          "id": "icon_size",
+          "min": 20,
+          "max": 164,
+          "step": 2,
+          "default": 24,
+          "label": "t:sections.general_section_settings.icon_size.label",
+          "unit": "t:sections.general_section_settings.icon_size.unit"
+        }
+      ]
+    },
+    {
+      "type": "question",
+      "name": "t:sections.faq.question_block_name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:sections.faq.question_block_title_label",
+          "default": "Frequently asked question"
+        },
+        {
+          "type": "select",
+          "id": "heading_size",
+          "label": "t:sections.general_section_settings.label_for_heading_size_setting",
+          "options": [
+            {
+              "value": "display1",
+              "label": "t:sections.general_section_settings.display_size_1_option"
+            },
+            {
+              "value": "display2",
+              "label": "t:sections.general_section_settings.display_size_2_option"
+            },
+            {
+              "value": "display3",
+              "label": "t:sections.general_section_settings.display_size_3_option"
+            },
+            {
+              "value": "h1",
+              "label": "t:sections.general_section_settings.heading_size_1_option"
+            },
+            {
+              "value": "h2",
+              "label": "t:sections.general_section_settings.heading_size_2_option"
+            },
+            {
+              "value": "h3",
+              "label": "t:sections.general_section_settings.heading_size_3_option"
+            },
+            {
+              "value": "h4",
+              "label": "t:sections.general_section_settings.heading_size_4_option"
+            },
+            {
+              "value": "h5",
+              "label": "t:sections.general_section_settings.heading_size_5_option"
+            },
+            {
+              "value": "h6",
+              "label": "t:sections.general_section_settings.heading_size_6_option"
+            },
+            {
+              "value": "caption1",
+              "label": "t:sections.general_section_settings.caption_size_1_option"
+            },
+            {
+              "value": "caption2",
+              "label": "t:sections.general_section_settings.caption_size_2_option"
+            },
+            {
+              "value": "caption3",
+              "label": "t:sections.general_section_settings.caption_size_3_option"
+            }
+          ],
+          "default": "caption2"
+        },
+        {
+          "type": "select",
+          "id": "icon",
+          "options": [
+            {
+              "value": "none",
+              "label": "t:sections.general_section_settings.icon.none_icon_label"
+            },
+            {
+              "value": "settings",
+              "label": "t:sections.general_section_settings.icon.general_group.settings_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "search",
+              "label": "t:sections.general_section_settings.icon.general_group.search_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "eye",
+              "label": "t:sections.general_section_settings.icon.general_group.eye_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "eye-slash",
+              "label": "t:sections.general_section_settings.icon.general_group.eye_slash_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "user",
+              "label": "t:sections.general_section_settings.icon.general_group.user_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "love-outline",
+              "label": "t:sections.general_section_settings.icon.general_group.love_outline_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "love-solid",
+              "label": "t:sections.general_section_settings.icon.general_group.love_solid_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "like",
+              "label": "t:sections.general_section_settings.icon.general_group.like_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "dislike",
+              "label": "t:sections.general_section_settings.icon.general_group.dislike_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "lamp",
+              "label": "t:sections.general_section_settings.icon.general_group.lamp_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "star-outline",
+              "label": "t:sections.general_section_settings.icon.general_group.star_outline_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "star-solid",
+              "label": "t:sections.general_section_settings.icon.general_group.star_solid_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "trash",
+              "label": "t:sections.general_section_settings.icon.general_group.trash_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "document",
+              "label": "t:sections.general_section_settings.icon.general_group.document_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "copy",
+              "label": "t:sections.general_section_settings.icon.general_group.copy_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "share",
+              "label": "t:sections.general_section_settings.icon.general_group.share_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "plus",
+              "label": "t:sections.general_section_settings.icon.general_group.plus_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "minus",
+              "label": "t:sections.general_section_settings.icon.general_group.minus_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "checkmark",
+              "label": "t:sections.general_section_settings.icon.general_group.checkmark_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "arrow-right",
+              "label": "t:sections.general_section_settings.icon.general_group.arrow_right_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "arrow-left",
+              "label": "t:sections.general_section_settings.icon.general_group.arrow_left_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "undo",
+              "label": "t:sections.general_section_settings.icon.general_group.undo_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "redo",
+              "label": "t:sections.general_section_settings.icon.general_group.redo_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "refresh",
+              "label": "t:sections.general_section_settings.icon.general_group.refresh_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "notification",
+              "label": "t:sections.general_section_settings.icon.general_group.notification_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "clock",
+              "label": "t:sections.general_section_settings.icon.general_group.clock_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "calendar",
+              "label": "t:sections.general_section_settings.icon.general_group.calendar_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "information",
+              "label": "t:sections.general_section_settings.icon.general_group.information_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "bag",
+              "label": "t:sections.general_section_settings.icon.shop_group.bag_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "cart",
+              "label": "t:sections.general_section_settings.icon.shop_group.cart_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "barcode",
+              "label": "t:sections.general_section_settings.icon.shop_group.barcode_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "coupon",
+              "label": "t:sections.general_section_settings.icon.shop_group.coupon_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "gift",
+              "label": "t:sections.general_section_settings.icon.shop_group.gift_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "discount-outline",
+              "label": "t:sections.general_section_settings.icon.shop_group.discount_outline_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "discount-solid",
+              "label": "t:sections.general_section_settings.icon.shop_group.discount_solid_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "medal",
+              "label": "t:sections.general_section_settings.icon.shop_group.medal_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "pen-and-ruler",
+              "label": "t:sections.general_section_settings.icon.shop_group.pen_and_ruler_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "color-swatch",
+              "label": "t:sections.general_section_settings.icon.shop_group.color_swatch_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "car",
+              "label": "t:sections.general_section_settings.icon.shop_group.car_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "cup",
+              "label": "t:sections.general_section_settings.icon.shop_group.cup_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "cake",
+              "label": "t:sections.general_section_settings.icon.shop_group.cake_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "hanger",
+              "label": "t:sections.general_section_settings.icon.shop_group.hanger_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "t-shirt",
+              "label": "t:sections.general_section_settings.icon.shop_group.t_shirt_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "dress",
+              "label": "t:sections.general_section_settings.icon.shop_group.dress_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "jewelry",
+              "label": "t:sections.general_section_settings.icon.shop_group.jewelry_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "furniture",
+              "label": "t:sections.general_section_settings.icon.shop_group.furniture_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "toy",
+              "label": "t:sections.general_section_settings.icon.shop_group.toy_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "shipping-box",
+              "label": "t:sections.general_section_settings.icon.shipping_group.shipping_box_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "address-pin",
+              "label": "t:sections.general_section_settings.icon.shipping_group.address_pin_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "fast-delivery",
+              "label": "t:sections.general_section_settings.icon.shipping_group.fast_delivery_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "delivery-truck",
+              "label": "t:sections.general_section_settings.icon.shipping_group.delivery_truck_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "easy-returns",
+              "label": "t:sections.general_section_settings.icon.shipping_group.easy_returns_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "world",
+              "label": "t:sections.general_section_settings.icon.shipping_group.world_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "plane",
+              "label": "t:sections.general_section_settings.icon.shipping_group.plane_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "search-order",
+              "label": "t:sections.general_section_settings.icon.shipping_group.search_order_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "briefcase",
+              "label": "t:sections.general_section_settings.icon.shipping_group.briefcase_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "store",
+              "label": "t:sections.general_section_settings.icon.shipping_group.store_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "routing",
+              "label": "t:sections.general_section_settings.icon.shipping_group.routing_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+
+            {
+              "value": "credit-card",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.credit_card_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "lock",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.lock_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "shield",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.shield_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "secure-payment",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.secure_payment_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "wallet",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.wallet_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "cash",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.cash_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "receipt",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.receipt_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "tag",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.tag_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "list",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.list_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "scanner",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.scanner_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "phone",
+              "label": "t:sections.general_section_settings.icon.communication_group.phone_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "chat",
+              "label": "t:sections.general_section_settings.icon.communication_group.chat_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "message",
+              "label": "t:sections.general_section_settings.icon.communication_group.message_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "email-outline",
+              "label": "t:sections.general_section_settings.icon.communication_group.email_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "customer-support",
+              "label": "t:sections.general_section_settings.icon.communication_group.customer_support_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "printer-and-fax",
+              "label": "t:sections.general_section_settings.icon.communication_group.printer_and_fax_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "devices",
+              "label": "t:sections.general_section_settings.icon.communication_group.devices_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "mobile",
+              "label": "t:sections.general_section_settings.icon.communication_group.mobile_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "virus",
+              "label": "t:sections.general_section_settings.icon.ecology_group.virus_icon_label",
+              "group": "t:sections.general_section_settings.icon.ecology_group.label"
+            },
+            {
+              "value": "mask",
+              "label": "t:sections.general_section_settings.icon.ecology_group.mask_icon_label",
+              "group": "t:sections.general_section_settings.icon.ecology_group.label"
+            },
+            {
+              "value": "eco",
+              "label": "t:sections.general_section_settings.icon.ecology_group.eco_icon_label",
+              "group": "t:sections.general_section_settings.icon.ecology_group.label"
+            },
+            {
+              "value": "rabbit",
+              "label": "t:sections.general_section_settings.icon.ecology_group.rabbit_icon_label",
+              "group": "t:sections.general_section_settings.icon.ecology_group.label"
+            },
+            {
+              "value": "twitter",
+              "label": "t:sections.general_section_settings.icon.social_group.twitter_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "facebook",
+              "label": "t:sections.general_section_settings.icon.social_group.facebook_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "pinterest",
+              "label": "t:sections.general_section_settings.icon.social_group.pinterest_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "instagram",
+              "label": "t:sections.general_section_settings.icon.social_group.instagram_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "tiktok",
+              "label": "t:sections.general_section_settings.icon.social_group.tiktok_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "tumblr",
+              "label": "t:sections.general_section_settings.icon.social_group.tumblr_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "snapchat",
+              "label": "t:sections.general_section_settings.icon.social_group.snapchat_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "youtube",
+              "label": "t:sections.general_section_settings.icon.social_group.youtube_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "vimeo",
+              "label": "t:sections.general_section_settings.icon.social_group.vimeo_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "linkedin",
+              "label": "t:sections.general_section_settings.icon.social_group.linkedin_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "flickr",
+              "label": "t:sections.general_section_settings.icon.social_group.flickr_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "reddit",
+              "label": "t:sections.general_section_settings.icon.social_group.reddit_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "email-solid",
+              "label": "t:sections.general_section_settings.icon.social_group.email_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "behance",
+              "label": "t:sections.general_section_settings.icon.social_group.behance_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "discord",
+              "label": "t:sections.general_section_settings.icon.social_group.discord_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "dribbble",
+              "label": "t:sections.general_section_settings.icon.social_group.dribbble_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "medium",
+              "label": "t:sections.general_section_settings.icon.social_group.medium_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "twitch",
+              "label": "t:sections.general_section_settings.icon.social_group.twitch_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "whatsapp",
+              "label": "t:sections.general_section_settings.icon.social_group.whatsapp_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "viber",
+              "label": "t:sections.general_section_settings.icon.social_group.viber_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "telegram",
+              "label": "t:sections.general_section_settings.icon.social_group.telegram_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "coffee",
+              "label": "t:sections.general_section_settings.icon.general_group.coffee_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            }
+          ],
+          "default": "none",
+          "label": "t:sections.general_section_settings.icon.label",
+          "info": "t:sections.general_section_settings.icon.info"
+        },
+        {
+          "type": "image_picker",
+          "id": "custom_icon_image",
+          "label": "t:sections.general_section_settings.custom_icon_image.label"
+        },
+        {
+          "type": "range",
+          "id": "icon_size",
+          "min": 20,
+          "max": 164,
+          "step": 2,
+          "default": 24,
+          "label": "t:sections.general_section_settings.icon_size.label",
+          "unit": "t:sections.general_section_settings.icon_size.unit"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.faq.blocks.content_tab.source_setting_header.content"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "t:sections.faq.question_block_text_label",
+          "default": "<p>Brief and clear answer</p>"
+        },
+        {
+          "type": "page",
+          "id": "page",
+          "label": "t:sections.faq.blocks.content_tab.page.label"
+        },
+        {
+          "type": "select",
+          "id": "body_size",
+          "label": "t:sections.general_section_settings.label_for_text_size_setting",
+          "info": "t:sections.general_section_settings.info_for_text_size_setting",
+          "options": [
+            {
+              "value": "body0",
+              "label": "t:sections.general_section_settings.body_size_0_option"
+            },
+            {
+              "value": "body1",
+              "label": "t:sections.general_section_settings.body_size_1_option"
+            },
+            {
+              "value": "body2",
+              "label": "t:sections.general_section_settings.body_size_2_option"
+            },
+            {
+              "value": "body3",
+              "label": "t:sections.general_section_settings.body_size_3_option"
+            },
+            {
+              "value": "body4",
+              "label": "t:sections.general_section_settings.body_size_4_option"
+            },
+            {
+              "value": "body5",
+              "label": "t:sections.general_section_settings.body_size_5_option"
+            },
+            {
+              "value": "body6",
+              "label": "t:sections.general_section_settings.body_size_6_option"
+            }
+          ],
+          "default": "body3"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "t:sections.faq.question_block_image_label"
+        },
+        {
+          "type": "video",
+          "id": "video",
+          "label": "t:sections.general_section_settings.label_for_desktop_video_setting"
+        },
+        {
+          "type": "range",
+          "id": "image_width",
+          "min": 10,
+          "max": 100,
+          "step": 1,
+          "default": 100,
+          "unit": "t:sections.faq.question_block_image_size_unit",
+          "label": "t:sections.faq.question_block_image_size_label"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.faq.name",
+      "blocks": [
+        {
+          "type": "category"
+        },
+        {
+          "type": "question"
+        },
+        {
+          "type": "question"
+        },
+        {
+          "type": "category"
+        },
+        {
+          "type": "question"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

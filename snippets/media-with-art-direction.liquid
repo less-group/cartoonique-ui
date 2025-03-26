@@ -1,0 +1,121 @@
+{%- liquid
+  assign has_desktop_video = false
+  assign has_desktop_image = false
+  assign has_mobile_video = false
+  assign has_mobile_image = false
+  assign placeholder_type = placeholder_type | default: 'lifestyle-2'
+
+  if mobile_img == blank and mobile_video == blank
+    if desktop_video != blank
+      assign mobile_video = desktop_video
+    endif
+
+    if desktop_img != blank
+      assign mobile_img = desktop_img
+    endif
+  endif
+
+  if desktop_img == blank and desktop_video == blank
+    if mobile_video != blank
+      assign desktop_video = mobile_video
+    endif
+
+    if mobile_img != blank
+      assign desktop_img = mobile_img
+    endif
+  endif
+
+  if desktop_video != blank
+    assign has_desktop_video = true
+  endif
+
+  if desktop_img != blank
+    assign has_desktop_image = true
+  endif
+
+  if mobile_video != blank
+    assign has_mobile_video = true
+  endif
+
+  if mobile_img != blank
+    assign has_mobile_image = true
+  endif
+
+  if loading == blank
+    assign loading = 'lazy'
+  endif
+
+  assign continue_observe_animation = continue_observe_animation | default: false
+
+  assign enable_image_zoom_out = settings.enable_image_zoom_out
+
+  assign desktop_image_class = 'image media__image media__image--desktop'
+  assign mobile_image_class = 'image media__image media__image--mobile'
+  if enable_image_zoom_out and force_disable_animation != true
+    assign desktop_image_class = desktop_image_class | append: ' scroll-trigger animate--zoom-out'
+    assign mobile_image_class = mobile_image_class | append: ' scroll-trigger animate--zoom-out'
+  endif
+-%}
+
+<div class='media {{ class }}'>
+  {%- if with_overlay -%}
+    <div class='overlay'></div>
+  {%- endif -%}
+
+  {%- if has_desktop_video -%}
+    {% render 'video-with-alt',
+      video: desktop_video,
+      class: desktop_image_class,
+      autoplay: true,
+      loop: true,
+      muted: true,
+      controls: false,
+      loading: loading
+    %}
+  {%- elsif has_desktop_image -%}
+    <img
+      {% render 'image-attributes',
+        image: desktop_img,
+        class: desktop_image_class,
+        is_eager_loading: is_eager_loading
+      %}
+      {% if continue_observe_animation and enable_image_zoom_out %}
+        data-keep-observe-animation
+      {% endif %}
+      {% if remove_animation_class and enable_image_zoom_out %}
+        data-remove-animation-class
+      {% endif %}
+    >
+  {%- endif -%}
+
+  {%- if has_mobile_video -%}
+    {% render 'video-with-alt',
+      video: mobile_video,
+      class: 'image media__image media__image--mobile',
+      autoplay: true,
+      loop: true,
+      muted: true,
+      controls: false,
+      loading: loading
+    %}
+  {%- elsif has_mobile_image -%}
+    <img
+      {% render 'image-attributes', image: mobile_img, class: mobile_image_class, is_eager_loading: is_eager_loading %}
+      {% if continue_observe_animation and enable_image_zoom_out %}
+        data-keep-observe-animation
+      {% endif %}
+      {% if remove_animation_class and enable_image_zoom_out %}
+        data-remove-animation-class
+      {% endif %}
+    >
+  {%- endif -%}
+
+  {% if with_placeholder == true %}
+    {%- if desktop_img == blank and desktop_video == blank and mobile_img == blank and mobile_video == blank -%}
+      {{
+        placeholder_type
+        | placeholder_svg_tag: 'placeholder-image placeholder-image--with-content image media__image media__image-placeholder'
+      }}
+    {%- endif -%}
+  {% endif %}
+</div>

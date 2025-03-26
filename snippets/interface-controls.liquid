@@ -1,0 +1,11 @@
+<aside>
+  {%- if settings.show_back_to_top_button -%}
+    {% render 'back-to-top-button' %}
+  {%- endif -%}
+  <zoom-cursor class='zoom-cursor'>
+    {% render 'icon', icon_name: 'plus', class: 'zoom-cursor__icon' %}
+  </zoom-cursor>
+  <close-cursor class='close-cursor'>
+    {% render 'icon', icon_name: 'close-large', class: 'close-cursor__icon' %}
+  </close-cursor>
+</aside>

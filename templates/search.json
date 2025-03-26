@@ -1,0 +1,38 @@
+{
+  "sections": {
+    "main": {
+      "type": "search",
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "page-width",
+        "enable_sorting": true,
+        "show_results_count": true,
+        "show_column_count_switcher": true,
+        "enable_filtering": true,
+        "filters_position": "left",
+        "filter_style": "drawer-left",
+        "categories_style": "static",
+        "option_style": "checkbox-outline",
+        "show_color_swatches": true,
+        "show_divider": true,
+        "show_result_count": true,
+        "enable_uppercase_title": true,
+        "img_ratio": "portrait",
+        "product_card_align": "left",
+        "product_per_page": 16,
+        "desktop_columns": "4",
+        "desktop_space_between_cards": 12,
+        "mobile_columns": "1",
+        "mobile_space_between_cards": 20,
+        "pagination_type": "load-button-pagination",
+        "show_blog_post_author": false,
+        "show_blog_post_date": false,
+        "show_blog_post_comment_count": false,
+        "add_side_paddings": true,
+        "section_spacing_top": 64,
+        "section_spacing_bottom": 64
+      }
+    }
+  },
+  "order": ["main"]
+}

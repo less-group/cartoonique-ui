@@ -1,0 +1,54 @@
+{%- liquid
+  assign show_inventory_status = block.settings.show_inventory_status
+  assign inventory_threshhold = block.settings.inventory_threshhold
+
+  assign inventory_notice_type = block.settings.inventory_notice_type
+  assign high_inventory_text = block.settings.high_inventory_text
+  assign low_inventory_text = block.settings.low_inventory_text
+
+  assign show_progress_bar = block.settings.show_progress_bar
+  assign progress_bar_type = block.settings.progress_bar_type
+  assign progress_bar_size = block.settings.progress_bar_size
+  assign progress_bar_max_value = block.settings.progress_bar_max_value
+-%}
+
+<product-block
+  style='display: block;'
+  id='product-stock-{{ product.id }}-{{ sectionId }}'
+  class='block-{{ block.id }}'
+  {{ block.shopify_attributes }}
+>
+  <div
+    id='product-stock-inner-{{ product.id }}-{{ sectionId }}'
+  >
+    {%- for variant in product.variants -%}
+      <template data-product-block-template='{{ variant.id }}'>
+        {% render 'product-inventory',
+          current_variant: variant,
+          show_inventory_status: show_inventory_status,
+          inventory_notice_type: inventory_notice_type,
+          inventory_threshhold: inventory_threshhold,
+          low_inventory_text: low_inventory_text,
+          high_inventory_text: high_inventory_text,
+          show_progress_bar: show_progress_bar,
+          progress_bar_type: progress_bar_type,
+          progress_bar_max_value: progress_bar_max_value
+        %}
+      </template>
+    {%- endfor -%}
+
+    <div data-product-block-container>
+      {% render 'product-inventory',
+        current_variant: product.selected_or_first_available_variant,
+        show_inventory_status: show_inventory_status,
+        inventory_notice_type: inventory_notice_type,
+        inventory_threshhold: inventory_threshhold,
+        low_inventory_text: low_inventory_text,
+        high_inventory_text: high_inventory_text,
+        show_progress_bar: show_progress_bar,
+        progress_bar_type: progress_bar_type,
+        progress_bar_max_value: progress_bar_max_value
+      %}
+    </div>
+  </div>
+</product-block>

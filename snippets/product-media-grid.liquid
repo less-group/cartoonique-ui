@@ -1,0 +1,100 @@
+{%- liquid
+  assign enable_content_slide_in = settings.enable_content_slide_in
+-%}
+
+<product-media
+  class='product-media-grid {% if product_media.size > 1 %} product-media-grid--{{block_layout}} {% endif %}'
+  data-section='{{ sectionId }}'
+  id='product-media-{{ product.id }}-{{ sectionId }}'
+  data-container='grid'
+>
+  {%- if product.media != blank -%}
+    {%- if featured_media != null -%}
+      <div
+        class='shape shape--{{ img_ratio }} product-media-grid__item  {% if img_ratio contains 'fit' %} shape--fit {% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: 1;'
+        {% endif %}
+        data-media-id='{{ featured_media.id }}'
+        {% if featured_media.media_type == 'image' and enable_image_zoom %}
+          data-zoom-cursor-target
+        {% endif %}
+        data-variant='{{ featured_media.alt | strip_html | escape }}'
+      >
+        {% render 'product-media',
+          product: product,
+          enable_image_zoom: enable_image_zoom,
+          enable_video_autoplay: enable_video_autoplay,
+          media: featured_media,
+          modal_media_id: featured_media.id,
+          enable_video_looping: enable_video_looping,
+          enable_video_controls: enable_video_controls,
+          sectionId: sectionId,
+          class: 'shape__target-image',
+          index: 0
+        %}
+      </div>
+    {%- endif -%}
+    {%- for media in product_media -%}
+      {%- if media.id != featured_media.id or media.id == blank -%}
+        {% liquid
+          assign index = forloop.index0
+          if featured_media != null
+            assign index = forloop.index
+          endif
+        %}
+
+        <div
+          class='shape shape--{{ img_ratio }} product-media-grid__item {% if img_ratio contains 'fit' %} shape--fit {% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+          {% if enable_content_slide_in %}
+            style='--gsc-animation-order: {{forloop.index}};'
+          {% endif %}
+          data-media-id='{{ media.id }}'
+          {% if media.media_type == 'image' and enable_image_zoom %}
+            data-zoom-cursor-target
+          {% endif %}
+          data-variant='{{ media.alt | strip_html | escape }}'
+        >
+          {% render 'product-media',
+            product: product,
+            enable_image_zoom: enable_image_zoom,
+            enable_video_autoplay: enable_video_autoplay,
+            media: media,
+            modal_media_id: media.id,
+            enable_video_looping: enable_video_looping,
+            enable_video_controls: enable_video_controls,
+            sectionId: sectionId,
+            class: 'shape__target-image',
+            index: index
+          %}
+        </div>
+      {%- endif -%}
+    {%- endfor -%}
+  {%- else -%}
+    {%- for media in product_media -%}
+      <div
+        class='shape shape--{{ img_ratio }} product-media-grid__item {% if img_ratio contains 'fit' %} shape--fit {% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: {{forloop.index}};'
+        {% endif %}
+        data-media-id='{{ forloop.index }}'
+        {% if enable_image_zoom %}
+          data-zoom-cursor-target
+        {% endif %}
+        data-variant='{{ media.alt | strip_html | escape }}'
+      >
+        {% render 'product-media',
+          product: product,
+          enable_image_zoom: enable_image_zoom,
+          enable_video_autoplay: enable_video_autoplay,
+          media: media,
+          modal_media_id: forloop.index,
+          enable_video_looping: enable_video_looping,
+          enable_video_controls: enable_video_controls,
+          sectionId: sectionId,
+          class: 'shape__target-image'
+        %}
+      </div>
+    {%- endfor -%}
+  {%- endif -%}
+</product-media>

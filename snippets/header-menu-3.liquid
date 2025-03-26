@@ -1,0 +1,111 @@
+{%- liquid
+  assign options = block.settings
+
+  assign img_ratio = options.img_ratio
+  assign collection_card_content_align = options.collection_card_content_align
+  assign autoplay_mode = options.autoplay_mode
+  assign autoplay_interval = options.autoplay_interval
+  assign columns = options.columns
+  assign placeholder_count = columns | times: 2
+  assign collection_list = options.collection_list | default: (1..placeholder_count)
+  assign show_product_count = options.show_product_count
+  assign heading_size = options.heading_size
+  assign text_style = options.text_style
+  assign block_layout = options.block_layout
+
+  assign block_visibility = options.block_visibility
+
+  assign add_spacing_desktop = options.header_block_paddings_desktop
+  assign add_spacing_mobile = options.header_block_paddings_mobile
+
+  assign product_card_with_bottom_spacing = false
+
+  assign add_side_paddings_desktop = false
+  assign add_side_paddings_mobile = false
+  if add_spacing_desktop < 12
+    assign add_side_paddings_desktop = true
+    assign product_card_with_bottom_spacing = true
+  endif
+  if add_spacing_mobile < 12
+    assign add_side_paddings_mobile = true
+    assign product_card_with_bottom_spacing = true
+  endif
+
+  assign enable_content_slide_in = settings.enable_content_slide_in
+-%}
+
+<div
+  class='{{ class }} mega-menu__block mega-menu__block--collection-list block-{{ block.id }} mega-menu__block--spaced {% if block_visibility != 'desktop_and_mobile' %} mega-menu__block--only-{{block_visibility}}-visible {% endif %} {% if add_side_paddings_desktop %}mega-menu__block--with-desktop-paddings-on-product {% endif %} {% if add_side_paddings_mobile %}mega-menu__block--with-mobile-paddings-on-product {% endif %}'
+  block-id='{{ block.id }}'
+  {{ block.shopify_attributes }}
+>
+  <slider-grid
+    class='slider-grid {% if request.design_mode %}is-editor-mode{% endif %}'
+    {% if autoplay_mode != 'disabled' %}
+      autoplay-mode='{{autoplay_mode}}'
+      autoplay-interval='{{autoplay_interval}}'
+    {% endif %}
+    {% if block_layout != 'carousel' %}
+      desktop-disabled
+      mobile-disabled
+    {% endif %}
+  >
+    <div
+      slider-grid-track
+      class='slider-grid-track slider-grid__d-{{block_layout}} slider-grid__m-{{block_layout}}'
+    >
+      {%- for collection in collection_list -%}
+        <div
+          class='slider-grid__slide {% if enable_content_slide_in %}animate--slide-in{% endif %}'
+          {% if enable_content_slide_in %}
+            style='--gsc-animation-order: {{forloop.index}};'
+          {% endif %}
+          slider-grid-slide
+        >
+          {%- render 'collection-card',
+            title: collection.title,
+            heading_size: heading_size,
+            text_style: text_style,
+            img: collection.image,
+            img_ratio: img_ratio,
+            content_align: collection_card_content_align,
+            collection: collection,
+            show_product_count: show_product_count,
+            link_url: collection.url,
+            with_bottom_spacing: product_card_with_bottom_spacing
+          -%}
+        </div>
+      {%- endfor -%}
+    </div>
+
+    {% if block_layout contains 'carousel' %}
+      <div class='card-carousel__position-btn-wrap card-carousel__position-btn-wrap--prev {% if img_ratio == 'nature' %} card-carousel__position-btn-wrap--nature-img-ratio {% endif %}'>
+        <div class='shape shape--{{ img_ratio }}'>
+          <button
+            type='button'
+            class='carousel-btn card-carousel__carousel-btn card-carousel__carousel-btn--prev'
+            data-direction='prev'
+            tabindex='0'
+            disabled
+          >
+            {% render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon x-flip' %}
+          </button>
+        </div>
+      </div>
+
+      <div class='card-carousel__position-btn-wrap card-carousel__position-btn-wrap--next {% if img_ratio == 'nature' %} card-carousel__position-btn-wrap--nature-img-ratio {% endif %}'>
+        <div class='shape shape--{{ img_ratio }}'>
+          <button
+            type='button'
+            class='carousel-btn card-carousel__carousel-btn card-carousel__carousel-btn--next'
+            data-direction='next'
+            tabindex='0'
+            disabled
+          >
+            {%- render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon' -%}
+          </button>
+        </div>
+      </div>
+    {% endif %}
+  </slider-grid>
+</div>

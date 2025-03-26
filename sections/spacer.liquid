@@ -1,0 +1,168 @@
+{%- liquid
+  assign options = section.settings
+  assign container_size = options.container_size
+  assign show_separator = options.show_separator
+  assign desktop_height = options.desktop_height
+  assign mobile_height = options.mobile_height
+
+  assign color_scheme = options.color_scheme
+-%}
+
+{% style %}
+  .section-{{ section.id }} {
+      --gsc-spacer-height: {{ mobile_height }}px;
+  }
+
+  @media {% render 'media-queries', screen: 'md' %} {
+      .section-{{ section.id }} {
+          --gsc-spacer-height: {{ desktop_height }}px;
+      }
+  }
+{% endstyle %}
+
+<div class='spacer spacer--desktop section-{{ section.id }} {% if container_size == 'full-screen' %} section color-{{ color_scheme }}{% endif %}'>
+  <div class=' container container--{{ container_size }} '>
+    <div class='spacer__content-wrapper {% if container_size != 'full-screen' %} section  color-{{ color_scheme }}{% endif %}'>
+      <div class='spacer__content'>
+        {% if show_separator %}
+          <div
+            class='spacer__separator '
+          ></div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class='spacer spacer--mobile section-{{ section.id }}'>
+  <div class='container container--{{ container_size }} section color-{{ color_scheme }}'>
+    <div class='spacer__content-wrapper'>
+      <div class='spacer__content'>
+        {% if show_separator %}
+          <div
+            class='spacer__separator '
+          ></div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% render 'save-section-data-in-global-scope', section: section %}
+
+{% schema %}
+{
+  "name": "t:sections.spacer.name",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:sections.general_section_settings.color_scheme_option_default_label"
+        },
+        {
+          "value": "primary",
+          "label": "t:sections.general_section_settings.color_scheme_option_primary_label"
+        },
+        {
+          "value": "secondary",
+          "label": "t:sections.general_section_settings.color_scheme_option_secondary_label"
+        },
+        {
+          "value": "custom-1",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_1_label"
+        },
+        {
+          "value": "custom-2",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_2_label"
+        },
+        {
+          "value": "custom-3",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_3_label"
+        },
+        {
+          "value": "white",
+          "label": "t:sections.general_section_settings.color_scheme_option_white_text_label"
+        },
+        {
+          "value": "black",
+          "label": "t:sections.general_section_settings.color_scheme_option_black_text_label"
+        },
+        {
+          "value": "custom-5",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_5_label"
+        }
+      ],
+      "default": "default",
+      "label": "t:sections.general_section_settings.color_scheme_label",
+      "info": "t:sections.general_section_settings.color_scheme_tip"
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "options": [
+        {
+          "value": "full-screen",
+          "label": "t:sections.general_section_settings.container_size.screen_width_option"
+        },
+        {
+          "value": "page-width",
+          "label": "t:sections.general_section_settings.container_size.page_width_option"
+        },
+        {
+          "value": "large",
+          "label": "t:sections.general_section_settings.container_size.large_width_option"
+        },
+        {
+          "value": "medium",
+          "label": "t:sections.general_section_settings.container_size.medium_width_option"
+        },
+        {
+          "value": "small",
+          "label": "t:sections.general_section_settings.container_size.small_width_option"
+        },
+        {
+          "value": "xsmall",
+          "label": "t:sections.general_section_settings.container_size.extra_small_width_option"
+        }
+      ],
+      "default": "full-screen",
+      "label": "t:sections.general_section_settings.container_size.label"
+    },
+    {
+      "type": "range",
+      "id": "desktop_height",
+      "min": 2,
+      "max": 200,
+      "step": 2,
+      "default": 200,
+      "unit": "t:sections.spacer.desktop_height.unit",
+      "label": "t:sections.spacer.desktop_height.label"
+    },
+    {
+      "type": "range",
+      "id": "mobile_height",
+      "min": 2,
+      "max": 200,
+      "step": 2,
+      "default": 40,
+      "unit": "t:sections.spacer.mobile_height.unit",
+      "label": "t:sections.spacer.mobile_height.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_separator",
+      "default": false,
+      "label": "t:sections.spacer.show_separator.label"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.spacer.name"
+    }
+  ]
+}
+{% endschema %}

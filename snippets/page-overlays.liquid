@@ -1,0 +1,4 @@
+<aside>
+  <body-element class='body-overlay' {% if settings.overlay_gradient != blank %} data-gradient="{{ settings.overlay_gradient }}" data-opacity="{{ settings.overlay_opacity | divided_by: 100.00 }}" {% endif %}></body-element>
+  {%- render 'page-preload-overlay', class: 'loading-overlay--global', id: 'GlobalLoadingOverlayDots' -%}
+</aside>

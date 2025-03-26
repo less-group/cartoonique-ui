@@ -1,0 +1,328 @@
+{% liquid
+  assign default_pallete_text_color_key = settings.default_color_scheme | replace: '-', '_' | append: '_text_color'
+  assign default_pallete_background_color_key = settings.default_color_scheme | replace: '-', '_' | append: '_background_color'
+  assign default_pallete_foreground_color_key = settings.default_color_scheme | replace: '-', '_' | append: '_foreground_color'
+  assign default_pallete_border_color_key = settings.default_color_scheme | replace: '-', '_' | append: '_border_color'
+  assign default_pallete_button_background_color_key = settings.default_color_scheme | replace: '-', '_' | append: '_button_background_color'
+  assign default_pallete_button_text_color_key = settings.default_color_scheme | replace: '-', '_' | append: '_button_text_color'
+  assign default_pallete_outline_button_background_color_key = settings.default_color_scheme | replace: '-', '_' | append: '_outline_button_background_color'
+  assign default_pallete_outline_button_text_color_key = settings.default_color_scheme | replace: '-', '_' | append: '_outline_button_text_color'
+  assign default_pallete_image_overlay = settings.default_color_scheme | replace: '-', '_' | append: '_image_overlay'
+%}
+
+{%- capture css -%}
+  {% style %}
+    :root {
+      /* product card */
+
+      --gsc-product-card-title-font-family: {{ settings.product_card_font_family.family }}, {{ settings.product_card_font_family.fallback_families }};
+      --gsc-product-card-title-font-style: {{ settings.product_card_font_family.style }};
+      --gsc-product-card-title-font-weight: {{ settings.product_card_font_family.weight }};
+      --gsc-product-card-title-transform: {{ settings.product_card_font_uppercase }};
+      --gsc-product-card-title-letter-spacing: {{ settings.product_card_font_letter_spacing }}px;
+      --gsc-product-card-title-font-size: calc(1.4rem * {{ settings.product_card_font_scale | times: 0.01 }});
+      --gsc-product-card-title-line-height: calc(22 / 14);
+
+      --gsc-product-card-price-font-family: {{ settings.product_card_price_font_family.family }}, {{ settings.product_card_price_font_family.fallback_families }};
+      --gsc-product-card-price-font-size: var(--gsc-product-card-price-font-size-{{- settings.product_card_price_size -}});
+      --gsc-product-card-price-line-height: var(--gsc-product-card-price-line-height-{{- settings.product_card_price_size -}});
+      --gsc-product-card-price-font-weight: {{ settings.product_card_price_font_family.weight }};
+
+      {% if settings.product_sale_badge_bg_gradient != blank %}
+        --gsc-product-sale-badge-background: {{ settings.product_sale_badge_bg_gradient }};
+      {% else %}
+        --gsc-product-sale-badge-background: rgba({{ settings.product_sale_badge_bg.red }}, {{ settings.product_sale_badge_bg.green }}, {{ settings.product_sale_badge_bg.blue }}, {{ settings.product_sale_badge_bg.alpha }});         
+      {% endif %}
+      --gsc-product-sale-badge-color: rgba({{ settings.product_sale_badge_color.red }}, {{ settings.product_sale_badge_color.green }}, {{ settings.product_sale_badge_color.blue }}, {{ settings.product_sale_badge_color.alpha }});
+
+      {% if settings.product_card_sold_out_badge_bg_gradient != blank %}
+        --gsc-product-sold-out-badge-background: {{ settings.product_card_sold_out_badge_bg_gradient }};
+      {% else %}
+        --gsc-product-sold-out-badge-background: rgb({{ settings.product_card_sold_out_badge_bg.red }}, {{ settings.product_card_sold_out_badge_bg.green }}, {{ settings.product_card_sold_out_badge_bg.blue }});
+      {% endif %}
+      --gsc-product-sold-out-badge-color: {{ settings.product_card_sold_out_badge_color.red }}, {{ settings.product_card_sold_out_badge_color.green }}, {{ settings.product_card_sold_out_badge_color.blue }};
+
+      {% if settings.product_card_custom_badge_1_bg_gradient != blank %}
+        --gsc-product-custom-badge-1-background: {{ settings.product_card_custom_badge_1_bg_gradient }};
+      {% else %}
+        --gsc-product-custom-badge-1-background:  rgba({{ settings.product_card_custom_badge_1_bg.red }}, {{ settings.product_card_custom_badge_1_bg.green }}, {{ settings.product_card_custom_badge_1_bg.blue }}, {{ settings.product_card_custom_badge_1_bg.alpha }});
+      {% endif %}
+      --gsc-product-custom-badge-1-color:  rgba({{ settings.product_card_custom_badge_1_color.red }}, {{ settings.product_card_custom_badge_1_color.green }}, {{ settings.product_card_custom_badge_1_color.blue }}, {{ settings.product_card_custom_badge_1_color.alpha }});
+      
+      {% if settings.product_card_custom_badge_2_bg_gradient != blank %}
+        --gsc-product-custom-badge-2-background: {{ settings.product_card_custom_badge_2_bg_gradient }};
+      {% else %}
+        --gsc-product-custom-badge-2-background:  rgba({{ settings.product_card_custom_badge_2_bg.red }}, {{ settings.product_card_custom_badge_2_bg.green }}, {{ settings.product_card_custom_badge_2_bg.blue }}, {{ settings.product_card_custom_badge_2_bg.alpha }});
+      {% endif %}
+      --gsc-product-custom-badge-2-color:  rgba({{ settings.product_card_custom_badge_2_color.red }}, {{ settings.product_card_custom_badge_2_color.green }}, {{ settings.product_card_custom_badge_2_color.blue }}, {{ settings.product_card_custom_badge_2_color.alpha }});
+      
+      {% if settings.product_card_custom_badge_3_bg_gradient != blank %}
+        --gsc-product-custom-badge-3-background: {{ settings.product_card_custom_badge_3_bg_gradient }};
+      {% else %}
+        --gsc-product-custom-badge-3-background:  rgba({{ settings.product_card_custom_badge_3_bg.red }}, {{ settings.product_card_custom_badge_3_bg.green }}, {{ settings.product_card_custom_badge_3_bg.blue }}, {{ settings.product_card_custom_badge_3_bg.alpha }});
+      {% endif %}
+      --gsc-product-custom-badge-3-color:  rgba({{ settings.product_card_custom_badge_3_color.red }}, {{ settings.product_card_custom_badge_3_color.green }}, {{ settings.product_card_custom_badge_3_color.blue }}, {{ settings.product_card_custom_badge_3_color.alpha }});
+      
+      --gsc-rating-stars-color: {{settings.product_card_rating_color}};
+      
+      /* product and product card badges */
+      
+      --gsc-product-highlight-price-color:   rgba({{ settings.product_highlight_sale_price_color.red }}, {{ settings.product_highlight_sale_price_color.green }}, {{ settings.product_highlight_sale_price_color.blue }}, {{ settings.product_highlight_sale_price_color.alpha }});
+      
+      {% if settings.product_sale_amount_badge_bg_gradient != blank %}
+        --gsc-product-sale-amount-badge-background: {{ settings.product_sale_amount_badge_bg_gradient }};
+      {% else %}
+        --gsc-product-sale-amount-badge-background:  rgba({{ settings.product_sale_amount_badge_bg.red }}, {{ settings.product_sale_amount_badge_bg.green }}, {{ settings.product_sale_amount_badge_bg.blue }}, {{ settings.product_sale_amount_badge_bg.alpha }});
+      {% endif %}
+      --gsc-product-sale-amount-badge-color:   rgba({{ settings.product_sale_badge_amount_color.red }}, {{ settings.product_sale_badge_amount_color.green }}, {{ settings.product_sale_badge_amount_color.blue }}, {{ settings.product_sale_badge_amount_color.alpha }});
+
+      /* cart icon in header */
+
+      {% if settings.cart_status_background_gradient != blank %}
+        --gsc-header-cart-icon-background-color: {{ settings.cart_status_background_gradient }};
+      {% else %}
+        --gsc-header-cart-icon-background-color: {{ settings.cart_status_background_color }};
+      {% endif %}
+      --gsc-header-cart-icon-text-color: {{ settings.cart_status_text_color }};
+
+      /* shipping bar */
+
+      --gsc-free-shipping-bar-message-color: {{ settings.cart_free_shipping_message_color }};
+      --gsc-free-shipping-bar-size: {{ settings.cart_free_shipping_bar_size }}px;
+      --gsc-free-shipping-bar-bg-high: {{ settings.cart_free_shipping_bar_bg.red }}, {{ settings.cart_free_shipping_bar_bg.green }}, {{ settings.cart_free_shipping_bar_bg.blue }};      
+      {% if settings.cart_free_shipping_bar_gradient != blank %}
+        --gsc-free-shipping-bar-color: {{ settings.cart_free_shipping_bar_gradient }};
+      {% else %}
+        --gsc-free-shipping-bar-color: {{ settings.cart_free_shipping_bar_color }};
+      {% endif %}
+
+      /* headings */
+
+      --gsc-headings-font-family: {{ settings.heading_font_family.family }}, {{ settings.heading_font_family.fallback_families }};
+      --gsc-headings-font-style: {{ settings.heading_font_family.style }};
+      --gsc-headings-font-weight: {{ settings.heading_font_family.weight }};
+      --gsc-headings-text-transform: {{ settings.heading_font_uppercase }};
+      --gsc-headings-letter-spacing: {{ settings.heading_font_letter_spacing }}px;
+      --gsc-headings-word-spacing: 0rem;
+      --gsc-headings-font-scale: {{ settings.heading_font_scale | times: 0.01 }};
+
+      /* body text */
+
+      --gsc-body-font-family: {{ settings.body_font_family.family }}, {{ settings.body_font_family.fallback_families }};
+      --gsc-body-font-style: {{ settings.body_font_family.style }};
+      --gsc-body-font-weight: {{ settings.body_font_family.weight }};
+      --gsc-body-font-scale: {{ settings.body_font_scale | times: 0.01 }};
+      --gsc-body-font-opacity: {{ settings.body_font_opacity }}%;
+      --gsc-body-font-letter-spacing: {{ settings.body_font_letter_spacing }}px;
+
+      /* button */
+
+      --gsc-button-font-family: {{ settings.button_font_family.family }}, {{ settings.button_font_family.fallback_families }};
+      --gsc-button-font-style: {{ settings.button_font_family.style }};
+      --gsc-button-font-weight: {{ settings.button_font_family.weight }};
+      --gsc-button-letter-spacing: {{ settings.button_font_letter_spacing }}px;
+      --gsc-button-font-size: calc(1.4rem * {{ settings.button_font_scale | times: 0.01 }});
+      --gsc-button-line-height: calc(22 / 14);
+      --gsc-button-text-transform: {{ settings.button_font_uppercase }};
+
+      /* menu */
+
+      --gsc-menu-font-family: {{ settings.menu_font_family.family }}, {{ settings.menu_font_family.fallback_families }};
+      --gsc-menu-font-style: {{ settings.menu_font_family.style }};
+      --gsc-menu-font-weight: {{ settings.menu_font_family.weight }};
+      --gsc-menu-font-letter-spacing: {{ settings.menu_font_letter_spacing }}px;
+      --gsc-menu-font-size: calc(var(--gsc-fz-11) * {{ settings.menu_font_scale | times: 0.01 }});
+      --gsc-drawer-menu-font-size: calc(var(--gsc-fz-11) * {{ settings.drawer_menu_font_scale | times: 0.01 }});
+      --gsc-drawer-menu-font-letter-spacing: {{ settings.drawer_menu_font_letter_spacing }}px;
+      --gsc-menu-line-height: calc(24 / 16);
+      --gsc-menu-text-transform: {{ settings.menu_font_uppercase }};
+      
+      /* header icons */
+
+      --gsc-header-icons-font-family: {{ settings.header_icons_font_family.family }}, {{ settings.header_icons_font_family.fallback_families }};
+      --gsc-header-icons-font-style: {{ settings.header_icons_font_family.style }};
+      --gsc-header-icons-font-weight: {{ settings.header_icons_font_family.weight }};
+      --gsc-header-icons-font-letter-spacing: {{ settings.header_icons_font_letter_spacing }}px;
+      --gsc-header-icons-font-size: calc(var(--gsc-fz-11) * {{ settings.header_icons_font_scale | times: 0.01 }});
+      --gsc-header-icons-line-height: calc(var(--gsc-header-icons-font-size) * 1.5);
+      --gsc-header-icons-gap: calc(10px * {{ settings.header_icons_font_scale | times: 0.01 }});
+      --gsc-header-icons-text-transform: {{ settings.header_icons_font_uppercase }};
+
+      /* icons */
+
+      --gsc-blockquote-icon: url({{ 'blockquote-icon.png' | asset_img_url: width: 64, height: 64 }});
+
+      /* container */
+      
+      --gsc-page-width: {{ settings.page_width }}px;
+      --gsc-aside-padding-size: {{ settings.aside_padding_size }}px;
+      --gsc-modals-and-header-paddings: min(20px, {{ settings.aside_padding_size }}px);
+
+      /* drawers and modals */
+      
+      --gsc-drawer-transition-duration: 0.5s;
+      --gsc-drawer-transition-timing: cubic-bezier(0.24, 0.25, 0, 1);
+
+      {% if settings.overlay_opacity == 0 and settings.overlay_blur == 0 %}
+        --gsc-drawer-modal-shadow: drop-shadow(0 1.2rem 4.8rem rgb(0, 0, 0, 12%));
+      {% else %}
+        --gsc-drawer-modal-shadow: none;
+      {% endif %}
+
+      {% case settings.default_img_ratio %}
+        {% when 'square' %}  
+          --gsc-default-card-image-ratio: var(--gsc-square-image-ratio);
+          --gsc-default-shape-fill-mode: cover;
+        {% when 'fit-square' %}
+          --gsc-default-card-image-ratio: var(--gsc-square-image-ratio);
+          --gsc-default-shape-fill-mode: contain;
+        {% when 'portrait' %}
+          --gsc-default-card-image-ratio: var(--gsc-portrait-image-ratio);
+          --gsc-default-shape-fill-mode: cover;
+        {% when 'fit-portrait' %}
+          --gsc-default-card-image-ratio: var(--gsc-portrait-image-ratio);
+          --gsc-default-shape-fill-mode: contain;
+        {% when 'portrait-xl' %}
+          --gsc-default-card-image-ratio: var(--gsc-large-portrait-image-ratio);
+          --gsc-default-shape-fill-mode: cover;
+        {% when 'fit-portrait-xl' %}
+          --gsc-default-card-image-ratio: var(--gsc-large-portrait-image-ratio);
+          --gsc-default-shape-fill-mode: contain;
+        {% when 'landscape' %}
+          --gsc-default-card-image-ratio: var(--gsc-landscape-image-ratio);
+          --gsc-default-shape-fill-mode: cover;
+        {% when 'fit-landscape' %}
+          --gsc-default-card-image-ratio: var(--gsc-landscape-image-ratio);
+          --gsc-default-shape-fill-mode: contain;
+      {% endcase %}
+    }
+
+
+    {% if settings.body_font_family.weight != '400' %}
+      .body-font-weight-from-global-settings {
+        font-weight: var(--gsc-body-font-weight);
+
+        --gsc-font-weight-bold: var(--gsc-body-font-weight);
+        --gsc-font-weight-semibold: var(--gsc-body-font-weight);
+        --gsc-font-weight-medium: var(--gsc-body-font-weight);
+      }
+    {% endif %}
+
+    body {
+      --gsc-overlay-color: {{ settings.overlay_color.red }}, {{ settings.overlay_color.green }}, {{ settings.overlay_color.blue }};
+      --gsc-overlay-opacity: {{ settings.overlay_opacity }}%;
+      --gsc-overlay-blur: {{ settings.overlay_blur | divided_by: 2.0 }}px;
+    }
+
+    .color-default {
+      --gsc-text-color: {{ settings[default_pallete_text_color_key].red }}, {{ settings[default_pallete_text_color_key].green }}, {{ settings[default_pallete_text_color_key].blue }};
+      --gsc-background-color: {{ settings[default_pallete_background_color_key].red }}, {{ settings[default_pallete_background_color_key].green }}, {{ settings[default_pallete_background_color_key].blue }};
+      --gsc-foreground-color: {{ settings[default_pallete_foreground_color_key].red }}, {{ settings[default_pallete_foreground_color_key].green }}, {{ settings[default_pallete_foreground_color_key].blue }};
+      --gsc-border-color: {{ settings[default_pallete_border_color_key].red }}, {{ settings[default_pallete_border_color_key].green }}, {{ settings[default_pallete_border_color_key].blue }};
+      --gsc-button-background-color: {{ settings[default_pallete_button_background_color_key].red }}, {{ settings[default_pallete_button_background_color_key].green }}, {{ settings[default_pallete_button_background_color_key].blue }};
+      --gsc-button-text-color: {{ settings[default_pallete_button_text_color_key].red }}, {{ settings[default_pallete_button_text_color_key].green }}, {{ settings[default_pallete_button_text_color_key].blue }};
+      --gsc-outline-button-background-color: {{ settings.[default_pallete_outline_button_background_color_key].red }}, {{ settings.[default_pallete_outline_button_background_color_key].green }}, {{ settings.[default_pallete_outline_button_background_color_key].blue }};
+      --gsc-outline-button-text-color: {{ settings.[default_pallete_outline_button_text_color_key].red }}, {{ settings.[default_pallete_outline_button_text_color_key].green }}, {{ settings.[default_pallete_outline_button_text_color_key].blue }};
+      --gsc-image-opacity-color: {{ settings.[default_pallete_image_overlay].red }}, {{ settings.[default_pallete_image_overlay].green }}, {{ settings.[default_pallete_image_overlay].blue }};
+    }
+
+    body,
+    .color-primary {
+      --gsc-text-color: {{ settings.primary_text_color.red }}, {{ settings.primary_text_color.green }}, {{ settings.primary_text_color.blue }};
+      --gsc-background-color: {{ settings.primary_background_color.red }}, {{ settings.primary_background_color.green }}, {{ settings.primary_background_color.blue }};
+      --gsc-foreground-color: {{ settings.primary_foreground_color.red }}, {{ settings.primary_foreground_color.green }}, {{ settings.primary_foreground_color.blue }};
+      --gsc-border-color: {{ settings.primary_border_color.red }}, {{ settings.primary_border_color.green }}, {{ settings.primary_border_color.blue }};
+      --gsc-button-background-color: {{ settings.primary_button_background_color.red }}, {{ settings.primary_button_background_color.green }}, {{ settings.primary_button_background_color.blue }};
+      --gsc-button-text-color: {{ settings.primary_button_text_color.red }}, {{ settings.primary_button_text_color.green }}, {{ settings.primary_button_text_color.blue }};
+      --gsc-outline-button-background-color: {{ settings.primary_outline_button_background_color.red }}, {{ settings.primary_outline_button_background_color.green }}, {{ settings.primary_outline_button_background_color.blue }};
+      --gsc-outline-button-text-color: {{ settings.primary_outline_button_text_color.red }}, {{ settings.primary_outline_button_text_color.green }}, {{ settings.primary_outline_button_text_color.blue }};
+      --gsc-image-opacity-color: {{ settings.primary_image_overlay.red }}, {{ settings.primary_image_overlay.green }}, {{ settings.primary_image_overlay.blue }};
+    }
+
+    .color-secondary {
+      --gsc-text-color: {{ settings.secondary_text_color.red }}, {{ settings.secondary_text_color.green }}, {{ settings.secondary_text_color.blue }};
+      --gsc-background-color: {{ settings.secondary_background_color.red }}, {{ settings.secondary_background_color.green }}, {{ settings.secondary_background_color.blue }};
+      --gsc-foreground-color: {{ settings.secondary_foreground_color.red }}, {{ settings.secondary_foreground_color.green }}, {{ settings.secondary_foreground_color.blue }};
+      --gsc-border-color: {{ settings.secondary_border_color.red }}, {{ settings.secondary_border_color.green }}, {{ settings.secondary_border_color.blue }};
+      --gsc-button-background-color: {{ settings.secondary_button_background_color.red }}, {{ settings.secondary_button_background_color.green }}, {{ settings.secondary_button_background_color.blue }};
+      --gsc-button-text-color: {{ settings.secondary_button_text_color.red }}, {{ settings.secondary_button_text_color.green }}, {{ settings.secondary_button_text_color.blue }};
+      --gsc-outline-button-background-color: {{ settings.secondary_outline_button_background_color.red }}, {{ settings.secondary_outline_button_background_color.green }}, {{ settings.secondary_outline_button_background_color.blue }};
+      --gsc-outline-button-text-color: {{ settings.secondary_outline_button_text_color.red }}, {{ settings.secondary_outline_button_text_color.green }}, {{ settings.secondary_outline_button_text_color.blue }};
+      --gsc-image-opacity-color: {{ settings.secondary_image_overlay.red }}, {{ settings.secondary_image_overlay.green }}, {{ settings.secondary_image_overlay.blue }};
+    }
+
+    .color-custom-1 {
+      --gsc-text-color: {{ settings.custom_1_text_color.red }}, {{ settings.custom_1_text_color.green }}, {{ settings.custom_1_text_color.blue }};
+      --gsc-background-color: {{ settings.custom_1_background_color.red }}, {{ settings.custom_1_background_color.green }}, {{ settings.custom_1_background_color.blue }};
+      --gsc-foreground-color: {{ settings.custom_1_foreground_color.red }}, {{ settings.custom_1_foreground_color.green }}, {{ settings.custom_1_foreground_color.blue }};
+      --gsc-border-color: {{ settings.custom_1_border_color.red }}, {{ settings.custom_1_border_color.green }}, {{ settings.custom_1_border_color.blue }};
+      --gsc-button-background-color: {{ settings.custom_1_button_background_color.red }}, {{ settings.custom_1_button_background_color.green }}, {{ settings.custom_1_button_background_color.blue }};
+      --gsc-button-text-color: {{ settings.custom_1_button_text_color.red }}, {{ settings.custom_1_button_text_color.green }}, {{ settings.custom_1_button_text_color.blue }};
+      --gsc-outline-button-background-color: {{ settings.custom_1_outline_button_background_color.red }}, {{ settings.custom_1_outline_button_background_color.green }}, {{ settings.custom_1_outline_button_background_color.blue }};
+      --gsc-outline-button-text-color: {{ settings.custom_1_outline_button_text_color.red }}, {{ settings.custom_1_outline_button_text_color.green }}, {{ settings.custom_1_outline_button_text_color.blue }};
+      --gsc-image-opacity-color: {{ settings.custom_1_image_overlay.red }}, {{ settings.custom_1_image_overlay.green }}, {{ settings.custom_1_image_overlay.blue }};
+    }
+
+    .color-custom-2 {
+      --gsc-text-color: {{ settings.custom_2_text_color.red }}, {{ settings.custom_2_text_color.green }}, {{ settings.custom_2_text_color.blue }};
+      --gsc-background-color: {{ settings.custom_2_background_color.red }}, {{ settings.custom_2_background_color.green }}, {{ settings.custom_2_background_color.blue }};
+      --gsc-foreground-color: {{ settings.custom_2_foreground_color.red }}, {{ settings.custom_2_foreground_color.green }}, {{ settings.custom_2_foreground_color.blue }};
+      --gsc-border-color: {{ settings.custom_2_border_color.red }}, {{ settings.custom_2_border_color.green }}, {{ settings.custom_2_border_color.blue }};
+      --gsc-button-background-color: {{ settings.custom_2_button_background_color.red }}, {{ settings.custom_2_button_background_color.green }}, {{ settings.custom_2_button_background_color.blue }};
+      --gsc-button-text-color: {{ settings.custom_2_button_text_color.red }}, {{ settings.custom_2_button_text_color.green }}, {{ settings.custom_2_button_text_color.blue }};
+      --gsc-outline-button-background-color: {{ settings.custom_2_outline_button_background_color.red }}, {{ settings.custom_2_outline_button_background_color.green }}, {{ settings.custom_2_outline_button_background_color.blue }};
+      --gsc-outline-button-text-color: {{ settings.custom_2_outline_button_text_color.red }}, {{ settings.custom_2_outline_button_text_color.green }}, {{ settings.custom_2_outline_button_text_color.blue }};
+      --gsc-image-opacity-color: {{ settings.custom_2_image_overlay.red }}, {{ settings.custom_2_image_overlay.green }}, {{ settings.custom_2_image_overlay.blue }};
+    }
+
+    .color-custom-3 {
+      --gsc-text-color: {{ settings.custom_3_text_color.red }}, {{ settings.custom_3_text_color.green }}, {{ settings.custom_3_text_color.blue }};
+      --gsc-background-color: {{ settings.custom_3_background_color.red }}, {{ settings.custom_3_background_color.green }}, {{ settings.custom_3_background_color.blue }};
+      --gsc-foreground-color: {{ settings.custom_3_foreground_color.red }}, {{ settings.custom_3_foreground_color.green }}, {{ settings.custom_3_foreground_color.blue }};
+      --gsc-border-color: {{ settings.custom_3_border_color.red }}, {{ settings.custom_3_border_color.green }}, {{ settings.custom_3_border_color.blue }};
+      --gsc-button-background-color: {{ settings.custom_3_button_background_color.red }}, {{ settings.custom_3_button_background_color.green }}, {{ settings.custom_3_button_background_color.blue }};
+      --gsc-button-text-color: {{ settings.custom_3_button_text_color.red }}, {{ settings.custom_3_button_text_color.green }}, {{ settings.custom_3_button_text_color.blue }};
+      --gsc-outline-button-background-color: {{ settings.custom_3_outline_button_background_color.red }}, {{ settings.custom_3_outline_button_background_color.green }}, {{ settings.custom_3_outline_button_background_color.blue }};
+      --gsc-outline-button-text-color: {{ settings.custom_3_outline_button_text_color.red }}, {{ settings.custom_3_outline_button_text_color.green }}, {{ settings.custom_3_outline_button_text_color.blue }};
+      --gsc-image-opacity-color: {{ settings.custom_3_image_overlay.red }}, {{ settings.custom_3_image_overlay.green }}, {{ settings.custom_3_image_overlay.blue }};
+    }
+
+    .color-white {
+      --gsc-text-color: {{ settings.white_text_color.red }}, {{ settings.white_text_color.green }}, {{ settings.white_text_color.blue }};
+      --gsc-background-color: {{ settings.white_background_color.red }}, {{ settings.white_background_color.green }}, {{ settings.white_background_color.blue }};
+      --gsc-foreground-color: {{ settings.white_foreground_color.red }}, {{ settings.white_foreground_color.green }}, {{ settings.white_foreground_color.blue }};
+      --gsc-border-color: {{ settings.white_border_color.red }}, {{ settings.white_border_color.green }}, {{ settings.white_border_color.blue }};
+      --gsc-button-background-color: {{ settings.white_button_background_color.red }}, {{ settings.white_button_background_color.green }}, {{ settings.white_button_background_color.blue }};
+      --gsc-button-text-color: {{ settings.white_button_text_color.red }}, {{ settings.white_button_text_color.green }}, {{ settings.white_button_text_color.blue }};
+      --gsc-outline-button-background-color: {{ settings.white_outline_button_background_color.red }}, {{ settings.white_outline_button_background_color.green }}, {{ settings.white_outline_button_background_color.blue }};
+      --gsc-outline-button-text-color: {{ settings.white_outline_button_text_color.red }}, {{ settings.white_outline_button_text_color.green }}, {{ settings.white_outline_button_text_color.blue }};
+      --gsc-image-opacity-color: {{ settings.white_image_overlay.red }}, {{ settings.white_image_overlay.green }}, {{ settings.white_image_overlay.blue }};
+    }
+
+    .color-black {
+      --gsc-text-color: {{ settings.black_text_color.red }}, {{ settings.black_text_color.green }}, {{ settings.black_text_color.blue }};
+      --gsc-background-color: {{ settings.black_background_color.red }}, {{ settings.black_background_color.green }}, {{ settings.black_background_color.blue }};
+      --gsc-foreground-color: {{ settings.black_foreground_color.red }}, {{ settings.black_foreground_color.green }}, {{ settings.black_foreground_color.blue }};
+      --gsc-border-color: {{ settings.black_border_color.red }}, {{ settings.black_border_color.green }}, {{ settings.black_border_color.blue }};
+      --gsc-button-background-color: {{ settings.black_button_background_color.red }}, {{ settings.black_button_background_color.green }}, {{ settings.black_button_background_color.blue }};
+      --gsc-button-text-color: {{ settings.black_button_text_color.red }}, {{ settings.black_button_text_color.green }}, {{ settings.black_button_text_color.blue }};
+      --gsc-outline-button-background-color: {{ settings.black_outline_button_background_color.red }}, {{ settings.black_outline_button_background_color.green }}, {{ settings.black_outline_button_background_color.blue }};
+      --gsc-outline-button-text-color: {{ settings.black_outline_button_text_color.red }}, {{ settings.black_outline_button_text_color.green }}, {{ settings.black_outline_button_text_color.blue }};
+      --gsc-image-opacity-color: {{ settings.black_image_overlay.red }}, {{ settings.black_image_overlay.green }}, {{ settings.black_image_overlay.blue }};
+    }
+
+    .color-custom-5 {
+      --gsc-text-color: {{ settings.custom_5_text_color.red }}, {{ settings.custom_5_text_color.green }}, {{ settings.custom_5_text_color.blue }};
+      --gsc-background-color: {{ settings.custom_5_background_color.red }}, {{ settings.custom_5_background_color.green }}, {{ settings.custom_5_background_color.blue }};
+      --gsc-foreground-color: {{ settings.custom_5_foreground_color.red }}, {{ settings.custom_5_foreground_color.green }}, {{ settings.custom_5_foreground_color.blue }};
+      --gsc-border-color: {{ settings.custom_5_border_color.red }}, {{ settings.custom_5_border_color.green }}, {{ settings.custom_5_border_color.blue }};
+      --gsc-button-background-color: {{ settings.custom_5_button_background_color.red }}, {{ settings.custom_5_button_background_color.green }}, {{ settings.custom_5_button_background_color.blue }};
+      --gsc-button-text-color: {{ settings.custom_5_button_text_color.red }}, {{ settings.custom_5_button_text_color.green }}, {{ settings.custom_5_button_text_color.blue }};
+      --gsc-outline-button-background-color: {{ settings.custom_5_outline_button_background_color.red }}, {{ settings.custom_5_outline_button_background_color.green }}, {{ settings.custom_5_outline_button_background_color.blue }};
+      --gsc-outline-button-text-color: {{ settings.custom_5_outline_button_text_color.red }}, {{ settings.custom_5_outline_button_text_color.green }}, {{ settings.custom_5_outline_button_text_color.blue }};
+      --gsc-image-opacity-color: {{ settings.custom_5_image_overlay.red }}, {{ settings.custom_5_image_overlay.green }}, {{ settings.custom_5_image_overlay.blue }};
+    }
+  {% endstyle %}
+{%- endcapture -%}
+
+{%- render 'inline-css-minifier', css: css -%}

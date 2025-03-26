@@ -1,0 +1,244 @@
+{% liquid
+  assign image = product.featured_image
+  assign price = product.price | default: 0
+  assign variant = product.first_available_variant
+  assign img_ratio = img_ratio | default: 'portrait'
+
+  if settings.show_currency_code
+    assign money_price = price | money_with_currency
+  else
+    assign money_price = price | money
+  endif
+
+  assign content_alignment = content_alignment
+  assign with_background = with_background
+  assign show_compared_at_price = settings.show_compared_at_price
+%}
+
+{% if settings.card_buttons_type != 'quickview_only' %}
+  {% capture add_to_cart_button %}
+    {% liquid
+      assign cart_type_setting_value = settings.product_card_cart_icon | split: '-'
+      assign cart_icon_type = cart_type_setting_value | first | append: '-icon-with-styles'
+      assign cart_icon_style = cart_type_setting_value | last 
+      assign cart_icon_stroke_width = settings.product_card_cart_icon_stroke_width
+    %}
+
+    <button
+      type='submit'
+      name='add'
+      class='btn btn--solid btn--md horizontal-product-card__button {% if settings.desktop_button_style == 'both' %}horizontal-product-card__button--with-icon-and-label{% endif %}'
+      aria-label='{{- 'cards.horizontal_product_card.screen_reader.add_to_cart_button_label' | t -}}'
+    >
+      <span class='horizontal-product-card__btn-label-text'>
+        {% if settings.desktop_button_style == 'with_labels' %}
+          {{- 'cards.horizontal_product_card.screen_reader.add_to_cart_button_label' | t -}}
+        {% elsif settings.desktop_button_style == 'without_labels' %}
+          {% render 'buy-icons-pack', icon: cart_icon_type, class: 'horizontal-product-card__button-icon', icon_style: cart_icon_style, stroke_width: cart_icon_stroke_width %}
+        {% elsif settings.desktop_button_style == 'both' %}
+          {% render 'buy-icons-pack', icon: cart_icon_type, class: 'horizontal-product-card__button-icon', icon_style: cart_icon_style, stroke_width: cart_icon_stroke_width %}
+          {{- 'cards.horizontal_product_card.screen_reader.add_to_cart_button_label' | t -}}
+        {% endif %}
+      </span>
+
+      <div class='loading-spinner btn__loading-spinner horizontal-product-card__btn-loading-spinner'></div>
+    </button>
+  {% endcapture %}
+{% endif %}
+
+{% if settings.card_buttons_type != 'add_only' %}
+  {% capture quickview_button %}
+    {% liquid
+      assign quickview_type_setting_value = settings.product_card_quickview_icon | split: '-'
+      assign quickview_icon_type = quickview_type_setting_value | first | append: '-icon-with-styles'
+      assign quickview_icon_style = quickview_type_setting_value | last 
+      assign quickview_icon_stroke_width = settings.product_card_quickview_icon_stroke_width
+    %}
+
+    <button
+        class='btn btn--solid btn--md horizontal-product-card__button {% if settings.desktop_button_style == 'both' %}horizontal-product-card__button--with-icon-and-label{% endif %}'
+        data-quick-view-button
+        data-product-card-quick-view-button
+        data-quick-view-id='Quick-view'
+        aria-label='{{- 'cards.horizontal_product_card.screen_reader.quick_view_button_label' | t -}}'
+      >
+        <span class='horizontal-product-card__btn-label-text'>
+          {% if settings.desktop_button_style == 'with_labels' %}
+            {{- 'cards.horizontal_product_card.screen_reader.quick_view_button_label' | t -}}
+          {% elsif settings.desktop_button_style == 'without_labels' %}
+            {% render 'buy-icons-pack', icon: quickview_icon_type, class: 'horizontal-product-card__button-icon', icon_style: quickview_icon_style, stroke_width: quickview_icon_stroke_width %}
+          {% elsif settings.desktop_button_style == 'both' %}
+            {% render 'buy-icons-pack', icon: quickview_icon_type, class: 'horizontal-product-card__button-icon', icon_style: quickview_icon_style, stroke_width: quickview_icon_stroke_width %}
+            {{- 'cards.horizontal_product_card.screen_reader.quick_view_button_label' | t -}}
+          {% endif %}
+        </span>
+        <div class='loading-spinner btn__loading-spinner horizontal-product-card__btn-loading-spinner'></div>
+      </button>
+  {% endcapture %}
+{% endif %}
+
+{% capture buttons %}
+  {%- if settings.card_buttons_type != 'none' -%}
+    <div class='horizontal-product-card__buttons'>
+      {%- if settings.card_buttons_type == 'add_only' -%}
+        {% if product.variants.size == 1 and product.available %}
+          <product-form
+            class='horizontal-product-card__button-wrapper'
+          >
+            {%- form 'product', product, data-type: 'add-to-cart-form' -%}
+              <input
+                type='hidden'
+                name='id'
+                value='{{ product.selected_or_first_available_variant.id }}'
+                data-product-form-variant
+                id='{{ product_form_id }}-IdInput-{{ form.id }}'
+              >
+              {{ add_to_cart_button }}
+            {%- endform -%}
+          </product-form>
+        {% else %}
+          <div
+            id='product-card-quick-view-btn-{{ product.id }}'
+            class='horizontal-product-card__button-wrapper'
+          >
+            <button
+              class='btn btn--solid btn--md horizontal-product-card__button {% if settings.desktop_button_style == 'both' %}horizontal-product-card__button--with-icon-and-label{% endif %}'
+              data-quick-view-button
+              data-product-card-quick-view-button
+              data-quick-view-id='Quick-view'
+              aria-label='{{- 'cards.horizontal_product_card.screen_reader.add_to_cart_button_label' | t -}}'
+            >
+              <span class='horizontal-product-card__btn-label-text'>
+                {% if settings.desktop_button_style == 'with_labels' %}
+                  {{- 'cards.horizontal_product_card.screen_reader.add_to_cart_button_label' | t -}}
+                {% elsif settings.desktop_button_style == 'without_labels' %}
+                  {% render 'buy-icons-pack', icon: cart_icon_type, class: 'horizontal-product-card__button-icon', icon_style: cart_icon_style, stroke_width: cart_icon_stroke_width %}
+                {% elsif settings.desktop_button_style == 'both' %}
+                  {% render 'buy-icons-pack', icon: cart_icon_type, class: 'horizontal-product-card__button-icon', icon_style: cart_icon_style, stroke_width: cart_icon_stroke_width %}
+                  {{- 'cards.horizontal_product_card.screen_reader.add_to_cart_button_label' | t -}}
+                {% endif %}
+              </span>
+
+              <div class='loading-spinner btn__loading-spinner horizontal-product-card__btn-loading-spinner'></div>
+            </button>
+          </div>
+        {% endif %}
+      {%- endif -%}
+
+      {%- if settings.card_buttons_type == 'quickview_only' -%}
+        <div
+          id='product-card-quick-view-btn-{{ product.id }}'
+          class='horizontal-product-card__button-wrapper'
+        >
+        {{ quickview_button }}
+        </div>
+      {%- endif -%}
+
+      {% if settings.card_buttons_type == 'combined' %}
+        {% if product.variants.size == 1 and product.available %}
+          <product-form
+            class='horizontal-product-card__button-wrapper'
+          >
+            {%- form 'product', product, data-type: 'add-to-cart-form' -%}
+              <input
+                type='hidden'
+                name='id'
+                value='{{ product.selected_or_first_available_variant.id }}'
+                data-product-form-variant
+                id='{{ product_form_id }}-IdInput-{{ form.id }}'
+              >
+              {{ add_to_cart_button }}
+            {%- endform -%}
+          </product-form>
+        {% else %}
+          <div
+            id='product-card-quick-view-btn-{{ product.id }}'
+            class='horizontal-product-card__button-wrapper'
+          >
+          {{ quickview_button }}
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+  {%- endif -%}
+{% endcapture %}
+
+<horizontal-product-card
+  class='horizontal-product-card {{ class }} {% if with_background %} horizontal-product-card--with-background {% endif %} {% if is_inside_block_with_background %} horizontal-product-card--inside-block-with-background {% endif %}'
+  data-url='{{ product.url }}'
+  data-id='{{ product.id }}'
+  {% if block != blank %}
+    data-block-id='{{ block.id }}'
+  {% endif %}
+  {{ data }}
+>
+  <div class='horizontal-product-card__inner'>
+    <a
+      {% if product.url != blank %}
+        href='{{ product.url }}'
+      {% endif %}
+      aria-label='{{ product.title | strip_html | escape }}'
+      class='horizontal-product-card__link'
+    ></a>
+    <div class='horizontal-product-card__image-wrapper shape shape--{{ img_ratio }} {% if img_ratio contains 'fit' %} shape--fit {% endif %} {% if is_inside_block_with_background %} horizontal-product-card__image-wrapper--inside-block-with-background {% endif %} {% if settings.enable_product_darken_background %} multiply-mode {% endif %}'>
+      {% if image != blank %}
+        <img
+          {% render 'image-attributes',
+            image: image,
+            size: 'medium',
+            is_multiply_target: settings.enable_product_darken_background,
+            class: 'horizontal-product-card__image shape__target-image'
+          %}
+        >
+      {% else %}
+        {{-
+          'product-4'
+          | placeholder_svg_tag: 'horizontal-product-card__image horizontal-product-card__image--placeholder shape__target-image'
+        -}}
+      {% endif %}
+    </div>
+  </div>
+  <div class='horizontal-product-card__info'>
+    <a
+      class='horizontal-product-card__title'
+      {% if product.url != blank %}
+        href='{{ product.url }}'
+      {% endif %}
+      aria-label='{{ product.url | strip_html | escape }}'
+    >
+      {% if product != blank %}
+        {{- product.title -}}
+      {% else %}
+        {{- 'cards.product_card.store_front.default_title' | t -}}
+      {% endif %}
+    </a>
+    <div class='horizontal-product-card__price'>
+      <div class='horizontal-product-card__price-item {% if settings.product_card_highlight_sale_price and product.compare_at_price > price %} horizontal-product-card__price-item--highlight-sale{% endif %}'>
+        {%- if product.price_varies -%}
+          {{ 'cards.horizontal_product_card.store_front.from_price_html' | t: price: money_price }}
+        {%- else -%}
+          {{ money_price }}
+        {%- endif -%}
+        {% if variant.unit_price_measurement %}
+          ({{ variant.unit_price | money }}
+
+          <span aria-hidden='true'>/</span>
+
+          {% if variant.unit_price_measurement.reference_value != 1 %}
+            {{- variant.unit_price_measurement.reference_value -}}
+          {% endif %}
+
+          {{ variant.unit_price_measurement.reference_unit }})
+        {% endif %}
+      </div>
+
+      {%- if show_compared_at_price and product.compare_at_price > price -%}
+        <div class='horizontal-product-card__old-price-item {% if settings.product_card_highlight_sale_price and product.compare_at_price > price %} horizontal-product-card__old-price-item--highlight-sale{% endif %}'>
+          {{- product.compare_at_price | money -}}
+        </div>
+      {%- endif -%}
+    </div>
+
+    {{ buttons }}
+  </div>
+</horizontal-product-card>

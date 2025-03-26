@@ -1,0 +1,462 @@
+/* Pixar Transformation File Input Component Styles */
+
+.file-input-wrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.file-input-wrapper__popup-open-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  text-align: center;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  border: none;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.file-input-wrapper__popup-open-btn:hover {
+  background-color: #45a049;
+}
+
+/* Improved overlay with better styling */
+.file-input-wrapper__overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: transparent !important; /* Force transparent background */
+  z-index: 100000;
+  display: none !important; /* Force hidden */
+  opacity: 0 !important; /* Force transparent */
+  pointer-events: none;
+}
+
+.file-input-wrapper__overlay.active {
+  display: none !important; /* Force hidden even when active */
+  opacity: 0 !important; /* Force transparent even when active */
+}
+
+/* Popup styles */
+.upload-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw !important; /* Force full viewport width */
+  height: 100vh !important; /* Force full viewport height */
+  z-index: 100001;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background-color: white !important; /* Force white background */
+}
+
+.upload-popup.active {
+  display: block;
+  opacity: 1;
+}
+
+.upload-popup__container {
+  position: fixed; /* Changed from absolute to fixed */
+  top: 0;
+  left: 0;
+  transform: none; /* Remove transform */
+  width: 100vw !important; /* Force full viewport width */
+  height: 100vh !important; /* Force full viewport height */
+  max-width: 100% !important; /* Full width */
+  max-height: 100vh !important; /* Full height */
+  background-color: white !important; /* Force white background */
+  border-radius: 0 !important; /* Remove rounded corners for full screen */
+  padding: 30px;
+  box-shadow: none !important; /* Remove shadow */
+  overflow-y: auto;
+}
+
+/* Override any grayed backgrounds */
+.popup-overlay,
+.popup-background,
+.popup__overlay,
+.file-input-wrapper__popup-overlay,
+[class*="overlay"],
+[id*="overlay"],
+#overlay,
+.overlay {
+  background-color: transparent !important;
+  opacity: 0 !important;
+  display: none !important;
+}
+
+/* Make sure nothing else is adding a gray overlay */
+.upload-popup *,
+.upload-popup__container *,
+.file-input-wrapper__popup *,
+[data-pixar-popup] *,
+[data-faceswap-popup] * {
+  background-color: transparent !important;
+}
+
+/* Only allow white backgrounds on specific containers */
+.upload-popup,
+.upload-popup__container,
+.upload-popup__content,
+.upload-popup__processing-content,
+.photo-guidelines-container {
+  background-color: white !important;
+}
+
+/* Center the content within the full-screen container */
+.upload-popup__content {
+  width: 100%;
+  max-width: 700px; /* Maintain content width */
+  margin: 0 auto; /* Center horizontally */
+  padding-top: 50px; /* Add some space at the top */
+}
+
+/* Make sure the close button is visible in the corner */
+.upload-popup__close-btn {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  color: #333;
+  z-index: 100002; /* Ensure it's above all content */
+  transition: all 0.2s ease;
+  padding: 10px;
+  border-radius: 50%;
+  background-color: rgba(255,255,255,0.8);
+}
+
+/* Adjust for small screens */
+@media (max-width: 480px) {
+  .upload-popup__container {
+    padding: 15px;
+  }
+  
+  .upload-popup__content {
+    padding-top: 30px;
+  }
+}
+
+.upload-popup__title {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 24px;
+  text-align: center;
+  color: #333;
+  padding-right: 30px;
+}
+
+/* Photo guidelines styles */
+.photo-guidelines-container {
+  width: 100%;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.photo-section-title {
+  margin-top: 5px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.photo-examples-row {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  margin-bottom: 25px;
+}
+
+.photo-example {
+  text-align: center;
+  width: 30%;
+  margin-bottom: 15px;
+}
+
+@media (max-width: 600px) {
+  .photo-example {
+    width: 48%;
+  }
+}
+
+.photo-frame {
+  position: relative;
+  border-width: 2px;
+  border-style: solid;
+  width: 100%;
+  aspect-ratio: 1;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.x-mark, .check-mark {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.x-mark {
+  background-color: #FF4444;
+}
+
+.check-mark {
+  background-color: #33CC66;
+}
+
+/* Upload buttons */
+.upload-popup__buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.file-input-label {
+  display: block;
+  background-color: #4CAF50;
+  color: white;
+  padding: 15px 30px;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  margin: 10px 0;
+  width: 100%;
+  max-width: 300px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.25);
+}
+
+.file-input-label:hover {
+  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(76, 175, 80, 0.3);
+}
+
+.file-input-label:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.2);
+}
+
+#backup-upload-button {
+  background-color: #2196F3;
+  color: white;
+  padding: 12px 25px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin: 10px 0;
+  width: 100%;
+  max-width: 280px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.25);
+}
+
+#backup-upload-button:hover {
+  background-color: #0b7dda;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(33, 150, 243, 0.3);
+}
+
+#backup-upload-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 6px rgba(33, 150, 243, 0.2);
+}
+
+/* Processing content */
+.upload-popup__processing-content {
+  text-align: center;
+  padding: 40px;
+  background-color: white; /* Pure white background */
+  border-radius: 12px;
+  box-shadow: none; /* Remove shadow */
+  width: 90%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.progress-container {
+  width: 80%;
+  max-width: 500px;
+  margin: 30px auto;
+  background-color: rgba(240, 240, 240, 0.3); /* Even lighter background */
+  height: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: none; /* Remove shadow completely */
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #4CAF50;
+  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.25) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.25) 50%, rgba(255, 255, 255, 0.25) 75%, transparent 75%, transparent);
+  background-size: 40px 40px;
+  animation: progress-bar-stripes 2s linear infinite;
+  transition: width 0.5s ease-in-out;
+  border-radius: 10px;
+}
+
+@keyframes progress-bar-stripes {
+  from { background-position: 40px 0; }
+  to { background-position: 0 0; }
+}
+
+/* Result image styles */
+.file-input-wrapper__result-image-wrapper {
+  margin-top: 20px;
+  width: 100%;
+  display: none;
+}
+
+.file-input-wrapper__result-image {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.upload-popup__help-text {
+  color: #f44336;
+  font-size: 14px;
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #ffebee;
+  border-radius: 4px;
+  border-left: 4px solid #f44336;
+  margin-bottom: 10px;
+  display: none;
+}
+
+/* Fix for image loading */
+.photo-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background-color: #f5f5f5;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .upload-popup__container {
+    padding: 20px 15px;
+  }
+  
+  .upload-popup__title {
+    font-size: 20px;
+  }
+  
+  .file-input-label {
+    padding: 12px 20px;
+    font-size: 16px;
+  }
+  
+  #backup-upload-button {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
+
+/* Direct upload button styling */
+#direct-upload-container {
+  display: none !important;
+}
+
+/* Fix cursors throughout the popup */
+.upload-popup__content * {
+  cursor: default;
+}
+
+.upload-popup__close-btn,
+#upload-button-main, 
+[id^="upload-button-"],
+button,
+label.file-input-label,
+input[type="file"] {
+  cursor: pointer !important;
+}
+
+/* Style for all clickable elements */
+[role="button"],
+button,
+.btn,
+.file-input-label,
+a[href],
+input[type="submit"],
+input[type="button"],
+input[type="file"],
+input[type="checkbox"],
+input[type="radio"],
+select {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
+
+/* Add a visible focus state for accessibility */
+.file-input-label:focus-within {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+}
+
+/* Added styles to make the popup work properly */
+body.popup-open {
+  overflow: hidden !important;
+}
+
+/* Ensure all popup elements capture clicks */
+.file-input-wrapper__popup *,
+.file-input-wrapper__popup button,
+.file-input-wrapper__popup label,
+.file-input-wrapper__popup input {
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure single upload button for clarity */
+.upload-popup__buttons .file-input-label {
+  margin-bottom: 0;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 100001 !important;
+}
+
+/* Hide unnecessary elements */
+.upload-popup__content input[type="file"]:not([id^="file-input-wrapper__input-"]) {
+  display: none !important;
+}
+
+/* Remove the debug popup button */
+#debug-pop-up, .debug-pop-up, [id*="debug-popup"], [class*="debug-popup"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+} 

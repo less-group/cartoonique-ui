@@ -1,0 +1,17 @@
+{
+  "sections": {
+    "page": {
+      "type": "page",
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "xsmall",
+        "section_spacing_top": 96,
+        "section_spacing_bottom": 96,
+        "show_heading": true
+      }
+    }
+  },
+  "order": [
+    "page"
+  ]
+}

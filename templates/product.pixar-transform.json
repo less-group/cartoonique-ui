@@ -1,0 +1,189 @@
+{
+  "sections": {
+    "ff03a7f7-70a4-4aa2-8e65-56be8e7dbefc": {
+      "type": "breadcrumbs",
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "large",
+        "show_breadcrumbs_product_title": true,
+        "add_side_paddings": true,
+        "section_spacing_top": 16,
+        "section_spacing_bottom": 0
+      }
+    },
+    "main": {
+      "type": "product",
+      "blocks": {
+        "vendor": {
+          "type": "vendor",
+          "disabled": true,
+          "settings": {}
+        },
+        "title": {
+          "type": "title",
+          "settings": {
+            "heading_size": "h1"
+          }
+        },
+        "price": {
+          "type": "price",
+          "settings": {
+            "price_size": "xs",
+            "show_currency_code": true,
+            "show_compared_at_price": true,
+            "show_tax_status": false,
+            "show_sale_amount_badge": true,
+            "highlight_sale_price": true
+          }
+        },
+        "d3d427d0-4e7d-4f81-9057-c64f65a4f183": {
+          "type": "variant_picker",
+          "settings": {
+            "option_type": "button-solid",
+            "show_swatches": false,
+            "primary_swatch_option_type": "swatches",
+            "secondary_swatch_option_type": "swatches",
+            "hide_single_value_options": true,
+            "option_name": "",
+            "information_drawer_button_label": "",
+            "text": "",
+            "page": "",
+            "image_width": 60
+          }
+        },
+        "quantity_selector": {
+          "type": "quantity_selector",
+          "disabled": true,
+          "settings": {}
+        },
+        "buy_buttons": {
+          "type": "buy_buttons",
+          "settings": {
+            "show_dynamic_checkout": false,
+            "enable_pickup_availability": false,
+            "enable_gift_card": false,
+            "show_payment_icons": false,
+            "show_sticky_btn_on_mobile": true,
+            "buttons_size": "md",
+            "add_to_cart_btn_style": "solid",
+            "checkout_btn_style": "outline"
+          }
+        },
+        "pixar_transform_block": {
+          "type": "liquid",
+          "settings": {
+            "liquid": "{% render 'pixar-transform-file-input' %}"
+          }
+        },
+        "collapsible_row_Mgp6qD": {
+          "type": "collapsible_row",
+          "settings": {
+            "style": "collapsible_row_closed",
+            "title": "Delivery Information",
+            "heading_size": "caption3",
+            "icon": "none",
+            "icon_size": 24,
+            "text": "<p>Unser Versand ist so schnell, dass du denkst, wir verschicken direkt aus dem Haus nebenan. Und das Beste: Wir versenden direkt aus Deutschland und Österreich! Die meisten Bestellungen kommen innerhalb von 3–6 Tagen bei dir an.</p>",
+            "page": "",
+            "body_size": "body3",
+            "image_width": 60
+          }
+        },
+        "collapsible_row_Kq99fL": {
+          "type": "collapsible_row",
+          "settings": {
+            "style": "collapsible_row_closed",
+            "title": "Material",
+            "heading_size": "caption3",
+            "icon": "none",
+            "icon_size": 24,
+            "text": "<p>Unsere Klamotten bestehen aus 100% hochwertiger Baumwolle – für eine angenehm weiche Textur und extra lange Haltbarkeit. Bei speziellen Designs oder Kollektionen nutzen wir manchmal andere Materialmischungen, aber das geben wir immer klar auf der Produktseite an.</p>",
+            "page": "",
+            "body_size": "body3",
+            "image_width": 60
+          }
+        },
+        "collapsible_row_jMxXFX": {
+          "type": "collapsible_row",
+          "settings": {
+            "style": "collapsible_row_closed",
+            "title": "Pflegehinweis",
+            "heading_size": "caption3",
+            "icon": "none",
+            "icon_size": 24,
+            "text": "<p>Damit der Druck lange hält und die Qualität top bleibt, empfehlen wir dir, das T-Shirt auf links zu waschen – am besten bei 30 Grad. Verzichte auf den Trockner und bügle nicht direkt über den Druck. Mit diesen einfachen Tipps bleibt dein Shirt frisch und der Druck wie neu.</p>",
+            "page": "",
+            "body_size": "body3",
+            "image_width": 60
+          }
+        }
+      },
+      "block_order": [
+        "vendor",
+        "title",
+        "price",
+        "d3d427d0-4e7d-4f81-9057-c64f65a4f183",
+        "quantity_selector",
+        "buy_buttons",
+        "pixar_transform_block",
+        "collapsible_row_Mgp6qD",
+        "collapsible_row_Kq99fL",
+        "collapsible_row_jMxXFX"
+      ],
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "medium",
+        "media_to_content_ratio": "fixed",
+        "img_ratio": "square",
+        "layout": "thumbnails-bottom",
+        "desktop_space_between_media": 20,
+        "thumbnails_size": 80,
+        "mobile_layout": "thumbnails-bottom-overlay",
+        "mobile_space_between_media": 16,
+        "show_only_selected_variants": false,
+        "enable_image_zoom": true,
+        "enable_video_autoplay": true,
+        "enable_video_controls": false,
+        "enable_video_looping": false,
+        "scale_video": true,
+        "add_side_paddings": true,
+        "desktop_spacing_top": 32,
+        "desktop_spacing_bottom": 48,
+        "mobile_spacing_top": 12,
+        "mobile_spacing_bottom": 12
+      }
+    },
+    "related-products": {
+      "type": "product-recommendations",
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "full-screen",
+        "title": "Siehe auch:",
+        "heading_size": "h5",
+        "alignment": "center",
+        "product_recommendations_type": "auto",
+        "featured_collection": "",
+        "featured_products": [],
+        "img_ratio": "portrait",
+        "desktop_layout": "carousel",
+        "mobile_layout": "carousel",
+        "product_card_align": "center",
+        "cards_to_show": 18,
+        "desktop_columns": 4,
+        "desktop_space_between_cards": 12,
+        "mobile_space_between_cards": 16,
+        "show_navigation_on_hover": true,
+        "autoplay_mode": "disabled",
+        "autoplay_interval": 3,
+        "add_side_paddings": true,
+        "section_spacing_top": 48,
+        "section_spacing_bottom": 48
+      }
+    }
+  },
+  "order": [
+    "ff03a7f7-70a4-4aa2-8e65-56be8e7dbefc",
+    "main",
+    "related-products"
+  ]
+} 

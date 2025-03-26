@@ -1,0 +1,32 @@
+{%- liquid
+  assign placeholder_type = placeholder_type | default: 'lifestyle-2'
+-%}
+
+<div class='media {{ class }}'>
+  {%- if with_overlay -%}
+    <div class='overlay'></div>
+  {%- endif -%}
+
+  {%- if video != blank -%}
+    {% render 'video-with-alt',
+      video: video,
+      class: 'image media__image',
+      autoplay: true,
+      loop: true,
+      muted: true,
+      controls: false,
+      loading: 'lazy'
+    %}
+  {%- elsif image != blank -%}
+    <img
+      {% render 'image-attributes', image: image, class: 'image media__image' %}
+    >
+  {%- endif -%}
+
+  {%- if image == blank and video == blank -%}
+    {{
+      placeholder_type
+      | placeholder_svg_tag: 'placeholder-image placeholder-image--with-content image media__image media__image-placeholder'
+    }}
+  {%- endif -%}
+</div>

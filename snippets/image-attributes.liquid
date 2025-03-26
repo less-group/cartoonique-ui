@@ -1,0 +1,46 @@
+{%- liquid
+  if size == 'medium'
+    assign res_list = '128,240,380,480,540,640,720,920,1080,1768,2056' | split: ','
+  elsif size == 'small'
+    assign res_list = '64,128,240,380,480,540,640' | split: ','
+  elsif size == 'xsmall'
+    assign res_list = '64,128,240,380' | split: ','
+  elsif size == 'product-card-image'
+    assign res_list = '128,240,380,540,720,1240' | split: ','
+  else
+    assign res_list = '128,240,380,540,720,920,1080,1440,1920,2560,4096' | split: ','
+  endif
+
+  assign loading = 'lazy'
+  if is_eager_loading
+    assign loading = 'eager'
+  endif
+-%}
+
+class='{% if loading == 'lazy' %}lazyload{% endif %}
+{{ class }}
+{{ class_from_parent }}
+{% if is_multiply_target %} multiply-mode__target {% endif %}' alt='{{ image.alt | escape }}' width='1' height='1'
+style='object-position: {{ image.presentation.focal_point }}; {% if is_in_header %}aspect-ratio: {{ image.aspect_ratio }} / 1;{% endif %}' src='
+{{- image | image_url: width: 160 -}}
+'
+{% if loading == 'lazy' %}
+  data-srcset='
+  {%- for res in res_list -%}
+    {{ image | image_url: width: res }}
+    {{ res }}w,
+  {%- endfor -%}
+  ' data-sizes='auto' loading='{{ loading }}'
+  {% if parent_fit == blank %}
+    data-parent-fit='cover' data-aspectratio='
+    {{- image.aspect_ratio -}}
+    '
+  {% endif %}
+{% else -%}
+  srcset='
+  {%- for res in res_list -%}
+    {{ image | image_url: width: res }}
+    {{ res }}w,
+  {%- endfor -%}
+  ' fetchpriority='high'
+{% endif %}

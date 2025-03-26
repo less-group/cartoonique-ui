@@ -1,0 +1,286 @@
+{% liquid
+  assign title = block.settings.title
+  assign show_background = block.settings.show_background
+  assign products_to_show = block.settings.products_to_show
+  assign block_layout = block.settings.block_layout
+  assign heading_size = block.settings.heading_size
+  assign alignment = block.settings.alignment
+  assign img_ratio = block.settings.img_ratio
+  assign color_scheme = block.settings.color_scheme
+  assign featured_products = block.settings.featured_products
+  assign featured_collection = block.settings.featured_collection
+  assign product_recommendations_type = block.settings.product_recommendations_type | default: 'auto'
+
+  if img_ratio == 'inherited'
+    assign img_ratio = section.settings.img_ratio
+  endif
+
+  assign show_navigation_on_hover = block.settings.show_navigation_on_hover
+  assign content_alignment = block.settings.content_alignment
+  assign with_background = block.settings.cards_color_background
+  assign autoplay_mode = block.settings.autoplay_mode
+  assign autoplay_interval = block.settings.autoplay_interval
+
+  assign block_layout_trimmed = 'carousel'
+  if block_layout contains 'grid'
+    assign block_layout_trimmed = 'grid'
+  endif
+%}
+
+{% capture css %}
+  {% style %}
+    .block-{{block.id}} {
+      --gsc-space-between-cards: {{ block.settings.mobile_space_between_cards }}px;
+    }
+
+    @media {% render 'media-queries', screen: 'md' %} {
+      .block-{{block.id}} {
+        --gsc-space-between-cards: {{ block.settings.desktop_space_between_cards }}px;
+      }
+    }
+  {% endstyle %}
+{% endcapture %}
+
+{% render 'inline-css-minifier', css: css %}
+
+{% if product_recommendations_type == 'auto' %}
+  <product-related-block
+    class='product-related-products-block color-{{ color_scheme }} {% if show_background %} product-related-products-block--with-background {% endif %} block-{{block.id}}'
+    data-url='{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product.id }}&limit={{ products_to_show }}&intent={% if is_complementary %}complementary{% else %}related{% endif %}'
+    id='product-related-blocks-{{ block.id }}-{{ sectionId }}'
+    {{ block.shopify_attributes }}
+    is-ready
+  >
+    {%- if recommendations.performed and recommendations.products_count > 0 -%}
+      {% if title != blank %}
+        <h2 class='product-related-products-block__title {{ heading_size }} product-related-products-block__title--align-{{alignment}}'>
+          {{ title }}
+        </h2>
+      {% endif %}
+
+      <slider-grid
+        class='slider-grid {% if show_navigation_on_hover %}card-carousel--navigation-on-hover{% endif %} {% if request.design_mode %}is-editor-mode{% endif %} {% if block_layout contains 'vertical' %} product-related-products__card-carousel--with-vertical-cards {% else %} product-related-products__card-carousel--with-horizontal-cards {% endif %}'
+        {% if autoplay_mode != 'disabled' %}
+          autoplay-mode='{{autoplay_mode}}'
+          autoplay-interval='{{autoplay_interval}}'
+        {% endif %}
+        {% if block_layout_trimmed contains 'grid' %}
+          desktop-disabled
+        {% endif %}
+      >
+        <div
+          slider-grid-track
+          class='slider-grid-track slider-grid__d-{{block_layout_trimmed}} slider-grid__m-{{block_layout_trimmed}} {% if block_layout contains 'grid' and block_layout contains 'vertical' %}product-related-products-block__grid product-related-products-block__grid--vertical{% endif %} {% if block_layout contains 'grid' and block_layout contains 'horizontal' %}product-related-products-block__grid product-related-products-block__grid--horizontal{% endif %}'
+        >
+          {%- for recommendation in recommendations.products limit: products_to_show -%}
+            {% if block_layout contains 'vertical' %}
+              <div
+                class='slider-grid__slide card-carousel__slide product-related-products__slide-vertical-product'
+                slider-grid-slide
+              >
+                {% render 'vertical-product-card',
+                  product: recommendation,
+                  img_ratio: img_ratio,
+                  with_bottom_spacing: true,
+                  content_alignment: content_alignment,
+                  with_background: with_background,
+                  is_inside_block_with_background: show_background
+                %}
+              </div>
+            {% else %}
+              <div
+                class='slider-grid__slide card-carousel__slide product-related-products__slide-horizontal-product'
+                slider-grid-slide
+              >
+                {% render 'horizontal-product-card',
+                  product: recommendation,
+                  img_ratio: img_ratio,
+                  content_alignment: content_alignment,
+                  with_background: with_background,
+                  is_inside_block_with_background: show_background
+                %}
+              </div>
+            {% endif %}
+          {%- endfor -%}
+        </div>
+
+        {% if block_layout_trimmed contains 'carousel' %}
+          {% if block_layout contains 'vertical' %}
+            <div class='card-carousel__position-btn-wrap card-carousel__position-btn-wrap--prev product-related-products__card-carousel-btn-wrap {% if img_ratio == 'nature' %} card-carousel__position-btn-wrap--nature-img-ratio {% endif %}'>
+              <div class='shape shape--{{ img_ratio }}'>
+                <button
+                  type='button'
+                  class='carousel-btn card-carousel__carousel-btn card-carousel__carousel-btn--prev'
+                  data-direction='prev'
+                  tabindex='0'
+                  disabled
+                >
+                  {% render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon x-flip' %}
+                </button>
+              </div>
+            </div>
+          {% else %}
+            <button
+              type='button'
+              class='carousel-btn card-carousel__carousel-btn card-carousel__carousel-btn--prev'
+              data-direction='prev'
+              tabindex='0'
+              disabled
+            >
+              {% render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon x-flip' %}
+            </button>
+          {% endif %}
+
+          {% if block_layout contains 'vertical' %}
+            <div class='card-carousel__position-btn-wrap card-carousel__position-btn-wrap--next product-related-products__card-carousel-btn-wrap {% if img_ratio == 'nature' %} card-carousel__position-btn-wrap--nature-img-ratio {% endif %}'>
+              <div class='shape shape--{{ img_ratio }}'>
+                <button
+                  type='button'
+                  class='carousel-btn card-carousel__carousel-btn card-carousel__carousel-btn--next'
+                  data-direction='next'
+                  tabindex='0'
+                >
+                  {% render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon' %}
+                </button>
+              </div>
+            </div>
+          {% else %}
+            <button
+              type='button'
+              class='carousel-btn card-carousel__carousel-btn card-carousel__carousel-btn--next'
+              data-direction='next'
+              tabindex='0'
+              disabled
+            >
+              {% render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon' %}
+            </button>
+          {% endif %}
+        {% endif %}
+      </slider-grid>
+    {%- endif -%}
+  </product-related-block>
+
+{% else %}
+  {% liquid
+    if featured_products != blank
+      assign target_products = featured_products
+    elsif featured_collection != blank
+      assign target_products = featured_collection.products
+    else
+      assign target_products = (1..products_to_show)
+    endif
+  %}
+
+  <div
+    class='product-related-products-block color-{{ color_scheme }} {% if show_background %} product-related-products-block--with-background {% endif %} block-{{block.id}}'
+    {{ block.shopify_attributes }}
+    is-ready
+  >
+    {% if title != blank %}
+      <h2 class='product-related-products-block__title {{ heading_size }} product-related-products-block__title--align-{{alignment}}'>
+        {{ title }}
+      </h2>
+    {% endif %}
+
+    <slider-grid
+      class='slider-grid {% if show_navigation_on_hover %}card-carousel--navigation-on-hover{% endif %} {% if request.design_mode %}is-editor-mode{% endif %} {% if block_layout contains 'vertical' %} product-related-products__card-carousel--with-vertical-cards {% else %} product-related-products__card-carousel--with-horizontal-cards {% endif %}'
+      {% if autoplay_mode != 'disabled' %}
+        autoplay-mode='{{autoplay_mode}}'
+        autoplay-interval='{{autoplay_interval}}'
+      {% endif %}
+      {% if block_layout_trimmed contains 'grid' %}
+        desktop-disabled
+      {% endif %}
+    >
+      <div
+        slider-grid-track
+        class='slider-grid-track slider-grid__d-{{block_layout_trimmed}} slider-grid__m-{{block_layout_trimmed}} {% if block_layout contains 'grid' and block_layout contains 'vertical' %}product-related-products-block__grid product-related-products-block__grid--vertical{% endif %} {% if block_layout contains 'grid' and block_layout contains 'horizontal' %}product-related-products-block__grid product-related-products-block__grid--horizontal{% endif %}'
+      >
+        {%- for recommendation in target_products limit: products_to_show -%}
+          {% if block_layout contains 'vertical' %}
+            <div
+              class='slider-grid__slide card-carousel__slide product-related-products__slide-vertical-product'
+              slider-grid-slide
+            >
+              {% render 'vertical-product-card',
+                product: recommendation,
+                img_ratio: img_ratio,
+                with_bottom_spacing: true,
+                content_alignment: content_alignment,
+                with_background: with_background,
+                is_inside_block_with_background: show_background
+              %}
+            </div>
+          {% else %}
+            <div
+              class='slider-grid__slide card-carousel__slide product-related-products__slide-horizontal-product'
+              slider-grid-slide
+            >
+              {% render 'horizontal-product-card',
+                product: recommendation,
+                img_ratio: img_ratio,
+                content_alignment: content_alignment,
+                with_background: with_background,
+                is_inside_block_with_background: show_background
+              %}
+            </div>
+          {% endif %}
+        {%- endfor -%}
+      </div>
+
+      {% if block_layout_trimmed contains 'carousel' %}
+        {% if block_layout contains 'vertical' %}
+          <div class='card-carousel__position-btn-wrap card-carousel__position-btn-wrap--prev product-related-products__card-carousel-btn-wrap {% if img_ratio == 'nature' %} card-carousel__position-btn-wrap--nature-img-ratio {% endif %}'>
+            <div class='shape shape--{{ img_ratio }}'>
+              <button
+                type='button'
+                class='carousel-btn card-carousel__carousel-btn card-carousel__carousel-btn--prev'
+                data-direction='prev'
+                tabindex='0'
+                disabled
+              >
+                {% render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon x-flip' %}
+              </button>
+            </div>
+          </div>
+        {% else %}
+          <button
+            type='button'
+            class='carousel-btn card-carousel__carousel-btn card-carousel__carousel-btn--prev'
+            data-direction='prev'
+            tabindex='0'
+            disabled
+          >
+            {% render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon x-flip' %}
+          </button>
+        {% endif %}
+
+        {% if block_layout contains 'vertical' %}
+          <div class='card-carousel__position-btn-wrap card-carousel__position-btn-wrap--next product-related-products__card-carousel-btn-wrap {% if img_ratio == 'nature' %} card-carousel__position-btn-wrap--nature-img-ratio {% endif %}'>
+            <div class='shape shape--{{ img_ratio }}'>
+              <button
+                type='button'
+                class='carousel-btn card-carousel__carousel-btn card-carousel__carousel-btn--next'
+                data-direction='next'
+                tabindex='0'
+                disabled
+              >
+                {% render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon' %}
+              </button>
+            </div>
+          </div>
+        {% else %}
+          <button
+            type='button'
+            class='carousel-btn card-carousel__carousel-btn card-carousel__carousel-btn--next'
+            data-direction='next'
+            tabindex='0'
+            disabled
+          >
+            {% render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon' %}
+          </button>
+        {% endif %}
+      {% endif %}
+    </slider-grid>
+  </div>
+{% endif %}

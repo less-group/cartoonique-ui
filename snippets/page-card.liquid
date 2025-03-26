@@ -1,0 +1,40 @@
+<a
+  class='unstyled-link page-card {% if show_image %}page-card--with-image{% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+  {% if enable_content_slide_in %}
+    style='--gsc-animation-order: {{index}};'
+  {% endif %}
+  href='{{ page.url }}'
+  aria-label='{{ page.title }}'
+>
+  {% if show_image %}
+    {% liquid
+      assign image = page.image
+      if image == blank
+        assign product_with_featured_image = page.products | where: 'featured_image' | first
+        assign image = product_with_featured_image.featured_image
+      endif
+    %}
+
+    {{ image | image_url: width: 100 | image_tag: height: 48, class: 'page-card__image', loading: 'lazy' }}
+  {% endif %}
+
+  <span
+    class='page-card__title body4'
+    {% if title_max_lines %}
+      style='--gsc-page-card-title-line-clamp: {{ title_max_lines }}'
+    {% endif %}
+  >
+    {{- page.title -}}
+  </span>
+
+  <svg
+    class='page-card__icon'
+    xmlns='http://www.w3.org/2000/svg'
+    width='24'
+    height='25'
+    viewBox='0 0 24 25'
+    fill='none'
+  >
+    <path d="M9.5 7.53906L14.5 12.5391L9.5 17.5391" stroke="currentColor" stroke-width="1.5"/>
+  </svg>
+</a>

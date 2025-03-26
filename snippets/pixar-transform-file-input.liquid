@@ -1,0 +1,1198 @@
+<!-- Load component CSS -->
+{{ 'pixar-transform-file-input.css' | asset_url | stylesheet_tag }}
+{{ 'image-cropper.css' | asset_url | stylesheet_tag }}
+
+<!-- Load component JS -->
+{{ 'image-cropper.js' | asset_url | script_tag }}
+{{ 'image-processing-manager.js' | asset_url | script_tag }}
+
+<!-- Two-popup approach: Instructions popup and Loading popup -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('PIXAR-ENHANCED: Loading optimized approach');
+    
+    // Prevent duplicate initialization
+    if (window.pixarComponentInitialized) {
+      console.log('PIXAR-ENHANCED: Already initialized, skipping');
+      return;
+    }
+    window.pixarComponentInitialized = true;
+    
+    // Single timeout for initialization
+    setTimeout(function() {
+      console.log('PIXAR-ENHANCED: Starting implementation');
+      
+      // Core elements
+      const pixarComponent = document.querySelector('pixar-transform-file-input');
+      const fileInput = pixarComponent ? pixarComponent.querySelector('input[type="file"]') : null;
+      const mainButton = document.querySelector('.file-input-wrapper__popup-open-btn');
+      
+      // Validate core elements
+      if (!pixarComponent || !fileInput) {
+        console.error('PIXAR-ENHANCED: Critical elements missing!');
+      return;
+    }
+      
+      // Remove any existing popups to avoid conflicts
+      document.querySelectorAll('[data-pixar-popup]').forEach(el => el.remove());
+      
+      // Create instructions popup (first popup)
+      const instructionsPopup = document.createElement('div');
+      instructionsPopup.id = 'pixar-instructions-popup';
+      instructionsPopup.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.98);
+        z-index: 99999999;
+        display: none;
+        overflow: auto;
+        padding: 20px;
+        box-sizing: border-box;
+      `;
+      
+      // Add content to the instructions popup
+      instructionsPopup.innerHTML = `
+        <div style="position: relative; max-width: 900px; margin: 0 auto; padding: 30px; background: white; border-radius: 8px; box-shadow: 0 0 30px rgba(0,0,0,0.2);">
+          <button id="pixar-close-button" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 30px; cursor: pointer; padding: 5px; color: #555;">&times;</button>
+          
+          <h2 style="text-align: center; font-size: 28px; margin-bottom: 20px; font-weight: bold;">KOSTENLOSE VORSCHAU, ERSTELLE DEINS JETZT:</h2>
+          
+          <div style="margin-bottom: 30px;">
+            <!-- Good and Bad photo sections -->
+            <div style="margin-bottom: 30px;">
+              <h3 style="color: #FF4444; text-align: center; font-size: 24px; margin-bottom: 15px; font-weight: bold;">BAD PHOTO</h3>
+              <div style="display: flex; justify-content: space-around;">
+                <div style="text-align: center; width: 30%;">
+                  <div style="position: relative; border: 2px solid #FF4444; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                    <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/bad_photo_far.jpg?v=1683712345" alt="Far/Blurry Example" style="width: 100%; height: 100%; object-fit: cover;">
+                    <div style="position: absolute; top: 5px; right: 5px; background-color: #FF4444; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✕</div>
+              </div>
+                  <p style="font-weight: bold; color: #FF4444; margin: 0;">FAR/BLURRY</p>
+            </div>
+            
+                <div style="text-align: center; width: 30%;">
+                  <div style="position: relative; border: 2px solid #FF4444; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                    <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/bad_photo_glasses.jpg?v=1683712345" alt="Glasses Example" style="width: 100%; height: 100%; object-fit: cover;">
+                    <div style="position: absolute; top: 5px; right: 5px; background-color: #FF4444; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✕</div>
+              </div>
+                  <p style="font-weight: bold; color: #FF4444; margin: 0;">GLASSES</p>
+            </div>
+            
+                <div style="text-align: center; width: 30%;">
+                  <div style="position: relative; border: 2px solid #FF4444; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                    <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/bad_photo_multiple.jpg?v=1683712345" alt="Multiple People Example" style="width: 100%; height: 100%; object-fit: cover;">
+                    <div style="position: absolute; top: 5px; right: 5px; background-color: #FF4444; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✕</div>
+              </div>
+                  <p style="font-weight: bold; color: #FF4444; margin: 0;">2+ PEOPLE</p>
+                </div>
+            </div>
+          </div>
+          
+            <div style="margin-bottom: 30px;">
+              <h3 style="color: #33CC66; text-align: center; font-size: 24px; margin-bottom: 15px; font-weight: bold;">GOOD PHOTO</h3>
+              <div style="display: flex; justify-content: space-around;">
+                <div style="text-align: center; width: 30%;">
+                  <div style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                    <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_closeup.jpg?v=1683712345" alt="Close-up Example" style="width: 100%; height: 100%; object-fit: cover;">
+                    <div style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>
+              </div>
+                  <p style="font-weight: bold; color: #33CC66; margin: 0;">CLOSE-UP</p>
+            </div>
+            
+                <div style="text-align: center; width: 30%;">
+                  <div style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                    <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_clear.jpg?v=1683712345" alt="Clear Example" style="width: 100%; height: 100%; object-fit: cover;">
+                    <div style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>
+              </div>
+                  <p style="font-weight: bold; color: #33CC66; margin: 0;">CLEAR</p>
+            </div>
+            
+                <div style="text-align: center; width: 30%;">
+                  <div style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                    <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_oneperson.jpg?v=1683712345" alt="One Person Example" style="width: 100%; height: 100%; object-fit: cover;">
+                    <div style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>
+              </div>
+                  <p style="font-weight: bold; color: #33CC66; margin: 0;">1 PERSON</p>
+                </div>
+            </div>
+          </div>
+        </div>
+
+          <p style="text-align: center; font-size: 18px; margin-bottom: 30px; font-weight: bold;">
+          Please make sure to upload a clear, close-up photo.
+        </p>
+
+          <div id="pixar-upload-buttons" style="text-align: center;">
+            <button id="pixar-upload-button" style="background-color: #4CAF50; color: white; padding: 18px 40px; font-size: 20px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 10px auto; display: block; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">UPLOAD PHOTO</button>
+          </div>
+          
+          <div id="pixar-error-message" style="display: none; text-align: center; color: red; margin-top: 20px;"></div>
+          </div>
+      `;
+      
+      // Create loading popup (second popup for processing)
+      const loadingPopup = document.createElement('div');
+      loadingPopup.id = 'pixar-loading-popup';
+      loadingPopup.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.98);
+        z-index: 99999999;
+        display: none;
+        overflow: auto;
+        padding: 20px;
+        box-sizing: border-box;
+      `;
+      
+      // Add content to the loading popup - improved and cleaner
+      loadingPopup.innerHTML = `
+        <div style="position: relative; max-width: 700px; margin: 0 auto; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.1); margin-top: 100px;">
+          <h3 style="text-align: center; font-size: 26px; margin-bottom: 30px; color: #333; font-weight: bold;">Generating, please wait...</h3>
+          
+          <div style="width: 90%; max-width: 500px; height: 12px; background-color: #f5f5f5; border-radius: 20px; margin: 30px auto; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
+            <div id="pixar-progress-bar" style="height: 100%; width: 10%; background: linear-gradient(to right, #4CAF50, #8BC34A); transition: width 1s ease-in-out; border-radius: 20px;"></div>
+          </div>
+          
+          <p id="pixar-progress-text" style="text-align: center; margin: 20px 0; color: #555; font-size: 18px; font-weight: 500;">Preparing your image...</p>
+          
+          <p style="text-align: center; margin-top: 15px; color: #777; font-size: 15px;">Usually takes 2 to 3 minutes.</p>
+        </div>
+      `;
+      
+      // Add the popups to the document
+      document.body.appendChild(instructionsPopup);
+      document.body.appendChild(loadingPopup);
+      
+      // Add a test button for debugging API requests
+      const testButton = document.createElement('button');
+      testButton.id = 'pixar-test-api-button';
+      testButton.textContent = 'Test API Request';
+      testButton.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        background-color: #ff9800;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        font-weight: bold;
+        z-index: 999999;
+        cursor: pointer;
+      `;
+      document.body.appendChild(testButton);
+      
+      // Add event listener for test button
+      testButton.addEventListener('click', function() {
+        console.log('Making test API request with simplified workflow');
+        
+        // Test the process-image endpoint
+        testProcessImage();
+      });
+      
+      // Function to test process-image endpoint
+      function testProcessImage() {
+        // Create a simple test image (1x1 transparent pixel)
+        const testImageBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+        
+        console.log('🧪 TEST: Making direct API call to transform endpoint');
+        
+        // Create a clean test payload with ONLY the required properties
+        const testPayload = {
+          image: testImageBase64,
+          style: 'pixar',
+          watermark: {
+            url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/watermark.png",
+            width: 200,
+            height: 100,
+            spaceBetweenWatermarks: 100
+          }
+        };
+        
+        console.log('🧪 TEST: Transform request body (stripped down):', JSON.stringify(testPayload).substring(0, 100) + '...');
+        
+        // Make the API call with clean payload
+        fetch('https://letzteshemd-faceswap-api-production.up.railway.app/transform', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(testPayload)
+        })
+        .then(response => {
+          console.log('🧪 TEST: transform response status:', response.status);
+          if (!response.ok) {
+            console.error('🧪 TEST: transform response not OK:', response.status, response.statusText);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('🧪 TEST: transform response RAW DATA:', data);
+          
+          // Log requestId if available
+          if (data.requestId) {
+            console.log('🧪 TEST: Response included requestId:', data.requestId);
+            if (window.pixarLastRequestId === undefined) window.pixarLastRequestId = [];
+            window.pixarLastRequestId.push(data.requestId);
+          }
+          
+          // Extract jobId - handle different response formats
+          let jobId = null;
+          
+          // Check various possible locations for jobId
+          if (data.jobId) {
+            jobId = data.jobId;
+            console.log('🧪 TEST: Found jobId directly in response:', jobId);
+          } else if (data.id) {
+            jobId = data.id;
+            console.log('🧪 TEST: Found jobId as "id" in response:', jobId);
+          } else if (data.job_id) {
+            jobId = data.job_id;
+            console.log('🧪 TEST: Found jobId as "job_id" in response:', jobId);
+          } else if (data.data && data.data.jobId) {
+            jobId = data.data.jobId;
+            console.log('🧪 TEST: Found jobId in data.jobId:', jobId);
+          } else if (data.data && data.data.id) {
+            jobId = data.data.id;
+            console.log('🧪 TEST: Found jobId in data.id:', jobId);
+          } else if (data.response && data.response.id) {
+            jobId = data.response.id;
+            console.log('🧪 TEST: Found jobId in response.id:', jobId);
+          }
+          
+          if (jobId) {
+            console.log('🧪 TEST: ✅ SUCCESS - Got jobId:', jobId);
+            window.testJobId = jobId; // Store for later use
+            testCheckStatus(jobId).then(completed => {
+              if (!completed) {
+                console.log('🧪 TEST: Job not complete yet, starting polling');
+                testPollForCompletion(jobId);
+              }
+            });
+          } else {
+            console.error('🧪 TEST: ❌ ERROR - Failed to find any jobId in response. Full response:', JSON.stringify(data));
+          }
+        })
+        .catch(error => {
+          console.error('🧪 TEST: ❌ ERROR - Exception in transform call:', error);
+        });
+      }
+      
+      // Function to test checking job status
+      function testCheckStatus(jobId) {
+        return new Promise((resolve) => {
+          console.log('🧪 TEST: Checking job status for:', jobId);
+          
+          fetch(`https://letzteshemd-faceswap-api-production.up.railway.app/status/${jobId}`, {
+            method: 'GET'
+          })
+          .then(response => response.json())
+          .then(data => {
+            console.log('🧪 TEST: Job status check response:', data);
+            
+            // Be more flexible with various status formats
+            const status = data.status || '';
+            
+            if (status.toUpperCase() === 'COMPLETED') {
+              console.log('🧪 TEST: Job is complete');
+              resolve(true);
+            } else if (status.toUpperCase() === 'FAILED') {
+              console.error('🧪 TEST: Job failed during processing');
+              resolve(true); // Resolve true to indicate polling should stop
+            } else {
+              console.log('🧪 TEST: Job still processing...');
+              resolve(false); // Resolve false to indicate polling should continue
+            }
+          })
+          .catch(error => {
+            console.error('🧪 TEST: Error during status check:', error);
+            resolve(true); // Resolve true on error to stop polling
+          });
+        });
+      }
+      
+      // Function to test polling for job completion
+      function testPollForCompletion(jobId) {
+        console.log('🧪 TEST: Polling for job completion:', jobId);
+        
+        // Test poll once, then set interval for continued polling
+        const testPollInterval = setInterval(() => {
+          testCheckStatus(jobId).then(completed => {
+            if (completed) {
+              clearInterval(testPollInterval);
+              console.log('🧪 TEST: Polling complete');
+            }
+          });
+        }, 5000);
+        
+        // Store interval ID for potential cleanup
+        window.testPollInterval = testPollInterval;
+      }
+      
+      // Set up event listeners
+      // 1. Main button click - Opens instructions popup
+      if (mainButton) {
+        const newMainButton = mainButton.cloneNode(true);
+        if (mainButton.parentNode) {
+          mainButton.parentNode.replaceChild(newMainButton, mainButton);
+        }
+        
+        newMainButton.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          // Reset error message
+          document.getElementById('pixar-error-message').style.display = 'none';
+          document.getElementById('pixar-error-message').textContent = '';
+          
+          // Show instructions popup
+          document.getElementById('pixar-instructions-popup').style.display = 'block';
+          document.body.style.overflow = 'hidden';
+        });
+      }
+      
+      // 2. Close button click for instructions popup
+      document.getElementById('pixar-close-button').addEventListener('click', function() {
+        document.getElementById('pixar-instructions-popup').style.display = 'none';
+        document.body.style.overflow = '';
+      });
+      
+      // 3. Upload button click
+      document.getElementById('pixar-upload-button').addEventListener('click', function() {
+        const currentFileInput = pixarComponent.querySelector('input[type="file"]');
+        if (currentFileInput) {
+          currentFileInput.click();
+        } else {
+          const errorElement = document.getElementById('pixar-error-message');
+          errorElement.textContent = 'Error: File input not found. Please refresh the page and try again.';
+          errorElement.style.display = 'block';
+        }
+      });
+      
+      // 4. File input change handler
+      let isFileSelectionInProgress = false;
+      let selectedFile = null; // Store the file reference
+      let currentJobId = null; // Store the RunPod job ID
+      
+      if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+          if (isFileSelectionInProgress) return;
+          
+          if (e.target.files && e.target.files.length > 0) {
+            isFileSelectionInProgress = true;
+            selectedFile = e.target.files[0]; // Store the file reference
+            
+            // Hide instructions popup
+            document.getElementById('pixar-instructions-popup').style.display = 'none';
+            
+            // Show loading popup immediately
+            document.getElementById('pixar-loading-popup').style.display = 'block';
+            document.getElementById('pixar-progress-bar').style.width = '10%';
+            document.getElementById('pixar-progress-text').textContent = 'Uploading your image...';
+            
+            // Start the image processing
+            processImageWithRunPod(selectedFile);
+          }
+        });
+      }
+      
+      // Function to process the image with RunPod
+      function processImageWithRunPod(file) {
+        console.log('Starting image processing with RunPod');
+        console.log('DEBUG: File selected:', file.name, 'Size:', Math.round(file.size/1024), 'KB');
+        
+        // Create a FileReader to read the file as a data URL
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const imageBase64 = e.target.result;
+          console.log('DEBUG: File successfully read as base64');
+          
+          // Create payload with image and watermark only
+          const payload = {
+            image: imageBase64,
+            style: 'pixar',
+            watermark: {
+              url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/watermark.png",
+              width: 200,
+              height: 100,
+              spaceBetweenWatermarks: 100
+            }
+          };
+          
+          console.log('Sending image data to RunPod with watermark details only');
+          
+          // Update progress bar to indicate upload in progress
+          document.getElementById('pixar-progress-bar').style.width = '10%';
+          document.getElementById('pixar-progress-text').textContent = 'Uploading your image...';
+          
+          // Call the transform endpoint
+          fetch('https://letzteshemd-faceswap-api-production.up.railway.app/transform', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload),
+            timeout: 60000 // 60 second timeout
+          })
+          .then(response => {
+            console.log('DEBUG: Transform API response received');
+            console.log('Transform API response status:', response.status, response.statusText);
+            if (!response.ok) {
+              console.error('Transform API response not OK:', response.status, response.statusText);
+              
+              // Handle specific error codes
+              if (response.status === 413) {
+                throw new Error('Image too large. Please use a smaller image (max 10MB).');
+              } else if (response.status === 415) {
+                throw new Error('Unsupported image format. Please use JPG or PNG.');
+              } else if (response.status === 429) {
+                throw new Error('Too many requests. Please try again in a few minutes.');
+              } else {
+                throw new Error(`API response error: ${response.status} ${response.statusText}`);
+              }
+            }
+            return response.json().catch(err => {
+              console.error('DEBUG: Failed to parse response as JSON:', err);
+              throw new Error('Failed to parse response as JSON');
+            });
+          })
+          .then(data => {
+            console.log('DEBUG: Successfully parsed response as JSON');
+            console.log('Transform response RAW DATA:', data);
+            
+            // Check for explicit error field in response
+            if (data.error) {
+              console.error('API returned error:', data.error);
+              throw new Error(data.error);
+            }
+            
+            // Extract jobId
+            let jobId = data.jobId;
+            
+            // Fallback for old response format if needed
+            if (!jobId && data.id) {
+              jobId = data.id;
+              console.log('DEBUG: Using fallback id field from response');
+            }
+            
+            console.log('DEBUG: JobId from response:', jobId);
+            
+            if (jobId) {
+              // Store the job ID for later use
+              currentJobId = jobId;
+              console.log('✅ SUCCESS - Received jobId:', currentJobId);
+              
+              // Start polling for the job status
+              pollJobStatus(jobId);
+              
+              // Start simulating progress while waiting
+              simulateProgressAfterImageUpload();
+              
+              if (data.requestId) {
+                console.log('Received requestId:', data.requestId);
+                // Store for potential support reference
+                if (window.pixarLastRequestId === undefined) window.pixarLastRequestId = [];
+                window.pixarLastRequestId.push(data.requestId);
+              }
+            } else {
+              console.error('❌ ERROR - Failed to find jobId in response. Full response:', JSON.stringify(data));
+              showError('Failed to process image. Please try again.');
+            }
+          })
+          .catch(error => {
+            console.error('❌ ERROR - Exception in transform call:', error);
+            console.error('DEBUG: Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+            
+            // Provide a user-friendly error message
+            let errorMessage = error.message || 'Error uploading image.';
+            
+            // Don't show full technical errors to the user
+            if (errorMessage.includes('API response error:')) {
+              errorMessage = 'Server error. Please try again later.';
+            }
+            
+            showError(errorMessage);
+          })
+          .finally(() => {
+            isFileSelectionInProgress = false;
+            console.log('DEBUG: File selection process completed');
+          });
+        };
+        reader.onerror = function(error) {
+          console.error('Error reading file:', error);
+          showError('Error reading file. Please try a different image.');
+          isFileSelectionInProgress = false;
+        };
+        reader.readAsDataURL(file);
+      }
+      
+      // Function to show error message and reset UI
+      function showError(message) {
+        document.getElementById('pixar-loading-popup').style.display = 'none';
+        document.getElementById('pixar-instructions-popup').style.display = 'block';
+        
+        const errorElement = document.getElementById('pixar-error-message');
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+      }
+      
+      // Function to simulate progress while RunPod processes the image
+      function simulateProgressAfterImageUpload() {
+        const progressBar = document.getElementById('pixar-progress-bar');
+        
+        // Start at 10% after successful upload
+        progressBar.style.width = '10%';
+        
+        // Simulate slow progress up to 90% while RunPod processes
+        let currentProgress = 10;
+        const maxProgress = 90;
+        const interval = 5000; // Update every 5 seconds
+        const increment = 5; // Increment by 5% each time
+        
+        const progressInterval = setInterval(() => {
+          if (currentProgress < maxProgress) {
+            currentProgress += increment;
+            progressBar.style.width = `${currentProgress}%`;
+            
+            // Update the progress message based on current progress
+            const progressText = document.getElementById('pixar-progress-text');
+            if (currentProgress < 30) {
+              progressText.textContent = 'Analyzing facial features...';
+            } else if (currentProgress < 50) {
+              progressText.textContent = 'Mapping to target style...';
+            } else if (currentProgress < 70) {
+              progressText.textContent = 'Adjusting colors and textures...';
+            } else {
+              progressText.textContent = 'Finalizing your image...';
+            }
+          } else {
+            // Stop the interval once we reach max progress
+            clearInterval(progressInterval);
+          }
+        }, interval);
+        
+        // Store the interval ID globally so it can be cleared if needed
+        window.pixarProgressInterval = progressInterval;
+      }
+      
+      // Track processed jobs to prevent duplicate processing
+      window.processedPixarJobs = window.processedPixarJobs || {};
+      
+      // Track polling attempts for exponential backoff
+      window.pollAttempts = window.pollAttempts || {};
+      
+      // Poll job status function
+      function pollJobStatus(jobId) {
+        console.log('DEBUG: Polling status for job ID:', jobId);
+        
+        // Skip if this job was already processed
+        if (window.processedPixarJobs[jobId]) {
+          console.log('Job already processed, skipping:', jobId);
+          return;
+        }
+        
+        // Tracking for polling attempts
+        window.pollAttempts[jobId] = (window.pollAttempts[jobId] || 0) + 1;
+        
+        // Check for timeout - stop polling after 2 minutes
+        if (!window.pollStartTimes) window.pollStartTimes = {};
+        if (!window.pollStartTimes[jobId]) window.pollStartTimes[jobId] = Date.now();
+        
+        const startTime = window.pollStartTimes[jobId];
+        const maxPollTime = 2 * 60 * 1000; // 2 minutes
+        
+        if (Date.now() - startTime > maxPollTime) {
+          console.error(`Polling timeout for job ${jobId} after ${window.pollAttempts[jobId]} attempts`);
+          showError('Image processing timed out. Please try again.');
+          return;
+        }
+        
+        fetch(`https://letzteshemd-faceswap-api-production.up.railway.app/status/${jobId}`, {
+          method: 'GET'
+        })
+        .then(response => {
+          if (!response.ok) {
+            // Stop polling on 404 (job not found) or 408 (timeout)
+            if (response.status === 404 || response.status === 408) {
+              console.error(`Job ${jobId} failed with status ${response.status}`);
+              showError(`Image processing failed (${response.status}). Please try again.`);
+              return null; // Return null to break the polling chain
+            }
+            // For other errors, throw to be caught by the catch block
+            throw new Error(`API error: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (!data) return; // Break polling if null (from 404/408 handling)
+          
+          console.log('DEBUG: Status response:', data);
+          
+          // Update progress bar regardless of status
+          updateProgressFromStatus(data);
+          
+          // Properly check for completed status using the documented API response structure
+          if (data.status && data.status.toUpperCase() === 'COMPLETED') {
+            // Mark job as processed to prevent duplicate processing
+            window.processedPixarJobs[jobId] = true;
+            
+            // Try all possible image URL fields in order of preference
+            const imageUrl = data.watermarkedImageUrlToShow || 
+                           data.processedImageUrl || 
+                           data.watermarkedOriginalImageUrl ||
+                           data.resultImageUrl ||
+                           (data.image && data.image.url); // Fallback for legacy format
+                           
+            if (imageUrl) {
+              displayFinalImage(imageUrl);
+              return true; // Successfully found and displayed an image
+            } else {
+              console.error("Job completed but no image URL found in response", data);
+              showError("Image processing completed but no result was found. Please try again.");
+              return false;
+            }
+          } else if (data.status && data.status.toUpperCase() === 'FAILED') {
+            console.error("Job failed:", data);
+            showError("Image processing failed. Please try with a different image.");
+            return;
+          } else {
+            // Continue polling with exponential backoff
+            const backoffTime = Math.min(1000 * Math.pow(1.5, Math.min(window.pollAttempts[jobId] - 1, 10)), 10000);
+            console.log(`Continuing to poll job ${jobId} (attempt ${window.pollAttempts[jobId]}) in ${backoffTime}ms`);
+            setTimeout(() => pollJobStatus(jobId), backoffTime);
+          }
+        })
+        .catch(error => {
+          console.error('Error polling status:', error);
+          
+          // Implement exponential backoff for retry
+          const backoffTime = Math.min(2000 * Math.pow(1.5, Math.min(window.pollAttempts[jobId] - 1, 8)), 15000);
+          console.log(`Error encountered, retrying poll for job ${jobId} in ${backoffTime}ms`);
+          setTimeout(() => pollJobStatus(jobId), backoffTime);
+        });
+      }
+      
+      // Function to display final image
+      function displayFinalImage(imageUrl) {
+        console.log('DEBUG: Displaying final image:', imageUrl);
+        
+        if (!imageUrl) {
+          console.error('ERROR: Attempted to display image with null/undefined URL');
+          showError('Error displaying final image. Please try again.');
+          return;
+        }
+        
+        // SUPER CRITICAL: ALWAYS INTERCEPT RAILWAY URLS
+        if (imageUrl.includes('railway.app')) {
+          console.log('CRITICAL: Railway URL detected, MUST process through ImageProcessingManager');
+          
+          // Find the ImageProcessingManager instance
+          const imageManager = window.imageProcessingManager || null;
+          
+          if (imageManager) {
+            // Completely bypass regular gallery update for Railway URLs
+            imageManager.stylizedImageUrl = imageUrl;
+            imageManager.transformationComplete = true;
+            
+            // Update progress bar to 95%
+            document.getElementById('pixar-progress-bar').style.width = '95%';
+            document.getElementById('pixar-progress-text').textContent = 'Applying your personal touch...';
+            
+            // Dispatch event to notify components
+            const pixarComponent = document.querySelector('pixar-transform-file-input');
+            if (pixarComponent && !pixarComponent.hasAttribute('data-event-dispatched')) {
+              pixarComponent.setAttribute('data-event-dispatched', 'true');
+              
+              // Set timeout to apply processing after a short delay to ensure all components are ready
+              setTimeout(() => {
+                if (imageManager.cropComplete && imageManager.textProcessingComplete) {
+                  console.log('CRITICAL: Applying final processing with crop immediately');
+                  imageManager.applyFinalProcessing();
+                } else {
+                  console.log('CRITICAL: Waiting for crop/text completion');
+                  
+                  // Trigger transform complete event
+                  const customEvent = new CustomEvent('pixar-transform-complete', {
+                    detail: { imageUrl: imageUrl, timestamp: Date.now() }
+                  });
+                  document.dispatchEvent(customEvent);
+                }
+              }, 100);
+            }
+            
+            return; // IMPORTANT: Exit immediately for Railway URLs - do NOT hide loading popup here
+          }
+        }
+        
+        // For non-Railway URLs or if the ImageProcessingManager is not available, 
+        // continue with normal display flow
+        
+        // Make sure we haven't already processed this image URL
+        if (window.displayedImageUrls && window.displayedImageUrls.includes(imageUrl)) {
+          console.log('DEBUG: Image already displayed, skipping:', imageUrl);
+          return;
+        }
+        
+        // Clear any remaining polling intervals
+        if (window.pixarProgressInterval) {
+          clearInterval(window.pixarProgressInterval);
+        }
+        
+        // Track displayed image URLs
+        window.displayedImageUrls = window.displayedImageUrls || [];
+        window.displayedImageUrls.push(imageUrl);
+        
+        // Update progress bar to 100%
+        document.getElementById('pixar-progress-bar').style.width = '100%';
+        document.getElementById('pixar-progress-text').textContent = 'Complete!';
+        
+        // Set the image URL on the component
+        const pixarComponent = document.querySelector('pixar-transform-file-input');
+        if (pixarComponent) {
+          pixarComponent.setAttribute('data-processed-image-url', imageUrl);
+          
+          // Dispatch event only once to notify that transform is complete
+          if (!pixarComponent.hasAttribute('data-event-dispatched')) {
+            pixarComponent.setAttribute('data-event-dispatched', 'true');
+            console.log('DEBUG: Dispatching pixar-transform-complete event with URL:', imageUrl);
+            pixarComponent.dispatchEvent(new CustomEvent('pixar-transform-complete', {
+              detail: {
+                imageUrl: imageUrl,
+                timestamp: Date.now()
+              }
+            }));
+          }
+        }
+        
+        // Update the product gallery image (for non-Railway URLs only)
+        updateProductGalleryImage(imageUrl);
+        
+        // For non-Railway URLs, hide loading popup after a delay
+        // For Railway URLs, the pixar-final-processing-complete event will handle this
+        if (!imageUrl.includes('railway.app')) {
+          setTimeout(() => {
+            document.getElementById('pixar-loading-popup').style.display = 'none';
+          }, 1000);
+        }
+      }
+      
+      // Function to update the product gallery image
+      function updateProductGalleryImage(imageUrl) {
+        if (!imageUrl) return;
+        
+        // CRITICAL: Always intercept Railway URLs - Never update gallery directly with Railway URLs
+        if (imageUrl.includes('railway.app')) {
+          console.log('INTERCEPT: Railway URL detected in updateProductGalleryImage, preventing direct display');
+          
+          // Find ImageProcessingManager instance
+          const imageManager = window.imageProcessingManager || null;
+          if (imageManager) {
+            console.log('INTERCEPT: Routing Railway URL through ImageProcessingManager');
+            
+            // Store the URL for later processing
+            imageManager.stylizedImageUrl = imageUrl;
+            imageManager.transformationComplete = true;
+            
+            // If crop and text are complete, process now, otherwise wait for them
+            if (imageManager.cropComplete && imageManager.textProcessingComplete) {
+              console.log('INTERCEPT: All steps complete, applying final processing immediately');
+              setTimeout(() => imageManager.applyFinalProcessing(), 100); // Small delay to ensure proper sequence
+            } else {
+              console.log('INTERCEPT: Will process image after crop/text are complete');
+            }
+            
+            return; // Never continue with direct display for Railway URLs
+          } else {
+            console.warn('WARNING: ImageProcessingManager not found, but Railway URL detected');
+            // Continue with direct display only if ImageProcessingManager not available
+          }
+        }
+        
+        // Only reach this point for non-Railway URLs or if ImageProcessingManager is unavailable
+        console.log('Updating product gallery image with:', imageUrl);
+        
+        // Find all relevant image elements that need updating
+        const imagesToUpdate = [
+          // Main product image (left side mockup)
+          document.querySelector('.product-gallery__media.snap-center.is-selected img.rounded'),
+          document.querySelector('.product-gallery__media.snap-center img'),
+          document.querySelector('.product-gallery__media img'),
+          document.querySelector('.product-gallery img'),
+          document.querySelector('.product__media img'),
+          
+          // Thumbnails
+          ...Array.from(document.querySelectorAll('.product-gallery__thumbnail img')),
+          
+          // Any other images in the product area
+          document.querySelector('img[src*="kurzt-das-lehregehalt"]'),
+          document.querySelector('img[src*="lehregehalt"]')
+        ].filter(Boolean); // Remove null/undefined entries
+        
+        // Additional comprehensive approach - get ALL product gallery images
+        const productGallery = document.querySelector('.product-gallery');
+        if (productGallery) {
+          const galleryImages = productGallery.querySelectorAll('img');
+          galleryImages.forEach(img => {
+            if (!imagesToUpdate.includes(img)) {
+              imagesToUpdate.push(img);
+            }
+          });
+        }
+        
+        // Update each image found
+        if (imagesToUpdate.length > 0) {
+          imagesToUpdate.forEach(img => {
+            // Save original src for potential restoration
+            if (!img.dataset.originalSrc) {
+              img.dataset.originalSrc = img.src;
+            }
+            
+            // Update the image src
+            img.src = imageUrl;
+            
+            // Try to update srcset if it exists to avoid responsive image issues
+            if (img.srcset) {
+              img.srcset = imageUrl;
+            }
+            
+            // For Safari compatibility, sometimes need to force a redraw
+            img.style.display = 'none';
+            setTimeout(() => { img.style.display = ''; }, 10);
+          });
+          
+          console.log(`Updated ${imagesToUpdate.length} product images with new design`);
+        } else {
+          console.warn('Could not find any product images to update');
+          
+          // Fallback approach - query all images and look for ones that might be product-related
+          const allImages = document.querySelectorAll('img');
+          let updatedCount = 0;
+          
+          allImages.forEach(img => {
+            const src = img.src || '';
+            // Only update images that appear to be product-related
+            if ((src.includes('product') || 
+                src.includes('lehregehalt') || 
+                src.includes('split') || 
+                src.includes('/files/kurzt') ||
+                (src.includes('/shop/files/') && !src.includes('bad_photo') && !src.includes('good_photo'))) &&
+                // Exclude result wrapper images
+                !img.closest('[data-result-wrapper]') && 
+                !img.closest('.result-wrapper') &&
+                !img.closest('[data-result-image-wrapper]') &&
+                !img.closest('.result-wrapper__image-wrapper')) {
+              
+              // Save original src for potential restoration
+              if (!img.dataset.originalSrc) {
+                img.dataset.originalSrc = img.src;
+              }
+              
+              // Update the image src
+              img.src = imageUrl;
+              updatedCount++;
+            }
+          });
+          
+          if (updatedCount > 0) {
+            console.log(`Fallback approach: Updated ${updatedCount} potential product images`);
+          } else {
+            console.error('Failed to find any product images to update using all approaches');
+          }
+        }
+        
+        // Hide the result wrapper if it exists to prevent showing the image below buttons
+        const resultWrapper = document.querySelector('[data-result-wrapper]');
+        if (resultWrapper) {
+          resultWrapper.style.display = 'none';
+        }
+        
+        console.log('Product gallery update completed');
+      }
+      
+      // 5. Listen for transformation events
+      document.addEventListener('pixar-transform-progress', function(event) {
+        if (event.detail && typeof event.detail.progress !== 'undefined') {
+          // Record that we received a real progress update
+          lastProgressUpdate = Date.now();
+          
+          const percent = Math.min(95, event.detail.progress); // Cap real progress at 95% too
+          document.getElementById('pixar-progress-bar').style.width = `${percent}%`;
+          
+          // Use more descriptive stage messages
+          let stage = event.detail.stage;
+          if (!stage) {
+            if (percent < 15) stage = 'Uploading your image...';
+            else if (percent < 30) stage = 'Analyzing facial features...';
+            else if (percent < 45) stage = 'Extracting key face points...';
+            else if (percent < 60) stage = 'Mapping to target style...';
+            else if (percent < 75) stage = 'Adjusting colors and textures...';
+            else if (percent < 90) stage = 'Enhancing details...';
+            else stage = 'Finalizing your image...';
+          }
+          document.getElementById('pixar-progress-text').textContent = stage;
+        }
+      });
+      
+      // Listen for final processing complete - indicates when we can safely hide the loading popup
+      document.addEventListener('pixar-final-processing-complete', function(event) {
+        console.log('Received pixar-final-processing-complete event:', event.detail);
+        
+        // Final processing is done, now safe to hide loading popup
+        setTimeout(function() {
+          const loadingPopup = document.getElementById('pixar-loading-popup');
+          if (loadingPopup) {
+            console.log('Final processing complete - hiding loading popup');
+            loadingPopup.style.display = 'none';
+          }
+        }, 300); // Short delay to ensure smooth transition
+      });
+      
+      // Listen for transform-complete events, handle both component and document events
+      function handleTransformComplete(event) {
+        // Clear any simulated progress timeouts
+        if (progressUpdateTimeout) {
+          clearTimeout(progressUpdateTimeout);
+        }
+        
+        // Log requestId if available in the response
+        if (event.detail && event.detail.requestId) {
+          console.log('🆔 Transformation completed with requestId:', event.detail.requestId);
+          // Store requestId for potential support/debugging
+          if (pixarComponent) {
+            pixarComponent.dataset.lastRequestId = event.detail.requestId;
+          }
+        }
+
+        // Find ImageProcessingManager instance
+        const imageManager = window.imageProcessingManager || null;
+        
+        // If we have a Railway URL, make sure all image updates go through the manager
+        const isRailwayUrl = event.detail && event.detail.imageUrl && 
+                             event.detail.imageUrl.includes('railway.app');
+        
+        if (imageManager && isRailwayUrl) {
+          console.log('Railway image received, delegating to ImageProcessingManager:', event.detail.imageUrl);
+          
+          // Store the image URL in the manager
+          imageManager.stylizedImageUrl = event.detail.imageUrl;
+          imageManager.transformationComplete = true;
+          
+          // Trigger the manager's transform complete handler
+          if (typeof imageManager.handleTransformComplete === 'function') {
+            imageManager.handleTransformComplete({
+              detail: { imageUrl: event.detail.imageUrl }
+            });
+          }
+          
+          // Set progress to indicate waiting for user input
+          document.getElementById('pixar-progress-bar').style.width = '95%';
+          document.getElementById('pixar-progress-text').textContent = 'Preparing your image...';
+          
+          // IMPORTANT: For Railway images we don't hide the loading popup here
+          // The pixar-final-processing-complete event will hide it when processing is done
+          
+          // Find the ImageProcessingManager instance to check if it's handling the image
+          const imageManager = window.imageProcessingManager || null;
+          
+          // Only hide loading popup here for non-Railway images or if imageManager not available
+          if (!isRailwayUrl || !imageManager) {
+            setTimeout(function() {
+              document.getElementById('pixar-loading-popup').style.display = 'none';
+              document.body.style.overflow = '';
+            }, 1000);
+          }
+        } else if (imageManager) {
+          console.log('Non-Railway transformation complete, delegating to ImageProcessingManager');
+          
+          // Trigger the manager's transform complete handler
+          const customEvent = new CustomEvent('pixar-transform-complete', {
+            detail: event.detail
+          });
+          
+          // Dispatch directly to the document since manager listens there
+          document.dispatchEvent(customEvent);
+          
+          // Set progress to indicate waiting for user input
+          document.getElementById('pixar-progress-bar').style.width = '95%';
+          document.getElementById('pixar-progress-text').textContent = 'Preparing your image...';
+          
+          // IMPORTANT: For Railway images we don't hide the loading popup here
+          // The pixar-final-processing-complete event will hide it when processing is done
+          
+          // Find the ImageProcessingManager instance to check if it's handling the image
+          const imageManager = window.imageProcessingManager || null;
+          
+          // Only hide loading popup here for non-Railway images or if imageManager not available
+          if (!isRailwayUrl || !imageManager) {
+            setTimeout(function() {
+              document.getElementById('pixar-loading-popup').style.display = 'none';
+              document.body.style.overflow = '';
+            }, 1000);
+          }
+        } else {
+          console.warn('ImageProcessingManager not found, falling back to direct display');
+          
+          // Set to 100% complete with animation
+          document.getElementById('pixar-progress-bar').style.width = '100%';
+          document.getElementById('pixar-progress-text').textContent = 'Complete!';
+          
+          // Update the product gallery image if event contains image URL (fallback)
+          if (event.detail && event.detail.imageUrl) {
+            updateProductGalleryImage(event.detail.imageUrl);
+          } else if (pixarComponent && pixarComponent.processedPrintImageUrl) {
+            // Fallback to using the component's processedPrintImageUrl property
+            updateProductGalleryImage(pixarComponent.processedPrintImageUrl);
+          }
+          
+          // For non-Railway URLs, hide loading popup after a delay
+          // For Railway URLs, the pixar-final-processing-complete event will handle this
+          if (!imageUrl.includes('railway.app')) {
+            setTimeout(() => {
+              document.getElementById('pixar-loading-popup').style.display = 'none';
+            }, 1000);
+          }
+        }
+      }
+
+      // Helper function to update progress from status data
+      function updateProgressFromStatus(data) {
+        // Check if progress data is available
+        if (data.metadata && data.metadata.progress !== undefined) {
+          // Cap at 90% to leave room for the final step
+          const progressPercent = Math.min(90, parseInt(data.metadata.progress));
+          document.getElementById('pixar-progress-bar').style.width = `${progressPercent}%`;
+          
+          // Update the progress text based on metadata
+          let progressMessage = 'Processing your image...';
+          if (data.metadata.message) {
+            progressMessage = data.metadata.message;
+          } else if (progressPercent < 30) {
+            progressMessage = 'Analyzing facial features...';
+          } else if (progressPercent < 60) {
+            progressMessage = 'Mapping to target style...';
+          } else if (progressPercent < 90) {
+            progressMessage = 'Finalizing your image...';
+          }
+          
+          if (document.getElementById('pixar-progress-text')) {
+            document.getElementById('pixar-progress-text').textContent = progressMessage;
+          }
+        }
+        // Fallback for old API format
+        else if (data.progress !== undefined) {
+          const progressPercent = Math.min(90, parseInt(data.progress));
+          document.getElementById('pixar-progress-bar').style.width = `${progressPercent}%`;
+          
+          let progressMessage = 'Processing your image...';
+          if (progressPercent < 30) {
+            progressMessage = 'Analyzing facial features...';
+          } else if (progressPercent < 60) {
+            progressMessage = 'Mapping to target style...';
+          } else if (progressPercent < 90) {
+            progressMessage = 'Finalizing your image...';
+          }
+          
+          if (document.getElementById('pixar-progress-text')) {
+            document.getElementById('pixar-progress-text').textContent = progressMessage;
+          }
+        }
+      }
+    }, 1000);
+  });
+</script>
+
+<!-- Keep only the essential component structure -->
+{% assign section_id = section_id | default: 'main' %}
+{% assign color_index = null %}
+
+{% for option in product.options_with_values %}
+  {% if option.name == 'Color' %}
+    {% assign color_index = forloop.index0 %}
+  {% endif %}
+{% endfor %}
+
+{% capture current_product_color %}
+  {% if color_index != nil %}
+    {% for variant in product.variants %}
+      {% if variant.id == product.selected_or_first_available_variant.id %}
+        {{ variant.options[color_index] | strip | downcase }}
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    unknown
+  {% endif %}
+{% endcapture %}
+
+{% assign upload_button_id = 'upload-button-' | append: section_id %}
+{% assign open_popup_button_id = 'popup-open-btn-' | append: section_id %}
+{% assign file_input_id = 'file-input-wrapper__input-' | append: section_id %}
+
+{% if customer.id != blank %}
+  {% assign customer_id = 'gid://shopify/Customer/' | append: customer.id %}
+{% endif %}
+
+{% assign product_variant_id = product.selected_or_first_available_variant.id %}
+{% assign product_image_url = product.selected_or_first_available_variant.image | image_url: 'master' %}
+{% assign cdn_url = 'https://cdn.shopify.com/s/files/1/0626/3416/4430/' %}
+
+{% assign target_image_url = cdn_url | append: product_image_url %}
+{% assign print_image_url = cdn_url | append: product.metafields.pixar.print_image.value | default: product.metafields.faceswap.print_image.value %}
+
+<pixar-transform-file-input 
+  data-section-id="{{ section_id }}" 
+  class="file-input-wrapper-{{ section_id }} file-input-wrapper" 
+  data-product-variant-id="{{ product_variant_id }}" 
+  data-product-id="{{ product.id }}" 
+  data-customer-id="{{ customer_id }}" 
+  data-target-image-url="{{ target_image_url }}" 
+  data-print-image-url="{{ print_image_url }}" 
+  data-color="{{ current_product_color | strip | downcase }}">
+  
+  <!-- File input -->
+  <input type="file" accept="image/*" id="{{ file_input_id }}" name="inputFile-{{ section_id }}" class="pixar-file-input" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; opacity: 0; visibility: hidden;">
+
+  <!-- Open popup button with main product call-to-action -->
+  {%- render 'button', id: open_popup_button_id, class: 'file-input-wrapper__popup-open-btn w-full', content: 'Bild hochladen', type: 'button', size: 'xl', disabled: false, subdued: false -%}
+
+  <!-- Result display area -->
+  <div data-result-wrapper class="file-input-wrapper__result result-wrapper" style="display: none;">
+    <div data-help-result-text class="result-wrapper__help-text"></div>
+    <div data-result-image-wrapper class="result-wrapper__image-wrapper"></div>
+  </div>
+</pixar-transform-file-input>
+
+<!-- Simple popup styling -->
+<style>
+  /* Basic popup styling */
+  .file-input-wrapper__popup,
+  .upload-popup,
+  [data-pixar-popup] {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    z-index: 9999999;
+    display: none;
+    overflow: auto;
+  }
+  
+  /* Active popup styling */
+  .file-input-wrapper__popup.active,
+  .upload-popup.active,
+  [data-pixar-popup].active {
+    display: block;
+  }
+  
+  /* Prevent scrolling when popup is open */
+  body.popup-open {
+    overflow: hidden;
+  }
+</style> 

@@ -1,0 +1,186 @@
+{% liquid
+  assign show_pin = true
+
+  if block.type == 'pin_icon'
+    if block.settings.icon == 'none' and block.settings.custom_icon_image == blank and block.settings.heading == blank and block.settings.body == blank and block.settings.link_text == blank
+      assign show_pin = false
+    endif
+  endif
+
+  if block.type == 'pin_image'
+    if block.settings.image == blank and block.settings.video == blank and block.settings.heading == blank and block.settings.body == blank and block.settings.link_text == blank
+      assign show_pin = false
+    endif
+  endif
+%}
+
+{% if show_pin %}
+  {%- capture content %}
+    {%- if block.settings.heading != blank -%}
+      <h3 class='hotspots__card-title {{ block.settings.heading_size }}'>
+        {{ block.settings.heading }}
+      </h3>
+    {%- endif -%}
+
+    {%- if block.settings.body != blank -%}
+      <div class='hotspots__card-body body-font-weight-from-global-settings {{ block.settings.body_size }}'>
+        {{ block.settings.body }}
+      </div>
+    {%- endif -%}
+
+    {%- if block.settings.link_text != blank -%}
+      <a class='hotspots__card-link link' href='{{ block.settings.link }}'>
+        <span class="link-parent-for-hover">
+          <span class='link__text'>{{ block.settings.link_text }}</span>
+        </span>
+        {%- render 'icon', icon_name: 'link-chevron', class: 'link__chevron' -%}
+      </a>
+    {%- endif -%}
+  {% endcapture %}
+
+  {% capture pin %}
+    {%- case block.type -%}
+      {% when 'pin_product' %}
+        {% if block.settings.product_card_type == 'horizontal' %}
+          <div class='hotspots__card-fix-height-wrapper hotspots__card-fix-height-wrapper--product hotspots__card-fix-height-wrapper--horizontal-product'>
+            {% render 'horizontal-product-card', product: block.settings.product, img_ratio: block.settings.img_ratio, is_inside_block_with_background: false, with_background: true %}     
+          </div>   
+        {% else %}
+          <div class='hotspots__card-fix-height-wrapper hotspots__card-fix-height-wrapper--product hotspots__card-fix-height-wrapper--vertical-product'>
+            {% render 'vertical-product-card', product: block.settings.product, img_ratio: block.settings.img_ratio, with_around_spacing: true %}
+          </div>
+        {% endif %}
+      {% when 'pin_image' %}
+        <div class='hotspots__card-fix-height-wrapper hotspots__card-fix-height-wrapper--pin-image hotspots__card-fix-height-wrapper--with-{{ block.settings.content_alignment }}-alignment'>
+          {%- if block.settings.link_text == blank and block.settings.link != blank -%}
+            <a href='{{ block.settings.link }}' class='hotspots__card-link-over'></a>
+          {% endif %}
+          {%- if block.settings.video != blank -%}
+            <div class='hotspots__card-media-wrapper'>
+              <div class='shape shape--nature'>
+                {%- render 'video-with-alt',
+                  video: block.settings.video,
+                  autoplay: true,
+                  muted: true,
+                  loop: true,
+                  class: 'hotspots__card-media',
+                  loading: 'eager'
+                -%}
+              </div>
+            </div>
+          {%- elsif block.settings.image != blank -%}
+            <div class='hotspots__card-media-wrapper'>
+              <div class='shape shape--nature'>
+                <img {% render 'image-attributes', image: block.settings.image, size: 'medium', class: 'hotspots__card-media' %}>
+              </div>
+            </div>
+          {%- endif -%}
+          {{ content }}
+        </div>
+      {% when 'pin_icon' %}
+        <div class='hotspots__card-fix-height-wrapper hotspots__card-fix-height-wrapper--pin-image hotspots__card-fix-height-wrapper--with-{{ block.settings.content_alignment }}-alignment'>
+          {%- if block.settings.link_text == blank and block.settings.link != blank -%}
+            <a href='{{ block.settings.link }}' class='hotspots__card-link-over'></a>
+          {% endif %}
+          {%- if block.settings.custom_icon_image != blank -%}
+            <img
+              {% render 'image-attributes', image: block.settings.custom_icon_image, size: 'small', class: 'hotspots__card-icon' %}
+            >
+          {%- elsif block.settings.icon != 'none' -%}
+            {% render 'icon-pack', icon: block.settings.icon, class: 'hotspots__card-icon' %}
+          {%- endif -%}
+          {{ content }}
+        </div>
+    {%- endcase -%}
+  {% endcapture %}
+
+  <div
+    {{ block.shopify_attributes }}
+  >
+    <div
+      class='hotspots__pin-wrapper hotspots__pin-wrapper--mobile block-{{ block.id }}'
+      data-block-id='{{ block.id }}'
+    >
+      <modal-button
+        data-action='open'
+        data-modal='#Hotspots-PinCard-{{ section.id }}-{{ block.id }}'
+      >
+        <button
+          class='hotspots__pin'
+          aria-label='{{ 'hotspots.store_front.pin' | t }}'
+          type='button'
+        ></button>
+      </modal-button>
+      <modal-component
+        class='hotspots__modal'
+        id='Hotspots-PinCard-{{ section.id }}-{{ block.id }}'
+        data-with-overlay
+        data-with-close-on-outside
+        data-overlay-important
+      >
+        <template data-modal-template='Hotspots-PinCard-{{ section.id }}-{{ block.id }}'>
+          <div class='hotspots__modal-body'>
+            <modal-button
+              data-action='close'
+              class='hotspots__card-close-wrapper'
+              aria-label='{{ 'hotspots.screen_reader.close' | t }}'
+              type='button'
+              data-modal='#Hotspots-PinCard-{{ section.id }}-{{ block.id }}'
+            >
+              <div
+                class='hotspots__card-close'
+              ></div>
+            </modal-button>
+            <div class='hotspots__modal-content'>
+              {{ pin }}
+            </div>
+          </div>
+        </template>
+      </modal-component>
+    </div>
+
+    <div
+      class='hotspots__pin-wrapper hotspots__pin-wrapper--desktop block-{{ block.id }}'
+      data-block-id='{{ block.id }}'
+    >
+      <float-element-btn
+        class='hotspots__pin-btn-wrapper'
+        data-aria-expanded='false'
+        data-float-element-id='pin-btn-{{ block.id }}'
+        data-trigger='{{ trigger_for_show_pin }}'
+      >
+        <button
+          class='hotspots__pin'
+          aria-label='{{ 'hotspots.pin' | t }}'
+          type='button'
+          data-float-element-trigger='pin-btn-{{ block.id }}'
+        ></button>
+      </float-element-btn>
+
+      <hotspots-float-element
+        class='hotspots__float-element {% if block.type == 'pin_product' %} hotspots__float-element--product {% endif %}  {% if block.type == 'pin_product' and block.settings.product_card_type == 'vertical' %} hotspots__float-element--vertical-product {% elsif block.type == 'pin_product' and block.settings.product_card_type == 'horizontal' %} hotspots__float-element--horizontal-product {% endif %}'
+        aria-hidden='true'
+        id='pin-btn-{{ block.id }}'
+        data-placement='bottom-start'
+        data-main-axis-offset='16'
+        data-alignment-axis-offset='-28'
+        data-strategy='fixed'
+        data-section-id='{{ section.id }}'
+        block-id='{{ block.id }}'
+      >
+        <template data-float-element-template='pin-btn-{{ block.id }}'>
+          <div
+            class='
+              hotspots__card
+              {% if block.type == 'pin_icon' %} hotspots__card--icon {% endif %}
+              {% if block.type == 'pin_image' %} hotspots__card--image {% endif %}
+              {% if block.type == 'pin_product' %} hotspots__card--product {% endif %}
+            '
+          >
+            {{ pin }}
+          </div>
+        </template>
+      </hotspots-float-element>
+    </div>
+  </div>
+{% endif %}

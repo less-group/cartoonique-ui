@@ -1,0 +1,167 @@
+{% liquid
+  assign enable_content_slide_in = settings.enable_content_slide_in
+%}
+
+{%- for block in blocks -%}
+  {% liquid
+    assign options = block.settings
+    assign heading = options.heading
+    assign heading_size = options.heading_size
+    assign subheading = options.subheading
+    assign body = options.body
+    assign body_size = options.body_size
+  %}
+  {%- case block.type -%}
+    {% when 'heading' %}
+      <h2
+        class='countdown-banner__heading {{ heading_size }} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: {{forloop.index}};'
+        {% endif %}
+        {{ block.shopify_attributes }}
+      >
+        {{ heading }}
+      </h2>
+    {% when 'subheading' %}
+      <div
+        class='caption countdown-banner__caption {% if section.settings.mobile_content_background == 'solid' %} mobile-body-color {% endif %} {% if section.settings.desktop_content_background == 'solid' %} desktop-body-color {% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: {{forloop.index}};'
+        {% endif %}
+        {{ block.shopify_attributes }}
+      >
+        {{ subheading }}
+      </div>
+    {% when 'text' %}
+      <div
+        class='rte countdown-banner__body {{ body_size }} body-font-weight-from-global-settings {% if section.settings.mobile_content_background == 'solid' %} mobile-body-color {% endif %} {% if section.settings.desktop_content_background == 'solid' %} desktop-body-color {% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: {{forloop.index}};'
+        {% endif %}
+      >
+        {{ body }}
+      </div>
+    {% when 'buttons' %}
+      {% liquid
+        assign btn_text = options.btn_text
+        assign btn_url = options.btn_url
+        assign btn_style = options.btn_style
+
+        assign extra_btn_text = options.extra_btn_text
+        assign extra_btn_url = options.extra_btn_url
+        assign extra_btn_style = options.extra_btn_style
+      %}
+
+      {% if btn_text != blank or extra_btn_text != blank %}
+        <div
+          class='countdown-banner__btns {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+          {% if enable_content_slide_in %}
+            style='--gsc-animation-order: {{forloop.index}};'
+          {% endif %}
+          {{ block.shopify_attributes }}
+        >
+          {%- if btn_text != blank -%}
+            {%- if btn_style == 'link' -%}
+              <a
+                class='link countdown-banner__btn-link'
+                {% if btn_url != blank %}
+                  href='{{ btn_url }}'
+                {% endif %}
+                aria-label='{{ btn_text | strip_html | escape }}'
+              >
+                <span class='link-parent-for-hover'>
+                  <span class='link__text'>{{ btn_text }}</span>
+                </span>
+                {%- render 'icon', icon_name: 'link-chevron', class: 'link__chevron' -%}
+              </a>
+            {%- else -%}
+              <a
+                class='btn btn--{{ btn_style }} countdown-banner__btn'
+                {% if btn_url != blank %}
+                  href='{{ btn_url }}'
+                {% endif %}
+                aria-label='{{- btn_text | strip_html | escape -}}'
+              >
+                {{- btn_text -}}
+              </a>
+            {%- endif -%}
+          {%- endif -%}
+          {%- if extra_btn_text != blank -%}
+            {% if extra_btn_style == 'link' -%}
+              <a
+                class='link countdown-banner__btn-link'
+                {% if extra_btn_url != blank %}
+                  href='{{ extra_btn_url }}'
+                {% endif %}
+                aria-label='{{ extra_btn_text | strip_html | escape }}'
+              >
+                <span class='link-parent-for-hover'>
+                  <span class='link__text'>{{ extra_btn_text }}</span>
+                </span>
+                {%- render 'icon', icon_name: 'link-chevron', class: 'link__chevron' -%}
+              </a>
+            {%- else -%}
+              <a
+                class='btn btn--{{ extra_btn_style }} countdown-banner__btn'
+                {% if extra_btn_url != blank %}
+                  href='{{ extra_btn_url }}'
+                {% endif %}
+                aria-label='{{- extra_btn_text | strip_html | escape -}}'
+              >
+                {{- extra_btn_text -}}
+              </a>
+            {%- endif -%}
+          {%- endif -%}
+        </div>
+      {% endif %}
+    {% when 'countdown' %}
+      <div
+        class='block-{{block.id}} countdown-banner__timer {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: {{forloop.index}};'
+        {% endif %}
+        {{ block.shopify_attributes }}
+      >
+        {% render 'timer', block: block, section_id: section_id, ensure_width: ensure_width, %}
+      </div>
+
+    {% when 'discount_code' %}
+      {% if block.settings.discount_code != blank %}
+        <div class='countdown-banner__discount {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: {{forloop.index}};'
+        {% endif %}>
+          <clipboard-button
+            class='popup__btn-discount'
+            aria-hidden='true'
+            data-value='{{options.discount_code}}'
+            data-tooltip-id='DiscountCodeTooltip-{{block.id}}'
+            data-clipboard-button-tooltip-target-id='DiscountCodeTooltip-{{block.id}}'
+            tabindex='0'
+          >
+            {%- render 'icon', icon_name: 'copy', class: 'copy-icon' -%}
+            <div class='popup__btn-discount-label'>
+              {{ options.discount_code }}
+            </div>
+          </clipboard-button>
+
+          <clipboard-button-tooltip
+            class='tooltip'
+            aria-hidden='true'
+            id='DiscountCodeTooltip-{{block.id}}'
+            data-placement='bottom'
+            data-main-axis-offset='5'
+          >
+            <template data-clipboard-button-tooltip-template='DiscountCodeTooltip-{{block.id}}'>
+              <div>
+                <div class='tooltip__body'>
+                  <div class='tooltip__arrow' data-float-element-arrow></div>
+                  {{ 'gift_card.store_front.copied' | t }}
+                </div>
+              </div>
+            </template>
+          </clipboard-button-tooltip>
+        </div>
+      {% endif %}
+  {%- endcase -%}
+{%- endfor -%}

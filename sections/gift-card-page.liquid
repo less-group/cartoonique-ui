@@ -1,0 +1,289 @@
+{%- liquid
+  if settings.currency_code_enabled
+    assign gift_card_balance = gift_card.balance | money_with_currency
+    assign gift_card_initial_value = gift_card.initial_value | money_with_currency
+  else
+    assign gift_card_balance = gift_card.balance | money
+    assign gift_card_initial_value = gift_card.initial_value | money
+  endif
+
+  assign options = section.settings
+  assign color_scheme = options.color_scheme
+  assign logo_img = options.logo_img
+  assign image = options.image
+  assign desktop_logo_width = options.desktop_logo_width
+  assign mobile_logo_width = options.mobile_logo_width
+  assign is_expired = gift_card.expired
+
+  assign enable_content_slide_in = settings.enable_content_slide_in
+  assign enable_image_zoom_out = settings.enable_image_zoom_out
+-%}
+
+{% capture css %}
+  {% style %}
+    .section-{{section.id}} {
+        --gsc-logo-width: {{ mobile_logo_width }}px;
+    }
+
+    @media {% render 'media-queries', screen: 'md' %} {
+        .section-{{section.id}} {
+            --gsc-logo-width: {{ desktop_logo_width }}px;
+        }
+    }
+  {% endstyle %}
+{% endcapture %}
+
+{% render 'inline-css-minifier', css: css %}
+
+<div class='gift-page section section-{{ section.id }} color-{{ color_scheme }} container--with-aside-paddings'>
+  <div
+    class='gift-page__header {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+    {% if enable_content_slide_in %}
+      style='--gsc-animation-order: 1;'
+    {% endif %}
+  >
+    {% render 'logo', image: logo_img, logo_width: desktop_logo_width, logo_text: shop.name %}
+  </div>
+
+  <div class='gift-page__container container container--small'>
+    <div
+      class='gift-page__content {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+      {% if enable_content_slide_in %}
+        style='--gsc-animation-order: 2;'
+      {% endif %}
+    >
+      <h2 class='gift-page__title h5'>{{ 'gift_card.store_front.title' | t }}</h2>
+      <div class='gift-page__text body-font-weight-from-global-settings'>{{ 'gift_card.store_front.text' | t }}</div>
+    </div>
+    {%- if gift_card.balance != gift_card.initial_value -%}
+      <p
+        class='gift-page__label {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: 3;'
+        {% endif %}
+      >
+        {{ 'gift_card.store_front.remaining_html' | t: balance: gift_card_balance }}
+      </p>
+    {%- endif -%}
+    <div
+      class='gift-page__image-wrap {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+      {% if enable_content_slide_in %}
+        style='--gsc-animation-order: 4;'
+      {% endif %}
+    >
+      <div class='gift-page__price'>
+        {{ gift_card_initial_value }}
+      </div>
+
+      {%- if image != blank -%}
+        <img
+          class='gift-page__image {% if is_expired == true %} gift-page__image--expired{% endif %} {% if enable_image_zoom_out %}scroll-trigger animate--zoom-out{% endif %}'
+          loading='lazy'
+          src='{{ image | image_url: width: 960 }}'
+          alt='{{ image.alt | escape }}'
+          width='400'
+          height='266'
+          style='object-position: {{ image.presentation.focal_point }};'
+        >
+      {%- else -%}
+        <img
+          class='gift-page__image {% if is_expired == true %} gift-page__image--expired{% endif %} {% if enable_image_zoom_out %}scroll-trigger animate--zoom-out{% endif %}'
+          loading='lazy'
+          src='{{ 'gift-card.png' | asset_img_url: '960x' }}'
+          alt='{{ 'gift_card.screen_reader.gift_card_image' | t }}'
+          width='400'
+          height='266'
+          style='object-position: {{ image.presentation.focal_point }};'
+        >
+      {%- endif -%}
+
+      <clipboard-button
+        class='gift-page__copy-code'
+        aria-hidden='true'
+        data-value='{{ gift_card.code | format_code }}'
+        data-tooltip-id='GiftCodeTooltip'
+        tabindex='0'
+      >
+        {%- if is_expired == false -%}
+          {{ gift_card.code | format_code }}
+        {%- else -%}
+          Expired
+        {% endif %}
+      </clipboard-button>
+      <clipboard-button-tooltip class='tooltip' aria-hidden='true' id='GiftCodeTooltip' data-placement='top'>
+        <template data-clipboard-button-tooltip-template='GiftCodeTooltip'>
+          <div>
+            <div class='tooltip__body'>
+              <div class='tooltip__arrow' data-float-element-arrow></div>
+              {{ 'gift_card.store_front.copied' | t }}
+            </div>
+          </div>
+        </template>
+      </clipboard-button-tooltip>
+    </div>
+    {%- if is_expired == false -%}
+      <script>
+        class QrCodeComponent extends HTMLElement {
+          connectedCallback() {
+            if (document.readyState == 'loading') {
+              document.addEventListener('DOMContentLoaded', this.setQr)
+            } else {
+              this.setQr()
+            }
+          }
+
+          setQr = () => {
+            new QRCode(this, {
+              text: this.dataset.identifier,
+              width: 120,
+              height: 120,
+            })
+          }
+        }
+
+        customElements.define('qr-code', QrCodeComponent)
+      </script>
+
+      <qr-code
+        class='gift-page__qr-code {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: 5;'
+        {% endif %}
+        data-identifier='{{ gift_card.qr_identifier }}'
+      ></qr-code>
+    {%- endif -%}
+    <div
+      class='gift-page__information {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+      {% if enable_content_slide_in %}
+        style='--gsc-animation-order: 6;'
+      {% endif %}
+    >
+      <div class='gift-page__btns no-print'>
+        {%- if gift_card.pass_url -%}
+          <a href='{{ gift_card.pass_url }}' class='gift_card__apple-wallet'>
+            <img
+              class='lazyload'
+              id='apple-wallet-badge'
+              src='{{ 'gift-card/add-to-apple-wallet.svg' | shopify_asset_url }}'
+              width='120'
+              height='40'
+              alt='{{ 'gift_card.screen_reader.add_to_apple_wallet' | t }}'
+              loading='lazy'
+            >
+          </a>
+        {%- endif -%}
+
+        <a
+          href='{{ shop.url }}'
+          class='btn btn--solid gift-page__btn'
+          aria-label='{{ 'gift_card.screen_reader.shop_link' | t }}'
+        >
+          {{ 'gift_card.store_front.shop_link' | t }}
+        </a>
+
+        <button
+          class='btn btn--outline gift-page__btn gift-page__print-btn'
+          onclick='window.print();'
+          aria-label='{{ 'gift_card.screen_reader.print' | t }}'
+        >
+          {% render 'icon', icon_name: 'print' %}
+          {{ 'gift_card.store_front.print' | t }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% render 'save-section-data-in-global-scope', section: section %}
+
+{% schema %}
+{
+  "name": "t:sections.gift_page.name",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:sections.general_section_settings.color_scheme_option_default_label"
+        },
+        {
+          "value": "primary",
+          "label": "t:sections.general_section_settings.color_scheme_option_primary_label"
+        },
+        {
+          "value": "secondary",
+          "label": "t:sections.general_section_settings.color_scheme_option_secondary_label"
+        },
+        {
+          "value": "custom-1",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_1_label"
+        },
+        {
+          "value": "custom-2",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_2_label"
+        },
+        {
+          "value": "custom-3",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_3_label"
+        },
+        {
+          "value": "white",
+          "label": "t:sections.general_section_settings.color_scheme_option_white_text_label"
+        },
+        {
+          "value": "black",
+          "label": "t:sections.general_section_settings.color_scheme_option_black_text_label"
+        },
+        {
+          "value": "custom-5",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_5_label"
+        }
+      ],
+      "default": "default",
+      "label": "t:sections.general_section_settings.color_scheme_label",
+      "info": "t:sections.general_section_settings.color_scheme_tip"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.gift_page.logo_settings_header"
+    },
+    {
+      "type": "image_picker",
+      "id": "logo_img",
+      "label": "t:sections.gift_page.logo_img_label"
+    },
+    {
+      "type": "range",
+      "id": "desktop_logo_width",
+      "min": 20,
+      "max": 400,
+      "step": 10,
+      "default": 140,
+      "unit": "t:sections.gift_page.desktop_logo_width_unit",
+      "label": "t:sections.gift_page.desktop_logo_width_label"
+    },
+    {
+      "type": "range",
+      "id": "mobile_logo_width",
+      "min": 20,
+      "max": 400,
+      "step": 10,
+      "default": 140,
+      "unit": "t:sections.gift_page.mobile_logo_width_unit",
+      "label": "t:sections.gift_page.mobile_logo_width_label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.gift_page.image_settings_header"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "t:sections.gift_page.image_label"
+    }
+  ]
+}
+{% endschema %}

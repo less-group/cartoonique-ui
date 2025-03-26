@@ -1,0 +1,36 @@
+{% liquid
+  assign options = block.settings
+  assign rating_style = options.rating_style
+  assign product_card_rating_hide_if_zero_reviews = options.product_card_rating_hide_if_zero_reviews
+
+  assign reviews_app = settings.product_card_reviews_app
+
+  assign rating_count = product.metafields.reviews.rating.value.rating | plus: 0
+  assign rating_reviews_count = product.metafields.reviews.rating_count | plus: 0
+
+  if reviews_app == 'judgeme'
+    assign rating_count = product.metafields.reviews.rating.value.rating | plus: 0
+    assign rating_reviews_count = product.metafields.reviews.rating_count | plus: 0
+  elsif reviews_app == 'loox'
+    assign rating_count = product.metafields.loox.avg_rating | plus: 0
+    assign rating_reviews_count = product.metafields.loox.num_reviews | plus: 0
+  elsif reviews_app == 'okendo'
+    assign rating_count = product.metafields.okendo.summaryData.reviewAverageValue | plus: 0
+    assign rating_reviews_count = product.metafields.okendo.summaryData.reviewCount | plus: 0
+  elsif reviews_app == 'stamped'
+    assign rating_count = product.metafields.stamped.reviews_average | plus: 0
+    assign rating_reviews_count = product.metafields.stamped.reviews_count | plus: 0
+  endif
+%}
+
+{% if product_card_rating_hide_if_zero_reviews and rating_reviews_count == 0 %}
+{% else %}
+  <div class='block-{{ block.id }}' {{ block.shopify_attributes }}>
+    {% render 'rating',
+      rating_style: rating_style,
+      rating_count: rating_count,
+      rating_reviews_count: rating_reviews_count,
+      class: 'body-color'
+    %}
+  </div>
+{% endif %}

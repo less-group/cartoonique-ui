@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unified Configuration Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    .container {
+      margin-bottom: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    .config-section {
+      margin-bottom: 10px;
+    }
+    .config-item {
+      margin-bottom: 5px;
+      display: flex;
+    }
+    .config-label {
+      flex: 1;
+      font-weight: bold;
+    }
+    .config-value {
+      flex: 2;
+      font-family: monospace;
+      word-break: break-all;
+    }
+    .test-button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    .results {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 15px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .pass {
+      color: green;
+    }
+    .fail {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Unified Configuration Test</h1>
+  
+  <div class="container">
+    <h2>Configuration Structure Test</h2>
+    <p>This section tests whether all configuration objects are correctly defined and accessible.</p>
+    
+    <div class="test-buttons">
+      <button id="check-configs" class="test-button">Check Configurations</button>
+      <button id="dump-configs" class="test-button">Dump Configurations</button>
+    </div>
+    
+    <div class="results" id="config-results"></div>
+  </div>
+  
+  <div class="container">
+    <h2>API Client Test</h2>
+    <p>This section tests that the UnifiedApiClient correctly uses the unified configuration.</p>
+    
+    <div class="test-buttons">
+      <button id="test-client" class="test-button">Test API Client</button>
+    </div>
+    
+    <div class="results" id="client-results"></div>
+  </div>
+  
+  <div class="container">
+    <h2>Backward Compatibility Test</h2>
+    <p>This section tests backward compatibility with legacy configuration objects.</p>
+    
+    <div class="test-buttons">
+      <button id="test-compatibility" class="test-button">Test Compatibility</button>
+    </div>
+    
+    <div class="results" id="compatibility-results"></div>
+  </div>
+  
+  <!-- Load configs in the correct order -->
+  <script src="assets/unified-config.js"></script>
+  
+  <!-- Load API client -->
+  <script src="assets/unified-api-client.js"></script>
+  
+  <!-- Test script -->
+  <script>
+    // Helper to log to results
+    function logToResults(elementId, message, isSuccess = null) {
+      const resultsDiv = document.getElementById(elementId);
+      const entry = document.createElement('div');
+      
+      // Format the entry based on success/failure
+      if (isSuccess === true) {
+        entry.classList.add('pass');
+        entry.textContent = '✓ ' + message;
+      } else if (isSuccess === false) {
+        entry.classList.add('fail');
+        entry.textContent = '✗ ' + message;
+      } else {
+        entry.textContent = message;
+      }
+      
+      resultsDiv.appendChild(entry);
+      console.log(message);
+    }
+    
+    // Helper to stringify objects for display
+    function formatObject(obj, depth = 0) {
+      if (depth > 2) return '{ ... }'; // Limit nesting depth
+      if (typeof obj !== 'object' || obj === null) return String(obj);
+      
+      return JSON.stringify(obj, (key, value) => {
+        if (typeof value === 'object' && value !== null && depth > 1) {
+          return '[Object]';
+        }
+        return value;
+      }, 2);
+    }
+    
+    // Test configuration structure and existence
+    function checkConfigurations() {
+      const resultsDiv = document.getElementById('config-results');
+      resultsDiv.innerHTML = '';
+      
+      try {
+        // Check for main unified config
+        if (window.unifiedConfig) {
+          logToResults('config-results', 'window.unifiedConfig exists', true);
+          
+          // Check base URL
+          if (window.unifiedConfig.api?.current()?.baseUrl) {
+            logToResults('config-results', `API base URL: ${window.unifiedConfig.api.current().baseUrl}`, true);
+          } else {
+            logToResults('config-results', 'API base URL is missing', false);
+          }
+          
+          // Check watermark
+          if (window.unifiedConfig.watermark) {
+            logToResults('config-results', 'Watermark configuration exists', true);
+          } else {
+            logToResults('config-results', 'Watermark configuration is missing', false);
+          }
+          
+          // Check environment
+          logToResults('config-results', `Current environment: ${window.unifiedConfig.environment}`, true);
+        } else {
+          logToResults('config-results', 'window.unifiedConfig is missing!', false);
+        }
+        
+        // Check legacy config compatibility
+        if (window.faceSwapConfig) {
+          logToResults('config-results', 'window.faceSwapConfig exists (backward compatibility)', true);
+        } else {
+          logToResults('config-results', 'window.faceSwapConfig is missing!', false);
+        }
+        
+        if (window.pixarConfig) {
+          logToResults('config-results', 'window.pixarConfig exists (backward compatibility)', true);
+        } else {
+          logToResults('config-results', 'window.pixarConfig is missing!', false);
+        }
+        
+        // Check global variables
+        if (window.watermarkImage) {
+          logToResults('config-results', 'window.watermarkImage exists', true);
+        } else {
+          logToResults('config-results', 'window.watermarkImage is missing!', false);
+        }
+        
+        if (window.faceSwapApiUrl) {
+          logToResults('config-results', `window.faceSwapApiUrl: ${window.faceSwapApiUrl}`, true);
+        } else {
+          logToResults('config-results', 'window.faceSwapApiUrl is missing!', false);
+        }
+        
+        if (window.pixarApiUrl) {
+          logToResults('config-results', `window.pixarApiUrl: ${window.pixarApiUrl}`, true);
+        } else {
+          logToResults('config-results', 'window.pixarApiUrl is missing!', false);
+        }
+        
+      } catch (error) {
+        logToResults('config-results', `Error checking configurations: ${error.message}`, false);
+      }
+    }
+    
+    // Dump configurations
+    function dumpConfigurations() {
+      const resultsDiv = document.getElementById('config-results');
+      resultsDiv.innerHTML = '';
+      
+      try {
+        logToResults('config-results', '--- Unified Config ---');
+        logToResults('config-results', formatObject(window.unifiedConfig, 1));
+        
+        logToResults('config-results', '\n--- Face Swap Config ---');
+        logToResults('config-results', formatObject(window.faceSwapConfig, 1));
+        
+        logToResults('config-results', '\n--- Pixar Config ---');
+        logToResults('config-results', formatObject(window.pixarConfig, 1));
+        
+        logToResults('config-results', '\n--- Global Variables ---');
+        logToResults('config-results', `window.watermarkImage: ${formatObject(window.watermarkImage)}`);
+        logToResults('config-results', `window.faceSwapApiUrl: ${window.faceSwapApiUrl}`);
+        logToResults('config-results', `window.pixarApiUrl: ${window.pixarApiUrl}`);
+        
+      } catch (error) {
+        logToResults('config-results', `Error dumping configurations: ${error.message}`, false);
+      }
+    }
+    
+    // Test API client
+    function testApiClient() {
+      const resultsDiv = document.getElementById('client-results');
+      resultsDiv.innerHTML = '';
+      
+      try {
+        logToResults('client-results', 'Creating API client with default options...');
+        
+        // Create client without any options
+        const client = new window.UnifiedApiClient();
+        
+        // Check if it loaded configuration correctly
+        logToResults('client-results', `Client base URL: ${client.baseUrl}`);
+        logToResults('client-results', `Client polling interval: ${client.pollingInterval}`);
+        logToResults('client-results', `Client max polling attempts: ${client.maxPollingAttempts}`);
+        
+        // Check if baseUrl matches unified config
+        if (client.baseUrl === window.unifiedConfig.api.current().baseUrl) {
+          logToResults('client-results', 'API client is using unified configuration baseUrl', true);
+        } else {
+          logToResults('client-results', 'API client is NOT using unified configuration baseUrl', false);
+        }
+        
+        // Test watermark config getter
+        const watermark = client._getDefaultWatermarkConfig();
+        logToResults('client-results', 'Default watermark configuration:', null);
+        logToResults('client-results', formatObject(watermark));
+        
+        if (watermark.url === window.unifiedConfig.watermark.url) {
+          logToResults('client-results', 'API client is using unified watermark configuration', true);
+        } else {
+          logToResults('client-results', 'API client is NOT using unified watermark configuration', false);
+        }
+        
+        logToResults('client-results', 'API client test complete', true);
+      } catch (error) {
+        logToResults('client-results', `Error testing API client: ${error.message}`, false);
+      }
+    }
+    
+    // Test backward compatibility
+    function testCompatibility() {
+      const resultsDiv = document.getElementById('compatibility-results');
+      resultsDiv.innerHTML = '';
+      
+      try {
+        // Test if legacy configs are properly populated
+        
+        // Test faceSwapConfig backward compatibility
+        if (window.faceSwapConfig.api.current().baseUrl === window.unifiedConfig.api.current().baseUrl) {
+          logToResults('compatibility-results', 'faceSwapConfig API URL matches unified config', true);
+        } else {
+          logToResults('compatibility-results', 'faceSwapConfig API URL does NOT match unified config', false);
+        }
+        
+        // Test pixarConfig backward compatibility
+        if (window.pixarConfig.api.current().baseUrl === window.unifiedConfig.api.current().baseUrl) {
+          logToResults('compatibility-results', 'pixarConfig API URL matches unified config', true);
+        } else {
+          logToResults('compatibility-results', 'pixarConfig API URL does NOT match unified config', false);
+        }
+        
+        // Test global variables
+        if (window.watermarkImage === window.unifiedConfig.watermark) {
+          logToResults('compatibility-results', 'watermarkImage global variable references unified config', true);
+        } else {
+          logToResults('compatibility-results', 'watermarkImage global variable does NOT reference unified config', false);
+        }
+        
+        if (window.faceSwapApiUrl === window.unifiedConfig.api.current().baseUrl) {
+          logToResults('compatibility-results', 'faceSwapApiUrl global variable matches unified config', true);
+        } else {
+          logToResults('compatibility-results', 'faceSwapApiUrl global variable does NOT match unified config', false);
+        }
+        
+        if (window.pixarApiUrl === window.unifiedConfig.api.current().baseUrl) {
+          logToResults('compatibility-results', 'pixarApiUrl global variable matches unified config', true);
+        } else {
+          logToResults('compatibility-results', 'pixarApiUrl global variable does NOT match unified config', false);
+        }
+        
+        // Test creating clients with legacy configuration
+        logToResults('compatibility-results', 'Testing API client with faceSwapConfig...');
+        const testClient1 = new window.UnifiedApiClient({
+          baseUrl: window.faceSwapConfig.api.current().baseUrl
+        });
+        
+        if (testClient1.baseUrl === window.unifiedConfig.api.current().baseUrl) {
+          logToResults('compatibility-results', 'API client with faceSwapConfig works correctly', true);
+        } else {
+          logToResults('compatibility-results', 'API client with faceSwapConfig does NOT work correctly', false);
+        }
+        
+        logToResults('compatibility-results', 'Backward compatibility test complete', true);
+      } catch (error) {
+        logToResults('compatibility-results', `Error testing backward compatibility: ${error.message}`, false);
+      }
+    }
+    
+    // Set up event listeners when the document is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('check-configs').addEventListener('click', checkConfigurations);
+      document.getElementById('dump-configs').addEventListener('click', dumpConfigurations);
+      document.getElementById('test-client').addEventListener('click', testApiClient);
+      document.getElementById('test-compatibility').addEventListener('click', testCompatibility);
+      
+      // Auto-run the first test
+      setTimeout(checkConfigurations, 500);
+    });
+  </script>
+</body>
+</html> 

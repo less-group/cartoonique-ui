@@ -1,0 +1,133 @@
+{%- liquid
+  assign options = block.settings
+  assign is_inside_sidebar = is_inside_sidebar | default: false
+
+  assign quote_product = options.quote_product
+  assign is_with_image = false
+
+  if options.quote_image != blank
+    assign quote_image = options.quote_image
+  else
+    assign quote_image = quote_product.featured_image
+  endif
+
+  if quote_image != blank
+    assign is_with_image = true
+  endif
+
+  assign image_class = 'quote__image'
+  if is_inside_sidebar == false
+    assign image_class = image_class | append: ' zoom'
+  endif
+-%}
+
+{%- if options.link == blank and is_inside_sidebar == false -%}
+  <sidebar-button
+    class='{{ class }} testimonials__sidebar-button {% if slide_type  == 'vertical' %}testimonials__quote--vertical{% endif %} block-{{ block.id }} zoom-parent-for-hover'
+  >
+    <quote-component
+      data-sidebar-button
+      data-sidebar-id='quote-sidebar-{{block.id}}'
+      class='quote quote--with-sidebar {% if with_background == true %}quote--with-background{% endif %} {% if with_background == false %}quote--without-background{% endif %} {% if slide_type  == 'vertical' %}quote--vertical{% endif %}'
+      tabindex='0'
+      {{ block.shopify_attributes }}
+      block-id='{{ block.id }}'
+    >
+{%- else -%}
+  <quote-component  
+    {{ block.shopify_attributes }}
+    block-id='{{ block.id }}'
+    class='{{ class }} quote {% if with_background == true %}quote--with-background{% endif %} {% if slide_type  == 'vertical' %}quote--vertical{% endif %} zoom-parent-for-hover'
+  >
+{%- endif -%}
+
+{% if quote_image != blank %}
+  {% if is_inside_sidebar %}
+    <img {% render 'image-attributes', image: quote_image, size: 'medium', class: image_class %} >
+  {% else %}
+    <div class="quote__image-wrapper">
+      <img data-remove-animation-class {% render 'image-attributes', image: quote_image, size: 'small', class: image_class %} >
+    </div>
+  {% endif %}
+{% endif %}
+
+<max-lines-component class='quote__content {% if is_inside_sidebar == false and with_background == false %}quote__content--without-right-padding{% endif %} {% if is_inside_sidebar == false and with_background == false and is_with_image == false %}quote__content--without-aside-paddings{% endif %}'>
+  {%- if options.link != blank -%}
+    <a
+      href='{{ options.link.url }}'
+      class='quote__link unstyled-link'
+      data-quote-link
+      aria-label='{{ options.link.title }}'
+    ></a>
+  {%- endif -%}
+
+  {% if show_rating == true %}
+    {%- render 'rating', rating_style: 'stars_only', rating_count: options.rating, rating_reviews_count: 0 -%}
+  {% endif %}
+
+  {% if quote_product != blank %}
+    <a
+      href='{{ quote_product.url }}'
+      class='link'
+      data-quote-product-link
+      aria-label='{{ quote_product.title }}'
+    >
+      <span class="link-parent-for-hover">
+        <span class='link__text quote__product-title'>{{- quote_product.title -}}</span>
+      </span>
+    </a>
+
+    <template data-quote-link-template> <a class='quote__link unstyled-link' aria-label='{{ quote_product.title }}'></a></template>
+  {% endif %}
+
+  {%- if options.text != blank -%}
+    {% if slide_type == 'vertical' %}
+      <div
+        class='quote__text-height {% if is_with_image == true %}quote__text-height--with-image{% endif %}'
+        data-quote-height
+      >
+    {% endif %}
+
+    <div
+      class='quote__text-wrap'
+      {% if is_inside_sidebar == false %}
+        data-quote-line-clamp
+      {% endif %}
+    >
+      <div
+        class='quote__text quote__text--{{ text_variant | default: 'medium' }} {% if is_inside_sidebar == false %}quote__text--truncate{% endif %}'
+        {% if is_inside_sidebar == false %}
+          data-quote-line-clamp-target
+        {% endif %}
+      >
+        <span>
+          {{- options.text -}}
+        </span>
+      </div>
+    </div>
+
+    {% if slide_type == 'vertical' %}
+      </div>
+    {% endif %}
+  {%- endif -%}
+
+  <div class='quote__details'>
+    {%- if options.author_image != blank -%}      
+      {{ options.author_image | image_url: width: 150 | image_tag: height: 150, class: 'quote__avatar-image', loading: 'lazy' }}
+    {%- else -%}
+      {% render 'icon', icon_name: 'quote-bold', class: 'quote__avatar-image' %}
+    {%- endif -%}
+
+    <div class='quote__details-credentials'>
+      <div class='quote__author-name'>{{ options.author_name }}</div>
+      <div class='quote__author-details'>{{ options.author_details }}</div>
+    </div>
+  </div>
+</max-lines-component>
+
+{%- if options.link == blank and is_inside_sidebar == false -%}
+  </quote-component>
+  </sidebar-button>
+{%- else -%}
+  </quote-component>
+{%- endif -%}

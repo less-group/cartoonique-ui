@@ -1,0 +1,7 @@
+.product-info {
+  &__price-with-reviews {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+}

@@ -1,0 +1,1988 @@
+<!-- Load component CSS -->
+{{ 'pixar-transform-file-input.css' | asset_url | stylesheet_tag }}
+
+<!-- Improved script loading to prevent duplicate loads -->
+<script>
+  // Add global debug helper function that works anywhere
+  window.pixarDebug = function(message, data) {
+    const debugElement = document.createElement('div');
+    debugElement.style.position = 'fixed';
+    debugElement.style.bottom = '10px';
+    debugElement.style.right = '10px';
+    debugElement.style.zIndex = '99999';
+    debugElement.style.background = 'rgba(0,0,0,0.8)';
+    debugElement.style.color = 'white';
+    debugElement.style.padding = '10px';
+    debugElement.style.borderRadius = '5px';
+    debugElement.style.maxWidth = '80%';
+    debugElement.style.maxHeight = '200px';
+    debugElement.style.overflow = 'auto';
+    debugElement.style.fontSize = '12px';
+    debugElement.style.fontFamily = 'monospace';
+    
+    let content = message;
+    if (data) {
+      try {
+        content += ': ' + JSON.stringify(data);
+      } catch (e) {
+        content += ': [Object cannot be stringified]';
+      }
+    }
+    
+    debugElement.textContent = content;
+    document.body.appendChild(debugElement);
+    
+    // Auto-remove after 10 seconds
+    setTimeout(() => {
+      if (document.body.contains(debugElement)) {
+        document.body.removeChild(debugElement);
+      }
+    }, 10000);
+    
+    console.log('PIXAR DEBUG:', message, data);
+  };
+
+  (function() {
+    // Global tracker to prevent duplicate init attempts
+    if (window.pixarScriptsLoading) {
+      console.log('Pixar scripts are already being loaded, skipping');
+      return;
+    }
+    window.pixarScriptsLoading = true;
+    
+    // Helper function to load scripts with better error handling and cache busting
+    function loadScript(src, id) {
+      return new Promise((resolve, reject) => {
+        // Check if script already exists by ID
+        if (document.getElementById(id)) {
+          console.log(`Script ${id} already loaded, skipping`);
+          resolve();
+          return;
+        }
+        
+        // Check if script already exists by src
+        const existingScripts = document.querySelectorAll('script[src*="' + src.split('/').pop().split('?')[0] + '"]');
+        if (existingScripts.length > 0) {
+          console.log(`Script ${src} already loaded with different ID, skipping`);
+          resolve();
+          return;
+        }
+        
+        // Version for busting cache and preventing 404s
+        const timestamp = new Date().getTime();
+        // Create a new script tag with a stronger cache-busting parameter
+        let cacheBustSrc = src;
+        if (cacheBustSrc.indexOf('?') === -1) {
+          cacheBustSrc = `${src}?v=${timestamp}`;
+        } else {
+          cacheBustSrc = `${src}&v=${timestamp}`;
+        }
+        
+        const script = document.createElement('script');
+        script.id = id;
+        script.src = cacheBustSrc;
+        script.async = true;
+        
+        // Add a short timeout to detect script loading issues
+        const timeout = setTimeout(() => {
+          console.warn(`Script ${id} is taking too long to load, continuing anyway`);
+          resolve(); // Resolve anyway to not block other scripts
+        }, 5000);
+        
+        script.onload = () => {
+          clearTimeout(timeout);
+          console.log(`Script ${id} loaded successfully`);
+          resolve();
+        };
+        
+        script.onerror = (error) => {
+          clearTimeout(timeout);
+          console.error(`Failed to load script ${id}`, error);
+          
+          // Try one more time with a different cache-busting approach
+          const retryScript = document.createElement('script');
+          retryScript.id = id + '-retry';
+          // Use a completely different cache busting technique
+          retryScript.src = `${src}?nocache=${Math.random().toString(36).substring(2,7)}-${timestamp}`;
+          retryScript.async = true;
+          
+          retryScript.onload = () => {
+            console.log(`Script ${id} loaded successfully on retry`);
+            resolve();
+          };
+          
+          retryScript.onerror = () => {
+            console.error(`Failed to load script ${id} even after retry`);
+            resolve(); // Resolve anyway to not block other scripts
+          };
+          
+          document.head.appendChild(retryScript);
+        };
+        
+        document.head.appendChild(script);
+      });
+    }
+    
+    // Load dependencies in sequence with better error handling
+    async function loadDependencies() {
+      try {
+        // Load dependencies in the correct order
+        console.log('Starting to load pixar dependencies');
+        
+        // Load config first - it's needed by other scripts
+        await loadScript('{{ "pixar-config.js" | asset_url }}', 'pixar-config-script');
+        
+        // Load API client next
+        await loadScript('{{ "pixar-api-client.js" | asset_url }}', 'pixar-api-client-script');
+        
+        // Finally load the component JS
+        await loadScript('{{ "pixar-transform-file-input.js" | asset_url }}', 'pixar-transform-file-input-script');
+        
+        // Mark as loaded
+        window.pixarDependenciesLoaded = true;
+        console.log('All pixar dependencies loaded successfully');
+        
+        // Initialize direct event listeners as fallback
+        initializeFallbackListeners();
+      } catch (error) {
+        console.error('Error loading pixar dependencies:', error);
+        // Initialize direct event listeners as fallback
+        initializeFallbackListeners();
+      } finally {
+        // Allow future load attempts if needed
+        window.pixarScriptsLoading = false;
+      }
+    }
+    
+    // Initialize direct event listeners as fallback
+    function initializeFallbackListeners() {
+      // Only run this once
+      if (window.pixarFallbackListenersInitialized) return;
+      window.pixarFallbackListenersInitialized = true;
+      
+      console.log('Initializing fallback event listeners for buttons');
+      window.pixarDebug('Initializing fallback listeners');
+      
+      // Direct event listeners for open buttons
+      const openButtons = document.querySelectorAll('.file-input-wrapper__popup-open-btn');
+      window.pixarDebug(`Found ${openButtons.length} open buttons`);
+      
+      openButtons.forEach((button, index) => {
+        // Remove existing listeners by cloning
+        const newButton = button.cloneNode(true);
+        if (button.parentNode) {
+          button.parentNode.replaceChild(newButton, button);
+        }
+        
+        newButton.addEventListener('click', function(e) {
+          e.preventDefault();
+          console.log('Open button clicked via fallback handler');
+          window.pixarDebug('Open button clicked', {buttonIndex: index});
+          
+          const wrapper = this.closest('.file-input-wrapper');
+          if (!wrapper) {
+            window.pixarDebug('No wrapper found!');
+            return;
+          }
+          
+          window.pixarDebug('Wrapper found', {id: wrapper.id, class: wrapper.className});
+          
+          const popup = wrapper.querySelector('[data-pixar-popup]');
+          if (popup) {
+            window.pixarDebug('Popup found, showing it');
+            
+            // Force styles with !important to override any conflicting styles
+            popup.classList.add('active');
+            popup.setAttribute('style', 'display: block !important; visibility: visible !important; opacity: 1 !important; z-index: 9999 !important; position: fixed !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; max-width: 90% !important; max-height: 90% !important; overflow: auto !important;');
+            
+            const overlay = document.querySelector('.file-input-wrapper__overlay');
+            if (overlay) {
+              overlay.classList.add('active');
+              overlay.setAttribute('style', 'display: block !important; visibility: visible !important; opacity: 0.8 !important; z-index: 9998 !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background: rgba(0,0,0,0.7) !important;');
+            }
+            
+            document.body.style.overflow = 'hidden';
+          } else {
+            window.pixarDebug('Popup not found!');
+            
+            // Debug what elements are actually in the wrapper
+            const children = wrapper.children;
+            let childInfo = [];
+            for (let i = 0; i < children.length; i++) {
+              childInfo.push({
+                tagName: children[i].tagName,
+                className: children[i].className,
+                id: children[i].id,
+                attributes: Array.from(children[i].attributes).map(attr => `${attr.name}="${attr.value}"`).join(' ')
+              });
+            }
+            window.pixarDebug('Wrapper children:', childInfo);
+          }
+        });
+      });
+      
+      // Direct event listeners for close buttons
+      const closeButtons = document.querySelectorAll('[data-close-pixar-popup]');
+      closeButtons.forEach(button => {
+        // Remove existing listeners by cloning
+        const newButton = button.cloneNode(true);
+        if (button.parentNode) {
+          button.parentNode.replaceChild(newButton, button);
+        }
+        
+        newButton.addEventListener('click', function() {
+          console.log('Close button clicked via fallback handler');
+          
+          const popup = this.closest('[data-pixar-popup]');
+          if (popup) {
+            popup.classList.remove('active');
+            popup.style.display = 'none';
+            
+            const overlay = document.querySelector('.file-input-wrapper__overlay');
+            if (overlay) {
+              overlay.classList.remove('active');
+            }
+            
+            document.body.style.overflow = '';
+          }
+        });
+      });
+    }
+    
+    // Start loading dependencies
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadDependencies);
+    } else {
+      loadDependencies();
+    }
+    
+    // Also run when Shopify theme editor makes changes
+    document.addEventListener('shopify:section:load', function() {
+      console.log('Section loaded in theme editor, reinitializing');
+      window.pixarScriptsLoading = false; // Allow loading again
+      loadDependencies();
+    });
+  })();
+</script>
+
+<!-- Add an immediately executed debug script to check structure on page load -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+      if (window.pixarDebug) {
+        // Check if our elements exist
+        const fileInputWrapper = document.querySelector('.file-input-wrapper');
+        const popup = document.querySelector('[data-pixar-popup]');
+        const openButton = document.querySelector('.file-input-wrapper__popup-open-btn');
+        
+        window.pixarDebug('Page loaded, checking elements', {
+          fileInputWrapperExists: !!fileInputWrapper,
+          popupExists: !!popup,
+          openButtonExists: !!openButton
+        });
+        
+        // Add direct event listener as last resort
+        if (openButton) {
+          openButton.addEventListener('click', function(e) {
+            window.pixarDebug('Direct click handler fired');
+            e.preventDefault();
+            
+            if (popup) {
+              popup.setAttribute('style', 'display: block !important; visibility: visible !important; opacity: 1 !important; z-index: 9999 !important; position: fixed !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; max-width: 90% !important; max-height: 90% !important; overflow: auto !important;');
+              window.pixarDebug('Popup directly shown');
+            } else {
+              window.pixarDebug('Popup not found in direct handler');
+            }
+          });
+        }
+      }
+    }, 2000); // Delay to ensure everything is loaded
+  });
+</script>
+
+<!-- Add a direct debug button at the bottom of the component -->
+<div style="position: fixed; bottom: 50px; right: 10px; z-index: 99999; background: #333; color: white; padding: 10px; border-radius: 5px;">
+  <button onclick="debugPixarPopup()" style="background: #f00; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">
+    DEBUG POP-UP
+  </button>
+</div>
+<script>
+  function debugPixarPopup() {
+    console.log('Manual debug triggered');
+    
+    // Create a detailed debug popup
+    const debugOverlay = document.createElement('div');
+    debugOverlay.style.position = 'fixed';
+    debugOverlay.style.top = '0';
+    debugOverlay.style.left = '0';
+    debugOverlay.style.width = '100%';
+    debugOverlay.style.height = '100%';
+    debugOverlay.style.backgroundColor = 'rgba(0,0,0,0.9)';
+    debugOverlay.style.color = 'white';
+    debugOverlay.style.padding = '20px';
+    debugOverlay.style.boxSizing = 'border-box';
+    debugOverlay.style.zIndex = '999999';
+    debugOverlay.style.overflowY = 'auto';
+    debugOverlay.style.fontFamily = 'monospace';
+    
+    // Add close button
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'Close Debug';
+    closeButton.style.position = 'fixed';
+    closeButton.style.top = '10px';
+    closeButton.style.right = '10px';
+    closeButton.style.backgroundColor = '#f00';
+    closeButton.style.color = 'white';
+    closeButton.style.border = 'none';
+    closeButton.style.padding = '10px 20px';
+    closeButton.style.borderRadius = '5px';
+    closeButton.style.cursor = 'pointer';
+    closeButton.addEventListener('click', function() {
+      document.body.removeChild(debugOverlay);
+    });
+    debugOverlay.appendChild(closeButton);
+    
+    // Debug header
+    const header = document.createElement('h2');
+    header.textContent = 'DEBUG INFORMATION';
+    header.style.color = 'white';
+    debugOverlay.appendChild(header);
+    
+    // Check file inputs
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    const fileInputSection = document.createElement('div');
+    fileInputSection.style.marginBottom = '30px';
+    
+    const fileInputHeader = document.createElement('h3');
+    fileInputHeader.textContent = `File Inputs Found: ${fileInputs.length}`;
+    fileInputHeader.style.color = '#4caf50';
+    fileInputSection.appendChild(fileInputHeader);
+    
+    fileInputs.forEach((input, index) => {
+      const inputInfo = document.createElement('div');
+      inputInfo.style.border = '1px solid #555';
+      inputInfo.style.padding = '10px';
+      inputInfo.style.margin = '10px 0';
+      inputInfo.style.borderRadius = '5px';
+      
+      const style = window.getComputedStyle(input);
+      const isVisible = style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+      const isAccessible = input.offsetParent !== null;
+      
+      // Check if input is properly positioned
+      const inputRect = input.getBoundingClientRect();
+      const isOnScreen = inputRect.width > 0 && inputRect.height > 0 && 
+                        inputRect.top < window.innerHeight && inputRect.bottom > 0 && 
+                        inputRect.left < window.innerWidth && inputRect.right > 0;
+      
+      inputInfo.innerHTML = `
+        <strong>File Input #${index}</strong><br>
+        ID: ${input.id || 'No ID'}<br>
+        Type: ${input.type}<br>
+        Accept: ${input.accept || 'Any file'}<br>
+        Display: ${style.display}<br>
+        Visibility: ${style.visibility}<br>
+        Opacity: ${style.opacity}<br>
+        Position: ${style.position}<br>
+        Is Visible: ${isVisible ? 'Yes' : 'No'}<br>
+        Is Accessible: ${isAccessible ? 'Yes' : 'No'}<br>
+        Is On Screen: ${isOnScreen ? 'Yes' : 'No'}
+      `;
+      
+      // Add test button
+      const testButton = document.createElement('button');
+      testButton.textContent = 'Test This Input';
+      testButton.style.backgroundColor = '#4caf50';
+      testButton.style.color = 'white';
+      testButton.style.border = 'none';
+      testButton.style.padding = '5px 10px';
+      testButton.style.borderRadius = '3px';
+      testButton.style.marginTop = '10px';
+      testButton.style.cursor = 'pointer';
+      
+      testButton.addEventListener('click', function() {
+        // Try to click the input
+        try {
+          input.click();
+          console.log(`Clicked file input #${index}`, input);
+          
+          // Update status
+          const status = document.createElement('p');
+          status.textContent = 'Input clicked! Check for file dialog...';
+          status.style.color = '#4caf50';
+          inputInfo.appendChild(status);
+        } catch (error) {
+          console.error(`Error clicking file input #${index}:`, error);
+          
+          // Update status
+          const status = document.createElement('p');
+          status.textContent = `Error: ${error.message}`;
+          status.style.color = '#f44336';
+          inputInfo.appendChild(status);
+        }
+      });
+      
+      inputInfo.appendChild(testButton);
+      fileInputSection.appendChild(inputInfo);
+    });
+    
+    debugOverlay.appendChild(fileInputSection);
+    
+    // Check upload buttons
+    const uploadButtonsSection = document.createElement('div');
+    uploadButtonsSection.style.marginBottom = '30px';
+    
+    const uploadButtons = Array.from(document.querySelectorAll('button, .btn, [role="button"], label'))
+      .filter(button => {
+        const text = button.textContent.trim().toLowerCase();
+        return text.includes('upload') || text.includes('photo') || text.includes('bild');
+      });
+    
+    const uploadButtonHeader = document.createElement('h3');
+    uploadButtonHeader.textContent = `Upload Buttons Found: ${uploadButtons.length}`;
+    uploadButtonHeader.style.color = '#2196f3';
+    uploadButtonsSection.appendChild(uploadButtonHeader);
+    
+    uploadButtons.forEach((button, index) => {
+      const buttonInfo = document.createElement('div');
+      buttonInfo.style.border = '1px solid #555';
+      buttonInfo.style.padding = '10px';
+      buttonInfo.style.margin = '10px 0';
+      buttonInfo.style.borderRadius = '5px';
+      
+      const style = window.getComputedStyle(button);
+      const isVisible = style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+      const isAccessible = button.offsetParent !== null;
+      
+      // Button text
+      const text = button.textContent.trim();
+      
+      // Check if it's a label
+      const isLabel = button.tagName === 'LABEL';
+      const forAttribute = isLabel ? button.getAttribute('for') : null;
+      const forInput = forAttribute ? document.getElementById(forAttribute) : null;
+      
+      // Contains file input?
+      const containsFileInput = button.querySelector('input[type="file"]') !== null;
+      
+      buttonInfo.innerHTML = `
+        <strong>Button #${index}: "${text}"</strong><br>
+        Tag: ${button.tagName}<br>
+        Class: ${button.className}<br>
+        Is Visible: ${isVisible ? 'Yes' : 'No'}<br>
+        Is Accessible: ${isAccessible ? 'Yes' : 'No'}<br>
+        Is Label: ${isLabel ? 'Yes' : 'No'}<br>
+        For Input: ${forAttribute || 'None'}<br>
+        For Input Found: ${forInput ? 'Yes' : 'No'}<br>
+        Contains File Input: ${containsFileInput ? 'Yes' : 'No'}
+      `;
+      
+      // Add test button
+      const testButton = document.createElement('button');
+      testButton.textContent = 'Test This Button';
+      testButton.style.backgroundColor = '#2196f3';
+      testButton.style.color = 'white';
+      testButton.style.border = 'none';
+      testButton.style.padding = '5px 10px';
+      testButton.style.borderRadius = '3px';
+      testButton.style.marginTop = '10px';
+      testButton.style.cursor = 'pointer';
+      
+      testButton.addEventListener('click', function() {
+        // Try to click the button
+        try {
+          button.click();
+          console.log(`Clicked button #${index}`, button);
+          
+          // Update status
+          const status = document.createElement('p');
+          status.textContent = 'Button clicked! Check for file dialog...';
+          status.style.color = '#4caf50';
+          buttonInfo.appendChild(status);
+        } catch (error) {
+          console.error(`Error clicking button #${index}:`, error);
+          
+          // Update status
+          const status = document.createElement('p');
+          status.textContent = `Error: ${error.message}`;
+          status.style.color = '#f44336';
+          buttonInfo.appendChild(status);
+        }
+      });
+      
+      buttonInfo.appendChild(testButton);
+      uploadButtonsSection.appendChild(buttonInfo);
+    });
+    
+    debugOverlay.appendChild(uploadButtonsSection);
+    
+    // Add direct file upload field
+    const directUploadSection = document.createElement('div');
+    directUploadSection.style.marginBottom = '30px';
+    directUploadSection.style.backgroundColor = '#333';
+    directUploadSection.style.padding = '20px';
+    directUploadSection.style.borderRadius = '10px';
+    
+    const directUploadHeader = document.createElement('h3');
+    directUploadHeader.textContent = 'Direct File Upload Test';
+    directUploadHeader.style.color = '#ff9800';
+    directUploadSection.appendChild(directUploadHeader);
+    
+    // Create file input
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.style.display = 'block';
+    fileInput.style.margin = '10px 0';
+    fileInput.style.padding = '10px';
+    fileInput.style.width = '100%';
+    fileInput.style.backgroundColor = '#444';
+    fileInput.style.color = 'white';
+    fileInput.style.border = '1px solid #666';
+    fileInput.style.borderRadius = '5px';
+    
+    directUploadSection.appendChild(fileInput);
+    
+    // Add process button
+    const processButton = document.createElement('button');
+    processButton.textContent = 'Process Selected File';
+    processButton.style.backgroundColor = '#ff9800';
+    processButton.style.color = 'white';
+    processButton.style.border = 'none';
+    processButton.style.padding = '10px 20px';
+    processButton.style.borderRadius = '5px';
+    processButton.style.marginTop = '10px';
+    processButton.style.cursor = 'pointer';
+    
+    processButton.addEventListener('click', function() {
+      if (fileInput.files && fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        console.log('Processing file directly:', file);
+        
+        // Show file details
+        const fileDetails = document.createElement('div');
+        fileDetails.style.marginTop = '10px';
+        fileDetails.innerHTML = `
+          <p>File selected: ${file.name}</p>
+          <p>Size: ${Math.round(file.size / 1024)} KB</p>
+          <p>Type: ${file.type}</p>
+        `;
+        
+        // Create preview
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.style.maxWidth = '100%';
+          img.style.maxHeight = '200px';
+          img.style.marginTop = '10px';
+          img.style.border = '1px solid #666';
+          
+          fileDetails.appendChild(img);
+          
+          // Try to find and use custom element
+          try {
+            const customElement = document.querySelector('pixar-transform-file-input');
+            if (customElement) {
+              console.log('Found custom element, trying direct methods');
+              
+              // Try multiple approaches
+              if (customElement.state) {
+                customElement.state.file = file;
+                console.log('Set file in state');
+              }
+              
+              if (typeof customElement.transformImage === 'function') {
+                try {
+                  customElement.transformImage();
+                  fileDetails.innerHTML += '<p style="color: #4caf50;">transformImage() called successfully!</p>';
+                } catch (error) {
+                  console.error('Error calling transformImage:', error);
+                  fileDetails.innerHTML += `<p style="color: #f44336;">Error calling transformImage: ${error.message}</p>`;
+                }
+              } else {
+                fileDetails.innerHTML += '<p style="color: #f44336;">transformImage method not found!</p>';
+              }
+            } else {
+              fileDetails.innerHTML += '<p style="color: #f44336;">Custom element not found!</p>';
+            }
+          } catch (error) {
+            console.error('Error processing file:', error);
+            fileDetails.innerHTML += `<p style="color: #f44336;">Error: ${error.message}</p>`;
+          }
+        };
+        
+        reader.readAsDataURL(file);
+        directUploadSection.appendChild(fileDetails);
+      } else {
+        alert('Please select a file first');
+      }
+    });
+    
+    directUploadSection.appendChild(processButton);
+    debugOverlay.appendChild(directUploadSection);
+    
+    // Add to body
+    document.body.appendChild(debugOverlay);
+  }
+</script>
+
+<!-- Add a script for handling progress updates -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Setup progress tracking functions
+    window.pixarUpdateProgress = function(percent, stage) {
+      console.log(`Updating progress: ${percent}%, stage: ${stage}`);
+      
+      // Update progress bar width
+      const progressBars = document.querySelectorAll('[data-progress-bar]');
+      progressBars.forEach(bar => {
+        bar.style.width = `${percent}%`;
+      });
+      
+      // Update percentage text
+      const percentageElements = document.querySelectorAll('[data-progress-percentage]');
+      percentageElements.forEach(element => {
+        element.textContent = `${Math.round(percent)}%`;
+      });
+      
+      // Update stage text if provided
+      if (stage) {
+        const stageElements = document.querySelectorAll('[data-progress-stage]');
+        stageElements.forEach(element => {
+          element.textContent = stage;
+        });
+      } else {
+        // Set appropriate stage based on percentage
+        const stageText = getStageTextFromPercentage(percent);
+        const stageElements = document.querySelectorAll('[data-progress-stage]');
+        stageElements.forEach(element => {
+          element.textContent = stageText;
+        });
+      }
+    };
+    
+    // Helper function to determine stage text based on percentage
+    function getStageTextFromPercentage(percent) {
+      if (percent < 10) {
+        return 'Hochladen...';
+      } else if (percent < 30) {
+        return 'Analysieren...';
+      } else if (percent < 60) {
+        return 'Transformieren...';
+      } else if (percent < 90) {
+        return 'Optimieren...';
+      } else {
+        return 'Fertigstellen...';
+      }
+    }
+    
+    // Listen for pixar-transform-progress events
+    document.addEventListener('pixar-transform-progress', function(event) {
+      if (event.detail && typeof event.detail.progress !== 'undefined') {
+        window.pixarUpdateProgress(event.detail.progress, event.detail.stage);
+      }
+    });
+    
+    // Listen for pixar-transform-complete events
+    document.addEventListener('pixar-transform-complete', function(event) {
+      console.log('Transform complete, updating progress to 100%');
+      window.pixarUpdateProgress(100, 'Abgeschlossen!');
+      
+      // Update processing title and description
+      const title = document.querySelector('.upload-popup__processing-title');
+      const description = document.querySelector('.upload-popup__processing-description');
+      
+      if (title) {
+        title.textContent = 'Fertig!';
+      }
+      
+      if (description) {
+        description.textContent = 'Dein Bild wurde erfolgreich transformiert und wird jetzt angezeigt.';
+      }
+    });
+    
+    // Listen for pixar-transform-error events
+    document.addEventListener('pixar-transform-error', function(event) {
+      console.log('Transform error, updating UI');
+      
+      const title = document.querySelector('.upload-popup__processing-title');
+      if (title) {
+        title.textContent = 'Ein Fehler ist aufgetreten';
+        title.style.color = '#ff0000';
+      }
+    });
+  });
+</script>
+
+<!-- Add inline styles to hide the debug popup button -->
+<style>
+  .debug-pop-up-button, 
+  #debug-pop-up, 
+  [id*="debug"], 
+  [class*="debug"],
+  button[id*="debug"],
+  button[class*="debug"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+</style>
+
+{% assign section_id = section_id | default: 'main' %}
+{% assign color_index = null %}
+
+{% for option in product.options_with_values %}
+  {% if option.name == 'Color' %}
+    {% assign color_index = forloop.index0 %}
+  {% endif %}
+{% endfor %}
+
+{% capture current_product_color %}
+  {% if color_index != nil %}
+    {% for variant in product.variants %}
+      {% if variant.id == product.selected_or_first_available_variant.id %}
+        {{ variant.options[color_index] | strip | downcase }}
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    unknown
+  {% endif %}
+{% endcapture %}
+
+{% assign upload_button_id = 'upload-button-' | append: section_id %}
+{% assign open_popup_button_id = 'popup-open-btn-' | append: section_id %}
+
+{% if customer.id != blank %}
+  {% assign customer_id = 'gid://shopify/Customer/' | append: customer.id %}
+{% endif %}
+
+{% assign product_variant_id = product.selected_or_first_available_variant.id %}
+{% assign product_image_url = product.selected_or_first_available_variant.image | image_url: 'master' %}
+{% assign cdn_url = 'https://cdn.shopify.com/s/files/1/0626/3416/4430/' %}
+
+{% assign target_image_url = cdn_url | append: product_image_url %}
+{% assign print_image_url = cdn_url | append: product.metafields.pixar.print_image.value | default: product.metafields.faceswap.print_image.value %}
+
+<pixar-transform-file-input 
+  data-section-id="{{ section_id }}" 
+  class="file-input-wrapper-{{ section_id }} file-input-wrapper" 
+  data-product-variant-id="{{ product_variant_id }}" 
+  data-product-id="{{ product.id }}" 
+  data-customer-id="{{ customer_id }}" 
+  data-target-image-url="{{ target_image_url }}" 
+  data-print-image-url="{{ print_image_url }}" 
+  data-color="{{ current_product_color | strip | downcase }}">
+  
+  <!-- Popup for file upload -->
+  <div data-pixar-popup class="file-input-wrapper__popup upload-popup">
+    <!-- Remove overlay div -->
+    <div class="upload-popup__container">
+      <!-- Close button -->
+      <button type="button" data-close-pixar-popup class="upload-popup__close-btn" aria-label="Close">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <!-- Main popup content -->
+      <div data-popup-content class="upload-popup__content">
+        <h2 class="upload-popup__title">KOSTENLOSE VORSCHAU, ERSTELLE DEINS JETZT:</h2>
+
+        <!-- New photo examples layout based on first screenshot -->
+        <div class="photo-guidelines-container">
+          <!-- BAD PHOTO section -->
+          <h2 class="photo-section-title" style="color: #FF4444; font-size: 28px; text-align: center; margin-bottom: 20px; font-weight: bold;">BAD PHOTO</h2>
+          
+          <div class="photo-examples-row" style="display: flex; justify-content: space-around; margin-bottom: 30px;">
+            <!-- Example 1: Far/Blurry -->
+            <div class="photo-example" style="text-align: center; width: 30%;">
+              <div class="photo-frame" style="position: relative; border: 2px solid #FF4444; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/bad_photo_far.jpg?v=1683712345" alt="Far/Blurry Example" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://placehold.co/200x200/ffeeee/ff4444?text=FAR';this.onerror='';">
+                <div class="x-mark" style="position: absolute; top: 5px; right: 5px; background-color: #FF4444; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✕</div>
+              </div>
+              <p style="font-weight: bold; color: #FF4444; margin: 0; text-transform: uppercase;">FAR/BLURRY</p>
+            </div>
+            
+            <!-- Example 2: Glasses -->
+            <div class="photo-example" style="text-align: center; width: 30%;">
+              <div class="photo-frame" style="position: relative; border: 2px solid #FF4444; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/bad_photo_glasses.jpg?v=1683712345" alt="Glasses Example" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://placehold.co/200x200/ffeeee/ff4444?text=GLASSES';this.onerror='';">
+                <div class="x-mark" style="position: absolute; top: 5px; right: 5px; background-color: #FF4444; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✕</div>
+              </div>
+              <p style="font-weight: bold; color: #FF4444; margin: 0; text-transform: uppercase;">GLASSES</p>
+            </div>
+            
+            <!-- Example 3: 2+ People -->
+            <div class="photo-example" style="text-align: center; width: 30%;">
+              <div class="photo-frame" style="position: relative; border: 2px solid #FF4444; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/bad_photo_multiple.jpg?v=1683712345" alt="Multiple People Example" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://placehold.co/200x200/ffeeee/ff4444?text=2%2B+PEOPLE';this.onerror='';">
+                <div class="x-mark" style="position: absolute; top: 5px; right: 5px; background-color: #FF4444; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✕</div>
+              </div>
+              <p style="font-weight: bold; color: #FF4444; margin: 0; text-transform: uppercase;">2+ PEOPLE</p>
+            </div>
+          </div>
+          
+          <!-- GOOD PHOTO section -->
+          <h2 class="photo-section-title" style="color: #33CC66; font-size: 28px; text-align: center; margin-bottom: 20px; font-weight: bold;">GOOD PHOTO</h2>
+          
+          <div class="photo-examples-row" style="display: flex; justify-content: space-around; margin-bottom: 30px;">
+            <!-- Example 1: Close-up -->
+            <div class="photo-example" style="text-align: center; width: 30%;">
+              <div class="photo-frame" style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_closeup.jpg?v=1683712345" alt="Close-up Example" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://placehold.co/200x200/eeffee/33cc66?text=CLOSE-UP';this.onerror='';">
+                <div class="check-mark" style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>
+              </div>
+              <p style="font-weight: bold; color: #33CC66; margin: 0; text-transform: uppercase;">CLOSE-UP</p>
+            </div>
+            
+            <!-- Example 2: Clear -->
+            <div class="photo-example" style="text-align: center; width: 30%;">
+              <div class="photo-frame" style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_clear.jpg?v=1683712345" alt="Clear Example" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://placehold.co/200x200/eeffee/33cc66?text=CLEAR';this.onerror='';">
+                <div class="check-mark" style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>
+              </div>
+              <p style="font-weight: bold; color: #33CC66; margin: 0; text-transform: uppercase;">CLEAR</p>
+            </div>
+            
+            <!-- Example 3: 1 Person -->
+            <div class="photo-example" style="text-align: center; width: 30%;">
+              <div class="photo-frame" style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+                <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_oneperson.jpg?v=1683712345" alt="One Person Example" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://placehold.co/200x200/eeffee/33cc66?text=1+PERSON';this.onerror='';">
+                <div class="check-mark" style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>
+              </div>
+              <p style="font-weight: bold; color: #33CC66; margin: 0; text-transform: uppercase;">1 PERSON</p>
+            </div>
+          </div>
+        </div>
+
+        <p class="upload-instruction" style="text-align: center; font-size: 18px; margin: 30px 0; font-weight: bold;">
+          Please make sure to upload a clear, close-up photo.
+        </p>
+
+        <div class="upload-popup__generate-preview">
+          <div class="upload-popup__buttons">
+            <!-- Primary upload button with direct styling -->
+            <label for="file-input-wrapper__input-{{ section_id }}" class="file-input-label" style="background-color: #4CAF50; color: white; padding: 20px 40px; font-size: 20px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer !important; box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3); margin: 20px auto; min-width: 280px; display: block !important; text-transform: uppercase; text-align: center; visibility: visible !important; opacity: 1 !important; z-index: 100001 !important;">
+              UPLOAD PHOTO
+              <input type="file" accept="image/*" id="file-input-wrapper__input-{{ section_id }}" name="inputFile-{{ section_id }}" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;">
+          </label>
+            
+            <!-- Backup button -->
+            <button type="button" id="backup-upload-button" onclick="document.getElementById('file-input-wrapper__input-{{ section_id }}').click();" style="background-color: #2196F3; color: white; padding: 15px 30px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer !important; margin: 15px auto; min-width: 250px; display: block; text-align: center;">
+              Directly Select Image
+            </button>
+          </div>
+        </div>
+
+        <!-- Script to ensure file input changes are handled properly -->
+        <script>
+          (function() {
+            document.addEventListener('DOMContentLoaded', function() {
+              console.log('Setting up enhanced file input handler');
+              
+              // Get the main file input
+              const mainFileInput = document.getElementById('file-input-wrapper__input-{{ section_id }}');
+              if (!mainFileInput) {
+                console.error('Main file input not found!');
+                return;
+              }
+              
+              // Add change listener to properly handle the file
+              mainFileInput.addEventListener('change', function(event) {
+                console.log('File selected via main input');
+                
+                if (event.target.files && event.target.files.length > 0) {
+                  const file = event.target.files[0];
+                  console.log('Processing file:', file.name);
+                  
+                  // Show loading state
+                  const popupContent = document.querySelector('[data-popup-content]');
+                  const processingContent = document.querySelector('[data-processing-content]');
+                  
+                  if (popupContent && processingContent) {
+                    popupContent.style.display = 'none';
+                    processingContent.style.display = 'block';
+                  }
+                  
+                  // Find the custom element
+                  const customElement = document.querySelector('pixar-transform-file-input');
+                  if (customElement) {
+                    console.log('Found custom element, sending to API');
+                    
+                    // Set file in state
+                    if (typeof customElement.state !== 'undefined') {
+                      customElement.state.file = file;
+                    }
+                    
+                    // Trigger transform
+                    if (typeof customElement.transformImage === 'function') {
+                      try {
+                        customElement.transformImage();
+                        console.log('Transform process initiated');
+                        
+                        // Listen for completion
+                        customElement.addEventListener('pixar-transform-complete', function(e) {
+                          console.log('Transform complete event received', e.detail);
+                          
+                          // Hide popup after successful transform
+                          setTimeout(() => {
+                            const popup = document.querySelector('[data-pixar-popup]');
+                            const overlay = document.querySelector('.file-input-wrapper__overlay');
+                            
+                            if (popup) {
+                              popup.classList.remove('active');
+                              popup.style.display = 'none';
+                            }
+                            
+                            if (overlay) {
+                              overlay.classList.remove('active');
+                              overlay.style.display = 'none';
+                            }
+                            
+                            document.body.classList.remove('popup-open');
+                          }, 500);
+                        });
+                        
+                        // Listen for errors
+                        customElement.addEventListener('pixar-transform-error', function(e) {
+                          console.error('Transform error event received', e.detail);
+                          
+                          // Show error message
+                          const helpText = document.getElementById('upload-popup__help-text');
+                          if (helpText) {
+                            helpText.textContent = e.detail.message || 'Ein Fehler ist aufgetreten. Bitte versuche es mit einem anderen Foto.';
+                            helpText.style.display = 'block';
+                          }
+                          
+                          // Show content again
+                          if (popupContent && processingContent) {
+                            processingContent.style.display = 'none';
+                            popupContent.style.display = 'block';
+                          }
+                        });
+                      } catch (error) {
+                        console.error('Error calling transformImage:', error);
+                        
+                        // Fallback to direct file processing
+                        processFileDirectly(file);
+                      }
+                    } else {
+                      console.error('transformImage method not found on custom element');
+                      processFileDirectly(file);
+                    }
+                  } else {
+                    console.error('Custom element not found');
+                    processFileDirectly(file);
+                  }
+                }
+              });
+              
+              // Function to process file directly as fallback
+              function processFileDirectly(file) {
+                console.log('Using direct file processing fallback');
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                  // Find the result wrapper
+                  const resultWrapper = document.querySelector('[data-result-wrapper]');
+                  const resultImageWrapper = document.querySelector('[data-result-image-wrapper]');
+                  
+                  if (resultImageWrapper) {
+                    // Display the image directly
+                    resultImageWrapper.innerHTML = '';
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.alt = 'Selected image';
+                    img.style.maxWidth = '100%';
+                    resultImageWrapper.appendChild(img);
+                    
+                    if (resultWrapper) {
+                      resultWrapper.style.display = 'block';
+                    }
+                    
+                    // Hide the popup
+                    const popup = document.querySelector('[data-pixar-popup]');
+                    const overlay = document.querySelector('.file-input-wrapper__overlay');
+                    
+                    if (popup) {
+                      popup.classList.remove('active');
+                      popup.style.display = 'none';
+                    }
+                    
+                    // Remove popup-open class from body
+                    document.body.classList.remove('popup-open');
+                    
+                    // Hide the "Bild hochladen" button
+                    const openButton = document.querySelector('.file-input-wrapper__popup-open-btn');
+                    if (openButton) {
+                      openButton.style.display = 'none';
+                    }
+                  }
+                };
+                
+                reader.readAsDataURL(file);
+              }
+            });
+          })();
+        </script>
+      </div>
+
+      <!-- Simplified Loading screen for image processing -->
+      <div data-processing-content class="upload-popup__processing-content" style="display: none; background-color: white; padding: 40px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+        <h2 style="text-align: center; font-size: 28px; margin-bottom: 40px; font-weight: bold; color: #333;">Generating, please wait...</h2>
+        
+        <!-- Simplified progress bar -->
+        <div class="progress-container" style="width: 80%; max-width: 500px; margin: 0 auto; background-color: #f0f0f0; height: 20px; border-radius: 10px; overflow: hidden;">
+          <div data-progress-bar class="progress-bar" style="width: 10%; height: 100%; background-color: #4CAF50; transition: width 0.5s ease-in-out;"></div>
+        </div>
+        
+        <p style="text-align: center; font-size: 18px; margin-top: 20px; color: #666;">Usually takes 2 to 3 minutes.</p>
+      </div>
+
+      <!-- Help text area -->
+      <div data-help-popup-text id="upload-popup__help-text" class="upload-popup__help-text" style="display: none;"></div>
+    </div>
+  </div>
+
+  <!-- Open popup button -->
+  {%- render 'button', id: open_popup_button_id, class: 'file-input-wrapper__popup-open-btn w-full', content: 'Bild hochladen', type: 'button', size: 'xl', disabled: false, subdued: false -%}
+
+  <!-- Result display area -->
+  <div data-result-wrapper class="file-input-wrapper__result result-wrapper" style="display: none;">
+    <div data-help-result-text class="result-wrapper__help-text"></div>
+    <div data-result-image-wrapper class="result-wrapper__image-wrapper"></div>
+  </div>
+
+  <!-- Photo upload component -->
+  <div class="file-input-wrapper__result-image-message">
+    Bitte lade ein Foto hoch, um dieses Produkt zu personalisieren
+  </div>
+
+  <div class="file-input-wrapper relative">
+    <!-- ... existing buttons and elements ... -->
+  </div>
+</pixar-transform-file-input> 
+
+<!-- Add super simple direct file handler at the end of the file as a foolproof fallback -->
+<script>
+  // Immediately executed function to avoid variable conflicts
+  (function() {
+    // Wait for DOM to be ready
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Direct file handler script loaded');
+      
+      // Function to check if an element is truly visible
+      function isElementVisible(el) {
+        if (!el) return false;
+        const style = window.getComputedStyle(el);
+        return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+      }
+      
+      // Function to create and trigger a custom event
+      function triggerFileEvent(file) {
+        const event = new CustomEvent('pixar-file-selected', { 
+          detail: { file: file },
+          bubbles: true
+        });
+        document.dispatchEvent(event);
+        console.log('Custom event triggered with file:', file.name);
+      }
+      
+      // Direct check of all file inputs - run on page load
+      setTimeout(function() {
+        const allFileInputs = document.querySelectorAll('input[type="file"]');
+        console.log(`Found ${allFileInputs.length} file inputs on page`);
+        
+        allFileInputs.forEach((input, index) => {
+          const isVisible = isElementVisible(input);
+          console.log(`File input #${index}:`, {
+            id: input.id || 'no-id',
+            visible: isVisible,
+            positioned: input.offsetParent !== null
+          });
+          
+          // Make sure each has a change listener
+          input.addEventListener('change', function(e) {
+            console.log(`Direct handler: File input #${index} changed`);
+            if (e.target.files && e.target.files.length > 0) {
+              const file = e.target.files[0];
+              console.log('File selected:', file.name);
+              
+              // Try multiple ways to handle the file
+              
+              // 1. Trigger custom event
+              triggerFileEvent(file);
+              
+              // 2. Try to find and use the custom element directly
+              const customElement = document.querySelector('pixar-transform-file-input');
+              if (customElement) {
+                console.log('Found custom element, trying to set file directly');
+                if (customElement.state) {
+                  customElement.state.file = file;
+                }
+                if (typeof customElement.transformImage === 'function') {
+                  try {
+                    customElement.transformImage();
+                  } catch (error) {
+                    console.error('Error calling transformImage:', error);
+                  }
+                }
+              }
+              
+              // 3. Try global handlers
+              if (typeof window.handlePixarFileSelection === 'function') {
+                try {
+                  window.handlePixarFileSelection(file);
+                } catch (error) {
+                  console.error('Error calling handlePixarFileSelection:', error);
+                }
+              }
+              
+              if (typeof window.setPixarFile === 'function') {
+                try {
+                  window.setPixarFile(file);
+                } catch (error) {
+                  console.error('Error calling setPixarFile:', error);
+                }
+              }
+              
+              // 4. Last resort - display the image directly in result area
+              const resultWrapper = document.querySelector('[data-result-wrapper]');
+              const resultImageWrapper = document.querySelector('[data-result-image-wrapper]');
+              if (resultImageWrapper) {
+                // Create an image preview
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                  resultImageWrapper.innerHTML = '';
+                  const img = document.createElement('img');
+                  img.src = event.target.result;
+                  img.alt = 'Selected image';
+                  img.style.maxWidth = '100%';
+                  resultImageWrapper.appendChild(img);
+                  
+                  if (resultWrapper) {
+                    resultWrapper.style.display = 'block';
+                  }
+                };
+                reader.readAsDataURL(file);
+              }
+            }
+          });
+        });
+      }, 1000); // Delay to ensure all elements are loaded
+      
+      // Add direct click handlers to all buttons
+      const allButtons = document.querySelectorAll('button, .btn, [role="button"], label.file-input-label');
+      console.log(`Found ${allButtons.length} buttons/clickable elements on page`);
+      
+      allButtons.forEach((button, index) => {
+        // Skip if it has a close attribute
+        if (button.hasAttribute('data-close-pixar-popup')) {
+          return;
+        }
+        
+        // Check what kind of button it is
+        const text = button.textContent.trim().toLowerCase();
+        const isUploadButton = text.includes('upload') || text.includes('photo') || text.includes('bild');
+        
+        if (isUploadButton) {
+          console.log(`Found upload button #${index}:`, text);
+          
+          // Add a direct click handler
+          button.addEventListener('click', function(e) {
+            console.log(`Direct handler: Upload button #${index} clicked`);
+            
+            // Find an associated file input
+            let fileInput = null;
+            
+            // Check if it's a label with a for attribute
+            if (button.tagName === 'LABEL' && button.hasAttribute('for')) {
+              fileInput = document.getElementById(button.getAttribute('for'));
+            }
+            
+            // Check if it contains a file input
+            if (!fileInput) {
+              fileInput = button.querySelector('input[type="file"]');
+            }
+            
+            // If no file input is found, look for one in the document
+            if (!fileInput) {
+              fileInput = document.querySelector('input[type="file"]');
+            }
+            
+            if (fileInput) {
+              console.log('Found file input, triggering click:', fileInput.id || 'no-id');
+              fileInput.click();
+            } else {
+              console.error('No file input found for upload button');
+              alert('No file input found. Please try another upload method.');
+            }
+          });
+        }
+      });
+      
+      // Create an emergency file input if none exists
+      setTimeout(function() {
+        const fileInputs = document.querySelectorAll('input[type="file"]');
+        if (fileInputs.length === 0) {
+          console.warn('No file inputs found on page, creating an emergency one');
+          
+          // Create emergency file input
+          const emergencyInput = document.createElement('input');
+          emergencyInput.type = 'file';
+          emergencyInput.id = 'emergency-file-input';
+          emergencyInput.accept = 'image/*';
+          emergencyInput.style.position = 'fixed';
+          emergencyInput.style.bottom = '10px';
+          emergencyInput.style.left = '10px';
+          emergencyInput.style.zIndex = '99999';
+          
+          // Add change listener
+          emergencyInput.addEventListener('change', function(e) {
+            console.log('Emergency file input changed');
+            if (e.target.files && e.target.files.length > 0) {
+              triggerFileEvent(e.target.files[0]);
+            }
+          });
+          
+          document.body.appendChild(emergencyInput);
+          
+          // Create emergency button
+          const emergencyButton = document.createElement('button');
+          emergencyButton.textContent = 'EMERGENCY UPLOAD';
+          emergencyButton.style.position = 'fixed';
+          emergencyButton.style.bottom = '40px';
+          emergencyButton.style.left = '10px';
+          emergencyButton.style.zIndex = '99999';
+          emergencyButton.style.background = 'red';
+          emergencyButton.style.color = 'white';
+          emergencyButton.style.padding = '10px';
+          emergencyButton.style.border = 'none';
+          emergencyButton.style.borderRadius = '5px';
+          emergencyButton.style.cursor = 'pointer';
+          
+          emergencyButton.addEventListener('click', function() {
+            emergencyInput.click();
+          });
+          
+          document.body.appendChild(emergencyButton);
+        }
+      }, 2000);
+    });
+  })();
+</script>
+
+<!-- Add a super simple file input form as absolute last resort -->
+<form id="emergency-form" style="position: fixed; bottom: 100px; left: 10px; z-index: 99999; background: white; padding: 10px; border: 2px solid red; display: none;">
+  <h3>Emergency Upload</h3>
+  <input type="file" accept="image/*" id="super-emergency-input">
+  <button type="button" id="super-emergency-button">Upload This File</button>
+  
+  <script>
+    document.getElementById('super-emergency-button').addEventListener('click', function() {
+      const fileInput = document.getElementById('super-emergency-input');
+      if (fileInput.files && fileInput.files.length > 0) {
+        console.log('Super emergency upload:', fileInput.files[0].name);
+        
+        // Create an image preview
+        const resultWrapper = document.querySelector('[data-result-wrapper]');
+        const resultImageWrapper = document.querySelector('[data-result-image-wrapper]');
+        if (resultImageWrapper) {
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            resultImageWrapper.innerHTML = '';
+            const img = document.createElement('img');
+            img.src = event.target.result;
+            img.alt = 'Selected image';
+            img.style.maxWidth = '100%';
+            resultImageWrapper.appendChild(img);
+            
+            if (resultWrapper) {
+              resultWrapper.style.display = 'block';
+            }
+          };
+          reader.readAsDataURL(fileInput.files[0]);
+        }
+      }
+    });
+    
+    // Show emergency form when user presses Shift+E
+    document.addEventListener('keydown', function(e) {
+      if (e.shiftKey && e.key === 'E') {
+        const form = document.getElementById('emergency-form');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+      }
+    });
+  </script>
+</form>
+
+<!-- Add specific popup button fix -->
+<script>
+  // Execute immediately to ensure it runs as early as possible
+  (function() {
+    // Function to fix popup buttons
+    function fixPopupButtons() {
+      console.log('Fixing popup upload buttons');
+      
+      // Get all file inputs and buttons inside the popup
+      const popup = document.querySelector('[data-pixar-popup]');
+      if (!popup) {
+        console.error('Popup not found for button fix');
+        return;
+      }
+      
+      // Make sure popup and overlay properly block all interaction
+      // but preserve the layout of the popup content
+      popup.style.setProperty('position', 'fixed', 'important');
+      popup.style.setProperty('top', '0', 'important');
+      popup.style.setProperty('left', '0', 'important');
+      popup.style.setProperty('width', '100%', 'important');
+      popup.style.setProperty('height', '100%', 'important');
+      popup.style.setProperty('z-index', '99999', 'important');
+      popup.style.setProperty('background-color', 'white', 'important');
+      popup.style.setProperty('pointer-events', 'auto', 'important');
+      popup.style.setProperty('overflow', 'auto', 'important');
+      popup.style.setProperty('display', 'block', 'important');
+      
+      // Set overlay to block interaction
+      const overlay = document.querySelector('.file-input-wrapper__overlay');
+      if (overlay) {
+        overlay.style.setProperty('position', 'fixed', 'important');
+        overlay.style.setProperty('top', '0', 'important');
+        overlay.style.setProperty('left', '0', 'important');
+        overlay.style.setProperty('width', '100%', 'important');
+        overlay.style.setProperty('height', '100%', 'important');
+        overlay.style.setProperty('z-index', '99998', 'important');
+        overlay.style.setProperty('background-color', 'rgba(0, 0, 0, 0.7)', 'important');
+        overlay.style.setProperty('pointer-events', 'auto', 'important');
+        overlay.style.setProperty('display', 'block', 'important');
+      }
+      
+      // Add a class to body to prevent scrolling
+      document.body.classList.add('popup-open');
+      
+      // Make sure popup content is properly visible
+      const popupContent = popup.querySelector('[data-popup-content]');
+      if (popupContent) {
+        popupContent.style.setProperty('display', 'block', 'important');
+        popupContent.style.setProperty('visibility', 'visible', 'important');
+        popupContent.style.setProperty('opacity', '1', 'important');
+      }
+      
+      // Make sure popup body is visible
+      const popupBody = popup.querySelector('.upload-popup__body');
+      if (popupBody) {
+        popupBody.style.setProperty('display', 'flex', 'important');
+        popupBody.style.setProperty('visibility', 'visible', 'important');
+        popupBody.style.setProperty('opacity', '1', 'important');
+      }
+      
+      // Make sure popup header is visible
+      const popupHeader = popup.querySelector('.upload-popup__header');
+      if (popupHeader) {
+        popupHeader.style.setProperty('display', 'flex', 'important');
+        popupHeader.style.setProperty('visibility', 'visible', 'important');
+        popupHeader.style.setProperty('opacity', '1', 'important');
+      }
+      
+      // Ensure all buttons in popup have pointer-events
+      popup.querySelectorAll('button, label, input, a').forEach(el => {
+        el.style.setProperty('pointer-events', 'auto', 'important');
+        el.style.setProperty('cursor', 'pointer', 'important');
+        // Set a higher z-index to ensure they're above popup content
+        el.style.setProperty('position', 'relative', 'important');
+        el.style.setProperty('z-index', '1', 'important');
+      });
+      
+      // Ensure all sections are visible
+      popup.querySelectorAll('.photo-examples-section, .upload-popup__description, .upload-popup__title').forEach(el => {
+        el.style.setProperty('display', 'block', 'important');
+        el.style.setProperty('visibility', 'visible', 'important');
+        el.style.setProperty('opacity', '1', 'important');
+      });
+      
+      // Find all file inputs in the popup
+      const popupFileInputs = popup.querySelectorAll('input[type="file"]');
+      console.log(`Found ${popupFileInputs.length} file inputs in popup`);
+      
+      // 1. Make all file inputs in the popup visible for debugging
+      popupFileInputs.forEach((input, index) => {
+        // Clone to remove existing event handlers
+        const originalInput = input;
+        const newInput = originalInput.cloneNode(true);
+        
+        // Replace with new input to remove old event handlers
+        if (originalInput.parentNode) {
+          originalInput.parentNode.replaceChild(newInput, originalInput);
+        }
+        
+        // Add new direct event handler
+        newInput.addEventListener('change', function(event) {
+          console.log(`Popup file input #${index} changed`, event.target.files);
+          
+          if (event.target.files && event.target.files.length > 0) {
+            const file = event.target.files[0];
+            
+            // Create a custom event to handle this file
+            const customEvent = new CustomEvent('pixar-file-selected', {
+              detail: { file: file },
+              bubbles: true
+            });
+            document.dispatchEvent(customEvent);
+            
+            // Also attempt to process directly
+            const reader = new FileReader();
+            reader.onload = function(e) {
+              // Find the result wrapper
+              const resultWrapper = document.querySelector('[data-result-wrapper]');
+              const resultImageWrapper = document.querySelector('[data-result-image-wrapper]');
+              
+              if (resultImageWrapper) {
+                // Display the image
+                resultImageWrapper.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.alt = 'Selected image';
+                img.style.maxWidth = '100%';
+                resultImageWrapper.appendChild(img);
+                
+                if (resultWrapper) {
+                  resultWrapper.style.display = 'block';
+                }
+                
+                // Hide the popup after a short delay
+                setTimeout(() => {
+                  popup.style.display = 'none';
+                  popup.classList.remove('active');
+                  
+                  const overlay = document.querySelector('.file-input-wrapper__overlay');
+                  if (overlay) {
+                    overlay.style.display = 'none';
+                    overlay.classList.remove('active');
+                  }
+                  
+                  document.body.style.overflow = '';
+                  
+                  // Also hide the "Bild hochladen" button
+                  const openButton = document.querySelector('.file-input-wrapper__popup-open-btn');
+                  if (openButton) {
+                    openButton.style.display = 'none';
+                  }
+                }, 1000);
+              }
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+        
+        // Make sure it's actually usable
+        if (newInput.style.display === 'none' || newInput.style.visibility === 'hidden') {
+          console.log(`Making popup file input #${index} more accessible`);
+          
+          // If this is inside a label, the label click should trigger it
+          const parentLabel = newInput.closest('label');
+          if (parentLabel) {
+            console.log('Input is inside a label, enhancing label');
+            
+            // Make sure the label is clearly clickable
+            parentLabel.style.cursor = 'pointer';
+            parentLabel.title = 'Click to select a file';
+            
+            // Add a specific click handler to the label
+            parentLabel.addEventListener('click', function(e) {
+              console.log('Label clicked, checking if file input needs clicking');
+              // Only trigger the file input directly if we're actually at the target
+              if (e.target === parentLabel) {
+                console.log('Direct label click, triggering file input');
+                // Prevent event from triggering twice
+                e.preventDefault();
+                newInput.click();
+              }
+            });
+          } else {
+            // If not in a label, make it more visible for debugging
+            console.log('File input not in label, making more visible');
+            newInput.style.display = 'block';
+            newInput.style.visibility = 'visible';
+            newInput.style.opacity = '1';
+            newInput.style.width = 'auto';
+            newInput.style.height = 'auto';
+            newInput.style.position = 'static';
+            newInput.style.margin = '10px auto';
+            newInput.style.maxWidth = '100%';
+          }
+        }
+      });
+      
+      // 2. Fix the Upload Photo button specifically
+      const uploadPhotoButton = popup.querySelector('label.file-input-label');
+      if (uploadPhotoButton) {
+        console.log('Fixing UPLOAD PHOTO button');
+        
+        // Make sure the button is visible
+        uploadPhotoButton.style.setProperty('display', 'block', 'important');
+        uploadPhotoButton.style.setProperty('visibility', 'visible', 'important');
+        uploadPhotoButton.style.setProperty('opacity', '1', 'important');
+        
+        // Clone to remove existing handlers
+        const newUploadButton = uploadPhotoButton.cloneNode(true);
+        if (uploadPhotoButton.parentNode) {
+          uploadPhotoButton.parentNode.replaceChild(newUploadButton, uploadPhotoButton);
+        }
+        
+        // Add special handler
+        newUploadButton.addEventListener('click', function(e) {
+          console.log('UPLOAD PHOTO button clicked');
+          
+          // Find the associated file input
+          const forAttribute = newUploadButton.getAttribute('for');
+          const fileInput = forAttribute ? document.getElementById(forAttribute) : null;
+          
+          // Also look for file input inside the label
+          const containedFileInput = newUploadButton.querySelector('input[type="file"]');
+          
+          const inputToClick = fileInput || containedFileInput;
+          
+          if (inputToClick) {
+            console.log('Found file input for UPLOAD PHOTO button, clicking it');
+            e.preventDefault(); // Prevent label from triggering input normally
+            inputToClick.click();
+          } else {
+            console.error('No file input found for UPLOAD PHOTO button');
+            
+            // Last resort - create a new file input
+            const newInput = document.createElement('input');
+            newInput.type = 'file';
+            newInput.accept = 'image/*';
+            newInput.style.position = 'absolute';
+            newInput.style.left = '-9999px';
+            
+            // Add change listener
+            newInput.addEventListener('change', function(inputEvent) {
+              if (inputEvent.target.files && inputEvent.target.files.length > 0) {
+                console.log('New input file selected:', inputEvent.target.files[0].name);
+                
+                // Process file with custom event
+                const customEvent = new CustomEvent('pixar-file-selected', {
+                  detail: { file: inputEvent.target.files[0] },
+                  bubbles: true
+                });
+                document.dispatchEvent(customEvent);
+              }
+            });
+            
+            // Add to body, click it, then remove it
+            document.body.appendChild(newInput);
+            newInput.click();
+            setTimeout(() => {
+              if (document.body.contains(newInput)) {
+                document.body.removeChild(newInput);
+              }
+            }, 5000);
+          }
+        });
+      }
+      
+      // 3. Fix the Directly Select Image button
+      const directButton = Array.from(popup.querySelectorAll('label')).find(label => 
+        label.textContent.trim().includes('Directly Select Image')
+      );
+      
+      if (directButton) {
+        console.log('Fixing Directly Select Image button');
+        
+        // Make sure the button is visible
+        directButton.style.setProperty('display', 'inline-block', 'important');
+        directButton.style.setProperty('visibility', 'visible', 'important');
+        directButton.style.setProperty('opacity', '1', 'important');
+        
+        // Clone to remove existing handlers
+        const newDirectButton = directButton.cloneNode(true);
+        if (directButton.parentNode) {
+          directButton.parentNode.replaceChild(newDirectButton, directButton);
+        }
+        
+        // Add special handler
+        newDirectButton.addEventListener('click', function(e) {
+          console.log('Directly Select Image button clicked');
+          
+          // Find the file input
+          const fileInput = newDirectButton.querySelector('input[type="file"]');
+          
+          if (fileInput) {
+            console.log('Found file input in Directly Select Image button, clicking it');
+            e.preventDefault();
+            fileInput.click();
+          } else {
+            console.error('No file input found in Directly Select Image button');
+            
+            // Create a new file input as fallback
+            const newInput = document.createElement('input');
+            newInput.type = 'file';
+            newInput.accept = 'image/*';
+            
+            // Add change listener
+            newInput.addEventListener('change', function(inputEvent) {
+              if (inputEvent.target.files && inputEvent.target.files.length > 0) {
+                console.log('New direct input file selected:', inputEvent.target.files[0].name);
+                
+                // Process file with custom event
+                const customEvent = new CustomEvent('pixar-file-selected', {
+                  detail: { file: inputEvent.target.files[0] },
+                  bubbles: true
+                });
+                document.dispatchEvent(customEvent);
+              }
+            });
+            
+            // Add to body, click it, then remove it
+            document.body.appendChild(newInput);
+            newInput.click();
+            setTimeout(() => {
+              if (document.body.contains(newInput)) {
+                document.body.removeChild(newInput);
+              }
+            }, 5000);
+          }
+        });
+      }
+      
+      // 4. Add a completely new, guaranteed-to-work upload button
+      const buttonContainer = document.createElement('div');
+      buttonContainer.style.margin = '20px auto';
+      buttonContainer.style.textAlign = 'center';
+      
+      const emergencyButton = document.createElement('button');
+      emergencyButton.textContent = '⚡ GUARANTEED UPLOAD BUTTON ⚡';
+      emergencyButton.style.backgroundColor = '#ff1744';
+      emergencyButton.style.color = 'white';
+      emergencyButton.style.padding = '15px 30px';
+      emergencyButton.style.fontSize = '18px';
+      emergencyButton.style.fontWeight = 'bold';
+      emergencyButton.style.border = 'none';
+      emergencyButton.style.borderRadius = '8px';
+      emergencyButton.style.cursor = 'pointer';
+      emergencyButton.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.3)';
+      
+      emergencyButton.addEventListener('click', function() {
+        console.log('Emergency upload button clicked');
+        
+        // Create a new file input
+        const newInput = document.createElement('input');
+        newInput.type = 'file';
+        newInput.accept = 'image/*';
+        
+        // Add change listener
+        newInput.addEventListener('change', function(event) {
+          if (event.target.files && event.target.files.length > 0) {
+            console.log('Emergency file selected:', event.target.files[0].name);
+            
+            // Display preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+              // Show in result wrapper
+              const resultWrapper = document.querySelector('[data-result-wrapper]');
+              const resultImageWrapper = document.querySelector('[data-result-image-wrapper]');
+              
+              if (resultImageWrapper) {
+                resultImageWrapper.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.alt = 'Selected image';
+                img.style.maxWidth = '100%';
+                resultImageWrapper.appendChild(img);
+                
+                if (resultWrapper) {
+                  resultWrapper.style.display = 'block';
+                }
+                
+                // Hide popup
+                popup.style.display = 'none';
+                popup.classList.remove('active');
+                
+                const overlay = document.querySelector('.file-input-wrapper__overlay');
+                if (overlay) {
+                  overlay.style.display = 'none';
+                  overlay.classList.remove('active');
+                }
+                
+                // Hide the "Bild hochladen" button
+                const openButton = document.querySelector('.file-input-wrapper__popup-open-btn');
+                if (openButton) {
+                  openButton.style.display = 'none';
+                }
+              }
+            };
+            reader.readAsDataURL(event.target.files[0]);
+          }
+        });
+        
+        // Add to page, click it, then remove it
+        document.body.appendChild(newInput);
+        newInput.click();
+        setTimeout(() => {
+          if (document.body.contains(newInput)) {
+            document.body.removeChild(newInput);
+          }
+        }, 5000);
+      });
+      
+      buttonContainer.appendChild(emergencyButton);
+      
+      // Add to popup content
+      const popupContent = popup.querySelector('[data-popup-content]');
+      if (popupContent) {
+        popupContent.appendChild(buttonContainer);
+      }
+    }
+    
+    // Listen for popup open/close to ensure proper handling
+    document.addEventListener('click', function(event) {
+      // Check if the open popup button was clicked
+      if (event.target.matches('.file-input-wrapper__popup-open-btn') || 
+          event.target.closest('.file-input-wrapper__popup-open-btn')) {
+        console.log('Open popup button clicked, will fix popup buttons');
+        
+        // Fix buttons after a slight delay to ensure popup is open
+        setTimeout(fixPopupButtons, 100);
+        
+        // Make popup visible and active
+        const popup = document.querySelector('[data-pixar-popup]');
+        if (popup) {
+          popup.classList.add('active');
+          popup.style.display = 'block';
+          popup.style.visibility = 'visible';
+          popup.style.opacity = '1';
+        }
+        
+        // Make overlay visible
+        const overlay = document.querySelector('.file-input-wrapper__overlay');
+        if (overlay) {
+          overlay.classList.add('active');
+          overlay.style.display = 'block';
+          overlay.style.visibility = 'visible';
+          overlay.style.opacity = '0.8';
+        }
+        
+        // Also add a manual overlay to block all interaction
+        const blockingOverlay = document.createElement('div');
+        blockingOverlay.id = 'extra-blocking-overlay';
+        blockingOverlay.style.position = 'fixed';
+        blockingOverlay.style.top = '0';
+        blockingOverlay.style.left = '0';
+        blockingOverlay.style.width = '100%';
+        blockingOverlay.style.height = '100%';
+        blockingOverlay.style.backgroundColor = 'transparent';
+        blockingOverlay.style.zIndex = '99997';
+        blockingOverlay.style.pointerEvents = 'none';
+        document.body.appendChild(blockingOverlay);
+      }
+      
+      // Check if close button was clicked
+      if (event.target.hasAttribute('data-close-pixar-popup') || 
+          event.target.closest('[data-close-pixar-popup]')) {
+        console.log('Close popup button clicked');
+        
+        // Remove body class
+        document.body.classList.remove('popup-open');
+        
+        // Remove blocking overlay
+        const blockingOverlay = document.getElementById('extra-blocking-overlay');
+        if (blockingOverlay) {
+          document.body.removeChild(blockingOverlay);
+        }
+      }
+    });
+    
+    // Special handler to ensure popup content is visible when the popup opens
+    const openButtons = document.querySelectorAll('.file-input-wrapper__popup-open-btn');
+    openButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        console.log('Open button clicked, ensuring popup content is visible');
+        
+        // Make sure popup is active
+        const popup = document.querySelector('[data-pixar-popup]');
+        if (popup) {
+          popup.classList.add('active');
+          popup.style.display = 'block';
+          
+          // Fix buttons after a slight delay to ensure popup is open
+          setTimeout(fixPopupButtons, 100);
+        }
+      });
+    });
+    
+    // Fix the popup buttons on DOMContentLoaded
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', fixPopupButtons);
+    } else {
+      // If already loaded, run immediately
+      fixPopupButtons();
+    }
+    
+    // Run again after a delay to make sure it catches late-loaded elements
+    setTimeout(fixPopupButtons, 1000);
+  })();
+</script> 
+
+<style>
+  /* Additional inline styles to force full screen white popup */
+  .file-input-wrapper__popup,
+  .upload-popup,
+  .upload-popup__container,
+  [data-pixar-popup],
+  [data-pixar-popup] .upload-popup__container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100% !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    background-color: white !important;
+    z-index: 9999999 !important;
+  }
+  
+  .file-input-wrapper__overlay,
+  [class*="overlay"],
+  [id*="overlay"] {
+    display: none !important;
+    opacity: 0 !important;
+    background-color: transparent !important;
+  }
+  
+  /* Force content inside to have proper spacing */
+  .upload-popup__content,
+  .upload-popup__processing-content {
+    padding: 60px 20px 20px !important;
+    background-color: white !important;
+  }
+  
+  /* Target the specific element causing the gray background */
+  .upload-popup__container > *,
+  .file-input-wrapper__popup > *,
+  .upload-popup > *,
+  [data-pixar-popup] > *,
+  [data-pixar-popup] *:not(.upload-popup__content, .upload-popup__processing-content, .photo-guidelines-container, .upload-popup__buttons, button, input) {
+    background-color: transparent !important;
+  }
+  
+  /* Target any element with background-color that might be gray */
+  body.popup-open::before,
+  [style*="background-color: rgba"],
+  [style*="background-color:rgba"],
+  [style*="background: rgba"],
+  [style*="background:rgba"],
+  [style*="background-color: rgb(128"],
+  [style*="background-color: rgb(169"],
+  [style*="background-color: rgb(211"] {
+    background-color: transparent !important;
+    opacity: 0 !important;
+    display: none !important;
+  }
+  
+  /* Fix close button positioning */
+  .upload-popup__close-btn {
+    position: fixed !important;
+    top: 15px !important;
+    right: 15px !important;
+    z-index: 10000000 !important;
+    background-color: white !important;
+    padding: 10px !important;
+    border-radius: 50% !important;
+  }
+  
+  /* Force the body to not scroll when popup is open */
+  body.popup-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  
+  /* Hide the DEBUG POP-UP button completely */
+  .debug-pop-up,
+  #debug-pop-up, 
+  [id*="debug"], 
+  [class*="debug"],
+  button[id*="debug"],
+  button[class*="debug"],
+  [id*="DEBUG-POP-UP"],
+  [class*="DEBUG-POP-UP"],
+  div:has(> #debug-pop-up),
+  div:has(> .debug-pop-up) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    z-index: -9999 !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+  
+  /* Make popup truly full screen */
+  .file-input-wrapper__popup,
+  .upload-popup,
+  .upload-popup__container,
+  [data-pixar-popup],
+  [data-pixar-popup] .upload-popup__container,
+  [data-faceswap-popup],
+  [data-faceswap-popup] .upload-popup__container {
+    position: fixed !important;
+    inset: 0 !important; /* shorthand for top/right/bottom/left: 0 */
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    border-radius: 0 !important;
+    background-color: white !important;
+  }
+</style>
+
+<script>
+  // Remove debug button directly via JavaScript
+  document.addEventListener('DOMContentLoaded', function() {
+    // Remove any existing debug buttons
+    const debugElements = document.querySelectorAll('[id*="debug"], [class*="debug"], [id*="DEBUG-POP-UP"], [class*="DEBUG-POP-UP"]');
+    debugElements.forEach(function(element) {
+      if (element && element.parentNode) {
+        element.parentNode.removeChild(element);
+      }
+    });
+    
+    // Observer to remove any debug buttons that might be added dynamically
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.addedNodes && mutation.addedNodes.length > 0) {
+          mutation.addedNodes.forEach(function(node) {
+            if (node.id && (node.id.includes('debug') || node.id.includes('DEBUG'))) {
+              node.parentNode.removeChild(node);
+            }
+            if (node.className && (node.className.includes('debug') || node.className.includes('DEBUG'))) {
+              node.parentNode.removeChild(node);
+            }
+          });
+        }
+      });
+    });
+    
+    observer.observe(document.body, { 
+      childList: true,
+      subtree: true
+    });
+  });
+</script> 

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixar API Client Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    .note {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      border-left: 4px solid #28a745;
+      margin-bottom: 20px;
+    }
+    .update {
+      background-color: #e9f5fd;
+      padding: 15px;
+      border-radius: 5px;
+      border-left: 4px solid #007bff;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pixar API Client Test</h1>
+  
+  <div class="note">
+    <p>This page tests the Unified API Client integration with the backend API for Pixar transformations. 
+       It checks that the client is correctly sending image and watermark data in the simplified format.</p>
+    <p>The test will use the production endpoint: <code>https://letzteshemd-faceswap-api-production.up.railway.app</code></p>
+  </div>
+  
+  <div class="update">
+    <p><strong>Update:</strong> The API has been simplified to only support Pixar transformations. 
+    The transformationType and targetImage parameters have been removed from the payload.</p>
+    <p>Current payload format:</p>
+    <pre>{
+  "image": "base64-encoded-image-data",
+  "watermark": {
+    "url": "watermark-url",
+    "width": 200,
+    "height": 200,
+    "spaceBetweenWatermarks": 100
+  }
+}</pre>
+  </div>
+
+  <!-- Load the unified configuration -->
+  <script src="assets/unified-config.js"></script>
+  
+  <!-- Load the API client -->
+  <script src="assets/unified-api-client.js"></script>
+  
+  <!-- Load the test script -->
+  <script src="test-unified-api.js"></script>
+</body>
+</html> 

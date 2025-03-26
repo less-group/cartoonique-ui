@@ -1,0 +1,195 @@
+<div
+  class='article-comments {% if settings.enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+  {% if settings.enable_content_slide_in %}
+    style='--gsc-animation-order: 1;'
+  {% endif %}
+  data-article-comments-block
+>
+  <div class='container container--xsmall container--with-aside-paddings'>
+    <div id='comments'>
+      {%- if article.comments_count > 0 -%}
+        <div class='article-comments__header' id='Comments-{{ article.id }}'>
+          <h6>
+            {{ 'blogs.blog_post.store_front.comments' | t: count: article.comments_count }}
+          </h6>
+        </div>
+
+        {% paginate article.comments by 5 %}
+          <div class='article-comments__body-wrapper'>
+            <div class='article-comments__body' id='ArticleComments'>
+              {%- if comment.status == 'pending' and comment.content -%}
+                <div class='comment' id='{{ comment.id }}'>
+                  <div class='comment__author'>- {{ comment.author }}</div>
+                  <div class='comment__content'>{{ comment.content }}</div>
+                  <div class='comment__date'>
+                    {{ comment.created_at | time_tag: format: 'date' }}
+                  </div>
+                </div>
+              {%- endif -%}
+
+              {%- for comment in article.comments -%}
+                <div
+                  class='comment {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                  id='{{ comment.id }}'
+                >
+                  <div class='comment__author'>- {{ comment.author }}</div>
+                  <div class='comment__content'>{{ comment.content }}</div>
+                  <div class='comment__date'>
+                    {{ comment.created_at | time_tag: format: 'date' }}
+                  </div>
+                </div>
+              {%- endfor -%}
+            </div>
+
+            {% render 'loading-overlay', class: 'article-comments__overlay', id: 'ArticleCommentsOverlay' %}
+          </div>
+
+          {% render 'classic-pagination',
+            class: 'article-comments__pagination',
+            paginate: paginate,
+            container_id: 'ArticleComments',
+            overlay_id: 'ArticleCommentsOverlay'
+          %}
+        {% endpaginate %}
+      {%- endif -%}
+
+      {% form 'new_comment', article, class: 'comment-form article-comments__comment-form', id: 'NewCommentForm' %}
+        {%- liquid
+          assign post_message = 'blogs.blog_post.store_front.success'
+          if blog.moderated? and comment.status == 'unapproved'
+            assign post_message = 'blogs.blog_post.store_front.success_moderated'
+          endif
+        -%}
+
+        <div class='comment-form__title {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'>
+          {{ 'blogs.blog_post.store_front.comment_form_title' | t }}
+        </div>
+
+        {%- if form.posted_successfully? -%}
+          <script>
+            window.notification = { text: '{{ post_message | t }}', variant: 'success' }
+
+            const url = location.href
+            let newCommentId = location.search.replace('?comment=', '')
+
+            const updateComments = () => {
+              fetch(url)
+                .then(data => data.text())
+                .then(data => {
+                  const html = new DOMParser().parseFromString(data, 'text/html')
+                  const newComments = html.querySelector('[data-article-comments-block]')
+                  const commentId = newComments.querySelector('.comment').getAttribute('id')
+
+                  if (commentId !== newCommentId) {
+                    updateComments()
+                  } else {
+                    const currentComments = document.querySelector('[data-article-comments-block]')
+                    currentComments.replaceWith(newComments)
+
+                    window.removeEventListener('load', updateComments)
+                  }
+                })
+            }
+
+            window.addEventListener('load', updateComments)
+          </script>
+        {%- endif -%}
+
+        <div class='comment-form__body'>
+          <div class='field-group comment-form__field-group {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'>
+            <div class='field comment-form__field'>
+              <label
+                class='visually-hidden'
+                for='NewCommentForm-CommentAuthorInput-{{ form.id }}'
+              >
+                {{- 'blogs.blog_post.screen_reader.name' | t -}}
+              </label>
+              <input
+                type='text'
+                name='comment[author]'
+                class='input input--{{ settings.input_style }} input--large'
+                autocomplete='name'
+                value='{{ form.author }}'
+                aria-required='true'
+                required
+                placeholder='{{ 'blogs.blog_post.store_front.name' | t }}'
+                id='NewCommentForm-CommentAuthorInput-{{ form.id }}'
+              >
+              {%- if form.errors contains 'author' -%}
+                {% assign error = 'Author field' | capitalize | append: ' ' | append: form.errors.messages.author %}
+                <script>
+                  window.notification = { text: '{{ error }}', variant: 'warning' }
+                </script>
+              {%- endif -%}
+            </div>
+
+            <div class='field comment-form__field'>
+              <label
+                class='visually-hidden'
+                for='NewCommentForm-CommentEmailInput-{{ form.id }}'
+              >
+                {{- 'blogs.blog_post.screen_reader.email' | t -}}
+              </label>
+              <input
+                type='email'
+                name='comment[email]'
+                autocomplete='email'
+                class='input input--{{ settings.input_style }} input--large'
+                value='{{ form.email }}'
+                autocorrect='off'
+                autocapitalize='off'
+                aria-required='true'
+                required
+                placeholder='{{ 'blogs.blog_post.store_front.email' | t }}'
+                id='NewCommentForm-CommentEmailInput-{{ form.id }}'
+              >
+              {%- if form.errors contains 'email' -%}
+                {% assign error = form.errors.translated_fields.email
+                  | capitalize
+                  | append: ' '
+                  | append: form.errors.messages.email
+                %}
+                <script>
+                  window.notification = { text: '{{ error }}', variant: 'warning' }
+                </script>
+              {%- endif -%}
+            </div>
+          </div>
+
+          <div class='field comment-form__field {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'>
+            <label class='hidden' for='CommentForm-body'></label>
+            <textarea
+              name='comment[body]'
+              id='CommentForm-body'
+              class='textarea textarea--{{ settings.input_style }}'
+              aria-required='true'
+              required
+              placeholder='{{ 'blogs.blog_post.store_front.placeholder_for_comment_message_textarea' | t }}'
+            >{{ form.body }}</textarea>
+          </div>
+
+          {%- if form.errors contains 'body' -%}
+            {% assign error = 'Text' | capitalize | append: ' ' | append: form.errors.messages.body %}
+            <script>
+              window.notification = { text: '{{ error }}', variant: 'warning' }
+            </script>
+          {%- endif -%}
+        </div>
+
+        {%- if blog.moderated? -%}
+          <div class='comment-form__note'>
+            {{ 'blogs.blog_post.store_front.moderated' | t }}
+          </div>
+        {%- endif -%}
+
+        <button
+          type='submit'
+          class='btn btn--solid btn--lg comment-form__btn {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+          aria-label='{{ 'blogs.blog_post.screen_reader.text_for_send_comment_button' | t }}'
+        >
+          {{ 'blogs.blog_post.store_front.text_for_send_comment_button' | t }}
+        </button>
+      {% endform %}
+    </div>
+  </div>
+</div>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixar Transformation Test Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    .mock-notice {
+      background-color: #ffe6cc;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .test-container {
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .test-controls {
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 8px 16px;
+      margin-right: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #test-results {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pixar Transformation Test Page</h1>
+  
+  <div class="mock-notice">
+    <strong>Mock Mode Enabled:</strong> This page is running in mock mode, which means no actual API calls will be made.
+    All transformations are simulated for testing purposes.
+  </div>
+  
+  <div class="test-container">
+    <h2>Test Pixar Transformation</h2>
+    
+    <div class="test-controls">
+      <button id="test-utils">Test Utils</button>
+      <button id="test-api-client">Test API Client</button>
+      <button id="clear-logs">Clear Logs</button>
+    </div>
+    
+    <!-- Pixar component for testing -->
+    <pixar-transform-file-input></pixar-transform-file-input>
+    
+    <h3>Test Results:</h3>
+    <div id="test-results"></div>
+  </div>
+  
+  <!-- Load scripts -->
+  <script>
+    // Set global mock mode
+    window.MOCK_API_MODE = true;
+  </script>
+  
+  <!-- Load the new Pixar scripts -->
+  <script src="assets/pixar-utils.js"></script>
+  <script src="assets/pixar-config.js"></script>
+  <script src="assets/pixar-api-client.js"></script>
+  <script src="assets/pixar-transform-file-input.js"></script>
+  
+  <script>
+    // Setup logging to the results area
+    const resultsArea = document.getElementById('test-results');
+    
+    // Override console.log to also output to the results area
+    const originalConsoleLog = console.log;
+    console.log = function() {
+      // Call the original console.log
+      originalConsoleLog.apply(console, arguments);
+      
+      // Add to results area
+      const args = Array.from(arguments);
+      let message = args.map(arg => {
+        if (typeof arg === 'object') {
+          try {
+            return JSON.stringify(arg, null, 2);
+          } catch (e) {
+            return arg;
+          }
+        }
+        return arg;
+      }).join(' ');
+      
+      resultsArea.innerHTML += `<div>${message}</div>`;
+      resultsArea.scrollTop = resultsArea.scrollHeight;
+    };
+    
+    // Test utility functions
+    document.getElementById('test-utils').addEventListener('click', function() {
+      console.log('Testing Pixar Utils...');
+      
+      try {
+        // Test utility availability
+        if (!window.PixarUtils) {
+          throw new Error('PixarUtils not found! Make sure the script is loaded correctly.');
+        }
+        
+        // Test generateUniqueId
+        const uniqueId = window.PixarUtils.generateUniqueId();
+        console.log('Generated unique ID:', uniqueId);
+        
+        // Test ensureLoaded
+        const utils = window.PixarUtils.ensureLoaded();
+        console.log('Utils loaded successfully:', !!utils);
+        
+        console.log('Pixar Utils tests passed!');
+      } catch (error) {
+        console.error('Pixar Utils test failed:', error);
+      }
+    });
+    
+    // Test API client
+    document.getElementById('test-api-client').addEventListener('click', async function() {
+      console.log('Testing Pixar API Client...');
+      
+      try {
+        // Test API client availability
+        if (!window.PixarApiClient) {
+          throw new Error('PixarApiClient not found! Make sure the script is loaded correctly.');
+        }
+        
+        // Create a mock file for testing
+        const mockFile = new File(
+          [new Uint8Array(1000).fill(255)], 
+          'test-face.jpg', 
+          { type: 'image/jpeg' }
+        );
+        
+        // Create API client with mock mode
+        const client = new window.PixarApiClient({
+          mockMode: true
+        });
+        
+        // Test transformation
+        console.log('Testing transformation with mock file...');
+        const result = await client.transform({
+          sourceImage: mockFile,
+          transformationType: 'pixar'
+        });
+        
+        console.log('Transformation result:', result);
+        
+        if (result.success) {
+          console.log('Pixar API client tests passed!');
+        } else {
+          throw new Error('Transformation failed: ' + (result.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Pixar API client test failed:', error);
+      }
+    });
+    
+    // Clear logs button
+    document.getElementById('clear-logs').addEventListener('click', function() {
+      resultsArea.innerHTML = '';
+    });
+    
+    // Log that the page is ready
+    console.log('Pixar Transformation Test Page is ready. Mock mode is enabled.');
+  </script>
+</body>
+</html> 

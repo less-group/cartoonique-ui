@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Face Swap Test Page - Railway API</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    .mock-notice {
+      background-color: #ffe6cc;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .api-info {
+      background-color: #e6f7ff;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .test-container {
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .test-controls {
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 8px 16px;
+      margin-right: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    #test-results {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-family: monospace;
+    }
+    .result-image {
+      max-width: 100%;
+      margin-top: 20px;
+    }
+    .clear-button {
+      background-color: #f44336;
+    }
+  </style>
+</head>
+<body>
+  <h1>Face Swap Test Page - Railway API</h1>
+  
+  <div class="mock-notice">
+    <strong>Mock Mode Enabled:</strong> Testing without connecting to the real API. 
+    No real API calls will be made, and mock responses will be returned.
+  </div>
+  
+  <div class="api-info">
+    <strong>API Information:</strong>
+    <ul>
+      <li>Base URL: <span id="api-base-url">https://letzteshemd-faceswap-api-production.up.railway.app</span></li>
+      <li>Transformation Types: 
+        <ul>
+          <li>PIXAR Style: POST /pixar-transform</li>
+          <li>Railway Style: POST /railway-transform</li>
+        </ul>
+      </li>
+      <li>Status Endpoints:
+        <ul>
+          <li>PIXAR Style: GET /pixar-status/{jobId}</li>
+          <li>Railway Style: GET /railway-status/{jobId}</li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+  
+  <div class="test-container">
+    <h2>Face Swap Component Test</h2>
+    <face-swap-file-input-wrapper></face-swap-file-input-wrapper>
+  </div>
+  
+  <div class="test-container">
+    <h2>Test Controls</h2>
+    <div class="test-controls">
+      <button id="run-tests">Run All Tests</button>
+      <button id="run-api-test">Test API Client</button>
+      <button id="run-utils-test">Test Utils</button>
+      <button id="clear-results" class="clear-button">Clear Logs</button>
+    </div>
+    <div id="test-results">
+      <p>Test results will appear here...</p>
+    </div>
+  </div>
+  
+  <!-- Manual API Connection Test -->
+  <div class="test-section" style="margin-top: 20px; border: 1px solid #ddd; padding: 20px; border-radius: 5px;">
+    <h3>Manual API Connection Test</h3>
+    <p>Test direct connection to the API:</p>
+    <button onclick="testApiConnection()" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Test API</button>
+    
+    <h4>Test Results:</h4>
+    <div id="manual-test-results" style="background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; white-space: pre-wrap;"></div>
+  </div>
+  
+  <!-- Configuration -->
+  <script src="assets/unified-config.js"></script>
+  
+  <!-- Utility functions -->
+  <script src="assets/face-swap-utils.js"></script>
+  
+  <!-- API Client -->
+  <script src="assets/unified-api-client.js"></script>
+  
+  <!-- Custom element definition -->
+  <script src="assets/face-swap-file-input-wrapper.js"></script>
+  
+  <!-- Test scripts -->
+  <script src="assets/face-swap-test.js"></script>
+  
+  <!-- Manual test script -->
+  <script src="assets/face-swap-manual-test.js"></script>
+  
+  <!-- Debug utilities -->
+  <script src="debug-test.js"></script>
+  
+  <!-- Simple test utility -->
+  <script src="simple-test.js"></script>
+  
+  <script>
+    // Set global mock mode
+    window.MOCK_API_MODE = true;
+    
+    // Override console.log for the test page
+    const originalLog = console.log;
+    const originalError = console.error;
+    
+    console.log = function(...args) {
+      originalLog.apply(console, args);
+      appendToResults('LOG: ' + args.map(arg => {
+        if (typeof arg === 'object') {
+          try {
+            return JSON.stringify(arg, null, 2);
+          } catch (e) {
+            return String(arg);
+          }
+        }
+        return String(arg);
+      }).join(' '));
+    };
+    
+    console.error = function(...args) {
+      originalError.apply(console, args);
+      appendToResults('ERROR: ' + args.map(arg => {
+        if (typeof arg === 'object') {
+          try {
+            return JSON.stringify(arg, null, 2);
+          } catch (e) {
+            return String(arg);
+          }
+        }
+        return String(arg);
+      }).join(' '));
+    };
+    
+    function appendToResults(text) {
+      const resultsDiv = document.getElementById('test-results');
+      const line = document.createElement('div');
+      line.textContent = text;
+      resultsDiv.appendChild(line);
+      resultsDiv.scrollTop = resultsDiv.scrollHeight;
+    }
+    
+    // When the DOM is loaded, set up event handlers
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('Main script loaded and running');
+      
+      // Set the API base URL in the info section
+      document.getElementById('api-base-url').textContent = window.faceSwapApiUrl || 'https://letzteshemd-faceswap-api-production.up.railway.app';
+      
+      // Set up button event handlers
+      console.log('Setting up button event handlers...');
+      
+      document.getElementById('run-tests').addEventListener('click', () => {
+        console.log('Run All Tests button clicked');
+        window.testFaceSwap();
+      });
+      
+      document.getElementById('run-api-test').addEventListener('click', () => {
+        console.log('Test API Client button clicked');
+        window.testApiClient();
+      });
+      
+      document.getElementById('run-utils-test').addEventListener('click', () => {
+        console.log('Test Utils button clicked');
+        window.testUtils();
+      });
+      
+      document.getElementById('clear-results').addEventListener('click', () => {
+        document.getElementById('test-results').innerHTML = '';
+        console.log('Logs cleared');
+      });
+    });
+    
+    // Function to test direct API connection
+    async function testApiConnection() {
+      const resultElement = document.getElementById('manual-test-results');
+      resultElement.innerHTML = 'Testing API connection...';
+      
+      try {
+        // Use the unified API endpoint for a basic health check
+        const response = await fetch('https://letzteshemd-faceswap-api-production.up.railway.app/health', {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+        
+        const text = await response.text();
+        const status = response.status;
+        
+        resultElement.innerHTML = `
+          <div>Status: ${status}</div>
+          <div>Response: ${text}</div>
+        `;
+        
+      } catch (error) {
+        resultElement.innerHTML = `
+          <div style="color: red;">Error: ${error.message}</div>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>

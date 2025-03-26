@@ -1,0 +1,54 @@
+{%- liquid
+  assign image_alt = 'Image'
+
+  if video.alt != blank
+    assign image_alt = video.alt | escape
+  endif
+
+  assign image_tag = '<img' | append: ' alt="' | append: image_alt | append: '"'
+
+  assign result = ''
+  assign prepared_video_tag = '<video ' | append: ' ' | append: attrs
+-%}
+
+{% if loading == 'eager' %}
+  {% if autoplay %}
+    {{
+      video
+      | video_tag: class: class, autoplay: true, loop: loop, muted: true, controls: controls
+      | replace: '<img', image_tag
+      | replace: '<video', prepared_video_tag
+    }}
+  {% else %}
+    {{
+      video
+      | video_tag: class: class, autoplay: false, loop: loop, muted: muted, controls: controls
+      | replace: '<img', image_tag
+      | replace: '<video', prepared_video_tag
+    }}
+  {% endif %}
+{% else %}
+  <lazy-video
+    class='{{ class }}'
+    lazy-video
+    {% if autoplay %}
+      with-autoplay
+    {% endif %}
+  >
+    {% if autoplay %}
+      {{
+        video
+        | video_tag: class: class, autoplay: false, loop: loop, muted: true, controls: controls
+        | replace: '<img', image_tag
+        | replace: '<video', prepared_video_tag
+      }}
+    {% else %}
+      {{
+        video
+        | video_tag: class: class, autoplay: false, loop: loop, muted: muted, controls: controls
+        | replace: '<img', image_tag
+        | replace: '<video', prepared_video_tag
+      }}
+    {% endif %}
+  </lazy-video>
+{% endif %}

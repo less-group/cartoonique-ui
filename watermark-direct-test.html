@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Direct Watermark Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    .test-container {
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+    }
+    .image-preview {
+      max-width: 100%;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+    #result-container img {
+      max-width: 100%;
+      margin-top: 10px;
+    }
+    .log-entry {
+      margin-bottom: 5px;
+      font-family: monospace;
+      word-break: break-all;
+    }
+    #result-logs {
+      background-color: #f5f5f5;
+      padding: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+    .image-display {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .image-item {
+      flex: 1;
+      min-width: 300px;
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .image-item h3 {
+      margin-top: 0;
+      font-size: 16px;
+    }
+    .image-item img {
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h1>Direct Watermark Testing Tool</h1>
+  <p>This tool tests the watermarking functionality directly using the backend's /test-watermark endpoint.</p>
+  
+  <div class="test-container">
+    <h2>Watermark Configuration</h2>
+    <label for="watermark-url">Watermark Image URL:</label>
+    <input type="text" id="watermark-url" value="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/watermark.png">
+    
+    <div style="display: flex; gap: 10px;">
+      <div style="flex: 1;">
+        <label for="watermark-width">Width (px):</label>
+        <input type="number" id="watermark-width" value="200">
+      </div>
+      <div style="flex: 1;">
+        <label for="watermark-height">Height (px):</label>
+        <input type="number" id="watermark-height" value="200">
+      </div>
+      <div style="flex: 1;">
+        <label for="watermark-spacing">Spacing (px):</label>
+        <input type="number" id="watermark-spacing" value="200">
+      </div>
+    </div>
+    
+    <h2>Test Image</h2>
+    <input type="file" id="image-input" accept="image/*">
+    <div id="image-preview" class="image-preview" style="display: none;"></div>
+    
+    <div style="display: flex; gap: 10px;">
+      <button id="test-direct-btn">Test Direct Watermarking</button>
+      <button id="test-pixar-btn">Test Pixar with Watermark</button>
+      <button id="test-api-connection">Test API Connection</button>
+    </div>
+    
+    <h2>Results</h2>
+    <div id="result-logs"></div>
+    
+    <div id="image-display" class="image-display"></div>
+  </div>
+  
+  <!-- Load unified configuration -->
+  <script src="assets/unified-config.js"></script>
+  
+  <script>
+    // API configuration - uses values from unified-config.js if available
+    const API_BASE_URL = window.unifiedConfig?.api?.current()?.baseUrl || 'https://letzteshemd-faceswap-api-production.up.railway.app';
+    const TEST_WATERMARK_ENDPOINT = '/test-watermark';
+    const TRANSFORM_ENDPOINT = '/transform';
+    const STATUS_ENDPOINT = '/status/';
+    
+    // DOM elements
+    const watermarkUrlInput = document.getElementById('watermark-url');
+    const watermarkWidthInput = document.getElementById('watermark-width');
+    const watermarkHeightInput = document.getElementById('watermark-height');
+    const watermarkSpacingInput = document.getElementById('watermark-spacing');
+    const imageInput = document.getElementById('image-input');
+    const imagePreview = document.getElementById('image-preview');
+    const testDirectBtn = document.getElementById('test-direct-btn');
+    const testPixarBtn = document.getElementById('test-pixar-btn');
+    const resultLogs = document.getElementById('result-logs');
+    const imageDisplay = document.getElementById('image-display');
+    
+    // Add event listeners
+    imageInput.addEventListener('change', handleImageSelect);
+    testDirectBtn.addEventListener('click', testDirectWatermark);
+    testPixarBtn.addEventListener('click', testPixarWatermark);
+    document.getElementById('test-api-connection').addEventListener('click', testApiConnection);
+    
+    // Handle image selection
+    function handleImageSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        imagePreview.innerHTML = `<img src="${e.target.result}" alt="Selected image">`;
+        imagePreview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+    
+    // Log messages
+    function log(message, data) {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      
+      if (data) {
+        console.log(message, data);
+        if (typeof data === 'object') {
+          entry.textContent = `${message} ${JSON.stringify(data, null, 2)}`;
+        } else {
+          entry.textContent = `${message} ${data}`;
+        }
+      } else {
+        console.log(message);
+        entry.textContent = message;
+      }
+      
+      resultLogs.prepend(entry);
+    }
+    
+    // Display images in the results section
+    function displayImages(images) {
+      imageDisplay.innerHTML = '';
+      
+      for (const [title, url] of Object.entries(images)) {
+        if (!url || url === 'not present') continue;
+        
+        const imageItem = document.createElement('div');
+        imageItem.className = 'image-item';
+        
+        const heading = document.createElement('h3');
+        heading.textContent = title;
+        
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = title;
+        
+        imageItem.appendChild(heading);
+        imageItem.appendChild(img);
+        imageDisplay.appendChild(imageItem);
+      }
+    }
+    
+    // Get watermark config from inputs
+    function getWatermarkConfig() {
+      return {
+        url: watermarkUrlInput.value,
+        width: parseInt(watermarkWidthInput.value, 10),
+        height: parseInt(watermarkHeightInput.value, 10),
+        spaceBetweenWatermarks: parseInt(watermarkSpacingInput.value, 10)
+      };
+    }
+    
+    // Convert file to base64
+    async function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(file);
+      });
+    }
+    
+    // Test direct watermarking endpoint
+    async function testDirectWatermark() {
+      const file = imageInput.files[0];
+      if (!file) {
+        log('Please select an image first');
+        return;
+      }
+      
+      try {
+        log('Starting direct watermark test...');
+        
+        const base64Image = await fileToBase64(file);
+        const watermarkConfig = getWatermarkConfig();
+        
+        log('Watermark config:', watermarkConfig);
+        
+        // Strip data URL prefix if needed
+        const imageData = base64Image.includes('base64,') 
+          ? base64Image.split('base64,')[1] 
+          : base64Image;
+        
+        const payload = {
+          image: imageData,
+          watermark: watermarkConfig
+        };
+        
+        log('Sending request to test-watermark endpoint...');
+        
+        const response = await fetch(`${API_BASE_URL}${TEST_WATERMARK_ENDPOINT}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP error ${response.status}: ${errorText}`);
+        }
+        
+        const result = await response.json();
+        log('Direct watermark test response:', result);
+        
+        // Display result images
+        displayImages({
+          'Original Image': base64Image,
+          'Watermarked Image': result.watermarkedImageUrl || result.resultImageUrl
+        });
+        
+      } catch (error) {
+        log('Error in direct watermark test:', error.message);
+      }
+    }
+    
+    // Test pixar transformation with watermark
+    async function testPixarWatermark() {
+      const file = imageInput.files[0];
+      if (!file) {
+        log('Please select an image first');
+        return;
+      }
+      
+      try {
+        log('Starting image transformation with watermark test...');
+        
+        const base64Image = await fileToBase64(file);
+        const watermarkConfig = getWatermarkConfig();
+        
+        log('Watermark config:', watermarkConfig);
+        
+        const payload = {
+          sourceImage: base64Image,
+          watermark: watermarkConfig,
+          productId: '12345',
+          productVariantId: '67890'
+        };
+        
+        log('Submitting transformation job...');
+        
+        // Submit transform job
+        const transformResponse = await fetch(`${API_BASE_URL}${TRANSFORM_ENDPOINT}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        if (!transformResponse.ok) {
+          const errorText = await transformResponse.text();
+          throw new Error(`HTTP error ${transformResponse.status}: ${errorText}`);
+        }
+        
+        const transformResult = await transformResponse.json();
+        log('Transform job submitted:', transformResult);
+        
+        if (!transformResult.jobId) {
+          throw new Error('No job ID returned from API');
+        }
+        
+        // Poll for job completion
+        log(`Polling for job status (ID: ${transformResult.jobId})...`);
+        
+        let completed = false;
+        let attempts = 0;
+        const maxAttempts = 60; // 5 minutes at 5s intervals
+        
+        while (!completed && attempts < maxAttempts) {
+          attempts++;
+          
+          const statusResponse = await fetch(`${API_BASE_URL}${STATUS_ENDPOINT}${transformResult.jobId}`, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json'
+            }
+          });
+          
+          if (!statusResponse.ok) {
+            const errorText = await statusResponse.text();
+            throw new Error(`HTTP error ${statusResponse.status}: ${errorText}`);
+          }
+          
+          const statusResult = await statusResponse.json();
+          log(`Poll attempt ${attempts}: Status = ${statusResult.status}`);
+          
+          if (statusResult.status === 'COMPLETED') {
+            log('Job completed successfully!');
+            log('Complete response:', statusResult);
+            
+            // Log all available image URLs
+            log('Available image URLs:', {
+              resultImageUrl: statusResult.resultImageUrl ? 'present' : 'not present',
+              watermarkedImageUrlToShow: statusResult.watermarkedImageUrlToShow ? 'present' : 'not present',
+              watermarkedOriginalImageUrl: statusResult.watermarkedOriginalImageUrl ? 'present' : 'not present',
+              processedImageUrl: statusResult.processedImageUrl ? 'present' : 'not present',
+              processedPrintImageUrl: statusResult.processedPrintImageUrl ? 'present' : 'not present'
+            });
+            
+            // Display result images
+            displayImages({
+              'Original Image': base64Image,
+              'Transformed Image (resultImageUrl)': statusResult.resultImageUrl,
+              'Watermarked Image (watermarkedImageUrlToShow)': statusResult.watermarkedImageUrlToShow,
+              'Watermarked Original (watermarkedOriginalImageUrl)': statusResult.watermarkedOriginalImageUrl,
+              'Processed Image': statusResult.processedImageUrl,
+              'Print Image': statusResult.processedPrintImageUrl
+            });
+            
+            completed = true;
+          } else if (statusResult.status === 'FAILED') {
+            throw new Error(`Job failed: ${statusResult.error || 'Unknown error'}`);
+          } else {
+            // Wait 5 seconds before polling again
+            await new Promise(resolve => setTimeout(resolve, 5000));
+          }
+        }
+        
+        if (!completed) {
+          throw new Error('Polling timed out');
+        }
+        
+      } catch (error) {
+        log('Error in Pixar transform test:', error.message);
+      }
+    }
+    
+    // Test API connection
+    async function testApiConnection() {
+      try {
+        log('Testing API connection...');
+        
+        // Use the unified API endpoint for a basic health check
+        const response = await fetch(`${API_BASE_URL}/health`, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+        
+        const text = await response.text();
+        const status = response.status;
+        
+        log(`API connection test result - Status: ${status}`);
+        log(`API connection test result - Response: ${text}`);
+        
+      } catch (error) {
+        log('Error testing API connection:', error.message);
+      }
+    }
+  </script>
+</body>
+</html> 

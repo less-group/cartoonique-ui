@@ -1,0 +1,116 @@
+{%- liquid
+  assign options = block.settings
+
+  assign img_ratio = options.img_ratio
+  assign columns = options.columns
+  assign add_spacing_desktop = options.header_block_paddings_desktop
+  assign add_spacing_mobile = options.header_block_paddings_mobile
+  assign autoplay_mode = options.autoplay_mode
+  assign autoplay_interval = options.autoplay_interval
+
+  assign placeholder_count = columns | times: 2
+  assign products = blank
+  assign product_limit = columns | times: 3
+
+  assign product_card_align = options.product_card_align
+  assign product_card_with_bottom_spacing = false
+
+  if options.featured_products != blank
+    assign products = options.featured_products
+  elsif options.collection != blank
+    assign products = options.collection.products
+  else
+    assign products = (1..placeholder_count)
+  endif
+
+  assign add_side_paddings_desktop = false
+  assign add_side_paddings_mobile = false
+  if add_spacing_desktop < 12
+    assign add_side_paddings_desktop = true
+    assign product_card_with_bottom_spacing = true
+  endif
+  if add_spacing_mobile < 12
+    assign add_side_paddings_mobile = true
+    assign product_card_with_bottom_spacing = true
+  endif
+
+  assign block_visibility = options.block_visibility
+
+  assign enable_content_slide_in = settings.enable_content_slide_in
+-%}
+
+{% liquid
+  assign swatch_patterns = settings.primary_custom_colors_and_patterns
+  assign primary_custom_colors_and_patterns = swatch_patterns | newline_to_br | split: '<br />'
+%}
+
+{% capture section_background_color %}
+  {% render 'get-section-background-color', section: section %}
+{% endcapture %}
+
+<div
+  class='{{ class }} mega-menu__block mega-menu__block--featured-collection block-{{ block.id }} mega-menu__block--spaced {% if block_visibility != 'mobile_and_mobile' %} mega-menu__block--only-{{block_visibility}}-visible {% endif %} {% if add_side_paddings_desktop %}mega-menu__block--with-desktop-paddings-on-product {% endif %} {% if add_side_paddings_mobile %}mega-menu__block--with-mobile-paddings-on-product {% endif %}'
+  block-id='{{ block.id }}'
+  {{ block.shopify_attributes }}
+>
+  <slider-grid
+    class='slider-grid {% if request.design_mode %}is-editor-mode{% endif %}'
+    {% if autoplay_mode != 'disabled' %}
+      autoplay-mode='{{autoplay_mode}}'
+      autoplay-interval='{{autoplay_interval}}'
+    {% endif %}
+  >
+    <div
+      slider-grid-track
+      class='slider-grid-track slider-grid__d-carousel slider-grid__m-carousel'
+    >
+      {%- for product in products limit: product_limit -%}
+        <div
+          class='slider-grid__slide {% if enable_content_slide_in %}animate--slide-in{% endif %}'
+          slider-grid-slide
+          {% if enable_content_slide_in %}
+            style='--gsc-animation-order: {{forloop.index}};'
+          {% endif %}
+        >
+          {%- render 'product-card',
+            product: product,
+            img_ratio: img_ratio,
+            product_card_align: product_card_align,
+            add_side_paddings: add_side_paddings,
+            with_bottom_spacing: product_card_with_bottom_spacing,
+            primary_custom_colors_and_patterns: primary_custom_colors_and_patterns,
+            section_background_color: section_background_color
+          -%}
+        </div>
+      {%- endfor -%}
+    </div>
+
+    <div class='card-carousel__position-btn-wrap card-carousel__position-btn-wrap--prev {% if img_ratio == 'nature' %} card-carousel__position-btn-wrap--nature-img-ratio {% endif %}'>
+      <div class='shape shape--{{ img_ratio }}'>
+        <button
+          type='button'
+          class='carousel-btn card-carousel__carousel-btn card-carousel__carousel-btn--prev'
+          data-direction='prev'
+          tabindex='0'
+          disabled
+        >
+          {% render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon x-flip' %}
+        </button>
+      </div>
+    </div>
+
+    <div class='card-carousel__position-btn-wrap card-carousel__position-btn-wrap--next {% if img_ratio == 'nature' %} card-carousel__position-btn-wrap--nature-img-ratio {% endif %}'>
+      <div class='shape shape--{{ img_ratio }}'>
+        <button
+          type='button'
+          class='carousel-btn card-carousel__carousel-btn card-carousel__carousel-btn--next'
+          data-direction='next'
+          tabindex='0'
+          disabled
+        >
+          {%- render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon' -%}
+        </button>
+      </div>
+    </div>
+  </slider-grid>
+</div>

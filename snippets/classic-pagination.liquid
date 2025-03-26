@@ -1,0 +1,39 @@
+{%- if paginate.parts.size > 0 -%}
+  <pagination-component class="classic-pagination {{ class }} {% if settings.enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}" data-overlay-id="{{ overlay_id }}" data-container-id="{{ container_id }}"
+    {% if settings.enable_content_slide_in %}
+      style='--gsc-animation-order: 1;'
+    {% endif %}
+  >
+    <ul class="classic-pagination__list">
+    {%- if paginate.previous -%}
+      <li>
+        <pagination-link data-url="{{ paginate.previous.url }}" tabindex="0" class="classic-pagination__item classic-pagination__link">
+          <
+        </pagination-link>
+      </li>
+    {%- endif -%}
+ 
+    {%- for part in paginate.parts -%}
+      <li>
+        {%- if part.is_link -%}
+          <pagination-link data-url="{{ part.url }}" tabindex="0" class="classic-pagination__item classic-pagination__link">{{ part.title }}</pagination-link>
+        {%- else -%}
+          {%- if part.title == paginate.current_page -%}
+            <span class="classic-pagination__item classic-pagination__link active">{{ part.title }}</span>
+          {%- else -%}
+            <span class="classic-pagination__item">{{ part.title }}</span>
+          {%- endif -%}
+        {%- endif -%}
+      </li>
+    {%- endfor -%}
+
+    {%- if paginate.next -%}
+      <li>
+        <pagination-link data-url="{{ paginate.next.url }}" tabindex="0" class="classic-pagination__item classic-pagination__link" >
+          >
+        </pagination-link>
+      </li>
+    {%- endif -%}
+    </ul>
+  </pagination-component>
+{%- endif -%}

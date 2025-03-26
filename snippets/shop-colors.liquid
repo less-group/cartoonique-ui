@@ -1,0 +1,231 @@
+{%- liquid
+  assign sorted_filter_values = filter.values | uniq
+
+  assign swatch_patterns = settings.primary_custom_colors_and_patterns
+  if is_primary_swatch == false
+    assign swatch_patterns = settings.secondary_custom_colors_and_patterns
+  endif
+
+  assign primary_custom_colors_and_patterns = swatch_patterns | newline_to_br | split: '<br />'
+  assign current_color_scheme = 'default'
+  assign target_color_scheme = section.settings.color_scheme
+
+  if section.settings.color_scheme == 'default'
+    assign target_color_scheme = settings.default_color_scheme
+  endif
+
+  case target_color_scheme
+    when 'primary'
+      assign current_color_scheme = 'primary'
+    when 'secondary'
+      assign current_color_scheme = 'secondary'
+    when 'custom-1'
+      assign current_color_scheme = 'custom_1'
+    when 'custom-2'
+      assign current_color_scheme = 'custom_2'
+    when 'custom-3'
+      assign current_color_scheme = 'custom_3'
+  endcase
+
+  assign key = current_color_scheme | append: '_background_color'
+  assign section_background_color = settings[key] | downcase
+
+  assign filter_presentation = filter.presentation
+-%}
+
+{% if option_style contains 'button' %}
+  {%- for value in sorted_filter_values -%}
+    {%- liquid
+      assign color_downcase = value.label | downcase | strip
+
+      assign is_image = false
+      assign selected_color_label = color_downcase | capitalize
+      assign selected_color_value = color_downcase
+
+      for pattern in primary_custom_colors_and_patterns
+        assign config = pattern | split: '::'
+        assign pattern_label_downcase = config[0] | downcase | strip
+        assign pattern_value = config[1]
+
+        if pattern_label_downcase == color_downcase
+          unless pattern_value contains 'http'
+            if pattern_value contains '.png' or pattern_value contains '.jp'
+              assign selected_color_value = pattern_value
+
+              assign is_image = true
+            endif
+          endunless
+        endif
+      endfor
+    -%}
+
+    <label
+      class='checkbox'
+      data-list-item
+      for='Filter-Mobile-{{ filter.label | escape }}-{{ forloop.index }}'
+      {% if value.count == 0 %}
+        no-available
+      {% else %}
+        data-filters-checkbox
+      {% endif %}
+    >
+      <input
+        class='checkbox__input'
+        id='Filter-Mobile-{{ filter.label | escape }}-{{ forloop.index }}'
+        type='checkbox'
+        name='{{ value.param_name }}'
+        value='{{ value.value }}'
+        {% if value.active %}
+          checked
+        {% endif %}
+        {% if value.count == 0 and value.active == false %}
+          disabled
+        {% endif %}
+      >
+      <div
+        class='pill pill--small pill-with-color-swatch-in-filters {% if option_style == 'button-outline' %}pill--outline{% endif %} {% if option_style == 'button-solid' %}pill--solid{% endif %} {% if value.active %}selected{% endif %}'
+        {% if value.count == 0 and value.active == false %}
+          disabled
+        {% endif %}
+      >
+        <shape-swatch
+          data-color='{{ value.label }}'
+          data-section-background='{{ section_background_color | strip }}'
+          data-colors-patterns='{{ primary_custom_colors_and_patterns }}'
+          class='color-swatch {% if showed_filter_value_count > initial_visible_option_count %}color-swatch--disabled{% endif %} pill__color-swatch {% if is_primary_swatch %} {% if settings.primary_shape_for_filters == 'round' %} color-swatch--round {% else %} color-swatch--square {% endif %} {% else %} {% if settings.secondary_shape_for_filters == 'round' %} color-swatch--round {% else %} color-swatch--square {% endif %} {% endif %}'
+          style='{% if is_image %} --gsc-color-swatch-value: url({{ selected_color_value | file_img_url: "200x" }}); {% endif %}'
+          {% if is_image %}
+            is-image
+          {% endif %}
+        >
+          {% if value.count == 0 %}
+            <div class='color-swatch__line'></div>
+          {% endif %}
+        </shape-swatch>
+        <span class='pill__label'>{{ value.label | escape }} ({{ value.count }})</span>
+      </div>
+    </label>
+  {%- endfor -%}
+{% else %}
+  <div class='filters__colors'>
+    {%- for value in sorted_filter_values -%}
+      {% case filter_presentation %}
+        {% when 'swatch' %}
+          {%- liquid
+            assign color_downcase = value.swatch.color
+            assign image_url = value.swatch.image
+
+            assign is_image = false
+            assign selected_color_label = value.label | capitalize
+            assign selected_color_value = color_downcase
+
+            if image_url != blank
+              assign is_image = true
+              assign selected_color_value = image_url | replace: 'files/', '' | replace: 'products/', ''
+            endif
+
+            assign filter_label = filter.label | escape | handleize
+          -%}
+        {% when 'image' %}
+          {%- liquid
+            assign color_downcase = value.label
+
+            assign is_image = true
+            assign selected_color_label = color_downcase | capitalize
+            assign selected_color_value = value.image | replace: 'files/', '' | replace: 'products/', ''
+
+            assign filter_label = filter.label | escape | handleize
+          -%}
+        {% else %}
+          {%- liquid
+            assign color_downcase = value.label | downcase | strip
+
+            assign is_image = false
+            assign selected_color_label = color_downcase | capitalize
+            assign selected_color_value = color_downcase
+
+            for pattern in primary_custom_colors_and_patterns
+              assign config = pattern | split: '::'
+              assign pattern_label_downcase = config[0] | downcase | strip
+              assign pattern_value = config[1]
+
+              if pattern_label_downcase == color_downcase
+                unless pattern_value contains 'http'
+                  if pattern_value contains '.png' or pattern_value contains '.jp'
+                    assign selected_color_value = pattern_value
+
+                    assign is_image = true
+                  endif
+                endunless
+              endif
+            endfor
+
+            assign filter_label = filter.label | escape | handleize
+          -%}
+      {% endcase %}
+
+      <tooltip-trigger
+        style='display: block; position: relative;'
+        data-float-element-id='ShopColor-{{ resolution }}-{{ filter_label }}-{{ forloop.index }}'
+        data-aria-expanded='false'
+      >
+        <label
+          class='checkbox'
+          for='Filter-{{ resolution }}-{{ filter_label  }}-{{ forloop.index }}'
+          {% if value.count == 0 %}
+            no-available
+          {% else %}
+            data-filters-checkbox
+          {% endif %}
+        >
+          <input
+            class='checkbox__input filters__input'
+            type='checkbox'
+            name='{{ value.param_name }}'
+            value='{{ value.value }}'
+            aria-label='{{ value.value | strip_html | escape }} color'
+            id='Filter-{{ resolution }}-{{ filter_label  }}-{{ forloop.index }}'
+            {% if value.active %}
+              checked
+            {% endif %}
+            {% if value.count == 0 and value.active == false %}
+              disabled
+            {% endif %}
+          >
+
+          <shape-swatch
+            data-color='{{ color_downcase }}'
+            data-section-background='{{ section_background_color | strip }}'
+            data-colors-patterns='{{ primary_custom_colors_and_patterns }}'
+            class='color-swatch {% if value.count == 0 %}color-swatch--disabled{% endif %} {% if is_primary_swatch %} color-swatch--{{ settings.primary_shape_for_filters }} {% else %} color-swatch--{{ settings.secondary_shape_for_filters }}{% endif %}'
+            style='{% if is_image %} --gsc-color-swatch-value: url({{ selected_color_value | file_img_url: "200x" }}); {% endif %}'
+            {% if is_image %}
+              is-image
+            {% endif %}
+          >
+            {% if value.count == 0 %}
+              <div class='color-swatch__line'></div>
+            {% endif %}
+          </shape-swatch>
+          <float-element
+            class='tooltip filters__color-swatch-tooltip'
+            aria-hidden='true'
+            id='ShopColor-{{ resolution }}-{{ filter_label }}-{{ forloop.index }}'
+            data-placement='bottom'
+            data-type='tooltip'
+          >
+            <template data-float-element-template='ShopColor-{{ resolution }}-{{ filter_label }}-{{ forloop.index }}'>
+              <div class='tooltip__body'>
+                <div class='tooltip__arrow' data-float-element-arrow></div>
+                {{ selected_color_label }}
+                {% if show_result_count %}
+                    <span class="filters__option-count">({{ value.count }})</span>
+                {% endif %}
+              </div>
+            </template>
+          </float-element>
+        </label>
+      </tooltip-trigger>
+    {%- endfor -%}
+  </div>
+{% endif %}

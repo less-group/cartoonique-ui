@@ -1,0 +1,64 @@
+{%- liquid
+  assign options = block.settings
+  assign btn_text = options.popup_link_text
+  assign btn_style = options.btn_style
+  assign icon = options.icon
+  assign custom_icon_image = options.custom_icon_image
+-%}
+<div class='block-{{ block.id }} product-drawer-tabs-trigger-block' {{ block.shopify_attributes }}>
+  {%- if btn_style == 'text' -%}
+    <sidebar-button>
+      <button
+        data-sidebar-button
+        class='product-drawer-tabs-trigger-link {{ block.settings.heading_size }} unstyled-button'
+        data-sidebar-id='product-information-sidebar-{{ block.id }}-{{ product.id }}-{{ sectionId }}'
+        aria-label='{{ btn_text | strip_html | escape }}'
+        type='button'
+      >
+        {% if custom_icon_image != blank or icon != 'none' %}
+          <div class='product-drawer-tabs-trigger-link__icon-wrap'>
+            {%- if custom_icon_image != blank -%}
+              <img
+                {% render 'image-attributes',
+                  image: custom_icon_image,
+                  size: 'small',
+                  class: 'product-drawer-tabs-trigger-link__icon'
+                %}
+              >
+            {%- elsif icon != 'none' -%}
+              {% render 'icon-pack', icon: icon, class: 'product-drawer-tabs-trigger-link__icon' %}
+            {%- endif -%}
+          </div>
+        {% endif %}
+        <span class='product-drawer-tabs-trigger-link__title'>{{ btn_text }}</span>
+      </button>
+    </sidebar-button>
+  {%- else -%}
+    <sidebar-button>
+      <button
+        data-sidebar-button
+        class='unstyled-button product-drawer-tabs-trigger-button {{ block.settings.heading_size }} {% if btn_style == 'solid' %} product-drawer-tabs-trigger-button--solid {% elsif btn_style == 'outline' %} product-drawer-tabs-trigger-button--outline {% endif %}'
+        data-sidebar-id='product-information-sidebar-{{ block.id }}-{{ product.id }}-{{ sectionId }}'
+        aria-label='{{ btn_text | strip_html | escape }}'
+        type='button'
+      >
+        {% if custom_icon_image != blank or icon != 'none' %}
+          <div class='product-drawer-tabs-trigger-button__icon-wrap'>
+            {%- if custom_icon_image != blank -%}
+              <img
+                {% render 'image-attributes',
+                  image: custom_icon_image,
+                  size: 'small',
+                  class: 'product-drawer-tabs-trigger-button__icon'
+                %}
+              >
+            {%- elsif icon != 'none' -%}
+              {% render 'icon-pack', icon: icon, class: 'product-drawer-tabs-trigger-button__icon' %}
+            {%- endif -%}
+          </div>
+        {% endif %}
+        <span class='product-drawer-tabs-trigger-button__title'>{{ btn_text }}</span>
+      </button>
+    </sidebar-button>
+  {%- endif -%}
+</div>

@@ -1,0 +1,101 @@
+{%- liquid
+  assign rating_count = rating_count | default: 0
+
+  assign is_average_rating = false
+  assign is_single_star = false
+
+  if rating_style == 'average_rating_and_stars' or rating_style == 'average_rating_only'
+    assign is_average_rating = true
+    assign rating_count = rating_count | round: 2
+  endif
+
+  if rating_style == 'average_rating_only' or rating_style == 'review_count_only'
+    assign is_single_star = true
+  endif
+
+  assign decimal = rating_count | modulo: 1
+  assign half_star_index = rating_count | minus: decimal | plus: 1
+-%}
+
+{% capture stars %}
+  {% if is_single_star %}
+    {% if rating_count != 0 %}
+      <svg class='rating__star' viewbox='0 0 18 17' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path d="M9 0L11.3276 5.79629L17.5595 6.21885L12.7662 10.2237L14.2901 16.2812L9 12.96L3.70993 16.2812L5.23382 10.2237L0.440492 6.21885L6.67237 5.79629L9 0Z" fill="#141416"/>
+      </svg>
+    {% else %}
+      <svg
+        class='rating__star rating__star--transparent'
+        viewbox='0 0 18 17'
+        fill='none'
+        xmlns='http://www.w3.org/2000/svg'
+      >
+        <path d="M9 0L11.3276 5.79629L17.5595 6.21885L12.7662 10.2237L14.2901 16.2812L9 12.96L3.70993 16.2812L5.23382 10.2237L0.440492 6.21885L6.67237 5.79629L9 0Z" fill="#141416"/>
+      </svg>
+    {% endif %}
+
+  {% else %}
+    {%- for i in (1..5) -%}
+      {%- if forloop.index <= rating_count -%}
+        <svg class='rating__star' viewbox='0 0 18 17' fill='none' xmlns='http://www.w3.org/2000/svg'>
+          <path d="M9 0L11.3276 5.79629L17.5595 6.21885L12.7662 10.2237L14.2901 16.2812L9 12.96L3.70993 16.2812L5.23382 10.2237L0.440492 6.21885L6.67237 5.79629L9 0Z" fill="#141416"/>
+        </svg>
+      {%- elsif forloop.index == half_star_index and decimal > 0 -%}
+        <svg class='rating__star' viewbox='0 0 18 17' fill='none' xmlns='http://www.w3.org/2000/svg'>
+          <path d="M9 0L11.3276 5.79629L17.5595 6.21885L12.7662 10.2237L14.2901 16.2812L9 12.96L3.70993 16.2812L5.23382 10.2237L0.440492 6.21885L6.67237 5.79629L9 0Z" fill="#141416" opacity="0.35"/>
+          <path d="M8.99994 0V12.96L3.70987 16.2812L5.23375 10.2237L0.44043 6.21885L6.67231 5.79629L8.99994 0Z" fill="#141416"/>
+        </svg>
+      {%- else -%}
+        <svg
+          class='rating__star rating__star--transparent'
+          viewbox='0 0 18 17'
+          fill='none'
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <path d="M9 0L11.3276 5.79629L17.5595 6.21885L12.7662 10.2237L14.2901 16.2812L9 12.96L3.70993 16.2812L5.23382 10.2237L0.440492 6.21885L6.67237 5.79629L9 0Z" fill="#141416"/>
+        </svg>
+      {%- endif -%}
+    {%- endfor -%}
+  {% endif %}
+{% endcapture %}
+
+{% capture review_count %}
+  {% if is_average_rating %}
+    {{ rating_count }}
+  {% else %}
+    {{ 'general.rating.store_front.review_count' | t: count: rating_reviews_count }}
+  {% endif %}
+{% endcapture %}
+
+{% if rating_style == 'review_count_only' %}
+  <div class='rating {{ class }} rating--with-inline-star'>
+    <span class='rating__count'>
+      <span>{{ review_count }}</span>
+      {{ stars }}
+    </span>
+  </div>
+
+{% elsif rating_style == 'average_rating_only' %}
+  <div class='rating {{ class }}'>
+    <span class='rating__count'>
+      {{ review_count }}
+    </span>
+    <span class='rating__stars'>
+      {{ stars }}
+    </span>
+  </div>
+
+{% elsif rating_style == 'average_rating_and_stars' or rating_style == 'review_count_and_stars' %}
+  <div class='rating {{ class }}'>
+    <span class='rating__stars'>
+      {{ stars }}
+    </span>
+    <span class='rating__count'>
+      {{ review_count }}
+    </span>
+  </div>
+{% else %}
+  <div class='rating {{ class }}'>
+    {{ stars }}
+  </div>
+{% endif %}

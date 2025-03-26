@@ -1,0 +1,24 @@
+{%- liquid
+  assign sku = product.selected_or_first_available_variant.sku
+
+  if product == blank
+    assign sku = 21623612
+  endif
+-%}
+
+<div class='product-general-info-block' {{ block.shopify_attributes }}>
+  <product-block class='product-general-info__text' id='product-sku-{{ product.id }}-{{ sectionId }}'>
+    {%- for variant in product.variants -%}
+      <template data-product-block-template='{{ variant.id }}'>
+        <span data-product-block-item class='product__sku body-color'>
+          {{ 'product.store_front.sku' | t: sku: variant.sku }}
+        </span>
+      </template>
+    {%- endfor -%}
+    <div data-product-block-container>
+      <span data-product-block-item class='product__sku body-color'>
+        {{ 'product.store_front.sku' | t: sku: sku }}
+      </span>
+    </div>
+  </product-block>
+</div>

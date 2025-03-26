@@ -1,0 +1,129 @@
+{%- liquid
+  assign options = block.settings
+  assign show_tax_status = options.show_tax_status
+  assign show_currency_code = options.show_currency_code
+  assign show_compared_at_price = options.show_compared_at_price
+  assign taxes_included = cart.taxes_included
+-%}
+
+{% capture section_background_color %}
+  {% render 'get-section-background-color', section: section %}
+{% endcapture %}
+
+<div class='product-general-info-block block-{{ block.id }}' {{ block.shopify_attributes }}>
+  <product-block
+    class='product-price-wrapper'
+    id='product-price-{{ product.id }}-{{ sectionId }}'
+  >
+    {%- for variant in product.variants -%}
+      {% assign price = variant.price | default: 0 %}
+
+      <template data-product-block-template='{{ variant.id }}'>
+        <div class='product-price__content' data-product-block-item>
+          <div class='product-price__cost'>
+            <div class='product-price__current-price {% if block.settings.highlight_sale_price and variant.compare_at_price > price %} product-price__current-price--highlight-sale{% endif %}'>
+              {% if show_currency_code %}
+                {{ variant.price | money_with_currency }}
+              {% else %}
+                {{ variant.price | money }}
+              {% endif %}
+
+              {%- if variant.unit_price_measurement -%}
+                (
+                {%- if show_currency_code %}
+                  {{ variant.unit_price | money_with_currency }}
+                {% else %}
+                  {{ variant.unit_price | money }}
+                {% endif %}
+
+                <span aria-hidden='true'>/</span>
+
+                {%- if variant.unit_price_measurement.reference_value != 1 -%}
+                  {{- variant.unit_price_measurement.reference_value -}}
+                {%- endif -%}
+                
+                {{ variant.unit_price_measurement.reference_unit }})
+              {%- endif -%}
+            </div>
+
+            {%- if show_compared_at_price and variant.compare_at_price > price -%}
+              <div class='product-price__old-price  {% if block.settings.highlight_sale_price and variant.compare_at_price > price %} product-price__old-price--highlight-sale{% endif %}'>
+                {%- if show_currency_code %}
+                  {{ variant.compare_at_price | money_with_currency }}
+                {% else %}
+                  {{ variant.compare_at_price | money }}
+                {% endif %}
+              </div>
+            {%- endif -%}
+          </div>
+
+          {%- if variant.compare_at_price > price and variant.available and block.settings.show_sale_amount_badge -%}
+            {% render 'badges',
+              name: 'sale_amount',
+              section_background_color: section_background_color,
+              product: variant
+            %}
+          {%- endif -%}
+        </div>
+      </template>
+    {%- endfor -%}
+    {%- liquid
+      assign variant = product.selected_or_first_available_variant
+      assign compare_at_price = variant.compare_at_price | default: 0
+      assign price = variant.price | default: 0
+    -%}
+    <div class='product-price' data-product-block-container>
+      <div class='product-price__content' data-product-block-item>
+        <div class='product-price__cost'>
+          <div class='product-price__current-price {% if block.settings.highlight_sale_price and variant.compare_at_price > price %} product-price__current-price--highlight-sale{% endif %}'>
+            {% if show_currency_code %}
+              {{ price | money_with_currency }}
+            {% else %}
+              {{ price | money }}
+            {% endif %}
+
+            {%- if variant.unit_price_measurement -%}
+              (
+              {%- if show_currency_code %}
+                {{ variant.unit_price | money_with_currency }}
+              {% else %}
+                {{ variant.unit_price | money }}
+              {% endif %}
+
+              <span aria-hidden='true'>/</span>
+
+              {%- if variant.unit_price_measurement.reference_value != 1 -%}
+                {{- variant.unit_price_measurement.reference_value -}}
+              {%- endif -%}
+
+              {{ variant.unit_price_measurement.reference_unit }})
+            {%- endif -%}
+          </div>
+
+          {%- if show_compared_at_price and compare_at_price > price -%}
+            <div class='product-price__old-price {% if block.settings.highlight_sale_price %} product-price__old-price--highlight-sale{% endif %}'>
+              {%- if show_currency_code %}
+                {{ compare_at_price | money_with_currency }}
+              {% else %}
+                {{ compare_at_price | money }}
+              {% endif %}
+            </div>
+          {%- endif -%}
+        </div>
+
+        {%- if variant.compare_at_price > price and variant.available and block.settings.show_sale_amount_badge -%}
+          {% render 'badges',
+            name: 'sale_amount',
+            section_background_color: section_background_color,
+            product: variant
+          %}
+        {%- endif -%}
+      </div>
+    </div>
+    {%- if show_tax_status -%}
+      <div class='product-price__tax-status body-color'>
+        {% render 'taxes-included-label' %}
+      </div>
+    {%- endif -%}
+  </product-block>
+</div>

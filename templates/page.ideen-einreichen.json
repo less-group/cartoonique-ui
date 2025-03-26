@@ -1,0 +1,130 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "faq_rEB8Pe": {
+      "type": "faq",
+      "blocks": {
+        "item_H4gc4y": {
+          "type": "item",
+          "settings": {
+            "title": "Ich habe keine Bestätigungs-E-Mail erhalten?",
+            "content": "<p>Kleiner Tipp: Alle Bestätigungs-E-Mails kommen automatisch von Letztes Hemd. Schau am besten mal in deinem Posteingang nach – manchmal verirren sie sich auch in den Spam-Ordner. Falls du denkst, dass du beim Checkout eine falsche E-Mail eingetippt hast, gib uns einfach Bescheid, dann korrigieren wir das für dich.</p>"
+          }
+        },
+        "item_68fzAX": {
+          "type": "item",
+          "settings": {
+            "title": "Wo bleibt mein Paket?",
+            "content": "<p>Alle Pakete werden mit Sendungsverfolgung verschickt, aber sobald sie unser Lager verlassen haben, haben wir leider keinen Einfluss mehr darauf. Wenn du dir Sorgen wegen eines verlorenen oder verspäteten Pakets machst, melde dich einfach bei uns – wir geben unser Bestes, um dir zu helfen.</p>"
+          }
+        },
+        "item_WnrDbz": {
+          "type": "item",
+          "settings": {
+            "title": "Aus welchem Material sind die T-Shirts?",
+            "content": "<p>Unsere T-Shirts bestehen zu 100% aus hochwertiger Baumwolle, was ihnen nicht nur eine weiche Textur, sondern auch eine lange Haltbarkeit verleiht. Bei einigen speziellen Designs oder Kollektionen verwenden wir eventuell andere Materialmischungen, dies wird aber immer deutlich auf der Produktseite angegeben.</p>"
+          }
+        },
+        "item_VyFwPE": {
+          "type": "item",
+          "settings": {
+            "title": "Wie lange dauert der Versand?",
+            "content": "<p>Nachdem du deine Bestellung aufgegeben hast, wird sie normalerweise innerhalb von 3-5 Werktagen bearbeitet und verschickt. Die genaue Lieferzeit hängt von deinem Standort ab, aber in der Regel kannst du dein T-Shirt innerhalb von 4-10 Werktagen erwarten. Du erhältst außerdem eine Versandbestätigung per E-Mail.</p>"
+          }
+        },
+        "item_zFUcgV": {
+          "type": "item",
+          "settings": {
+            "title": "Kann ich ein T-Shirt zurückgeben oder umtauschen?",
+            "content": "<p>Natürlich! Wenn du mit deinem Kauf nicht zufrieden bist, kannst du ihn innerhalb von 14 Tagen nach Erhalt zurückgeben oder umtauschen. Das T-Shirt sollte ungetragen, ungewaschen und in seinem Originalzustand sein. Um den Rückgabeprozess zu starten, schreib uns einfach an <a>Kontakt@letzteshemd.de</a>. Die Rücksendekosten musst du tragen, es sei denn, es liegt ein Fehler von unserer Seite vor.</p>"
+          }
+        },
+        "item_dfzfBQ": {
+          "type": "item",
+          "settings": {
+            "title": "Wie ist die Qualität des Drucks und wie sollte ich das T-Shirt waschen, um den Druck zu erhalten?",
+            "content": "<p>Unsere T-Shirts werden mit hochwertigen Druckverfahren veredelt, die für lebendige Farben und Langlebigkeit sorgen. Um den Druck optimal zu schützen und die Qualität zu erhalten, empfehlen wir dir, das T-Shirt auf links zu drehen und bei niedrigen Temperaturen (idealerweise 30 Grad) zu waschen. Vermeide es, das T-Shirt im Trockner zu trocknen und bügle nicht direkt über den Druck. Wenn du diese Pflegehinweise beachtest, bleibt der Druck lange frisch und lebendig.</p>"
+          }
+        },
+        "item_weyFTY": {
+          "type": "item",
+          "settings": {
+            "title": "Kann ich ein personalisiertes Design bestellen?",
+            "content": "<p>Ja, einfach auf unserer Homepage nach unten scrollen, und du wirst eine Custom-Kollektion finden, mit der du dein eigenes Design erstellen kannst</p>"
+          }
+        }
+      },
+      "block_order": [
+        "item_H4gc4y",
+        "item_68fzAX",
+        "item_WnrDbz",
+        "item_VyFwPE",
+        "item_zFUcgV",
+        "item_dfzfBQ",
+        "item_weyFTY"
+      ],
+      "disabled": true,
+      "settings": {
+        "full_width": true,
+        "subheading": "",
+        "title": "FAQ",
+        "content": "",
+        "team_avatar_width": 160,
+        "support_hours": "",
+        "answer_time": "",
+        "button_text": "",
+        "button_url": "",
+        "text_position": "center",
+        "background": "",
+        "background_gradient": "",
+        "text_color": "",
+        "heading_color": "",
+        "heading_gradient": "",
+        "button_background": "",
+        "button_text_color": "",
+        "accordion_background": "",
+        "accordion_text_color": ""
+      }
+    },
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "content_width": "80ch"
+      }
+    },
+    "contact": {
+      "type": "contact",
+      "settings": {
+        "full_width": true,
+        "subheading": "",
+        "title": "Ideen einreichen",
+        "content": "<h4>Hast du eine Idee für ein T-Shirt? Dann möchten wir gerne von dir hören. Schick uns deinen Vorschlag! Alle Ideen, die verwendet werden, werden mit einem Gutschein im Wert von 500.- belohnt.</h4>",
+        "text_position": "center",
+        "contact_form_size": "small",
+        "background": "",
+        "background_gradient": "",
+        "text_color": "",
+        "heading_color": "",
+        "heading_gradient": "",
+        "contact_background": "",
+        "contact_text_color": "",
+        "button_background": "",
+        "button_text_color": ""
+      }
+    }
+  },
+  "order": [
+    "faq_rEB8Pe",
+    "main",
+    "contact"
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "sections": {
+    "cart": {
+      "type": "cart",
+      "blocks": {
+        "items": {
+          "type": "items",
+          "settings": {}
+        },
+        "order_notes": {
+          "type": "order_notes",
+          "settings": {}
+        },
+        "subtotal": {
+          "type": "subtotal",
+          "settings": {
+            "show_taxes_and_shipping_costs": true
+          }
+        },
+        "buttons": {
+          "type": "buttons",
+          "settings": {
+            "show_payment_icons": true
+          }
+        },
+        "2bcfb89d-d6dd-4c35-b1f8-7120c5e7d5d5": {
+          "type": "in_cart_related",
+          "settings": {
+            "hide_for_empty_cart": true,
+            "color_scheme": "secondary",
+            "enable_color_background": false,
+            "img_ratio": "inherited",
+            "heading": "You may also like",
+            "heading_size": "h6",
+            "heading_alignment": "left",
+            "recommendations_type": "auto",
+            "featured_collection": "",
+            "featured_products": [],
+            "cards_to_show": 10
+          }
+        }
+      },
+      "block_order": [
+        "items",
+        "order_notes",
+        "subtotal",
+        "buttons",
+        "2bcfb89d-d6dd-4c35-b1f8-7120c5e7d5d5"
+      ],
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "small",
+        "section_spacing_top": 96,
+        "section_spacing_bottom": 96,
+        "img_ratio": "default"
+      }
+    }
+  },
+  "order": ["cart"]
+}

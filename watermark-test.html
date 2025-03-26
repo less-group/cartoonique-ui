@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Watermark Configuration Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    .test-container {
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .test-section {
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    input, select {
+      padding: 8px;
+      margin-bottom: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    #test-results {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-family: monospace;
+    }
+    .watermark-preview {
+      max-width: 100%;
+      border: 1px dashed #ccc;
+      padding: 10px;
+      margin-top: 10px;
+    }
+    .config-display {
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>Watermark Configuration Test</h1>
+  
+  <div class="test-container">
+    <h2>Current Watermark Configuration</h2>
+    <div class="test-section">
+      <div id="current-config" class="config-display">Loading configuration...</div>
+    </div>
+    
+    <h2>Test New Watermark Configuration</h2>
+    <div class="test-section">
+      <label for="watermark-url">Watermark Image URL:</label>
+      <input type="text" id="watermark-url" placeholder="https://example.com/watermark.png">
+      
+      <label for="watermark-width">Width (px):</label>
+      <input type="number" id="watermark-width" value="200">
+      
+      <label for="watermark-height">Height (px):</label>
+      <input type="number" id="watermark-height" value="200">
+      
+      <label for="watermark-spacing">Spacing Between Watermarks (px):</label>
+      <input type="number" id="watermark-spacing" value="200">
+      
+      <button id="update-config">Update Configuration</button>
+      <button id="reset-config">Reset to Default</button>
+    </div>
+    
+    <h2>Test API Request with Watermark</h2>
+    <div class="test-section">
+      <label for="image-file">Select Image:</label>
+      <input type="file" id="image-file" accept="image/*">
+      
+      <button id="test-api" disabled>Test API Request</button>
+      <button id="clear-logs">Clear Logs</button>
+    </div>
+    
+    <h2>Results</h2>
+    <div id="test-results" style="margin-top: 20px; background-color: #f0f0f0; padding: 10px; border-radius: 5px; font-family: monospace; white-space: pre-wrap;"></div>
+
+    <!-- Manual API Connection Test -->
+    <div class="test-section" style="margin-top: 20px; border: 1px solid #ddd; padding: 15px; border-radius: 5px;">
+      <h3>Manual API Connection Test</h3>
+      <p>Test direct connection to the API:</p>
+      <button onclick="testApiConnection()" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Test API</button>
+      
+      <h4>Test Results:</h4>
+      <div id="manual-test-results" style="background: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; white-space: pre-wrap;"></div>
+    </div>
+  </div>
+  
+  <!-- Load the same scripts used in the main application -->
+  <script>
+    // Update the configuration
+    window.pixarConfig = {
+      api: {
+        development: {
+          baseUrl: 'https://api.letzteshemd-faceswap.com',
+          timeout: 120000,
+          pollingInterval: 5000,
+          maxPollingAttempts: 60
+        },
+        production: {
+          baseUrl: 'https://api.letzteshemd-faceswap.com',
+          timeout: 120000,
+          pollingInterval: 5000,
+          maxPollingAttempts: 60
+        }
+      },
+      endpoints: {
+        transform: '/transform',
+        status: '/status/'
+      },
+      watermark: {
+        url: 'https://cdn.shopify.com/s/files/1/0626/3416/4430/files/letzteshemd-watermark.png',
+        width: 200,
+        height: 200,
+        spaceBetweenWatermarks: 100
+      }
+    };
+    
+    // Set initial watermark config
+    window.watermarkImage = { ...window.pixarConfig.watermark };
+    
+    // Mock API client for testing
+    class MockUnifiedApiClient {
+      constructor() {
+        this.baseUrl = window.pixarConfig.api.development.baseUrl;
+      }
+      
+      log(message, data) {
+        const logMessage = data ? `${message} ${JSON.stringify(data)}` : message;
+        const resultsDiv = document.getElementById('test-results');
+        resultsDiv.innerHTML += `<div>${new Date().toISOString().split('T')[1].split('.')[0]} - ${logMessage}</div>`;
+        console.log(message, data);
+      }
+      
+      async transform(params) {
+        this.log('Transforming image with params:', params);
+        this.log('Watermark config being sent:', params.watermark || window.watermarkImage);
+        
+        // Simulate network request
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve({
+              success: true,
+              jobId: 'mock-job-' + Date.now(),
+              status: 'COMPLETED',
+              imageUrl: 'https://picsum.photos/400/600',
+              watermarkedImageUrlToShow: 'https://picsum.photos/400/600',
+              watermarkedOriginalImageUrl: 'https://picsum.photos/400/600',
+              processedImageUrl: 'https://picsum.photos/400/600',
+              processedPrintImageUrl: 'https://picsum.photos/400/600',
+              message: 'Mock transformation completed successfully'
+            });
+          }, 1500);
+        });
+      }
+    }
+    
+    // Update the configuration display
+    function updateConfigDisplay() {
+      const configDiv = document.getElementById('current-config');
+      configDiv.textContent = JSON.stringify(window.watermarkImage, null, 2);
+    }
+    
+    // Document ready
+    document.addEventListener('DOMContentLoaded', function() {
+      updateConfigDisplay();
+      
+      // Get form elements
+      const urlInput = document.getElementById('watermark-url');
+      const widthInput = document.getElementById('watermark-width');
+      const heightInput = document.getElementById('watermark-height');
+      const spacingInput = document.getElementById('watermark-spacing');
+      const updateButton = document.getElementById('update-config');
+      const resetButton = document.getElementById('reset-config');
+      const fileInput = document.getElementById('image-file');
+      const testApiButton = document.getElementById('test-api');
+      const clearLogsButton = document.getElementById('clear-logs');
+      const resultsDiv = document.getElementById('test-results');
+      
+      // Set initial values from current config
+      urlInput.value = window.watermarkImage.url;
+      widthInput.value = window.watermarkImage.width;
+      heightInput.value = window.watermarkImage.height;
+      spacingInput.value = window.watermarkImage.spaceBetweenWatermarks;
+      
+      // Update config when button is clicked
+      updateButton.addEventListener('click', function() {
+        window.watermarkImage = {
+          url: urlInput.value,
+          width: parseInt(widthInput.value, 10),
+          height: parseInt(heightInput.value, 10),
+          spaceBetweenWatermarks: parseInt(spacingInput.value, 10)
+        };
+        
+        updateConfigDisplay();
+        resultsDiv.innerHTML += '<div>Configuration updated.</div>';
+      });
+      
+      // Reset to default config
+      resetButton.addEventListener('click', function() {
+        window.watermarkImage = { ...window.pixarConfig.watermark };
+        
+        urlInput.value = window.watermarkImage.url;
+        widthInput.value = window.watermarkImage.width;
+        heightInput.value = window.watermarkImage.height;
+        spacingInput.value = window.watermarkImage.spaceBetweenWatermarks;
+        
+        updateConfigDisplay();
+        resultsDiv.innerHTML += '<div>Configuration reset to default.</div>';
+      });
+      
+      // Enable/disable test button based on file selection
+      fileInput.addEventListener('change', function() {
+        testApiButton.disabled = !fileInput.files.length;
+      });
+      
+      // Test API button click
+      testApiButton.addEventListener('click', async function() {
+        const file = fileInput.files[0];
+        if (!file) {
+          resultsDiv.innerHTML += '<div style="color: red;">No file selected</div>';
+          return;
+        }
+        
+        resultsDiv.innerHTML += '<div>Testing API with watermark configuration...</div>';
+        
+        const apiClient = new MockUnifiedApiClient();
+        
+        try {
+          const result = await apiClient.transform({
+            sourceImage: file,
+            watermark: window.watermarkImage,
+            productId: '12345',
+            productVariantId: '67890'
+          });
+          
+          resultsDiv.innerHTML += `<div>API response: ${JSON.stringify(result)}</div>`;
+        } catch (error) {
+          resultsDiv.innerHTML += `<div style="color: red;">Error: ${error.message}</div>`;
+        }
+      });
+      
+      // Clear logs button
+      clearLogsButton.addEventListener('click', function() {
+        resultsDiv.innerHTML = '';
+      });
+    });
+
+    // Set global mock mode
+    window.__MOCK_MODE__ = true;
+    console.log('Watermark Test Page is ready. Mock mode is enabled.');
+  </script>
+
+  <script>
+    // Test API connection
+    async function testApiConnection() {
+      try {
+        log('Testing API connection...');
+        
+        // Use the unified API endpoint for a basic health check
+        const response = await fetch(`https://letzteshemd-faceswap-api-production.up.railway.app/health`, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+        
+        const text = await response.text();
+        const status = response.status;
+        
+        log(`API connection test result - Status: ${status}`);
+        log(`API connection test result - Response: ${text}`);
+        
+      } catch (error) {
+        log('Error testing API connection:', error.message);
+      }
+    }
+  </script>
+
+  <!-- Pixar configuration -->
+  <script src="assets/unified-config.js"></script>
+  
+  <!-- Global variables for legacy compatibility - will be set by unified-config.js -->
+  <script>
+    // The following global variables are set by unified-config.js
+    // window.watermarkImage = ...
+    // window.pollingInterval = ...
+    // window.pixarApiUrl = ...
+    
+    // Additional hardcoded configuration for specific test cases
+    if (!window.pixarConfig) {
+      window.pixarConfig = {};
+    }
+  </script>
+</body>
+</html> 
