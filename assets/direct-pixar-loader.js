@@ -234,13 +234,42 @@
   }
 
   // Process image using RunPod service
-  function processImageWithRunPod(file) {
-    console.log('⭐ Processing image with RunPod:', file.name);
+  function processImageWithRunPod(file, options = {}) {
+    // Track if this is the original image (sent immediately) or the cropped image (sent later)
+    const isOriginalImage = options.isOriginal || !window.imageProcessingManager?.cropHandled;
+    console.log('⭐ Processing image with RunPod:', file.name, isOriginalImage ? '(original image)' : '(cropped image)');
     
-    // Show loading popup with initial progress
+    // Global tracking to prevent duplicate processing
+    if (!window.pixarRunPodRequests) {
+      window.pixarRunPodRequests = new Map();
+    }
+    
+    // Create a unique key for this request based on file name and time
+    const requestKey = `${file.name}-${Date.now()}`;
+    
+    // Check if we're already processing this image
+    if (window.pixarRunPodRequests.has(requestKey)) {
+      console.log('⭐ Already processing this image, ignoring duplicate request');
+      return;
+    }
+    
+    // Store this request in the tracking map
+    window.pixarRunPodRequests.set(requestKey, {
+      file,
+      isOriginal: isOriginalImage,
+      startTime: Date.now()
+    });
+    
+    // For original images, don't show loading popup since user will be cropping
     const loadingPopup = document.getElementById('pixar-loading-popup');
     if (loadingPopup) {
-      loadingPopup.style.display = 'block';
+      if (isOriginalImage) {
+        // For original image, don't show loading popup as user will be cropping
+        console.log('⭐ Original image - not showing loading popup as user will be cropping');
+      } else {
+        // For cropped image, show loading popup
+        loadingPopup.style.display = 'block';
+      }
     }
     
     // Update progress indicators
@@ -254,7 +283,8 @@
     document.dispatchEvent(new CustomEvent('runpod-processing-started', {
       detail: {
         filename: file.name,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        isOriginal: isOriginalImage
       }
     }));
     
@@ -286,7 +316,8 @@
       document.dispatchEvent(new CustomEvent('pixar-transform-progress', {
         detail: {
           progress: 30,
-          stage: 'uploading'
+          stage: 'uploading',
+          isOriginal: isOriginalImage
         }
       }));
       
@@ -294,7 +325,8 @@
       console.log('⭐ Payload structure:', { 
         imageLength: imageBase64.length,
         style: payload.style,
-        watermark: payload.watermark
+        watermark: payload.watermark,
+        isOriginal: isOriginalImage
       });
       
       // Call the RunPod API endpoint
@@ -313,7 +345,8 @@
         document.dispatchEvent(new CustomEvent('pixar-transform-progress', {
           detail: {
             progress: 60,
-            stage: 'processing'
+            stage: 'processing',
+            isOriginal: isOriginalImage
           }
         }));
         
@@ -332,7 +365,8 @@
         document.dispatchEvent(new CustomEvent('pixar-transform-progress', {
           detail: {
             progress: 90,
-            stage: 'finalizing'
+            stage: 'finalizing',
+            isOriginal: isOriginalImage
           }
         }));
         
@@ -343,76 +377,86 @@
           if (progressBar) progressBar.style.width = '100%';
           if (progressText) progressText.textContent = 'Complete!';
           
-          // Hide loading popup
-          if (loadingPopup) {
+          // Hide loading popup only for non-original images
+          // Original images are still being processed in the cropper
+          if (loadingPopup && !isOriginalImage) {
             loadingPopup.style.display = 'none';
           }
           
           // Store the processed image URL
           const processedImageUrl = data.image;
           
-          // Update product images if available
-          const productImages = document.querySelectorAll('.product-gallery img, .product__media img, .product__media-item img');
-          if (productImages.length > 0) {
-            productImages.forEach(img => {
-              img.src = processedImageUrl;
-              // Clear srcset to ensure our processed image is shown
-              if (img.srcset) {
-                img.srcset = '';
+          // Update UI based on whether this is the original or cropped image
+          if (isOriginalImage) {
+            console.log('⭐ Original image processed - storing result for later use and continuing with cropping UI');
+            // Store result for later use after cropping is complete
+            window.originalProcessedImageUrl = processedImageUrl;
+          } else {
+            console.log('⭐ Cropped image processed - updating UI with final result');
+            
+            // Update product images if available
+            const productImages = document.querySelectorAll('.product-gallery img, .product__media img, .product__media-item img');
+            if (productImages.length > 0) {
+              productImages.forEach(img => {
+                img.src = processedImageUrl;
+                // Clear srcset to ensure our processed image is shown
+                if (img.srcset) {
+                  img.srcset = '';
+                }
+              });
+            }
+            
+            // Dispatch the transform complete event
+            document.dispatchEvent(new CustomEvent('pixar-transform-complete', {
+              detail: {
+                imageUrl: processedImageUrl,
+                timestamp: Date.now()
               }
-            });
-          }
-          
-          // Dispatch the transform complete event
-          document.dispatchEvent(new CustomEvent('pixar-transform-complete', {
-            detail: {
-              imageUrl: processedImageUrl,
-              timestamp: Date.now()
-            }
-          }));
-          
-          // Dispatch RunPod processing complete event specifically for the adapter
-          document.dispatchEvent(new CustomEvent('runpod-processing-complete', {
-            detail: {
-              imageUrl: processedImageUrl,
-              timestamp: Date.now()
-            }
-          }));
-          
-          // Mark upload as complete
-          window.pixarTransformComplete = true;
-          
-          // Store processed image URL globally for form submission
-          window.processedImageUrl = processedImageUrl;
-          
-          // Update upload button text if available
-          const uploadContainer = document.getElementById('direct-pixar-loader-container');
-          if (uploadContainer) {
-            const uploadButton = uploadContainer.querySelector('button');
-            if (uploadButton) {
-              uploadButton.textContent = '✅ IMAGE UPLOADED - READY TO ADD TO CART';
-              uploadButton.style.backgroundColor = '#4CAF50';
-            }
-          }
-          
-          // If we're in Aurora theme, find the form and add hidden inputs
-          const productForm = document.querySelector('form[action="/cart/add"], form[data-type="add-to-cart-form"]');
-          if (productForm) {
-            // Add hidden input for the processed image URL
-            let hiddenInput = productForm.querySelector('input[name="properties[_processed_image_url]"]');
-            if (!hiddenInput) {
-              hiddenInput = document.createElement('input');
-              hiddenInput.type = 'hidden';
-              hiddenInput.name = 'properties[_processed_image_url]';
-              productForm.appendChild(hiddenInput);
-            }
-            hiddenInput.value = processedImageUrl;
+            }));
             
-            // Mark the form as transformed
-            productForm.dataset.pixarTransformed = 'true';
-            productForm.dataset.pixarImageUrl = processedImageUrl;
+            // Dispatch RunPod processing complete event specifically for the adapter
+            document.dispatchEvent(new CustomEvent('runpod-processing-complete', {
+              detail: {
+                imageUrl: processedImageUrl,
+                timestamp: Date.now()
+              }
+            }));
             
-            console.log('⭐ Updated form with processed image URL');
+            // Mark upload as complete
+            window.pixarTransformComplete = true;
+            
+            // Store processed image URL globally for form submission
+            window.processedImageUrl = processedImageUrl;
+            
+            // Update upload button text if available
+            const uploadContainer = document.getElementById('direct-pixar-loader-container');
+            if (uploadContainer) {
+              const uploadButton = uploadContainer.querySelector('button');
+              if (uploadButton) {
+                uploadButton.textContent = '✅ IMAGE UPLOADED - READY TO ADD TO CART';
+                uploadButton.style.backgroundColor = '#4CAF50';
+              }
+            }
+            
+            // If we're in Aurora theme, find the form and add hidden inputs
+            const productForm = document.querySelector('form[action="/cart/add"], form[data-type="add-to-cart-form"]');
+            if (productForm) {
+              // Add hidden input for the processed image URL
+              let hiddenInput = productForm.querySelector('input[name="properties[_processed_image_url]"]');
+              if (!hiddenInput) {
+                hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'properties[_processed_image_url]';
+                productForm.appendChild(hiddenInput);
+              }
+              hiddenInput.value = processedImageUrl;
+              
+              // Mark the form as transformed
+              productForm.dataset.pixarTransformed = 'true';
+              productForm.dataset.pixarImageUrl = processedImageUrl;
+              
+              console.log('⭐ Updated form with processed image URL');
+            }
           }
         } else {
           throw new Error('Invalid response from server: No image URL received');
@@ -437,7 +481,8 @@
         document.dispatchEvent(new CustomEvent('pixar-transform-error', {
           detail: {
             error: error.message,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            isOriginal: isOriginalImage
           }
         }));
       });
@@ -460,7 +505,8 @@
       document.dispatchEvent(new CustomEvent('pixar-transform-error', {
         detail: {
           error: 'Error reading file',
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          isOriginal: isOriginalImage
         }
       }));
     };

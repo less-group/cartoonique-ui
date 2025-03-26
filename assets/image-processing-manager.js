@@ -284,6 +284,16 @@ class ImageProcessingManager {
     this.cropComplete = false;
     this.textProcessingComplete = false;
     
+    // IMPORTANT: Send the original file to Railway immediately for processing in the background
+    // while the user is doing cropping and text editing
+    if (typeof window.processImageWithRunPod === 'function' && this.originalFile) {
+      console.log('🖼️ Immediately sending original image to Railway for processing in the background');
+      // Pass isOriginal: true to indicate this is the uncropped image
+      window.processImageWithRunPod(this.originalFile, { isOriginal: true });
+    } else {
+      console.log('🖼️ processImageWithRunPod not available, will send after cropping');
+    }
+    
     // Convert file to data URL for later use
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -967,6 +977,12 @@ class ImageProcessingManager {
     
     // Check if we've completed the user interaction flow (cropping and text)
     if (this.cropComplete && this.textProcessingComplete) {
+      // If we have an originalProcessedImageUrl from the first Railway call, use that instead
+      if (window.originalProcessedImageUrl) {
+        console.log('TRANSFORM COMPLETE: Using pre-processed image from earlier Railway call');
+        this.stylizedImageUrl = window.originalProcessedImageUrl;
+      }
+      
       // Apply final processing if both crop and text steps are done
       console.log('TRANSFORM COMPLETE: Both crop and text are complete, applying final processing');
       
@@ -2347,9 +2363,13 @@ if (originalHandleCropComplete) {
     // Call the original method first
     originalHandleCropComplete.call(this, croppedImage);
     
-    // After cropping is complete, ensure we send to Railway
-    if (this.processedImage && !this.sentToRailway) {
-      console.log('🖼️ Cropping complete, preparing to send to Railway');
+    // Track that we've handled the crop completion
+    this.cropHandled = true;
+    
+    // After cropping is complete, check if we need to send to Railway
+    // Only send if the image wasn't already sent in handleFileSelected
+    if (this.processedImage && !this.sentToRailway && typeof window.processImageWithRunPod !== 'function') {
+      console.log('🖼️ Cropping complete, sending to Railway now since it wasn\'t sent earlier');
       this.sentToRailway = true;
       
       // Convert data URL to File object for processImageWithRunPod
@@ -2368,7 +2388,7 @@ if (originalHandleCropComplete) {
       
       console.log('🖼️ Created File object from cropped image data URL');
       
-      // Now send to Railway via processImageWithRunPod
+      // Now send to Railway via processImageWithRunPod if it exists
       if (typeof window.processImageWithRunPod === 'function') {
         console.log('🖼️ Calling processImageWithRunPod with cropped image file');
         window.processImageWithRunPod(file);
@@ -2384,6 +2404,8 @@ if (originalHandleCropComplete) {
       } else {
         console.error('🖼️ Failed to find method to send image to Railway after cropping');
       }
+    } else {
+      console.log('🖼️ Cropping complete, but image was already sent to Railway earlier or processImageWithRunPod not available');
     }
   };
   console.log('🖼️ Enhanced handleCropComplete method installed');
