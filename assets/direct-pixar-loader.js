@@ -208,6 +208,47 @@
               if (pixarComponent && typeof pixarComponent.handleFileSelect === 'function') {
                 console.log('⭐ Using pixarComponent.handleFileSelect for processing');
                 pixarComponent.handleFileSelect(e);
+              } else if (window.unifiedApiClient) {
+                console.log('⭐ Using UnifiedApiClient for direct processing');
+                // Create a temporary component to handle the transformation
+                if (!window.tempPixarComponent) {
+                  // Create a temporary PixarTransformFileInput if available
+                  if (window.PixarTransformFileInput) {
+                    window.tempPixarComponent = new window.PixarTransformFileInput();
+                    window.tempPixarComponent.state = { file: file };
+                    window.tempPixarComponent.transformImage();
+                  } else {
+                    // Fall back to direct transformation with UnifiedApiClient
+                    const watermarkConfig = {
+                      url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/letzteshemd-watermark.png",
+                      width: 200,
+                      height: 200,
+                      spaceBetweenWatermarks: 100
+                    };
+                    
+                    window.unifiedApiClient.transform({
+                      sourceImage: file,
+                      watermark: watermarkConfig
+                    }, (progress) => {
+                      // Update progress indicators
+                      const progressBar = document.getElementById('pixar-progress-bar');
+                      const progressText = document.getElementById('pixar-progress-text');
+                      
+                      if (progressBar) progressBar.style.width = `${progress}%`;
+                      if (progressText) {
+                        if (progress < 30) {
+                          progressText.textContent = 'Uploading your image...';
+                        } else if (progress < 60) {
+                          progressText.textContent = 'Processing your image...';
+                        } else if (progress < 90) {
+                          progressText.textContent = 'Finalizing...';
+                        } else {
+                          progressText.textContent = 'Complete!';
+                        }
+                      }
+                    });
+                  }
+                }
               } else if (window.imageProcessingManager && typeof window.imageProcessingManager.handleFileSelected === 'function') {
                 console.log('⭐ Using imageProcessingManager for processing');
                 window.imageProcessingManager.handleFileSelected(e);
@@ -235,6 +276,26 @@
 
   // Process image using RunPod service
   function processImageWithRunPod(file, options = {}) {
+    // Check if UnifiedApiClient is being used - if so, don't process with this method
+    if (window.unifiedApiClient && !options.forceDirectProcessing) {
+      console.log('⭐ UnifiedApiClient available, skipping direct processImageWithRunPod handling');
+      
+      // If this is called from ImageProcessingManager and it's the original image, still
+      // dispatch the event to keep the UI state consistent, but don't do the actual processing
+      if (options.isOriginal) {
+        document.dispatchEvent(new CustomEvent('runpod-processing-started', {
+          detail: {
+            filename: file.name,
+            timestamp: Date.now(),
+            isOriginal: true,
+            handledByUnifiedClient: true
+          }
+        }));
+      }
+      
+      return;
+    }
+    
     // Track if this is the original image (sent immediately) or the cropped image (sent later)
     const isOriginalImage = options.isOriginal || !window.imageProcessingManager?.cropHandled;
     console.log('⭐ Processing image with RunPod:', file.name, isOriginalImage ? '(original image)' : '(cropped image)');
