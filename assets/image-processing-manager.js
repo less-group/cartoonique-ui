@@ -4363,7 +4363,7 @@ class ImageProcessingManager {
    * This adds event listeners for page load and DOM mutations 
    */
   setupCartImageReplacement() {
-    console.log('Setting up cart image replacement with the same method as product images');
+    console.log('Setting up cart image replacement with specific targeting for Dawn theme');
     
     // Create a script element that will run on the cart page
     const script = document.createElement('script');
@@ -4378,7 +4378,7 @@ class ImageProcessingManager {
         }
         
         console.log('Looking for cart items to update with processed images', cartImageMapping);
-        
+
         // Extract base filenames from processed images for more flexible matching
         const processedImageKeys = {};
         Object.keys(cartImageMapping).forEach(variantId => {
@@ -4394,75 +4394,131 @@ class ImageProcessingManager {
           }
         });
         
-        // Use Shopify's class selectors for cart items (tested across multiple themes)
-        const cartImageContainers = document.querySelectorAll(
-          '.cart-item__image-container, ' +
-          '.cart-item__image-wrapper, ' +
-          '.cart__image-wrapper, ' +
-          '.cart-item__image, ' +
-          '.cart_image, ' +
-          '.cart__image'
-        );
-        
-        console.log('Found ' + cartImageContainers.length + ' cart image containers');
-        
-        // Direct approach - find all images in cart and check their src
-        const allImages = document.querySelectorAll('img');
-        console.log('Checking ' + allImages.length + ' images on page');
-        
-        allImages.forEach(img => {
-          const src = img.src || '';
-          // Check if this is a cart image by looking at context/classes
-          const isInCart = 
-            img.closest('.cart-item, .cart__item, .cart-table__row, [data-cart-item], .cart_item, .cart__items') || 
-            (img.parentElement && (
-              img.parentElement.classList.contains('cart-item__image') || 
-              img.parentElement.classList.contains('cart__image') ||
-              img.parentElement.classList.contains('cart-item__image-container')
-            ));
-            
-          if (isInCart) {
-            console.log('Found cart image:', src);
-            
-            // Try to match by file ID in the src
+        // SPECIFIC TARGET: Look specifically for the classes seen in the example
+        const cartImages = document.querySelectorAll('.cart-item__image.shape__target-image, .cart-item__image');
+        console.log('Found ' + cartImages.length + ' specific cart images with target classes');
+
+        if (cartImages.length > 0) {
+          cartImages.forEach(img => {
+            // Try to find file ID in the alt text, src or srcset
+            const altText = img.alt || '';
+            const src = img.src || '';
+            const srcset = img.srcset || '';
+            let matched = false;
+
+            // Check if any of our file IDs match
             for (const fileId in processedImageKeys) {
-              if (src.includes(fileId)) {
-                console.log('Found matching file ID in cart image:', fileId);
+              if (altText.includes(fileId) || src.includes(fileId) || srcset.includes(fileId)) {
+                console.log('Found matching file ID:', fileId);
                 
-                // Get the variant ID and processed image URL
-                const variantId = processedImageKeys[fileId].variantId;
+                // Get the processed image URL
                 const processedUrl = processedImageKeys[fileId].fullUrl;
                 
                 // Replace the image
                 img.src = processedUrl;
-                img.srcset = ''; // Clear srcset
-                img.dataset.processed = 'true';
+                img.srcset = ''; // Clear srcset to ensure our version is used
+                img.sizes = ''; // Clear sizes as well
                 
-                // Wrap and style image
-                wrapCartImage(img);
+                // Keep original classes that might be important for the theme
+                const originalClasses = img.className;
+                
+                // Make sure we don't lose important styling classes
+                if (!img.dataset.originalClasses) {
+                  img.dataset.originalClasses = originalClasses;
+                }
+                
+                // Mark as processed and store the file ID for reference
+                img.dataset.processed = 'true';
+                img.dataset.fileId = fileId;
+                
+                // Prevent lazy loading issues by setting loading attribute
+                img.loading = 'eager';
+                
+                console.log('Successfully replaced cart image with processed version');
+                matched = true;
                 break;
               }
             }
-            
-            // If we couldn't match by file ID, try other methods
-            if (!img.dataset.processed) {
-              // Try identifying variant ID from surrounding elements
+
+            // If we couldn't match by file ID, try variant ID approach
+            if (!matched) {
               const variantId = findVariantIdForImage(img);
               if (variantId && cartImageMapping[variantId]) {
                 console.log('Found variant ID for image:', variantId);
                 img.src = cartImageMapping[variantId];
                 img.srcset = '';
+                img.sizes = '';
                 img.dataset.processed = 'true';
-                
-                // Wrap and style image
-                wrapCartImage(img);
+                img.loading = 'eager';
+                console.log('Successfully replaced cart image using variant ID');
               }
             }
-          }
-        });
+          });
+        } else {
+          // Fallback to the more general approach
+          const allImages = document.querySelectorAll('img');
+          console.log('Fallback: Checking ' + allImages.length + ' images on page');
+          
+          allImages.forEach(img => {
+            const src = img.src || '';
+            const srcset = img.srcset || '';
+            const altText = img.alt || '';
+            
+            // Check if this is a cart image by looking at context/classes
+            const isInCart = 
+              img.closest('.cart-item, .cart__item, .cart-table__row, [data-cart-item], .cart_item, .cart__items') || 
+              (img.parentElement && (
+                img.parentElement.classList.contains('cart-item__image') || 
+                img.parentElement.classList.contains('cart__image') ||
+                img.parentElement.classList.contains('cart-item__image-container')
+              ));
+              
+            if (isInCart) {
+              console.log('Found cart image:', src);
+              let matched = false;
+              
+              // Try to match by file ID in the src, srcset or alt text
+              for (const fileId in processedImageKeys) {
+                if (src.includes(fileId) || srcset.includes(fileId) || altText.includes(fileId)) {
+                  console.log('Found matching file ID in cart image:', fileId);
+                  
+                  // Get the processed image URL
+                  const processedUrl = processedImageKeys[fileId].fullUrl;
+                  
+                  // Replace the image
+                  img.src = processedUrl;
+                  img.srcset = ''; // Clear srcset
+                  img.sizes = '';
+                  img.dataset.processed = 'true';
+                  img.loading = 'eager';
+                  
+                  matched = true;
+                  break;
+                }
+              }
+              
+              // If we couldn't match by file ID, try other methods
+              if (!matched) {
+                const variantId = findVariantIdForImage(img);
+                if (variantId && cartImageMapping[variantId]) {
+                  console.log('Found variant ID for image:', variantId);
+                  img.src = cartImageMapping[variantId];
+                  img.srcset = '';
+                  img.sizes = '';
+                  img.dataset.processed = 'true';
+                  img.loading = 'eager';
+                }
+              }
+            }
+          });
+        }
         
         // Find variant ID for an image by checking its surrounding elements
         function findVariantIdForImage(img) {
+          // First check if the image itself has any data attributes
+          if (img.dataset.variantId) return img.dataset.variantId;
+          if (img.dataset.id) return img.dataset.id;
+          
           // Check parent elements for variant ID
           let element = img.parentElement;
           const checkedElements = new Set();
@@ -4475,7 +4531,8 @@ class ImageProcessingManager {
             const variantId = element.dataset.variantId || 
                              element.dataset.id || 
                              element.dataset.variant || 
-                             element.dataset.itemId;
+                             element.dataset.itemId ||
+                             element.dataset.cartItemId;
             
             if (variantId) return variantId;
             
@@ -4493,57 +4550,32 @@ class ImageProcessingManager {
             element = element.parentElement;
           }
           
-          // If still not found, try to extract from line item properties
-          const lineItem = img.closest('[data-line-item-key], [data-cart-item-key]');
+          // If still not found, try to extract from line item properties or key
+          const lineItem = img.closest('[data-line-item-key], [data-cart-item-key], [data-cart-item], [data-id]');
           if (lineItem) {
-            const key = lineItem.dataset.lineItemKey || lineItem.dataset.cartItemKey;
-            if (key) {
-              const keyParts = key.split(':');
-              if (keyParts.length > 1) {
-                return keyParts[1]; // Often the variant ID is after the colon
+            // Try various ways stores might store the ID
+            const id = lineItem.dataset.id || 
+                      lineItem.dataset.lineItemKey || 
+                      lineItem.dataset.cartItemKey ||
+                      lineItem.dataset.cartItem;
+                      
+            if (id) {
+              // IDs might be in various formats
+              if (id.includes(':')) {
+                const keyParts = id.split(':');
+                if (keyParts.length > 1) {
+                  return keyParts[1]; // Often the variant ID is after the colon
+                }
+              }
+              
+              // If it's just a number, it might be the variant ID directly
+              if (/^[0-9]+$/.test(id)) {
+                return id;
               }
             }
           }
           
           return null;
-        }
-        
-        // Function to wrap cart image in a container for styling
-        function wrapCartImage(img) {
-          // Skip if already wrapped
-          if (img.parentElement.classList.contains('pixar-crop-wrapper')) {
-            return img.parentElement;
-          }
-          
-          // Get original styles
-          const computedStyle = window.getComputedStyle(img);
-          const originalWidth = img.width || parseInt(computedStyle.width, 10) || img.getAttribute('width');
-          const originalHeight = img.height || parseInt(computedStyle.height, 10) || img.getAttribute('height');
-          
-          // Create wrapper div
-          const wrapper = document.createElement('div');
-          wrapper.className = 'pixar-crop-wrapper';
-          wrapper.style.cssText = 'position: relative; overflow: hidden; display: block;';
-          
-          if (originalWidth && originalHeight) {
-            wrapper.style.width = originalWidth + 'px';
-            wrapper.style.height = originalHeight + 'px';
-          } else {
-            // If dimensions not available, try to maintain aspect ratio
-            wrapper.style.width = '100%';
-            wrapper.style.paddingTop = '100%'; // 1:1 aspect ratio as fallback
-          }
-          
-          // Insert wrapper before the image
-          img.parentNode.insertBefore(wrapper, img);
-          
-          // Move image inside wrapper
-          wrapper.appendChild(img);
-          
-          // Style the image
-          img.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain;';
-          
-          return wrapper;
         }
       }
       
@@ -4552,10 +4584,12 @@ class ImageProcessingManager {
         setTimeout(replaceCartImages, 100);
         setTimeout(replaceCartImages, 500);
         setTimeout(replaceCartImages, 1000);
+        setTimeout(replaceCartImages, 2000);
       });
       
       document.addEventListener('DOMContentLoaded', function() {
         setTimeout(replaceCartImages, 100);
+        setTimeout(replaceCartImages, 300);
       });
       
       // Also trigger on scroll and mouse movement to catch lazy-loaded images
