@@ -4363,307 +4363,220 @@ class ImageProcessingManager {
    * This adds event listeners for page load and DOM mutations 
    */
   setupCartImageReplacement() {
-    console.log('Setting up cart image replacement with specific targeting for Dawn theme');
+    console.log('Setting up cart image replacement for exact Dawn theme structure');
     
-    // Create a script element that will run on the cart page
+    // Store the current state of processed images in localStorage for the cart page to access
+    const processedImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
+    
+    if (Object.keys(processedImages).length === 0) {
+      console.log('No processed images found in localStorage, nothing to replace');
+      return;
+    }
+    
+    console.log('Processed images available:', processedImages);
+    
+    // Create a script element with a direct approach to image replacement
     const script = document.createElement('script');
     script.textContent = `
-      // Function to replace cart images with processed images
-      function replaceCartImages() {
-        // Get stored processed images
-        const cartImageMapping = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-        if (Object.keys(cartImageMapping).length === 0) {
-          console.log('No processed images found in localStorage');
-          return;
-        }
+      (function() {
+        console.log('Direct cart image replacement script started');
         
-        console.log('Looking for cart items to update with processed images', cartImageMapping);
-
-        // Extract base filenames from processed images for more flexible matching
-        const processedImageKeys = {};
-        Object.keys(cartImageMapping).forEach(variantId => {
-          const url = cartImageMapping[variantId];
-          // Extract the file ID from the URL (e.g. f833654d-577a-4aff-9e06-c9df35868714)
+        // Access the stored processed images
+        const processedImages = ${JSON.stringify(processedImages)};
+        console.log('Processed images loaded in script:', processedImages);
+        
+        // Extract the file IDs from the URLs
+        const fileIdMapping = {};
+        Object.keys(processedImages).forEach(variantId => {
+          const url = processedImages[variantId];
           const fileIdMatch = url.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i);
           if (fileIdMatch && fileIdMatch[1]) {
-            processedImageKeys[fileIdMatch[1]] = {
-              variantId: variantId,
-              fullUrl: url
-            };
-            console.log('Found processed image with file ID:', fileIdMatch[1]);
+            fileIdMapping[fileIdMatch[1]] = url;
+            console.log('Mapped file ID ' + fileIdMatch[1] + ' to URL ' + url);
           }
         });
         
-        // SPECIFIC TARGET: Look specifically for the classes seen in the example
-        const cartImages = document.querySelectorAll('.cart-item__image.shape__target-image, .cart-item__image');
-        console.log('Found ' + cartImages.length + ' specific cart images with target classes');
-
-        if (cartImages.length > 0) {
+        // Direct replacement function
+        function replaceCartImages() {
+          // Target specifically the exact class combination we see in the cart
+          console.log('Searching for cart images to replace...');
+          
+          // Method 1: Direct target by class
+          const cartImages = document.querySelectorAll('.cart-item__image.shape__target-image.multiply-mode__target, .cart-item__image.shape__target-image, .cart-item__image');
+          console.log('Found ' + cartImages.length + ' cart images with target classes');
+          
+          let replacedCount = 0;
+          
           cartImages.forEach(img => {
-            // Try to find file ID in the alt text, src or srcset
-            const altText = img.alt || '';
-            const src = img.src || '';
-            const srcset = img.srcset || '';
-            let matched = false;
-
-            // Check if any of our file IDs match
-            for (const fileId in processedImageKeys) {
-              if (altText.includes(fileId) || src.includes(fileId) || srcset.includes(fileId)) {
-                console.log('Found matching file ID:', fileId);
-                
-                // Get the processed image URL
-                const processedUrl = processedImageKeys[fileId].fullUrl;
-                
-                // Replace the image
-                img.src = processedUrl;
-                img.srcset = ''; // Clear srcset to ensure our version is used
-                img.sizes = ''; // Clear sizes as well
-                
-                // Keep original classes that might be important for the theme
-                const originalClasses = img.className;
-                
-                // Make sure we don't lose important styling classes
-                if (!img.dataset.originalClasses) {
-                  img.dataset.originalClasses = originalClasses;
-                }
-                
-                // Mark as processed and store the file ID for reference
-                img.dataset.processed = 'true';
-                img.dataset.fileId = fileId;
-                
-                // Prevent lazy loading issues by setting loading attribute
-                img.loading = 'eager';
-                
-                console.log('Successfully replaced cart image with processed version');
-                matched = true;
-                break;
-              }
+            // Check if we've already processed this image
+            if (img.dataset.processed === 'true') {
+              console.log('Image already processed, skipping');
+              return;
             }
-
-            // If we couldn't match by file ID, try variant ID approach
-            if (!matched) {
-              const variantId = findVariantIdForImage(img);
-              if (variantId && cartImageMapping[variantId]) {
-                console.log('Found variant ID for image:', variantId);
-                img.src = cartImageMapping[variantId];
-                img.srcset = '';
-                img.sizes = '';
-                img.dataset.processed = 'true';
-                img.loading = 'eager';
-                console.log('Successfully replaced cart image using variant ID');
+            
+            // Get image src, alt and srcset
+            const src = img.src || '';
+            const alt = img.alt || '';
+            
+            console.log('Processing cart image:', { 
+              src: src, 
+              alt: alt, 
+              classes: img.className 
+            });
+            
+            // Check for file ID matches in src or alt
+            for (const fileId in fileIdMapping) {
+              if (src.includes(fileId) || alt.includes(fileId)) {
+                console.log('Found matching file ID: ' + fileId);
+                
+                // Create a new image that will replace the original
+                const newImg = new Image();
+                newImg.onload = function() {
+                  console.log('Processed image loaded successfully');
+                  
+                  // Copy all attributes from the original image except src
+                  Array.from(img.attributes).forEach(attr => {
+                    if (attr.name !== 'src' && attr.name !== 'srcset' && attr.name !== 'sizes') {
+                      newImg.setAttribute(attr.name, attr.value);
+                    }
+                  });
+                  
+                  // Copy all classes to maintain theme styling
+                  newImg.className = img.className;
+                  
+                  // Apply our processed image
+                  newImg.src = fileIdMapping[fileId];
+                  newImg.srcset = '';
+                  newImg.sizes = '';
+                  newImg.alt = alt;
+                  newImg.dataset.processed = 'true';
+                  
+                  // Force eager loading
+                  newImg.loading = 'eager';
+                  
+                  // Replace the original image with our new one
+                  img.parentNode.replaceChild(newImg, img);
+                  replacedCount++;
+                  console.log('Successfully replaced cart image with processed version');
+                };
+                
+                newImg.onerror = function() {
+                  console.error('Failed to load processed image:', fileIdMapping[fileId]);
+                };
+                
+                // Start loading the image
+                newImg.src = fileIdMapping[fileId];
+                
+                // Break out of the loop once we've found a match
+                return;
               }
             }
           });
-        } else {
-          // Fallback to the more general approach
-          const allImages = document.querySelectorAll('img');
-          console.log('Fallback: Checking ' + allImages.length + ' images on page');
           
-          allImages.forEach(img => {
-            const src = img.src || '';
-            const srcset = img.srcset || '';
-            const altText = img.alt || '';
+          // Method 2: More general approach if the first method didn't find any matches
+          if (replacedCount === 0) {
+            console.log('No images replaced with direct class targeting, trying fallback approach');
             
-            // Check if this is a cart image by looking at context/classes
-            const isInCart = 
-              img.closest('.cart-item, .cart__item, .cart-table__row, [data-cart-item], .cart_item, .cart__items') || 
-              (img.parentElement && (
-                img.parentElement.classList.contains('cart-item__image') || 
-                img.parentElement.classList.contains('cart__image') ||
-                img.parentElement.classList.contains('cart-item__image-container')
-              ));
+            // Try to find the cart item container and look for images within
+            const cartItemContainers = document.querySelectorAll(
+              '.cart-item, .cart__item, .cart-table__row, [data-cart-item], .cart_item, ' + 
+              '.cart__items, .cart-items'
+            );
+            
+            console.log('Found ' + cartItemContainers.length + ' cart item containers');
+            
+            cartItemContainers.forEach(container => {
+              // Find all images in this container
+              const images = container.querySelectorAll('img');
+              console.log('Found ' + images.length + ' images in container');
               
-            if (isInCart) {
-              console.log('Found cart image:', src);
-              let matched = false;
-              
-              // Try to match by file ID in the src, srcset or alt text
-              for (const fileId in processedImageKeys) {
-                if (src.includes(fileId) || srcset.includes(fileId) || altText.includes(fileId)) {
-                  console.log('Found matching file ID in cart image:', fileId);
-                  
-                  // Get the processed image URL
-                  const processedUrl = processedImageKeys[fileId].fullUrl;
-                  
-                  // Replace the image
-                  img.src = processedUrl;
-                  img.srcset = ''; // Clear srcset
-                  img.sizes = '';
-                  img.dataset.processed = 'true';
-                  img.loading = 'eager';
-                  
-                  matched = true;
-                  break;
+              images.forEach(img => {
+                // Skip if already processed
+                if (img.dataset.processed === 'true') return;
+                
+                const src = img.src || '';
+                const alt = img.alt || '';
+                
+                // Check for file ID matches
+                for (const fileId in fileIdMapping) {
+                  if (src.includes(fileId) || alt.includes(fileId)) {
+                    console.log('Found matching file ID in container image: ' + fileId);
+                    
+                    // Simply replace the src directly
+                    img.src = fileIdMapping[fileId];
+                    img.srcset = '';
+                    img.sizes = '';
+                    img.dataset.processed = 'true';
+                    replacedCount++;
+                    console.log('Successfully replaced container image');
+                    return;
+                  }
                 }
-              }
-              
-              // If we couldn't match by file ID, try other methods
-              if (!matched) {
-                const variantId = findVariantIdForImage(img);
-                if (variantId && cartImageMapping[variantId]) {
-                  console.log('Found variant ID for image:', variantId);
-                  img.src = cartImageMapping[variantId];
-                  img.srcset = '';
-                  img.sizes = '';
-                  img.dataset.processed = 'true';
-                  img.loading = 'eager';
-                }
-              }
-            }
-          });
-        }
-        
-        // Find variant ID for an image by checking its surrounding elements
-        function findVariantIdForImage(img) {
-          // First check if the image itself has any data attributes
-          if (img.dataset.variantId) return img.dataset.variantId;
-          if (img.dataset.id) return img.dataset.id;
-          
-          // Check parent elements for variant ID
-          let element = img.parentElement;
-          const checkedElements = new Set();
-          
-          for (let depth = 0; depth < 10; depth++) {
-            if (!element || checkedElements.has(element)) break;
-            checkedElements.add(element);
-            
-            // Check for data attributes
-            const variantId = element.dataset.variantId || 
-                             element.dataset.id || 
-                             element.dataset.variant || 
-                             element.dataset.itemId ||
-                             element.dataset.cartItemId;
-            
-            if (variantId) return variantId;
-            
-            // Check href attributes
-            const href = element.getAttribute('href');
-            if (href) {
-              const variantMatch = href.match(/variant=([0-9]+)/);
-              if (variantMatch && variantMatch[1]) return variantMatch[1];
-              
-              const pathVariantMatch = href.match(/\\?variant=([0-9]+)/);
-              if (pathVariantMatch && pathVariantMatch[1]) return pathVariantMatch[1];
-            }
-            
-            // Move up the DOM tree
-            element = element.parentElement;
+              });
+            });
           }
           
-          // If still not found, try to extract from line item properties or key
-          const lineItem = img.closest('[data-line-item-key], [data-cart-item-key], [data-cart-item], [data-id]');
-          if (lineItem) {
-            // Try various ways stores might store the ID
-            const id = lineItem.dataset.id || 
-                      lineItem.dataset.lineItemKey || 
-                      lineItem.dataset.cartItemKey ||
-                      lineItem.dataset.cartItem;
-                      
-            if (id) {
-              // IDs might be in various formats
-              if (id.includes(':')) {
-                const keyParts = id.split(':');
-                if (keyParts.length > 1) {
-                  return keyParts[1]; // Often the variant ID is after the colon
-                }
-              }
-              
-              // If it's just a number, it might be the variant ID directly
-              if (/^[0-9]+$/.test(id)) {
-                return id;
-              }
-            }
-          }
-          
-          return null;
-        }
-      }
-      
-      // Run image replacement on all page interaction events to ensure it happens
-      window.addEventListener('load', function() {
-        setTimeout(replaceCartImages, 100);
-        setTimeout(replaceCartImages, 500);
-        setTimeout(replaceCartImages, 1000);
-        setTimeout(replaceCartImages, 2000);
-      });
-      
-      document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(replaceCartImages, 100);
-        setTimeout(replaceCartImages, 300);
-      });
-      
-      // Also trigger on scroll and mouse movement to catch lazy-loaded images
-      let lastReplaceTime = 0;
-      function throttledReplace() {
-        const now = Date.now();
-        if (now - lastReplaceTime > 1000) { // Throttle to once per second
-          lastReplaceTime = now;
-          replaceCartImages();
-        }
-      }
-      
-      window.addEventListener('scroll', throttledReplace);
-      document.addEventListener('mousemove', throttledReplace);
-      
-      // Create a MutationObserver to watch for changes
-      const observer = new MutationObserver(function(mutations) {
-        // Debounce the callback
-        if (window.cartImageObserverTimeout) {
-          clearTimeout(window.cartImageObserverTimeout);
+          // Log the results
+          console.log('Finished replacing cart images, replaced ' + replacedCount + ' images');
+          return replacedCount;
         }
         
-        window.cartImageObserverTimeout = setTimeout(function() {
-          console.log('Cart DOM changed, re-running image replacement');
-          replaceCartImages();
-        }, 300);
-      });
-      
-      // Start observing right away
-      replaceCartImages();
-      
-      // And also after a delay to make sure everything is loaded
-      setTimeout(function() {
-        // Observe document body for changes that could affect cart
-        observer.observe(document.body, { 
-          childList: true, 
-          subtree: true,
-          attributes: true,
-          attributeFilter: ['src', 'srcset']
+        // Run immediately
+        let replaced = replaceCartImages();
+        
+        // Run again after short delays to catch any lazy-loaded content
+        setTimeout(() => { replaceCartImages(); }, 100);
+        setTimeout(() => { replaceCartImages(); }, 500);
+        setTimeout(() => { replaceCartImages(); }, 1000);
+        setTimeout(() => { replaceCartImages(); }, 2000);
+        
+        // Also observe DOM changes to catch any dynamically added content
+        const observer = new MutationObserver(mutations => {
+          setTimeout(() => { replaceCartImages(); }, 100);
         });
-        console.log('Observing document for cart image changes');
         
-        // Final check
-        replaceCartImages();
-      }, 500);
+        // Start observing after a short delay
+        setTimeout(() => {
+          observer.observe(document.body, { 
+            childList: true, 
+            subtree: true,
+            attributes: true, 
+            attributeFilter: ['src', 'srcset', 'class']
+          });
+          console.log('Started observing DOM for changes');
+        }, 500);
+        
+        // Also check on interaction events
+        window.addEventListener('load', replaceCartImages);
+        document.addEventListener('DOMContentLoaded', replaceCartImages);
+        window.addEventListener('scroll', function() {
+          if (window.lastScrollTime && Date.now() - window.lastScrollTime < 500) return;
+          window.lastScrollTime = Date.now();
+          replaceCartImages();
+        });
+      })();
     `;
     
     // Add the script to the document
     document.head.appendChild(script);
     
-    // Also store a flag in sessionStorage to trigger image replacement when the cart page loads
-    sessionStorage.setItem('cartoonique_replace_cart_images', 'true');
-    
-    // If we're already on the cart page, inject an immediate script
+    // If we're already on the cart page, inject an immediate execution script
     if (window.location.pathname.includes('/cart')) {
       console.log('Already on cart page, triggering immediate image replacement');
       const immediateScript = document.createElement('script');
       immediateScript.textContent = `
-        // Trigger immediate replacement
-        if (typeof replaceCartImages === 'function') {
-          console.log('Triggering immediate cart image replacement');
-          replaceCartImages();
-          
-          // And again after a delay
-          setTimeout(replaceCartImages, 500);
-          setTimeout(replaceCartImages, 1000);
-        } else {
-          console.log('replaceCartImages function not found, will try again');
-          setTimeout(function() {
-            if (typeof replaceCartImages === 'function') {
-              replaceCartImages();
-            }
-          }, 1000);
-        }
+        console.log('Immediate cart image replacement executing');
+        
+        // Directly inject CSS to ensure our images display correctly
+        const style = document.createElement('style');
+        style.textContent = \`
+          .cart-item__image.shape__target-image.multiply-mode__target[data-processed="true"],
+          .cart-item__image.shape__target-image[data-processed="true"],
+          .cart-item__image[data-processed="true"] {
+            object-fit: contain !important;
+          }
+        \`;
+        document.head.appendChild(style);
       `;
       document.head.appendChild(immediateScript);
     }
