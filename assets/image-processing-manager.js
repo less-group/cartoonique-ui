@@ -1819,8 +1819,24 @@ class ImageProcessingManager {
         
         // Clear any previous cropping classes or styles
         mainImage.classList.remove('pixar-crop-applied');
-        mainImage.style.objectPosition = '';
-        mainImage.style.objectFit = '';
+        
+        // Save original styling for potential restoration
+        if (!mainImage.dataset.originalStyles) {
+          mainImage.dataset.originalStyles = JSON.stringify({
+            objectFit: mainImage.style.objectFit,
+            objectPosition: mainImage.style.objectPosition,
+            width: mainImage.style.width,
+            height: mainImage.style.height,
+            aspectRatio: mainImage.style.aspectRatio
+          });
+        }
+        
+        // Set appropriate styling to ensure correct aspect ratio display
+        mainImage.style.objectFit = 'contain';
+        mainImage.style.objectPosition = 'center';
+        mainImage.style.width = '100%';
+        mainImage.style.height = 'auto';
+        mainImage.style.aspectRatio = '3/4'; // Force 3:4 aspect ratio
         
         // Update the image source
         mainImage.setAttribute('src', imageUrl);
@@ -1828,6 +1844,32 @@ class ImageProcessingManager {
         
         // Mark as transformed for future reference
         mainImage.classList.add('pixar-transformed-image');
+        
+        // Handle container aspect ratio
+        const container = mainImage.parentElement;
+        if (container) {
+          // Save original container styling if not already saved
+          if (!container.dataset.originalStyles) {
+            container.dataset.originalStyles = JSON.stringify({
+              aspectRatio: container.style.aspectRatio,
+              display: container.style.display,
+              position: container.style.position,
+              width: container.style.width,
+              height: container.style.height
+            });
+          }
+          
+          // Apply appropriate container styling to maintain aspect ratio
+          container.style.display = 'flex';
+          container.style.alignItems = 'center';
+          container.style.justifyContent = 'center';
+          container.style.position = 'relative';
+          container.style.width = '100%';
+          container.style.aspectRatio = '3/4';
+          
+          // Add a helpful class for later identification
+          container.classList.add('pixar-image-container');
+        }
         
         // Also search for and update any alternate views or thumbnails with same image pattern
         let additionalImagesUpdated = 0;
@@ -1855,41 +1897,38 @@ class ImageProcessingManager {
   }
   
   /**
-   * Create a new image element as a last resort when no suitable images are found
-   * @param {string} imageUrl - The URL of the processed image
+   * Create a replacement image when the original one can't be found
+   * @param {string} imageUrl - The URL of the new image
    */
   createReplacementImage(imageUrl) {
-    console.log('PRODUCT IMAGE: Creating replacement image as last resort');
+    console.log('PRODUCT IMAGE: Creating replacement image');
     
-    // Find the most likely container for the product image
-    const likelyContainers = [
-      document.querySelector('.product-gallery'),
-      document.querySelector('.product__media'),
-      document.querySelector('.product-media'),
-      document.querySelector('.product-single__photos'),
-      document.querySelector('.product__photos')
-    ].filter(Boolean);
+    // Find a suitable container for the replacement image
+    const container = document.querySelector('.product__media') ||
+                    document.querySelector('.product-single__media') ||
+                    document.querySelector('.product-single__photo') ||
+                    document.querySelector('.product-gallery');
     
-    if (likelyContainers.length > 0) {
-      const container = likelyContainers[0];
-      console.log('PRODUCT IMAGE: Found suitable container for replacement');
-      
+    if (container) {
       // Create a new image element
       const newImage = document.createElement('img');
       newImage.src = imageUrl;
-      newImage.alt = 'Processed Product Image';
-      newImage.style.maxWidth = '100%';
+      newImage.classList.add('pixar-transformed-image');
       newImage.style.width = '100%';
       newImage.style.height = 'auto';
       newImage.style.objectFit = 'contain';
-      newImage.classList.add('pixar-replacement-image');
+      newImage.style.aspectRatio = '3/4';
       
-      // Create a wrapper div
+      // Create a wrapper to maintain aspect ratio
       const wrapper = document.createElement('div');
+      wrapper.classList.add('pixar-transform-container');
       wrapper.style.width = '100%';
       wrapper.style.height = 'auto';
       wrapper.style.aspectRatio = '3/4';
       wrapper.style.position = 'relative';
+      wrapper.style.display = 'flex';
+      wrapper.style.alignItems = 'center';
+      wrapper.style.justifyContent = 'center';
       wrapper.appendChild(newImage);
       
       // Clear and append to container
