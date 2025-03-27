@@ -1257,24 +1257,10 @@ class ImageProcessingManager {
       // Add content to the result popup
       resultPopup.innerHTML = `
         <div style="position: relative; max-width: 600px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; height: calc(100vh - 40px); max-height: 800px;">
-          <div id="pixar-result-image-wrapper" style="flex: 1; min-height: 0; margin: 0 auto; width: 100%; max-width: 400px; position: relative; display: flex; align-items: center; justify-content: center;">
-            <!-- 3D Canvas Display Container -->
-            <div id="pixar-result-image-container" style="position: relative; width: 100%; height: auto; max-height: 100%; transform: perspective(1000px) rotateY(5deg); transform-style: preserve-3d; margin: 20px auto;">
-              <!-- Main image with border -->
-              <div style="position: relative; width: 100%; height: 100%; border: 12px solid black; box-sizing: border-box; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.4);">
-                <img id="pixar-result-image" src="" alt="Processed image" style="width: 100%; height: 100%; object-fit: contain; display: block; transition: all 0.3s ease-in-out; background: black;">
-                <div id="pixar-result-image-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;"></div>
-              </div>
-              
-              <!-- Right edge -->
-              <div style="position: absolute; top: 0; right: 0; bottom: 0; width: 20px; background: #111; transform: translateX(20px) rotateY(90deg); transform-origin: left center; backface-visibility: hidden;"></div>
-              
-              <!-- Bottom edge -->
-              <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 20px; background: #0a0a0a; transform: translateY(20px) rotateX(-90deg); transform-origin: top center; backface-visibility: hidden;"></div>
-              
-              <!-- Canvas shadow -->
-              <div style="position: absolute; top: 12px; left: 12px; right: -8px; bottom: -8px; background: transparent; box-shadow: 2px 2px 15px rgba(0,0,0,0.4); z-index: -1; transform: translateZ(-10px);"></div>
-            </div>
+          <div id="pixar-result-image-container" style="flex: 1; min-height: 0; margin: 0 auto; width: 100%; max-width: 400px; position: relative; display: flex; align-items: center; justify-content: center; padding: 10px;">
+            <div id="pixar-image-shadow" style="position: absolute; top: 15px; left: 15px; right: 15px; bottom: 5px; border-radius: 8px; background: #f5f5f5; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 0;"></div>
+            <img id="pixar-result-image" src="" alt="Processed image" style="position: relative; z-index: 1; max-width: 100%; max-height: 100%; display: block; object-fit: contain; transition: all 0.3s ease-in-out; border-radius: 8px; background: white;">
+            <div id="pixar-result-image-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; z-index: 2;"></div>
           </div>
           
           <!-- Fixed position controls container -->
@@ -1418,37 +1404,44 @@ class ImageProcessingManager {
         // Adjust container padding and margins for mobile
         container.style.padding = '15px';
         container.style.margin = '10px auto';
-        container.style.maxWidth = '95%';
+        container.style.maxWidth = '90%';
         container.style.height = 'calc(100vh - 20px)';
       }
       
       // Make image container smaller on mobile
       const imageContainer = document.getElementById('pixar-result-image-container');
-      const wrapper = document.getElementById('pixar-result-image-wrapper');
-      if (imageContainer && wrapper) {
-        wrapper.style.maxHeight = '60vh';
-        // Use a smaller rotation angle on mobile for better viewing
-        imageContainer.style.transform = 'perspective(1000px) rotateY(3deg)';
-        
-        // Adjust the 3D edges to be thinner on mobile
-        const edges = imageContainer.querySelectorAll('div[style*="transform"]');
-        edges.forEach(edge => {
-          if (edge.style.width === '20px') {
-            edge.style.width = '10px';
-            edge.style.transform = edge.style.transform.replace('20px', '10px');
-          }
-          if (edge.style.height === '20px') {
-            edge.style.height = '10px';
-            edge.style.transform = edge.style.transform.replace('20px', '10px');
-          }
-        });
-        
-        // Adjust border thickness
-        const mainImageContainer = imageContainer.querySelector('div[style*="border: 12px"]');
-        if (mainImageContainer) {
-          mainImageContainer.style.border = '8px solid black';
-        }
+      if (imageContainer) {
+        imageContainer.style.maxHeight = '60vh';
       }
+      
+      // Adjust size options for mobile
+      const sizeOptions = document.querySelectorAll('[data-size]');
+      sizeOptions.forEach(option => {
+        // Make size options more compact
+        option.style.padding = '5px';
+        
+        // Make circle and text smaller
+        const circle = option.querySelector('div');
+        if (circle) {
+          circle.style.width = '30px';
+          circle.style.height = '30px';
+          circle.style.fontSize = '16px';
+        }
+        
+        // Adjust prices text
+        const price = option.querySelectorAll('div')[1];
+        if (price) {
+          price.style.fontSize = '14px';
+          price.style.marginTop = '3px';
+        }
+        
+        // Adjust dimensions text
+        const dimensions = option.querySelectorAll('div')[2];
+        if (dimensions) {
+          dimensions.style.fontSize = '10px';
+          dimensions.style.marginTop = '2px';
+        }
+      });
       
       // Make continue button smaller
       const continueButton = document.getElementById('pixar-result-continue');
@@ -1474,22 +1467,15 @@ class ImageProcessingManager {
     // Get the image element and container
     const image = document.getElementById('pixar-result-image');
     const container = document.getElementById('pixar-result-image-container');
-    const wrapper = document.getElementById('pixar-result-image-wrapper');
-    if (!image || !container || !wrapper) return;
+    const shadow = document.getElementById('pixar-image-shadow');
+    if (!image || !container) return;
 
-    // Set aspect ratio constraints on the container
-    const containerWidth = wrapper.clientWidth * 0.95; // 95% of the wrapper width
-    container.style.width = `${containerWidth}px`;
-    container.style.height = `${containerWidth / aspectRatio}px`;
-    
-    // Adjust 3D transform based on aspect ratio for better visual effect
-    if (aspectRatio < 1) {
-      // Portrait orientation - more dramatic angle
-      container.style.transform = 'perspective(1000px) rotateY(5deg)';
-    } else {
-      // Landscape orientation - subtler angle
-      container.style.transform = 'perspective(1000px) rotateY(3deg)';
-    }
+    // Set container's aspect ratio while maintaining flexibility
+    container.style.position = 'relative';
+    container.style.display = 'flex';
+    container.style.alignItems = 'center';
+    container.style.justifyContent = 'center';
+    container.style.background = 'transparent';
     
     // Create canvas to maintain aspect ratio
     const canvas = document.createElement('canvas');
@@ -1517,9 +1503,8 @@ class ImageProcessingManager {
       // Draw the image onto the canvas with the center crop
       const ctx = canvas.getContext('2d');
       
-      // Fill with black background
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+      // Fill with transparent background
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
       
       const offsetX = (img.width - canvasWidth) / 2;
       const offsetY = (img.height - canvasHeight) / 2;
@@ -1533,9 +1518,45 @@ class ImageProcessingManager {
       
       // Replace the image src with the canvas data
       image.src = canvas.toDataURL('image/png');
+      
+      // Adjust shadow to match image dimensions once loaded
+      image.onload = () => {
+        this.adjustShadowToImage(image, shadow);
+      };
+      
+      // Adjust container to maintain the aspect ratio without affecting layout
+      image.style.maxWidth = '100%';
+      image.style.maxHeight = '100%';
+      image.style.objectFit = 'contain';
+      image.style.borderRadius = '8px';
     };
     
     img.src = this.resultImageUrl || image.src;
+  }
+  
+  /**
+   * Adjust the shadow element to match the displayed image dimensions
+   * @param {HTMLImageElement} image - The image element
+   * @param {HTMLElement} shadow - The shadow element
+   */
+  adjustShadowToImage(image, shadow) {
+    if (!image || !shadow) return;
+    
+    // We need to wait for the image to be fully rendered to get its displayed dimensions
+    setTimeout(() => {
+      // Get the actual displayed dimensions of the image
+      const rect = image.getBoundingClientRect();
+      const displayedWidth = rect.width;
+      const displayedHeight = rect.height;
+      
+      // Adjust the shadow to match the image size with a slight offset
+      shadow.style.width = `${displayedWidth}px`;
+      shadow.style.height = `${displayedHeight}px`;
+      shadow.style.top = '10px';
+      shadow.style.left = '50%';
+      shadow.style.transform = 'translateX(-50%)';
+      shadow.style.borderRadius = '8px';
+    }, 50); // Small delay to ensure image is rendered
   }
   
   /**
