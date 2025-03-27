@@ -424,8 +424,20 @@
               document.getElementById('pixar-progress-bar').style.width = '10%';
               document.getElementById('pixar-progress-text').textContent = 'Uploading your image...';
               
-              // Process the image
-              processImageWithRunPod(event.target.files[0]);
+              // Get the selected file
+              const selectedFile = event.target.files[0];
+              
+              // Option 1: Use the global processImageWithRunPod function if available
+              if (typeof window.processImageWithRunPod === 'function') {
+                console.log('PIXAR-ENHANCED: Using global processImageWithRunPod function');
+                window.processImageWithRunPod(selectedFile);
+              } 
+              // Option 2: Process the image directly using our local function
+              else {
+                console.log('PIXAR-ENHANCED: Using local processImageWithRunPod function');
+                // This refers to the function defined below in the same script
+                processImageWithRunPod(selectedFile);
+              }
             }
           });
           

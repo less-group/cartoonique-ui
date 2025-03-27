@@ -357,7 +357,61 @@ class ImageProcessingManager {
       // Pass isOriginal: true to indicate this is the uncropped image
       window.processImageWithRunPod(this.originalFile, { isOriginal: true });
     } else {
-      console.log('🖼️ processImageWithRunPod not available, will send after cropping');
+      console.log('🖼️ processImageWithRunPod not available, implementing direct Railway API call');
+      
+      // Implement direct API call to Railway as a fallback
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imageBase64 = e.target.result;
+        
+        // Create payload
+        const payload = {
+          image: imageBase64,
+          style: 'pixar',
+          watermark: {
+            url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/watermark.png",
+            width: 200,
+            height: 100,
+            spaceBetweenWatermarks: 100
+          }
+        };
+        
+        console.log('🖼️ Sending image directly to Railway API');
+        
+        // Call the transform endpoint
+        fetch('https://letzteshemd-faceswap-api-production.up.railway.app/transform', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload),
+          timeout: 60000 // 60 second timeout
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`API response error: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('🖼️ Transform response from Railway:', data);
+          
+          // Extract jobId
+          let jobId = data.jobId || data.id;
+          
+          if (jobId) {
+            console.log('🖼️ Successfully received jobId:', jobId);
+            
+            // Start polling for the job result
+            this.pollRailwayJobStatus(jobId);
+          }
+        })
+        .catch(error => {
+          console.error('🖼️ Error in Railway transform call:', error);
+        });
+      };
+      
+      reader.readAsDataURL(this.originalFile);
     }
     
     // Convert file to data URL for later use
@@ -2370,6 +2424,76 @@ class ImageProcessingManager {
   // Add a new method to check if processing is complete
   isProcessingComplete() {
     return this.finalProcessingComplete;
+  }
+
+  /**
+   * Poll Railway job status
+   * @param {string} jobId - The job ID to poll
+   */
+  pollRailwayJobStatus(jobId, attempt = 1) {
+    console.log(`🖼️ Polling Railway job status for job ${jobId}, attempt ${attempt}`);
+    
+    // Implement reasonable timeout/limits
+    if (attempt > 30) {
+      console.log(`🖼️ Giving up on polling job ${jobId} after ${attempt} attempts`);
+      return;
+    }
+    
+    fetch(`https://letzteshemd-faceswap-api-production.up.railway.app/status/${jobId}`, {
+      method: 'GET'
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log(`🖼️ Railway job status for ${jobId}:`, data);
+      
+      // Check job status
+      if (data.status && data.status.toUpperCase() === 'COMPLETED') {
+        // Get the image URL
+        const imageUrl = data.watermarkedImageUrlToShow || 
+                         data.processedImageUrl || 
+                         data.watermarkedOriginalImageUrl ||
+                         data.resultImageUrl ||
+                         (data.image && data.image.url);
+                         
+        if (imageUrl) {
+          console.log('🖼️ Railway job completed, image URL:', imageUrl);
+          
+          // Store the URL and mark as complete
+          this.stylizedImageUrl = imageUrl;
+          this.transformationComplete = true;
+          
+          // Trigger the transform complete event
+          const customEvent = new CustomEvent('pixar-transform-complete', {
+            detail: { imageUrl: imageUrl, timestamp: Date.now() }
+          });
+          document.dispatchEvent(customEvent);
+          
+          // If crop is already complete, apply final processing
+          if (this.cropComplete && this.textProcessingComplete) {
+            this.applyFinalProcessing();
+          }
+        }
+      } else if (data.status && data.status.toUpperCase() === 'FAILED') {
+        console.error('🖼️ Railway job failed:', data);
+      } else {
+        // Continue polling with exponential backoff
+        const backoffTime = Math.min(1000 * Math.pow(1.5, Math.min(attempt - 1, 10)), 10000);
+        console.log(`🖼️ Continuing to poll job ${jobId} in ${backoffTime}ms`);
+        setTimeout(() => this.pollRailwayJobStatus(jobId, attempt + 1), backoffTime);
+      }
+    })
+    .catch(error => {
+      console.error('🖼️ Error polling Railway job status:', error);
+      
+      // Retry with backoff
+      const backoffTime = Math.min(2000 * Math.pow(1.5, Math.min(attempt - 1, 8)), 15000);
+      setTimeout(() => this.pollRailwayJobStatus(jobId, attempt + 1), backoffTime);
+    });
   }
 }
 

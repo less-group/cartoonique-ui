@@ -204,10 +204,113 @@
                 if (progressText) progressText.textContent = 'Uploading your image...';
               }
               
-              // Try to use the image processing manager directly
-              if (window.imageProcessingManager && typeof window.imageProcessingManager.handleFileSelected === 'function') {
+              // Process the selected file
+              const selectedFile = event.target.files[0];
+              
+              // Option 1: Try to use the window.processImageWithRunPod function directly
+              if (typeof window.processImageWithRunPod === 'function') {
+                console.log('⭐ Using global processImageWithRunPod function');
+                window.processImageWithRunPod(selectedFile);
+              } 
+              // Option 2: Try to use the image processing manager
+              else if (window.imageProcessingManager && typeof window.imageProcessingManager.handleFileSelected === 'function') {
                 console.log('⭐ Passing file to ImageProcessingManager');
-                window.imageProcessingManager.handleFileSelected({ target: { files: [event.target.files[0]] } });
+                window.imageProcessingManager.handleFileSelected({ target: { files: [selectedFile] } });
+              }
+              // Option 3: Implement the Railway API call directly as a fallback
+              else {
+                console.log('⭐ Using direct implementation to call Railway API');
+                // Create a FileReader to read the file as a data URL
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                  const imageBase64 = e.target.result;
+                  console.log('⭐ File successfully read as base64');
+                  
+                  // Create payload with image and watermark only
+                  const payload = {
+                    image: imageBase64,
+                    style: 'pixar',
+                    watermark: {
+                      url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/watermark.png",
+                      width: 200,
+                      height: 100,
+                      spaceBetweenWatermarks: 100
+                    }
+                  };
+                  
+                  console.log('⭐ Sending image data directly to Railway API');
+                  
+                  // Call the transform endpoint
+                  fetch('https://letzteshemd-faceswap-api-production.up.railway.app/transform', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload),
+                    timeout: 60000 // 60 second timeout
+                  })
+                  .then(response => {
+                    console.log('⭐ Transform API response received, status:', response.status);
+                    if (!response.ok) {
+                      throw new Error(`API response error: ${response.status}`);
+                    }
+                    return response.json();
+                  })
+                  .then(data => {
+                    console.log('⭐ Transform response data:', data);
+                    
+                    // Check for explicit error field in response
+                    if (data.error) {
+                      throw new Error(data.error);
+                    }
+                    
+                    // Extract jobId
+                    let jobId = data.jobId || data.id;
+                    
+                    if (jobId) {
+                      console.log('⭐ Successfully received jobId:', jobId);
+                      
+                      // Dispatch event for other components to handle
+                      const customEvent = new CustomEvent('pixar-job-started', {
+                        detail: { jobId: jobId, file: selectedFile }
+                      });
+                      document.dispatchEvent(customEvent);
+                      
+                      // Show success message on button
+                      const uploadButton = document.querySelector('#direct-pixar-loader-container button');
+                      if (uploadButton) {
+                        uploadButton.textContent = '✅ IMAGE UPLOADED - PROCESSING';
+                        uploadButton.style.backgroundColor = '#FFA500';
+                      }
+                    } else {
+                      console.error('⭐ No jobId in response');
+                      throw new Error('Failed to process image. Please try again.');
+                    }
+                  })
+                  .catch(error => {
+                    console.error('⭐ Error in transform call:', error);
+                    // Show error message
+                    const errorElement = document.getElementById('pixar-error-message');
+                    if (errorElement) {
+                      errorElement.textContent = 'Error: ' + (error.message || 'Unknown error processing image');
+                      errorElement.style.display = 'block';
+                    }
+                    
+                    // Hide loading popup
+                    if (loadingPopup) {
+                      loadingPopup.style.display = 'none';
+                    }
+                  });
+                };
+                reader.onerror = function(error) {
+                  console.error('⭐ Error reading file:', error);
+                  const errorElement = document.getElementById('pixar-error-message');
+                  if (errorElement) {
+                    errorElement.textContent = 'Error: Could not read file';
+                    errorElement.style.display = 'block';
+                  }
+                };
+                reader.readAsDataURL(selectedFile);
               }
             }
           });
