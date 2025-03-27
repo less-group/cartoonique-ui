@@ -4506,22 +4506,25 @@ class ImageProcessingManager {
     const numericVariantId = parseInt(variantId, 10);
     console.log('Using variant ID:', numericVariantId, 'with image URL (truncated):', processedImageUrl.substring(0, 50) + '...');
     
-    // Store the processed image URL for cart display using our helper function
-    this.storeProcessedImage(numericVariantId, processedImageUrl);
+    // Generate a unique reference ID for this image
+    const imageReferenceId = 'image_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
+    
+    // Store the actual image using our helper function
+    this.storeProcessedImage(numericVariantId, processedImageUrl, imageReferenceId);
     
     // Show loading state in the popup
     this.showAddToCartLoading();
     
-    // IMPORTANT: Use the standard Shopify cart API format
+    // IMPORTANT: Create cart data with SMALL properties (not the full image)
     const cartData = {
       items: [
         {
           id: numericVariantId,
           quantity: 1,
           properties: {
-            _processed_image_url: processedImageUrl,
-            _watermarked_image_url: processedImageUrl,
-            _selected_size: size
+            _selected_size: size,
+            _has_custom_image: 'true',
+            _image_reference_id: imageReferenceId
           }
         }
       ]
@@ -4546,6 +4549,9 @@ class ImageProcessingManager {
     })
     .then(data => {
       console.log('Product added to cart:', data);
+      
+      // Ensure the client-side storage mechanism is loaded
+      this.setupClientStorage();
 
       // Set flag for cart page to preload images
       localStorage.setItem('cartoonique_preload_cart_images', 'true');
@@ -4569,17 +4575,47 @@ class ImageProcessingManager {
   }
   
   /**
+   * Set up client-side storage mechanism for images
+   */
+  setupClientStorage() {
+    // Create script to set up storage
+    const script = document.createElement('script');
+    script.textContent = `
+      // Initialize cartoonique storage
+      if (!window.cartoonique_storage_initialized) {
+        console.log('Initializing cartoonique image storage');
+        
+        // Create storage objects if they don't exist
+        window.cartoonique_blob_urls = window.cartoonique_blob_urls || {};
+        window.cartoonique_memory_images = window.cartoonique_memory_images || {};
+        
+        // Flag to prevent multiple initializations
+        window.cartoonique_storage_initialized = true;
+      }
+    `;
+    
+    document.head.appendChild(script);
+  }
+  
+  /**
    * Store the processed image for cart display
    * @param {number} variantId - The variant ID
    * @param {string} imageUrl - The processed image URL
+   * @param {string} referenceId - Optional reference ID for the image
    * @returns {boolean} - Whether storage was successful
    */
-  storeProcessedImage(variantId, imageUrl) {
+  storeProcessedImage(variantId, imageUrl, referenceId = null) {
     try {
       if (!variantId || !imageUrl) {
         console.error('Missing variant ID or image URL for storage');
         return false;
       }
+      
+      // Initialize client storage
+      this.setupClientStorage();
+      
+      // Use either provided reference ID or create a key from the variant ID
+      const storageKey = referenceId || 'variant_' + variantId;
       
       // Handle large base64 images - convert to blob URL for better performance
       if (imageUrl.startsWith('data:image')) {
@@ -4598,20 +4634,23 @@ class ImageProcessingManager {
           const blob = new Blob([ab], { type: mimeType });
           const blobUrl = URL.createObjectURL(blob);
           
-          // Store in localStorage - just store a marker that we're using a blob
-          // Then store the blob URL in the window object for immediate access
+          // Store reference in localStorage - NOT the full image data
           const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-          cartImages[variantId] = 'BLOB_URL:' + variantId;
+          cartImages[storageKey] = 'BLOB_URL:' + storageKey;
           localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
           
-          // Store the variant ID -> blob URL mapping in the window object for immediate access
+          // Store the key -> blob URL mapping in the window object for immediate access
           if (!window.cartoonique_blob_urls) {
             window.cartoonique_blob_urls = {};
           }
-          window.cartoonique_blob_urls[variantId] = blobUrl;
+          window.cartoonique_blob_urls[storageKey] = blobUrl;
           
-          // Store the current variant and image URL for cart page preloading
-          sessionStorage.setItem('cartoonique_current_variant', variantId);
+          // Also map the variant ID to this storage key
+          cartImages['variant_' + variantId] = storageKey;
+          localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
+          
+          // Store the current reference for cart page preloading
+          sessionStorage.setItem('cartoonique_current_reference', storageKey);
           window.cartoonique_current_image = blobUrl;
           
           // Set a flag for the cart page to know it should preload images
@@ -4620,6 +4659,7 @@ class ImageProcessingManager {
           // Also store navigation data for faster page transitions
           const navigationData = {
             variantId: variantId,
+            referenceId: storageKey,
             imageUrl: blobUrl,
             timestamp: Date.now()
           };
@@ -4632,31 +4672,34 @@ class ImageProcessingManager {
           if (!window.cartoonique_memory_images) {
             window.cartoonique_memory_images = {};
           }
-          window.cartoonique_memory_images[variantId] = imageUrl;
+          window.cartoonique_memory_images[storageKey] = imageUrl;
           
           // Store reference in localStorage
           const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-          cartImages[variantId] = 'MEMORY_IMAGE:' + variantId;
+          cartImages[storageKey] = 'MEMORY_IMAGE:' + storageKey;
+          cartImages['variant_' + variantId] = storageKey;
           localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
           
           return true;
         }
       } else {
-        // Not a base64 image, store as is
+        // Not a base64 image, store the URL as is
         const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-        cartImages[variantId] = imageUrl;
+        cartImages[storageKey] = imageUrl;
+        cartImages['variant_' + variantId] = storageKey;
         localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
         
         // Also store in window object for immediate access
         if (!window.cartoonique_blob_urls) {
           window.cartoonique_blob_urls = {};
         }
-        window.cartoonique_blob_urls[variantId] = imageUrl;
+        window.cartoonique_blob_urls[storageKey] = imageUrl;
         
         // Set preload flag and navigation data
         localStorage.setItem('cartoonique_preload_cart_images', 'true');
         const navigationData = {
           variantId: variantId,
+          referenceId: storageKey,
           imageUrl: imageUrl,
           timestamp: Date.now()
         };
@@ -4673,11 +4716,16 @@ class ImageProcessingManager {
         if (!window.cartoonique_memory_images) {
           window.cartoonique_memory_images = {};
         }
-        window.cartoonique_memory_images[variantId] = imageUrl;
+        
+        // Use provided reference ID or create a key
+        const storageKey = referenceId || 'variant_' + variantId;
+        
+        window.cartoonique_memory_images[storageKey] = imageUrl;
         
         // Store just a reference in localStorage
         const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-        cartImages[variantId] = 'MEMORY_IMAGE:' + variantId;
+        cartImages[storageKey] = 'MEMORY_IMAGE:' + storageKey;
+        cartImages['variant_' + variantId] = storageKey;
         localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
         
         return true;
@@ -4710,7 +4758,7 @@ class ImageProcessingManager {
       // Hide the result image and show loading
       resultImage.style.opacity = '0.3';
       popupContent.appendChild(loadingElement);
-    } else {
+          } else {
       // Alternative loading UI if structure is different
       // Change continue button text to indicate loading
       const continueButton = popup.querySelector('.pixar-continue-button');
