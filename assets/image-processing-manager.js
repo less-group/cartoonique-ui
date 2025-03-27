@@ -2108,11 +2108,47 @@ class ImageProcessingManager {
         const scaleX = this.originalImageWidth / crop.originalImageWidth;
         const scaleY = this.originalImageHeight / crop.originalImageHeight;
         
+        console.log(`RAILWAY PROCESSING: Original crop from ${crop.originalImageWidth}x${crop.originalImageHeight} to current ${this.originalImageWidth}x${this.originalImageHeight}`);
+        console.log(`RAILWAY PROCESSING: Scaling factors - X: ${scaleX}, Y: ${scaleY}`);
+        
         // Calculate cropped dimensions in the displayed image
-        this.croppedImageX = crop.x * scaleX;
-        this.croppedImageY = crop.y * scaleY;
-        this.croppedImageWidth = crop.width * scaleX;
-        this.croppedImageHeight = crop.height * scaleY;
+        this.croppedImageX = Math.round(crop.x * scaleX);
+        this.croppedImageY = Math.round(crop.y * scaleY);
+        this.croppedImageWidth = Math.round(crop.width * scaleX);
+        this.croppedImageHeight = Math.round(crop.height * scaleY);
+        
+        console.log(`RAILWAY PROCESSING: Adjusted crop coordinates: X: ${this.croppedImageX}, Y: ${this.croppedImageY}, Width: ${this.croppedImageWidth}, Height: ${this.croppedImageHeight}`);
+        
+        // Force 3:4 aspect ratio if it doesn't match (important for proper display)
+        const currentRatio = this.croppedImageWidth / this.croppedImageHeight;
+        const targetRatio = 3/4; // 3:4 aspect ratio is our standard
+        
+        if (Math.abs(currentRatio - targetRatio) > 0.01) { // Allow small deviation
+          console.log(`RAILWAY PROCESSING: Current aspect ratio ${currentRatio.toFixed(2)} doesn't match target ${targetRatio.toFixed(2)}, adjusting`);
+          
+          // Adjust width to match height
+          const newWidth = Math.round(this.croppedImageHeight * targetRatio);
+          
+          // If new width is smaller than current, center the crop
+          if (newWidth < this.croppedImageWidth) {
+            const diff = this.croppedImageWidth - newWidth;
+            this.croppedImageX += Math.floor(diff / 2);
+            this.croppedImageWidth = newWidth;
+          } 
+          // If new width is larger, we need to adjust height instead
+          else {
+            const newHeight = Math.round(this.croppedImageWidth / targetRatio);
+            
+            // If new height is smaller than current, center the crop
+            if (newHeight < this.croppedImageHeight) {
+              const diff = this.croppedImageHeight - newHeight;
+              this.croppedImageY += Math.floor(diff / 2);
+              this.croppedImageHeight = newHeight;
+            }
+          }
+          
+          console.log(`RAILWAY PROCESSING: Adjusted to 3:4 ratio - Width: ${this.croppedImageWidth}, Height: ${this.croppedImageHeight}`);
+        }
         
         // Apply crop styling to all product images
         this.applyCropStylingToImages();
@@ -2126,6 +2162,29 @@ class ImageProcessingManager {
         }
       } else {
         console.log('RAILWAY PROCESSING: No crop coordinates available, using full image');
+        
+        // Set default crop to full image with 3:4 aspect ratio
+        const fullImageRatio = this.originalImageWidth / this.originalImageHeight;
+        const targetRatio = 3/4; // Target 3:4 ratio
+        
+        if (fullImageRatio > targetRatio) {
+          // Image is wider than 3:4, use full height and crop width
+          this.croppedImageY = 0;
+          this.croppedImageHeight = this.originalImageHeight;
+          this.croppedImageWidth = Math.round(this.originalImageHeight * targetRatio);
+          this.croppedImageX = Math.round((this.originalImageWidth - this.croppedImageWidth) / 2);
+        } else {
+          // Image is taller than 3:4, use full width and crop height
+          this.croppedImageX = 0;
+          this.croppedImageWidth = this.originalImageWidth;
+          this.croppedImageHeight = Math.round(this.originalImageWidth / targetRatio);
+          this.croppedImageY = Math.round((this.originalImageHeight - this.croppedImageHeight) / 2);
+        }
+        
+        console.log(`RAILWAY PROCESSING: Set default crop to X: ${this.croppedImageX}, Y: ${this.croppedImageY}, Width: ${this.croppedImageWidth}, Height: ${this.croppedImageHeight}`);
+        
+        // Apply crop styling to all product images
+        this.applyCropStylingToImages();
       }
       
       // Get final cropped image for overlay
@@ -2166,6 +2225,10 @@ class ImageProcessingManager {
           this.addTextToRailwayImage(this.stylizedImageUrl);
         } else {
           // No text to add, just finish the process
+          // Set flags to indicate processing is done
+          this.textProcessingComplete = true;
+          this.finalProcessingComplete = true;
+          
           const finalEvent = new CustomEvent('pixar-final-processing-complete', {
             detail: { 
               imageUrl: this.stylizedImageUrl,
@@ -3374,13 +3437,18 @@ class ImageProcessingManager {
         return mainImage.src;
       }
       
-      // Create a canvas for cropping
+      // Create a canvas with 3:4 aspect ratio for the final image
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
-      // Set canvas dimensions to the cropped area
-      canvas.width = this.croppedImageWidth || this.cropCoordinates.width;
-      canvas.height = this.croppedImageHeight || this.cropCoordinates.height;
+      // Set the canvas to the cropped dimensions (already calculated in processCropForMainImage)
+      // These should already be in the correct 3:4 aspect ratio
+      canvas.width = this.croppedImageWidth;
+      canvas.height = this.croppedImageHeight;
+      
+      // Log the dimensions we're using
+      console.log(`🖼️ Creating crop canvas with dimensions ${canvas.width}x${canvas.height}`);
+      console.log(`🖼️ Using crop coordinates X:${this.croppedImageX}, Y:${this.croppedImageY}, W:${this.croppedImageWidth}, H:${this.croppedImageHeight}`);
       
       // Create an image to draw from
       const img = new Image();
@@ -3390,26 +3458,51 @@ class ImageProcessingManager {
       return new Promise((resolve, reject) => {
         img.onload = () => {
           try {
+            console.log(`🖼️ Source image loaded with dimensions ${img.width}x${img.height}`);
+            
+            // Fill with white background
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
             // Draw only the cropped portion of the image
+            // We're using the original image and cutting out the portion we want
             ctx.drawImage(
               img,
-              this.croppedImageX || this.cropCoordinates.x,
-              this.croppedImageY || this.cropCoordinates.y,
-              this.croppedImageWidth || this.cropCoordinates.width,
-              this.croppedImageHeight || this.cropCoordinates.height,
-              0, 0,
-              canvas.width,
-              canvas.height
+              this.croppedImageX,  // Source X
+              this.croppedImageY,  // Source Y
+              this.croppedImageWidth,  // Source width
+              this.croppedImageHeight, // Source height
+              0, 0, // Destination X, Y (always 0, 0 for our canvas)
+              canvas.width, // Destination width
+              canvas.height // Destination height
             );
             
             // Convert to data URL
-            const dataURL = canvas.toDataURL('image/png');
+            const dataURL = canvas.toDataURL('image/png', 0.95);
             console.log('🖼️ Successfully captured cropped image from DOM');
             resolve(dataURL);
           } catch (error) {
             console.error('🖼️ Error drawing cropped image on canvas:', error);
-            // Fall back to the full image
-            resolve(img.src);
+            
+            // If there's an error with our sophisticated approach, try a simpler approach
+            console.log('🖼️ Trying simpler cropping approach as fallback');
+            try {
+              // Clear canvas
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              ctx.fillStyle = '#FFFFFF';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              
+              // Try to draw the entire image and let the canvas handle scaling
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              
+              const dataURL = canvas.toDataURL('image/png', 0.95);
+              console.log('🖼️ Successfully captured image with fallback approach');
+              resolve(dataURL);
+            } catch (fallbackError) {
+              console.error('🖼️ Error with fallback approach:', fallbackError);
+              // Fall back to the original image source
+              resolve(img.src);
+            }
           }
         };
         
@@ -3474,38 +3567,91 @@ class ImageProcessingManager {
       // Set the CSS
       cropStyle.textContent = cssRules;
       
-      // Find all product images to apply the styling
-      const productImages = document.querySelectorAll('[data-product-image], .product__media img, .product-single__photo img, .product-featured-img');
-      console.log(`🖼️ Found ${productImages.length} product images to apply styling to`);
-      
-      productImages.forEach((img, index) => {
-        // Add our class for tracking
-        img.classList.add('pixar-transformed-image');
+      // Start with the main product image (this is guaranteed to exist because we just updated it)
+      const mainImage = this.findMainProductImage();
+      if (mainImage) {
+        // Ensure the main image has our class
+        mainImage.classList.add('pixar-transformed-image');
         
-        // For some themes, we need to wrap the image in a container
-        if (img.parentElement && !img.parentElement.classList.contains('pixar-transform-container')) {
-          // Check if the parent is a suitable container (e.g., already has positioning)
-          const style = window.getComputedStyle(img.parentElement);
-          const needsContainer = style.position === 'static';
+        // Wrap in a container if needed
+        this.wrapImageInContainer(mainImage);
+        
+        // Now find all images that should have the same styling
+        // This includes product images, gallery images, carousel images, etc.
+        const productImages = document.querySelectorAll([
+          '[data-product-image]', 
+          '.product__media img', 
+          '.product-single__photo img', 
+          '.product-featured-img',
+          '.product__image-container img',
+          '.product-image-main',
+          '.product-image img',
+          '.product-gallery img',
+          '.product-single__media img',
+          '.product__slide img',
+          '.product-single__media--featured img',
+          '.product__image img',
+          '.featured-img'
+        ].join(', '));
+        
+        // Count only images that aren't already transformed and meet minimum size
+        const imagesToTransform = Array.from(productImages).filter(img => {
+          // Skip the main image (already done)
+          if (img === mainImage) return false;
           
-          if (needsContainer) {
-            console.log(`🖼️ Creating wrapper container for image ${index}`);
-            
-            // Create a wrapper
-            const wrapper = document.createElement('div');
-            wrapper.classList.add('pixar-transform-container');
-            
-            // Replace the image with the wrapper containing the image
-            const parent = img.parentElement;
-            parent.insertBefore(wrapper, img);
-            wrapper.appendChild(img);
-          }
-        }
-      });
-      
-      console.log('🖼️ Applied crop styling to product images');
+          // Skip small images (thumbnails)
+          if (img.naturalWidth < 100 || img.naturalHeight < 100) return false;
+          
+          // Skip non-visible images
+          const style = window.getComputedStyle(img);
+          if (style.display === 'none' || style.visibility === 'hidden') return false;
+          
+          // Skip images already styled
+          if (img.classList.contains('pixar-transformed-image')) return false;
+          
+          return true;
+        });
+        
+        console.log(`🖼️ Found ${imagesToTransform.length} additional product images to apply styling to`);
+        
+        // Apply styling to these images
+        imagesToTransform.forEach((img, index) => {
+          img.classList.add('pixar-transformed-image');
+          this.wrapImageInContainer(img);
+        });
+        
+        console.log(`🖼️ Applied crop styling to ${imagesToTransform.length + 1} product images (including main image)`);
+      } else {
+        console.warn('🖼️ Main product image not found, cannot apply crop styling');
+      }
     } catch (error) {
       console.error('🖼️ Error applying crop styling to images:', error);
+    }
+  }
+  
+  /**
+   * Helper method to wrap an image in a container if needed
+   * @param {HTMLImageElement} img - The image element to wrap
+   */
+  wrapImageInContainer(img) {
+    // For some themes, we need to wrap the image in a container
+    if (img.parentElement && !img.parentElement.classList.contains('pixar-transform-container')) {
+      // Check if the parent is a suitable container (e.g., already has positioning)
+      const style = window.getComputedStyle(img.parentElement);
+      const needsContainer = style.position === 'static';
+      
+      if (needsContainer) {
+        console.log(`🖼️ Creating wrapper container for image ${img.src.substring(0, 50)}...`);
+        
+        // Create a wrapper
+        const wrapper = document.createElement('div');
+        wrapper.classList.add('pixar-transform-container');
+        
+        // Replace the image with the wrapper containing the image
+        const parent = img.parentElement;
+        parent.insertBefore(wrapper, img);
+        wrapper.appendChild(img);
+      }
     }
   }
 }
