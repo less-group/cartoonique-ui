@@ -4379,36 +4379,134 @@ class ImageProcessingManager {
   redirectToCheckout(size) {
     console.log('Adding to cart with size:', size);
     
-    // Find variant ID based on the size
-    const variantSelector = document.querySelector('select.product-variant-select, select[name="id"], [data-variant-selector]');
-    const variantId = variantSelector ? variantSelector.value : null;
+    // Keep track of the product variant based on size
+    let variantId = null;
     
+    // First try to find the variant selector
+    const variantSelector = document.querySelector('select.product-variant-select, select[name="id"], [data-variant-selector]');
+    if (variantSelector) {
+      variantId = variantSelector.value;
+      console.log('Found variant ID from selector:', variantId);
+    }
+    
+    // If not found, check if specific size mapping exists
     if (!variantId) {
-      console.error('No variant ID found for checkout');
-      // Fallback to try to find variant ID from the DOM
-      const metaVariant = document.querySelector('meta[property="product:variant_id"], [data-variant-id]');
-      if (metaVariant) {
-        metaVariant.getAttribute('content') || metaVariant.getAttribute('data-variant-id');
+      // Try size-based variant mapping if defined
+      const sizeVariantMap = {
+        'S': '54215893451100',  // Shopify variant ID for size S
+        'M': '54215893483868',  // Shopify variant ID for size M
+        'L': '54215893516636'   // Shopify variant ID for size L
+      };
+      
+      if (sizeVariantMap[size]) {
+        variantId = sizeVariantMap[size];
+        console.log('Using mapped variant ID for size', size, ':', variantId);
       }
     }
     
-    if (!this.processedImageUrl) {
-      console.error('No processed image URL found for checkout');
-      // Try with default settings if available
-      this.generateTransformedImage();
-      
-      if (!this.processedImageUrl) {
-        alert('Unable to generate a transformed image. Please try again or contact support.');
-        return;
+    // If still not found, try to find from metadata or other elements
+    if (!variantId) {
+      console.warn('No direct variant ID found, searching in metadata');
+      // Check meta tags
+      const metaVariant = document.querySelector('meta[property="product:variant_id"], [data-variant-id]');
+      if (metaVariant) {
+        variantId = metaVariant.getAttribute('content') || metaVariant.getAttribute('data-variant-id');
+        console.log('Found variant ID from metadata:', variantId);
       }
+      
+      // If still not found, look through the page for common patterns
+      if (!variantId) {
+        console.warn('Searching for variant ID in page content');
+        // Look for JSON in scripts
+        const scriptTags = document.querySelectorAll('script');
+        for (const script of scriptTags) {
+          if (script.textContent && script.textContent.includes('variantId')) {
+            const match = script.textContent.match(/variantId['":\s]+(\d+)/);
+            if (match && match[1]) {
+              variantId = match[1];
+              console.log('Found variant ID in script content:', variantId);
+              break;
+            }
+          }
+        }
+      }
+    }
+    
+    // Check for processed image URL through various methods
+    let processedImageUrl = this.processedImageUrl || this.resultImageUrl;
+    
+    if (!processedImageUrl) {
+      console.warn('No direct processed image found, searching in DOM');
+      
+      // Try to find from DOM
+      const resultImage = document.getElementById('pixar-result-image');
+      if (resultImage && resultImage.src) {
+        processedImageUrl = resultImage.src;
+        console.log('Found image from element with ID');
+      } else {
+        // Try common containers
+        const selectors = [
+          '#pixar-result-popup .pixar-result-image-container img',
+          '.result-wrapper__image img',
+          '.pixar-result-image',
+          '[data-processed-image]'
+        ];
+        
+        for (const selector of selectors) {
+          const el = document.querySelector(selector);
+          if (el && el.src) {
+            processedImageUrl = el.src;
+            console.log('Found image from selector:', selector);
+            break;
+          }
+        }
+      }
+    }
+    
+    // If we still don't have a processed image, check for a fallback method
+    if (!processedImageUrl) {
+      console.warn('No processed image URL found, checking for fallback methods');
+      
+      // Try the generateTransformedImage method if it exists
+      if (typeof this.generateTransformedImage === 'function') {
+        try {
+          console.log('Trying to generate transformed image');
+          this.generateTransformedImage();
+          // Check if this set the processed image URL
+          processedImageUrl = this.processedImageUrl;
+        } catch (error) {
+          console.error('Error generating transformed image:', error);
+        }
+      } else {
+        console.warn('generateTransformedImage method not found');
+        
+        // Try to get the primary product image as a fallback
+        const productImage = this.findMainProductImage ? this.findMainProductImage() : null;
+        if (productImage && productImage.src) {
+          processedImageUrl = productImage.src;
+          console.log('Using main product image as fallback');
+        }
+      }
+    }
+    
+    // Final check if we have what we need
+    if (!variantId) {
+      console.error('Failed to find a valid variant ID');
+      alert('Unable to find product variant. Please try again or contact support.');
+      return;
+    }
+    
+    if (!processedImageUrl) {
+      console.error('Failed to find a processed image');
+      alert('Unable to find processed image. Please try again or contact support.');
+      return;
     }
     
     // Ensure we have a numeric variant ID
-    const numericVariantId = variantId ? parseInt(variantId, 10) : null;
+    const numericVariantId = parseInt(variantId, 10);
+    console.log('Using variant ID:', numericVariantId, 'with image URL (truncated):', processedImageUrl.substring(0, 50) + '...');
     
     // Store the processed image URL for cart display
-    const processedImageUrl = this.processedImageUrl;
-    
     // Helper function to safely store image in various storage mechanisms
     const storeImageSafely = (variantId, imageUrl) => {
       try {
@@ -4528,7 +4626,11 @@ class ImageProcessingManager {
     const storageResult = storeImageSafely(numericVariantId, processedImageUrl);
     
     // Update cart image replacement code to be aware of our storage approach
-    this.setupCartImageReplacementWithFallbacks();
+    if (typeof this.setupCartImageReplacementWithFallbacks === 'function') {
+      this.setupCartImageReplacementWithFallbacks();
+    } else {
+      console.warn('Cart image replacement method not available');
+    }
     
     // Show loading state in the popup instead of closing it immediately
     const popup = document.querySelector('#pixar-result-popup');
@@ -4547,6 +4649,15 @@ class ImageProcessingManager {
       // Hide the result image and show loading
       resultImage.style.opacity = '0.3';
       popupContent.appendChild(loadingElement);
+    } else if (popup) {
+      // Alternative loading UI if structure is different
+      // Change continue button text to indicate loading
+      const continueButton = popup.querySelector('.pixar-continue-button');
+      if (continueButton) {
+        continueButton.textContent = 'Adding to cart...';
+        continueButton.disabled = true;
+        continueButton.classList.add('loading');
+      }
     }
     
     // Prepare for cart/checkout with line item properties
@@ -4557,6 +4668,7 @@ class ImageProcessingManager {
     // Add line item properties to store our image URLs with the cart item
     formData.append('properties[_processed_image_url]', processedImageUrl);
     formData.append('properties[_watermarked_image_url]', processedImageUrl); // Using same URL for now, but could be different in future
+    formData.append('properties[_selected_size]', size); // Add selected size as a property
     
     // If we generated a print-ready version, store that too
     if (this.processedPrintImageUrl) {
@@ -4588,9 +4700,13 @@ class ImageProcessingManager {
         
         // Directly trigger our image update method for cart image refresh
         // This ensures the image shows up immediately in the cart without refresh
-        this.updateCartImages(processedImageUrl, numericVariantId).then(updatedCount => {
-          console.log(`Updated ${updatedCount} cart images directly after add to cart`);
-        });
+        if (typeof this.updateCartImages === 'function') {
+          this.updateCartImages(processedImageUrl, numericVariantId).then(updatedCount => {
+            console.log(`Updated ${updatedCount} cart images directly after add to cart`);
+          });
+        } else {
+          console.warn('updateCartImages method not available');
+        }
         
         // Check if we should go to cart or checkout
         const goToCheckout = false; // Toggle this if you want direct checkout
@@ -4608,6 +4724,14 @@ class ImageProcessingManager {
             resultImage.style.opacity = '1';
           }
           
+          // Reset any loading buttons
+          const continueButton = popup.querySelector('.pixar-continue-button');
+          if (continueButton) {
+            continueButton.textContent = 'Continue';
+            continueButton.disabled = false;
+            continueButton.classList.remove('loading');
+          }
+          
           // Toggle popup closed
           popup.setAttribute('aria-hidden', 'true');
         }
@@ -4618,7 +4742,16 @@ class ImageProcessingManager {
           window.location.href = '/checkout';
         } else {
           // Update the cart count
-          this.updateCartCount(cartData.item_count);
+          if (typeof this.updateCartCount === 'function') {
+            this.updateCartCount(cartData.item_count);
+          } else {
+            console.warn('updateCartCount method not available');
+            // Try to update cart count directly
+            document.querySelectorAll('.cart-count').forEach(counter => {
+              counter.textContent = cartData.item_count;
+              counter.classList.remove('hidden');
+            });
+          }
           
           // Look for cart drawer toggle
           const cartDrawerToggle = document.querySelector('[data-cart-toggle], [data-action="open-drawer"][data-drawer="cart"], [aria-controls="cart-drawer"]');
@@ -4644,6 +4777,14 @@ class ImageProcessingManager {
           // Restore image visibility
           if (resultImage) {
             resultImage.style.opacity = '1';
+          }
+          
+          // Reset any loading buttons
+          const continueButton = popup.querySelector('.pixar-continue-button');
+          if (continueButton) {
+            continueButton.textContent = 'Continue';
+            continueButton.disabled = false;
+            continueButton.classList.remove('loading');
           }
         }
       });
