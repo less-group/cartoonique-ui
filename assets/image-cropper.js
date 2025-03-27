@@ -15,6 +15,11 @@ class ImageCropper {
       ...options
     };
     
+    // Set default ratio for global use
+    if (window.imageProcessingManager) {
+      window.imageProcessingManager.currentCropRatio = this.options.aspectRatio;
+    }
+    
     // State variables
     this.originalImage = null;
     this.image = null;
@@ -70,13 +75,6 @@ class ImageCropper {
           </div>
         </div>
       </div>
-      
-      <div class="aspect-ratio-buttons">
-        <button id="ratio-30-40" class="ratio-button ratio-button-active">30x40</button>
-        <button id="ratio-50-70" class="ratio-button">50x70</button>
-      </div>
-      
-      <p class="crop-aspect-ratio-info">Select your preferred canvas size. Movement is restricted based on your image's orientation.</p>
       
       <div class="image-cropper-actions">
         <button id="image-cropper-cancel" class="image-cropper-button image-cropper-cancel">Cancel</button>
@@ -138,35 +136,6 @@ class ImageCropper {
         align-items: center;
       }
       
-      .aspect-ratio-buttons {
-        display: flex;
-        justify-content: center;
-        gap: 20px;
-        margin-bottom: 20px;
-      }
-      
-      .ratio-button {
-        padding: 8px 16px;
-        font-size: 14px;
-        font-weight: bold;
-        cursor: pointer;
-        border-radius: 4px;
-        border: 2px solid #ccc;
-        background-color: #f5f5f5;
-        color: #555;
-        transition: all 0.2s ease;
-      }
-      
-      .ratio-button:hover {
-        background-color: #e8e8e8;
-      }
-      
-      .ratio-button-active {
-        border-color: #00C2FF;
-        background-color: #e6f7ff;
-        color: #0085b3;
-      }
-      
       .crop-container {
         position: relative;
         overflow: visible;
@@ -222,13 +191,6 @@ class ImageCropper {
         cursor: sw-resize;
       }
       
-      .crop-aspect-ratio-info {
-        text-align: center;
-        margin-top: 10px;
-        font-size: 14px;
-        color: #666;
-      }
-      
       .image-cropper-actions {
         display: flex;
         justify-content: center;
@@ -281,8 +243,6 @@ class ImageCropper {
     this.cropBox = document.getElementById('crop-box');
     this.applyButton = document.getElementById('image-cropper-apply');
     this.cancelButton = document.getElementById('image-cropper-cancel');
-    this.ratio3040Button = document.getElementById('ratio-30-40');
-    this.ratio5070Button = document.getElementById('ratio-50-70');
   }
   
   /**
@@ -302,10 +262,6 @@ class ImageCropper {
     // Button clicks
     this.applyButton.addEventListener('click', this.handleApply.bind(this));
     this.cancelButton.addEventListener('click', this.handleCancel.bind(this));
-    
-    // Aspect ratio buttons
-    this.ratio3040Button.addEventListener('click', () => this.changeAspectRatio(3/4, '30x40'));
-    this.ratio5070Button.addEventListener('click', () => this.changeAspectRatio(5/7, '50x70'));
   }
   
   /**
@@ -315,10 +271,6 @@ class ImageCropper {
    */
   changeAspectRatio(ratio, ratioLabel) {
     console.log(`Changing aspect ratio to ${ratioLabel} (${ratio})`);
-    
-    // Update the active button UI
-    this.ratio3040Button.classList.toggle('ratio-button-active', ratio === 3/4);
-    this.ratio5070Button.classList.toggle('ratio-button-active', ratio === 5/7);
     
     // Save the current position before changing the aspect ratio
     const previousPosition = { ...this.imagePosition };
