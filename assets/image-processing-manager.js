@@ -1310,7 +1310,109 @@ class ImageProcessingManager {
       // Add event listener for the continue button
       const continueButton = document.getElementById('pixar-result-continue');
       if (continueButton) {
-        continueButton.addEventListener('click', () => {
+        continueButton.addEventListener('click', (event) => {
+          // Prevent default action
+          event.preventDefault();
+          
+          // Show loading animation immediately when clicked
+          const button = event.currentTarget;
+          const originalButtonText = button.textContent;
+          button.textContent = 'Adding to cart...';
+          button.disabled = true;
+          button.classList.add('loading');
+          
+          // Add loading spinner style if not already present
+          if (!document.querySelector('#pixar-loading-spinner-style')) {
+            const style = document.createElement('style');
+            style.id = 'pixar-loading-spinner-style';
+            style.textContent = `
+              .pixar-continue-button.loading,
+              #pixar-result-continue.loading {
+                position: relative;
+                color: transparent !important;
+                transition: background-color 0.3s ease;
+              }
+              .pixar-continue-button.loading::after,
+              #pixar-result-continue.loading::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 24px;
+                height: 24px;
+                margin: -12px 0 0 -12px;
+                border-radius: 50%;
+                border: 3px solid rgba(255, 255, 255, 0.8);
+                border-top-color: transparent;
+                animation: pixar-spinner 0.8s linear infinite;
+                box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+              }
+              @keyframes pixar-spinner {
+                to {transform: rotate(360deg);}
+              }
+              /* Second animation for pulse effect */
+              .pixar-continue-button.loading,
+              #pixar-result-continue.loading {
+                animation: pixar-pulse 2s infinite ease-in-out;
+              }
+              @keyframes pixar-pulse {
+                0% { background-color: var(--original-bg, #4a7dbd); }
+                50% { background-color: var(--pulse-bg, #3a6dad); }
+                100% { background-color: var(--original-bg, #4a7dbd); }
+              }
+            `;
+            document.head.appendChild(style);
+            
+            // Cache the original background color for pulse animation
+            const computedStyle = window.getComputedStyle(button);
+            const originalBg = computedStyle.backgroundColor;
+            document.documentElement.style.setProperty('--original-bg', originalBg);
+            document.documentElement.style.setProperty('--pulse-bg', adjustColor(originalBg, -20));
+          }
+          
+          // Disable size buttons during the transition
+          const popup = document.getElementById('pixar-result-popup');
+          const sizeButtons = popup.querySelectorAll('[data-size]');
+          sizeButtons.forEach(btn => {
+            btn.style.pointerEvents = 'none';
+            btn.style.opacity = '0.7';
+          });
+          
+          // Function to darken a color for pulse animation (if not already defined)
+          if (typeof adjustColor !== 'function') {
+            function adjustColor(color, amount) {
+              // Handle different color formats
+              let r, g, b;
+              
+              if (color.startsWith('rgb')) {
+                // Parse RGB format
+                const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/);
+                if (rgbMatch) {
+                  r = parseInt(rgbMatch[1]);
+                  g = parseInt(rgbMatch[2]);
+                  b = parseInt(rgbMatch[3]);
+                } else {
+                  return color; // Can't parse, return original
+                }
+              } else if (color.startsWith('#')) {
+                // Parse hex format
+                const hex = color.substring(1);
+                r = parseInt(hex.substr(0, 2), 16);
+                g = parseInt(hex.substr(2, 2), 16);
+                b = parseInt(hex.substr(4, 2), 16);
+              } else {
+                return color; // Unsupported format, return original
+              }
+              
+              // Adjust brightness
+              r = Math.max(0, Math.min(255, r + amount));
+              g = Math.max(0, Math.min(255, g + amount));
+              b = Math.max(0, Math.min(255, b + amount));
+              
+              return `rgb(${r}, ${g}, ${b})`;
+            }
+          }
+          
           // IMPORTANT: Don't hide the popup here - we'll keep it visible until the redirect happens
           console.log(`Continue clicked with size ${this.selectedSize || 'S'} selected, redirecting to checkout`);
           
@@ -1320,11 +1422,15 @@ class ImageProcessingManager {
         
         // Add hover effect for continue button
         continueButton.addEventListener('mouseenter', () => {
-          continueButton.style.backgroundColor = '#3a6dad';
+          if (!continueButton.classList.contains('loading')) {
+            continueButton.style.backgroundColor = '#3a6dad';
+          }
         });
         
         continueButton.addEventListener('mouseleave', () => {
-          continueButton.style.backgroundColor = '#4a7dbd';
+          if (!continueButton.classList.contains('loading')) {
+            continueButton.style.backgroundColor = '#4a7dbd';
+          }
         });
       }
       
