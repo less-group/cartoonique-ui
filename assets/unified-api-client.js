@@ -204,7 +204,10 @@ if (typeof window.UnifiedApiClient === 'undefined') {
           success: true,
           jobId: data.jobId,
           status: statusResult.status,
-          imageUrl: statusResult.imageUrl || statusResult.watermarkedImageUrlToShow,
+          imageUrl: statusResult.imageUrl || 
+                   statusResult.watermarkedImageUrlToShow || 
+                   statusResult.processedImageUrl || 
+                   statusResult.resultImageUrl,
           watermarkedImageUrlToShow: statusResult.watermarkedImageUrlToShow,
           watermarkedOriginalImageUrl: statusResult.watermarkedOriginalImageUrl,
           processedImageUrl: statusResult.processedImageUrl,

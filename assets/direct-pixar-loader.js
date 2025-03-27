@@ -373,7 +373,13 @@
         console.log('⭐ RunPod processing complete - received response from Railway API:', data);
         
         // Handle successful response
-        if (data && data.image) {
+        // Check for any of the possible image URL fields
+        const imageUrl = data?.image || 
+                        data?.watermarkedImageUrlToShow || 
+                        data?.processedImageUrl || 
+                        data?.resultImageUrl;
+                        
+        if (data && imageUrl) {
           if (progressBar) progressBar.style.width = '100%';
           if (progressText) progressText.textContent = 'Complete!';
           
@@ -384,7 +390,7 @@
           }
           
           // Store the processed image URL
-          const processedImageUrl = data.image;
+          const processedImageUrl = imageUrl;
           
           // Update UI based on whether this is the original or cropped image
           if (isOriginalImage) {
