@@ -134,7 +134,7 @@
         "color_scheme": "default",
         "container_size": "medium",
         "media_to_content_ratio": "fixed",
-        "img_ratio": "square",
+        "img_ratio": 0.75,
         "layout": "thumbnails-bottom",
         "desktop_space_between_media": 20,
         "thumbnails_size": 80,
