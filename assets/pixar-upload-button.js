@@ -300,7 +300,7 @@
     let targetContainer;
     
     if (addToCartButton) {
-      console.log('⭐ Add to cart button found, inserting upload button before it');
+      console.log('⭐ Add to cart button found, inserting upload button nearby');
       // Get the parent of the add to cart button
       targetContainer = addToCartButton.closest('form[action*="/cart/add"]') || 
                         addToCartButton.closest('.product-form__buttons') ||
@@ -309,9 +309,21 @@
       
       // Insert our button directly before the add to cart button
       if (targetContainer) {
-        targetContainer.insertBefore(container, addToCartButton);
-        console.log('⭐ Upload button container added before Add to cart button');
-        return;
+        try {
+          // First check if the addToCartButton is a direct child of targetContainer
+          if (Array.from(targetContainer.children).includes(addToCartButton)) {
+            targetContainer.insertBefore(container, addToCartButton);
+            console.log('⭐ Upload button container added before Add to cart button');
+          } else {
+            // If not, just prepend to the target container
+            targetContainer.prepend(container);
+            console.log('⭐ Upload button container added to the beginning of target container');
+          }
+          return;
+        } catch (e) {
+          console.log('⭐ Error inserting button:', e);
+          // Continue to fallback methods
+        }
       }
     }
     
@@ -321,10 +333,149 @@
       console.log('⭐ Blue Add to cart button found, inserting upload button before it');
       const buttonParent = blueAddToCartButton.parentNode;
       if (buttonParent) {
-        buttonParent.insertBefore(container, blueAddToCartButton);
-        console.log('⭐ Upload button container added before blue Add to cart button');
-        return;
+        try {
+          buttonParent.insertBefore(container, blueAddToCartButton);
+          console.log('⭐ Upload button container added before blue Add to cart button');
+          return;
+        } catch (e) {
+          console.log('⭐ Error inserting button before blue Add to cart button:', e);
+          // Continue to fallback methods
+        }
       }
+    }
+    
+    // Very specific fix for the with-faceswap template causing the insertBefore error
+    try {
+      const allButtons = Array.from(document.querySelectorAll('button'));
+      const directAddButton = allButtons.find(btn => 
+        btn.textContent && btn.textContent.trim() === 'Add to cart');
+      
+      if (directAddButton) {
+        console.log('⭐ Found exact Add to cart button by text content');
+        
+        // Create a new div as a wrapper for both buttons
+        const buttonWrapper = document.createElement('div');
+        buttonWrapper.style.cssText = `
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          width: 100%;
+          margin-bottom: 10px;
+        `;
+        
+        // Get parent element to ensure we can replace safely
+        const parent = directAddButton.parentElement;
+        if (parent) {
+          // Clone our container to ensure we don't get reference issues
+          const clonedContainer = container.cloneNode(true);
+          
+          // Add event listener to the cloned button
+          const clonedButton = clonedContainer.querySelector('button');
+          if (clonedButton) {
+            clonedButton.addEventListener('click', function() {
+              // Show instructions popup
+              const popup = document.getElementById('pixar-instructions-popup');
+              if (popup) {
+                popup.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+              } else {
+                checkForInstructionsPopup();
+                // After creating, show it
+                document.getElementById('pixar-instructions-popup').style.display = 'block';
+                document.body.style.overflow = 'hidden';
+              }
+            });
+          }
+          
+          // Create a safe replacement approach
+          try {
+            buttonWrapper.appendChild(clonedContainer);
+            
+            // Capture the original button
+            const originalButton = directAddButton.cloneNode(true);
+            
+            // Replace the original button with our new wrapper
+            parent.replaceChild(buttonWrapper, directAddButton);
+            
+            // Add the original button back inside our wrapper
+            buttonWrapper.appendChild(originalButton);
+            
+            console.log('⭐ Successfully replaced Add to cart button with wrapper containing both buttons');
+            return;
+          } catch (e) {
+            console.log('⭐ Error in direct replacement approach:', e);
+          }
+        }
+      }
+    } catch (e) {
+      console.log('⭐ Error in with-faceswap specific fix:', e);
+    }
+    
+    // Special case for with-faceswap template
+    try {
+      // For the template with error, add button directly to form
+      const addToCartForm = document.querySelector('form[action*="/cart/add"]');
+      if (addToCartForm) {
+        const submitButton = addToCartForm.querySelector('button[type="submit"]');
+        if (submitButton) {
+          console.log('⭐ Found submit button in cart form, inserting before it');
+          addToCartForm.insertBefore(container, submitButton);
+          return;
+        } else {
+          console.log('⭐ Adding to beginning of cart form');
+          addToCartForm.prepend(container);
+          return;
+        }
+      }
+    } catch (e) {
+      console.log('⭐ Error with special case for with-faceswap template:', e);
+    }
+    
+    // Direct DOM manipulation for the with-faceswap template
+    try {
+      // Look for the specific "Add to cart" button shown in the UI
+      const addToCartButtons = Array.from(document.querySelectorAll('button'));
+      const cartButton = addToCartButtons.find(btn => 
+        btn.textContent && btn.textContent.trim().toLowerCase() === 'add to cart');
+      
+      if (cartButton) {
+        console.log('⭐ Found direct Add to cart text button');
+        // Get the closest product form container
+        const productFormContainer = cartButton.closest('.product-form') || 
+                                   cartButton.closest('.form') || 
+                                   cartButton.closest('form') ||
+                                   cartButton.parentElement?.parentElement;
+        
+        if (productFormContainer) {
+          // Insert before the cart button's parent or grandparent for correct positioning
+          const buttonContainer = cartButton.parentElement;
+          if (buttonContainer && productFormContainer.contains(buttonContainer)) {
+            productFormContainer.insertBefore(container, buttonContainer);
+            console.log('⭐ Added transform button before button container');
+            return;
+          } else if (productFormContainer.contains(cartButton)) {
+            productFormContainer.insertBefore(container, cartButton);
+            console.log('⭐ Added transform button directly before cart button');
+            return;
+          } else {
+            productFormContainer.prepend(container);
+            console.log('⭐ Added transform button to beginning of product form');
+            return;
+          }
+        }
+      }
+
+      // Look for any form with add to cart in it
+      const forms = document.querySelectorAll('form');
+      for (const form of forms) {
+        if (form.innerHTML.toLowerCase().includes('add to cart')) {
+          form.prepend(container);
+          console.log('⭐ Added transform button to beginning of form containing Add to cart text');
+          return;
+        }
+      }
+    } catch (e) {
+      console.log('⭐ Error with direct DOM manipulation:', e);
     }
     
     // Special case for the theme in the screenshot - look for Size options and add after them
