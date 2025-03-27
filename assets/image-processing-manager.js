@@ -2014,114 +2014,30 @@ class ImageProcessingManager {
       
       // Get the main displayed image to apply the crop to
       const mainImage = this.findMainProductImage();
-      if (mainImage) {
-        console.log('RAILWAY PROCESSING: Found main product image:', mainImage.src);
+      
+      // If we couldn't find the main image through DOM selectors, try again after a short delay
+      // This is necessary because some themes load images dynamically
+      if (!mainImage) {
+        console.log('RAILWAY PROCESSING: Main product image not found initially, trying again after delay');
         
-        // Check dimensions
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        
-        img.onload = () => {
-          console.log('RAILWAY PROCESSING: Original image loaded', img.width, 'x', img.height);
+        // Set a timeout to try again after 500ms
+        setTimeout(() => {
+          const retryMainImage = this.findMainProductImage();
           
-          // Calculate crop dimensions
-          this.originalImageWidth = img.width;
-          this.originalImageHeight = img.height;
-          
-          // Get the cropped area from our crop coordinates
-          if (this.cropCoordinates) {
-            const crop = this.cropCoordinates;
-            
-            // Calculate scaling factor if original images sizes don't match
-            const scaleX = this.originalImageWidth / crop.originalImageWidth;
-            const scaleY = this.originalImageHeight / crop.originalImageHeight;
-            
-            // Calculate cropped dimensions in the displayed image
-            this.croppedImageX = crop.x * scaleX;
-            this.croppedImageY = crop.y * scaleY;
-            this.croppedImageWidth = crop.width * scaleX;
-            this.croppedImageHeight = crop.height * scaleY;
-            
-            // Apply crop styling to all product images
-            this.applyCropStylingToImages();
-            
-            // Get cropped image for text overlays
-            const croppedImage = this.getCroppedImageFromDOM();
-            if (croppedImage) {
-              console.log('RAILWAY PROCESSING: Successfully captured cropped image');
-            } else {
-              console.log('RAILWAY PROCESSING: Could not capture cropped image from DOM');
-            }
+          if (retryMainImage) {
+            console.log('RAILWAY PROCESSING: Found main product image on retry:', retryMainImage.src);
+            this.processCropForMainImage(retryMainImage);
           } else {
-            console.log('RAILWAY PROCESSING: No crop coordinates available, using full image');
+            console.log('RAILWAY PROCESSING: Still could not find main product image, proceeding with fallback');
+            this.handleMainImageNotFound();
           }
-          
-          // Get final cropped image for overlay
-          const capturedImage = this.getCroppedImageFromDOM();
-          if (capturedImage) {
-            console.log('RAILWAY PROCESSING: Successfully captured image');
-            
-            // If no text to add, dispatch final event now 
-            if (!this.textInfo) {
-              console.log('RAILWAY PROCESSING: No text to add, dispatching final event');
-              
-              // Dispatch event to signal final processing is complete
-              const finalEvent = new CustomEvent('pixar-final-processing-complete', {
-                detail: { 
-                  imageUrl: this.stylizedImageUrl,
-                  timestamp: Date.now()
-                }
-              });
-              document.dispatchEvent(finalEvent);
-              
-              // Hide any loading popup that might still be visible
-              this.hideLoadingPopup();
-            } else {
-              console.log('RAILWAY PROCESSING: Adding Name1 & Name2 text to image');
-            }
-          } else {
-            console.log('RAILWAY PROCESSING: Could not capture image from DOM');
-            
-            // Hide any loading popup even on error
-            this.hideLoadingPopup();
-          }
-        };
+        }, 500);
         
-        img.onerror = (error) => {
-          console.error('RAILWAY PROCESSING: Error loading image:', error);
-          
-          // Hide loading popup on error
-          this.hideLoadingPopup();
-          
-          // Dispatch final event with error
-          const finalEvent = new CustomEvent('pixar-final-processing-complete', {
-            detail: { 
-              imageUrl: this.stylizedImageUrl,
-              timestamp: Date.now(),
-              error: 'Error loading image for cropping'
-            }
-          });
-          document.dispatchEvent(finalEvent);
-        };
-        
-        // Start loading the image
-        img.src = this.stylizedImageUrl;
-      } else {
-        console.error('RAILWAY PROCESSING: Could not find main product image to apply crop to');
-        
-        // Hide loading popup on error
-        this.hideLoadingPopup();
-        
-        // Dispatch final event with error
-        const finalEvent = new CustomEvent('pixar-final-processing-complete', {
-          detail: { 
-            imageUrl: this.stylizedImageUrl,
-            timestamp: Date.now(),
-            error: 'Could not find main product image'
-          }
-        });
-        document.dispatchEvent(finalEvent);
+        return;
       }
+      
+      // If we found the main image, process it
+      this.processCropForMainImage(mainImage);
     } catch (error) {
       console.error('RAILWAY PROCESSING: Error applying Railway image crop:', error);
       
@@ -2137,6 +2053,133 @@ class ImageProcessingManager {
         }
       });
       document.dispatchEvent(finalEvent);
+    }
+  }
+  
+  /**
+   * Process crop for main image when found
+   * @param {HTMLImageElement} mainImage - The main product image
+   */
+  processCropForMainImage(mainImage) {
+    console.log('RAILWAY PROCESSING: Found main product image:', mainImage.src);
+    
+    // Check dimensions
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    
+    img.onload = () => {
+      console.log('RAILWAY PROCESSING: Original image loaded', img.width, 'x', img.height);
+      
+      // Calculate crop dimensions
+      this.originalImageWidth = img.width;
+      this.originalImageHeight = img.height;
+      
+      // Get the cropped area from our crop coordinates
+      if (this.cropCoordinates) {
+        const crop = this.cropCoordinates;
+        
+        // Calculate scaling factor if original images sizes don't match
+        const scaleX = this.originalImageWidth / crop.originalImageWidth;
+        const scaleY = this.originalImageHeight / crop.originalImageHeight;
+        
+        // Calculate cropped dimensions in the displayed image
+        this.croppedImageX = crop.x * scaleX;
+        this.croppedImageY = crop.y * scaleY;
+        this.croppedImageWidth = crop.width * scaleX;
+        this.croppedImageHeight = crop.height * scaleY;
+        
+        // Apply crop styling to all product images
+        this.applyCropStylingToImages();
+        
+        // Get cropped image for text overlays
+        const croppedImage = this.getCroppedImageFromDOM();
+        if (croppedImage) {
+          console.log('RAILWAY PROCESSING: Successfully captured cropped image');
+        } else {
+          console.log('RAILWAY PROCESSING: Could not capture cropped image from DOM');
+        }
+      } else {
+        console.log('RAILWAY PROCESSING: No crop coordinates available, using full image');
+      }
+      
+      // Get final cropped image for overlay
+      const capturedImage = this.getCroppedImageFromDOM();
+      if (capturedImage) {
+        console.log('RAILWAY PROCESSING: Successfully captured image');
+        
+        // If no text to add, dispatch final event now 
+        if (!this.textInfo) {
+          console.log('RAILWAY PROCESSING: No text to add, dispatching final event');
+          
+          // Dispatch event to signal final processing is complete
+          const finalEvent = new CustomEvent('pixar-final-processing-complete', {
+            detail: { 
+              imageUrl: this.stylizedImageUrl,
+              timestamp: Date.now()
+            }
+          });
+          document.dispatchEvent(finalEvent);
+          
+          // Hide any loading popup that might still be visible
+          this.hideLoadingPopup();
+        } else {
+          console.log('RAILWAY PROCESSING: Adding Name1 & Name2 text to image');
+          
+          // If the image is captured successfully, add text to it
+          this.addTextToRailwayImage(this.stylizedImageUrl);
+        }
+      } else {
+        console.log('RAILWAY PROCESSING: Could not capture image from DOM, using original image');
+        
+        // If we can't capture the cropped image, use the original stylized image
+        if (this.textInfo) {
+          this.addTextToRailwayImage(this.stylizedImageUrl);
+        } else {
+          // No text to add, just finish the process
+          const finalEvent = new CustomEvent('pixar-final-processing-complete', {
+            detail: { 
+              imageUrl: this.stylizedImageUrl,
+              timestamp: Date.now()
+            }
+          });
+          document.dispatchEvent(finalEvent);
+          this.hideLoadingPopup();
+        }
+      }
+    };
+    
+    img.onerror = (error) => {
+      console.error('RAILWAY PROCESSING: Error loading image:', error);
+      this.handleMainImageNotFound();
+    };
+    
+    // Start loading the image
+    img.src = this.stylizedImageUrl;
+  }
+  
+  /**
+   * Handle case where main image could not be found or loaded
+   */
+  handleMainImageNotFound() {
+    console.error('RAILWAY PROCESSING: Could not find or load main product image');
+    
+    // We can still try to process the image for text if needed
+    if (this.textInfo) {
+      console.log('RAILWAY PROCESSING: Attempting to add text to original image without cropping');
+      this.addTextToRailwayImage(this.stylizedImageUrl);
+    } else {
+      // No text to add, just finish the process
+      const finalEvent = new CustomEvent('pixar-final-processing-complete', {
+        detail: { 
+          imageUrl: this.stylizedImageUrl,
+          timestamp: Date.now(),
+          error: 'Could not find main product image'
+        }
+      });
+      document.dispatchEvent(finalEvent);
+      
+      // Hide loading popup
+      this.hideLoadingPopup();
     }
   }
   
@@ -3118,6 +3161,300 @@ class ImageProcessingManager {
         ctx.fillText(subtitle, x, subtitleY);
         console.log('FINAL PROCESSING: Subtitle added as single line at Y:', subtitleY);
       }
+    }
+  }
+
+  /**
+   * Find the main product image on the page
+   * @returns {HTMLImageElement|null} - The main product image element or null if not found
+   */
+  findMainProductImage() {
+    console.log('🖼️ Searching for main product image');
+    
+    try {
+      // Try various selectors for main product image based on common theme patterns
+      let mainImage = null;
+      
+      // First check if we have already updated any images that have our special class
+      mainImage = document.querySelector('.pixar-transformed-image');
+      if (mainImage) {
+        console.log('🖼️ Found previously transformed product image');
+        return mainImage;
+      }
+      
+      // Dawn theme pattern
+      mainImage = document.querySelector('.product__media img:not(.product__thumbnail)') ||
+                document.querySelector('.product-media-modal__content img.product__media-item');
+                
+      // Empire theme pattern
+      if (!mainImage) {
+        mainImage = document.querySelector('.product-single__photo:not(.hide) img') ||
+                  document.querySelector('.photoswipe__image:not([aria-hidden="true"]) img');
+      }
+      
+      // Debut theme pattern 
+      if (!mainImage) {
+        mainImage = document.querySelector('.product-featured-img') ||
+                  document.querySelector('#ProductPhotoImg');
+      }
+      
+      // Brooklyn theme pattern
+      if (!mainImage) {
+        mainImage = document.querySelector('.product-single__photo:not(.hide) img') ||
+                  document.querySelector('.slick-current .product-single__photo img');
+      }
+      
+      // Narrative theme pattern
+      if (!mainImage) {
+        mainImage = document.querySelector('.product__image-wrapper img') ||
+                  document.querySelector('.product__images-container img');
+      }
+      
+      // Venture theme pattern
+      if (!mainImage) {
+        mainImage = document.querySelector('.product-single__media--featured img') ||
+                  document.querySelector('.product-single__media--active img');
+      }
+      
+      // Try to find images inside a gallery
+      if (!mainImage) {
+        const galleryContainer = document.querySelector('.product-gallery') ||
+                               document.querySelector('.product__media-list') ||
+                               document.querySelector('.product-single__photos') ||
+                               document.querySelector('.product-single__media-group');
+        
+        if (galleryContainer) {
+          mainImage = galleryContainer.querySelector('img:not(.product__thumbnail)');
+        }
+      }
+      
+      // Generic fallback - find largest visible image in product area
+      if (!mainImage) {
+        const productContainer = document.querySelector('.product') ||
+                               document.querySelector('[data-product-container]') ||
+                               document.querySelector('[data-section-type="product-template"]');
+        
+        if (productContainer) {
+          let largestImage = null;
+          let largestArea = 0;
+          
+          // Find all images in the product container
+          const productImages = productContainer.querySelectorAll('img');
+          for (const img of productImages) {
+            // Skip thumbnails and icons
+            if (img.width < 100 || img.height < 100) continue;
+            if (img.classList.contains('product__thumbnail')) continue;
+            
+            // Skip hidden images
+            const style = window.getComputedStyle(img);
+            if (style.display === 'none' || style.visibility === 'hidden') continue;
+            
+            // Calculate visible area
+            const area = img.width * img.height;
+            if (area > largestArea) {
+              largestArea = area;
+              largestImage = img;
+            }
+          }
+          
+          if (largestImage) {
+            mainImage = largestImage;
+          }
+        }
+      }
+      
+      // Last resort - look for any large image on the page
+      if (!mainImage) {
+        const allImages = document.querySelectorAll('img');
+        let largestImage = null;
+        let largestArea = 0;
+        
+        for (const img of allImages) {
+          // Skip very small images (likely icons)
+          if (img.width < 100 || img.height < 100) continue;
+          
+          // Calculate area
+          const area = img.width * img.height;
+          if (area > largestArea) {
+            largestArea = area;
+            largestImage = img;
+          }
+        }
+        
+        if (largestImage) {
+          mainImage = largestImage;
+        }
+      }
+      
+      if (mainImage) {
+        console.log('🖼️ Found main product image:', mainImage);
+        // Add our special class for future reference
+        mainImage.classList.add('pixar-transformed-image');
+        return mainImage;
+      }
+      
+      console.error('🖼️ Could not find main product image');
+      return null;
+    } catch (error) {
+      console.error('🖼️ Error finding main product image:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get the cropped image from the DOM
+   * @returns {string|null} - Data URL of the cropped image or null if not found
+   */
+  getCroppedImageFromDOM() {
+    try {
+      console.log('🖼️ Attempting to capture cropped image from DOM');
+      
+      // First try to find the main product image that we've transformed
+      const mainImage = document.querySelector('.pixar-transformed-image') || this.findMainProductImage();
+      
+      if (!mainImage) {
+        console.log('🖼️ Main product image not found for cropping');
+        return null;
+      }
+      
+      // Check if we have crop coordinates
+      if (!this.cropCoordinates || !this.originalImageWidth) {
+        console.log('🖼️ No crop coordinates available, returning full image');
+        return mainImage.src;
+      }
+      
+      // Create a canvas for cropping
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Set canvas dimensions to the cropped area
+      canvas.width = this.croppedImageWidth || this.cropCoordinates.width;
+      canvas.height = this.croppedImageHeight || this.cropCoordinates.height;
+      
+      // Create an image to draw from
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      // Return a promise that resolves with the cropped image
+      return new Promise((resolve, reject) => {
+        img.onload = () => {
+          try {
+            // Draw only the cropped portion of the image
+            ctx.drawImage(
+              img,
+              this.croppedImageX || this.cropCoordinates.x,
+              this.croppedImageY || this.cropCoordinates.y,
+              this.croppedImageWidth || this.cropCoordinates.width,
+              this.croppedImageHeight || this.cropCoordinates.height,
+              0, 0,
+              canvas.width,
+              canvas.height
+            );
+            
+            // Convert to data URL
+            const dataURL = canvas.toDataURL('image/png');
+            console.log('🖼️ Successfully captured cropped image from DOM');
+            resolve(dataURL);
+          } catch (error) {
+            console.error('🖼️ Error drawing cropped image on canvas:', error);
+            // Fall back to the full image
+            resolve(img.src);
+          }
+        };
+        
+        img.onerror = (error) => {
+          console.error('🖼️ Error loading image for cropping:', error);
+          // Fall back to the original image source
+          resolve(mainImage.src);
+        };
+        
+        // Start loading the image
+        img.src = mainImage.src;
+      });
+    } catch (error) {
+      console.error('🖼️ Error in getCroppedImageFromDOM:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Apply crop styling to all product images
+   */
+  applyCropStylingToImages() {
+    try {
+      console.log('🖼️ Applying crop styling to product images');
+      
+      // Create a style element for the crop styling if it doesn't exist
+      let cropStyle = document.getElementById('pixar-crop-style');
+      if (!cropStyle) {
+        cropStyle = document.createElement('style');
+        cropStyle.id = 'pixar-crop-style';
+        document.head.appendChild(cropStyle);
+      }
+      
+      // Create CSS for the crop
+      const cssRules = `
+        .pixar-transformed-image {
+          object-position: -${this.croppedImageX}px -${this.croppedImageY}px !important;
+          object-fit: none !important;
+          width: ${this.croppedImageWidth}px !important;
+          height: ${this.croppedImageHeight}px !important;
+        }
+        
+        .pixar-transform-container {
+          position: relative;
+          width: ${this.croppedImageWidth}px;
+          height: ${this.croppedImageHeight}px;
+          overflow: hidden;
+          margin: 0 auto;
+        }
+        
+        .pixar-transform-container img {
+          position: absolute;
+          top: -${this.croppedImageY}px;
+          left: -${this.croppedImageX}px;
+          width: auto;
+          height: auto;
+          max-width: none;
+          max-height: none;
+        }
+      `;
+      
+      // Set the CSS
+      cropStyle.textContent = cssRules;
+      
+      // Find all product images to apply the styling
+      const productImages = document.querySelectorAll('[data-product-image], .product__media img, .product-single__photo img, .product-featured-img');
+      console.log(`🖼️ Found ${productImages.length} product images to apply styling to`);
+      
+      productImages.forEach((img, index) => {
+        // Add our class for tracking
+        img.classList.add('pixar-transformed-image');
+        
+        // For some themes, we need to wrap the image in a container
+        if (img.parentElement && !img.parentElement.classList.contains('pixar-transform-container')) {
+          // Check if the parent is a suitable container (e.g., already has positioning)
+          const style = window.getComputedStyle(img.parentElement);
+          const needsContainer = style.position === 'static';
+          
+          if (needsContainer) {
+            console.log(`🖼️ Creating wrapper container for image ${index}`);
+            
+            // Create a wrapper
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('pixar-transform-container');
+            
+            // Replace the image with the wrapper containing the image
+            const parent = img.parentElement;
+            parent.insertBefore(wrapper, img);
+            wrapper.appendChild(img);
+          }
+        }
+      });
+      
+      console.log('🖼️ Applied crop styling to product images');
+    } catch (error) {
+      console.error('🖼️ Error applying crop styling to images:', error);
     }
   }
 }
