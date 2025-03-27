@@ -4642,11 +4642,25 @@ class ImageProcessingManager {
         } catch(e) {
           console.warn('Unable to store navigation data:', e);
         }
+        
+        // NEW: Also store in sessionStorage with a unique key for direct URL parameter passing
+        try {
+          // Create a unique blob key
+          const blobKey = 'cartoonique_blob_' + Date.now();
+          // Store the image data with this key
+          sessionStorage.setItem(blobKey, processedImageUrl);
+          // Use URL parameters to pass both the variant ID and the blob key
+          // This is more reliable than relying on localStorage which can be wiped
+          window.location.href = `/cart?variant_id=${variantId}&blob_key=${blobKey}&t=${Date.now()}`;
+          return;
+        } catch(e) {
+          console.warn('Failed to use sessionStorage for image passing:', e);
+        }
       } catch (e) {
         console.error('Error setting navigation flags:', e);
       }
       
-      // The most reliable way to navigate - directly change location
+      // Fallback: The original navigation method if the above fails
       window.location.href = '/cart?nocache=' + Date.now();
     };
     
@@ -4763,6 +4777,55 @@ class ImageProcessingManager {
         // Cache DOM queries and data to avoid repeated lookups
         const cachedImages = new Map();
         const processedVariants = new Set();
+        
+        // Check URL parameters first for direct image passing
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlVariantId = urlParams.get('variant_id');
+        const urlBlobKey = urlParams.get('blob_key');
+        
+        if (urlVariantId && urlBlobKey) {
+          console.log('Found URL parameters for image sync: variant=' + urlVariantId + ', key=' + urlBlobKey);
+          
+          // Try to get the image from sessionStorage using the blob key
+          try {
+            const storedImage = sessionStorage.getItem(urlBlobKey);
+            if (storedImage) {
+              console.log('Successfully retrieved image from URL parameter blob key');
+              // Store this in our cache for immediate use
+              cachedImages.set(urlVariantId, storedImage);
+              
+              // Also save to indexed DB for future visits if available
+              if (window.indexedDB) {
+                try {
+                  const request = indexedDB.open('cartoonique-images', 1);
+                  
+                  request.onupgradeneeded = function(event) {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('images')) {
+                      db.createObjectStore('images');
+                    }
+                  };
+                  
+                  request.onsuccess = function(event) {
+                    const db = event.target.result;
+                    const transaction = db.transaction(['images'], 'readwrite');
+                    const store = transaction.objectStore('images');
+                    
+                    // Use a consistent key format
+                    const key = \`cart_\${urlVariantId}\`;
+                    store.put(storedImage, key);
+                    
+                    console.log('Saved image to IndexedDB for future use');
+                  };
+                } catch (e) {
+                  console.warn('Error saving to IndexedDB:', e);
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('Error retrieving image from sessionStorage via URL params:', e);
+          }
+        }
         
         // Function to get an image URL from our various storage locations
         function getStoredImageForVariant(variantId) {
@@ -5095,6 +5158,228 @@ class ImageProcessingManager {
     console.log('Redirecting to setupCartImageReplacementWithFallbacks for better storage handling');
     this.setupCartImageReplacementWithFallbacks();
   }
+
+  /**
+   * Initialize IndexedDB for better image storage
+   * @private
+   */
+  initImageDatabase() {
+    return new Promise((resolve, reject) => {
+      // Check if IndexedDB is supported
+      if (!window.indexedDB) {
+        console.log('IndexedDB not supported, falling back to localStorage');
+        resolve(false);
+        return;
+      }
+      
+      const dbName = 'cartooniqueImageDB';
+      const dbVersion = 1;
+      const request = indexedDB.open(dbName, dbVersion);
+      
+      request.onerror = (event) => {
+        console.error('IndexedDB error:', event.target.error);
+        resolve(false);
+      };
+      
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        // Create an object store for the processed images
+        // Use variantId as the key path
+        if (!db.objectStoreNames.contains('processedImages')) {
+          const store = db.createObjectStore('processedImages', { keyPath: 'variantId' });
+          // Create indexes for faster queries
+          store.createIndex('timestamp', 'timestamp', { unique: false });
+          store.createIndex('variantId', 'variantId', { unique: true });
+        }
+      };
+      
+      request.onsuccess = (event) => {
+        this.imageDB = event.target.result;
+        console.log('IndexedDB initialized successfully');
+        
+        // Set up cleanup task to remove old images (once per session)
+        if (!window.cartooniqueDbCleanupDone) {
+          this.cleanupOldImages();
+          window.cartooniqueDbCleanupDone = true;
+        }
+        
+        resolve(true);
+      };
+    });
+  }
+  
+  /**
+   * Clean up old images from IndexedDB
+   * @private
+   */
+  cleanupOldImages() {
+    if (!this.imageDB) return;
+    
+    const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+    const MAX_IMAGES = 20; // Maximum number of images to keep
+    
+    const transaction = this.imageDB.transaction(['processedImages'], 'readwrite');
+    const store = transaction.objectStore('processedImages');
+    const index = store.index('timestamp');
+    
+    // Get all images ordered by timestamp
+    const request = index.openCursor();
+    const imagesToDelete = [];
+    const now = Date.now();
+    
+    request.onsuccess = (event) => {
+      const cursor = event.target.result;
+      if (cursor) {
+        const image = cursor.value;
+        const age = now - image.timestamp;
+        
+        if (age > MAX_AGE_MS) {
+          imagesToDelete.push(image.variantId);
+        }
+        
+        cursor.continue();
+      } else {
+        // Delete old images
+        imagesToDelete.forEach(variantId => {
+          store.delete(variantId);
+        });
+        
+        if (imagesToDelete.length > 0) {
+          console.log(`Cleaned up ${imagesToDelete.length} old images from IndexedDB`);
+        }
+      }
+    };
+  }
+  
+  /**
+   * Store an image in IndexedDB
+   * @param {string} variantId - The variant ID to use as the key
+   * @param {string} imageData - The image data (base64 or URL)
+   * @returns {Promise<boolean>} - Whether the operation succeeded
+   * @private
+   */
+  storeImageInIndexedDB(variantId, imageData) {
+    return new Promise((resolve, reject) => {
+      if (!this.imageDB) {
+        resolve(false);
+        return;
+      }
+      
+      try {
+        const transaction = this.imageDB.transaction(['processedImages'], 'readwrite');
+        const store = transaction.objectStore('processedImages');
+        
+        const imageRecord = {
+          variantId: variantId,
+          imageData: imageData,
+          timestamp: Date.now(),
+          version: '1.0' // For future compatibility
+        };
+        
+        const request = store.put(imageRecord);
+        
+        request.onsuccess = () => {
+          console.log(`Image for variant ${variantId} stored in IndexedDB`);
+          resolve(true);
+        };
+        
+        request.onerror = (event) => {
+          console.error('Error storing image in IndexedDB:', event.target.error);
+          resolve(false);
+        };
+      } catch (e) {
+        console.error('Exception storing image in IndexedDB:', e);
+        resolve(false);
+      }
+    });
+  }
+  
+  /**
+   * Retrieve an image from IndexedDB
+   * @param {string} variantId - The variant ID to retrieve
+   * @returns {Promise<string|null>} - The image data, or null if not found
+   * @private
+   */
+  async getImageFromIndexedDB(variantId) {
+    return new Promise((resolve, reject) => {
+      if (!this.imageDB) {
+        resolve(null);
+        return;
+      }
+      
+      try {
+        const transaction = this.imageDB.transaction(['processedImages'], 'readonly');
+        const store = transaction.objectStore('processedImages');
+        const request = store.get(variantId);
+        
+        request.onsuccess = (event) => {
+          const result = event.target.result;
+          if (result) {
+            console.log(`Retrieved image for variant ${variantId} from IndexedDB`);
+            resolve(result.imageData);
+          } else {
+            resolve(null);
+          }
+        };
+        
+        request.onerror = (event) => {
+          console.error('Error retrieving image from IndexedDB:', event.target.error);
+          resolve(null);
+        };
+      } catch (e) {
+        console.error('Exception retrieving image from IndexedDB:', e);
+        resolve(null);
+      }
+    });
+  }
+
+  // Handle storage of the processed image URL safely to prevent quota errors
+  storeImageSafely = async (variantId, imageUrl) => {
+    try {
+      // Initialize DB if not already done
+      if (!this.imageDB) {
+        await this.initImageDatabase();
+      }
+      
+      // Always store the raw image data in window memory for immediate access
+      if (!window.cartoonique_memory_images) {
+        window.cartoonique_memory_images = {};
+      }
+      window.cartoonique_memory_images[variantId] = imageUrl;
+      console.log('Stored image in window memory for variant', variantId);
+      
+      // Try to store in IndexedDB first
+      let indexedDBSuccess = false;
+      if (this.imageDB) {
+        indexedDBSuccess = await this.storeImageInIndexedDB(variantId, imageUrl);
+      }
+      
+      // Try to store a reference in localStorage
+      try {
+        const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
+        // Store a reference pointing to the storage method
+        cartImages[variantId] = indexedDBSuccess ? 'INDEXED_DB:' + variantId : 'MEMORY_IMAGE:' + variantId;
+        localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
+        
+        // Also store navigation data for immediate use
+        const navigationData = {
+          timestamp: Date.now(),
+          imageUrl: imageUrl,
+          variantId: variantId,
+          storageMethod: indexedDBSuccess ? 'indexedDB' : 'memory',
+          version: '1.0'
+        };
+        localStorage.setItem('cartoonique_navigation_data', JSON.stringify(navigationData));
+      } catch (e) {
+        console.warn('Could not store image reference in localStorage:', e);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Storage error:', error);
+      return false;
+    }
+  };
 }
 
 // Initialize static instance property

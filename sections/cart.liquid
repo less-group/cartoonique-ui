@@ -1198,16 +1198,55 @@
       // Start preloading images if we detect cart items
       await preloadCartImages();
       
-      // Process cart images when DOM is fully loaded
+      // Wait for Shopify's lazy loading to initialize first
+      const waitForShopifyLazyload = () => {
+        // Look for lazy-loaded images to ensure Shopify's lazy loading has initiated
+        const lazyImages = document.querySelectorAll('.cart-item__image[loading="lazy"], .cart-item__image.lazyload');
+        const lazyloaded = document.querySelectorAll('.cart-item__image.lazyloaded');
+        
+        if (lazyImages.length > 0 || lazyloaded.length > 0) {
+          console.log('Cartoonique: Detected Shopify lazy loading, waiting for images to load');
+          
+          // If we found lazy images, wait a moment to ensure they've had time to start loading
+          setTimeout(() => {
+            processCartImages();
+            setupCartObserver();
+          }, 100);
+        } else {
+          // If no lazy loading detected, proceed normally with the readyState check
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+              processCartImages();
+              setupCartObserver();
+            });
+          } else {
+            processCartImages();
+            setupCartObserver();
+          }
+        }
+      };
+      
+      // Begin with a check for lazy loading
+      waitForShopifyLazyload();
+      
+      // Also add a handler for the DOMContentLoaded event as a fallback
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-          processCartImages();
-          setupCartObserver();
+          // Run a second check after DOM is fully loaded
+          waitForShopifyLazyload();
         });
-      } else {
-        processCartImages();
-        setupCartObserver();
       }
+      
+      // Add event listeners for Shopify's cart:refresh events
+      document.addEventListener('cart:refresh', function() {
+        console.log('Cartoonique: Cart refresh event detected');
+        setTimeout(processCartImages, 300);
+      });
+      
+      document.addEventListener('cart:change', function() {
+        console.log('Cartoonique: Cart change event detected');
+        setTimeout(processCartImages, 300);
+      });
     } catch (error) {
       console.error('Cartoonique: Error in cart image processor', error);
     }
