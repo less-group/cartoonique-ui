@@ -1476,19 +1476,6 @@ class ImageProcessingManager {
     container.style.boxShadow = 'none';
     container.style.background = 'transparent';
     
-    // If this is a transition between sizes, add some visual effects
-    if (previousSize && previousSize !== size) {
-      // Add transition animation to the image
-      image.style.opacity = '0.7';
-      image.style.transform = 'scale(0.96)';
-      
-      // Reset after animation completes
-      setTimeout(() => {
-        image.style.opacity = '1';
-        image.style.transform = 'scale(1)';
-      }, 300); // Match the transition duration from CSS
-    }
-    
     // Create canvas to maintain aspect ratio
     const canvas = document.createElement('canvas');
     const img = new Image();
