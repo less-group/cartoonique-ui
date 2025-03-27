@@ -1803,8 +1803,8 @@ class ImageProcessingManager {
   }
   
   /**
-   * Update the product image with the final processed image
-   * @param {String} imageUrl - The URL of the final image
+   * Update all product images with the new image URL
+   * @param {string} imageUrl - The URL of the new image
    */
   updateProductImage(imageUrl) {
     console.log('PRODUCT IMAGE: Updating all product gallery images with new image');
@@ -1830,7 +1830,7 @@ class ImageProcessingManager {
         mainImage.classList.add('pixar-transformed-image');
         
         // Also search for and update any alternate views or thumbnails with same image pattern
-        // but only ones that match our main image pattern (likely duplicates in carousels, etc.)
+        let additionalImagesUpdated = 0;
         const mainImageSrc = mainImage.getAttribute('data-original-src') || '';
         if (mainImageSrc) {
           const similarImages = document.querySelectorAll(`img[data-original-src="${mainImageSrc}"]`);
@@ -1839,11 +1839,12 @@ class ImageProcessingManager {
             if (img !== mainImage) {
               img.setAttribute('src', imageUrl);
               img.setAttribute('srcset', imageUrl);
+              additionalImagesUpdated++;
             }
           });
         }
         
-        console.log(`PRODUCT IMAGE: Updated ${1 + (similarImages?.length || 0)} product images with new design`);
+        console.log(`PRODUCT IMAGE: Updated ${1 + additionalImagesUpdated} product images with new design`);
       } else {
         // If we can't find an existing image, create a new one as fallback
         this.createReplacementImage(imageUrl);
@@ -2039,14 +2040,6 @@ class ImageProcessingManager {
         }
         
         // DO NOT apply crop styling to product images - we'll directly crop in canvas
-        
-        // Get cropped image for text overlays
-        const croppedImage = this.getCroppedImageFromDOM();
-        if (croppedImage) {
-          console.log('RAILWAY PROCESSING: Successfully captured cropped image');
-        } else {
-          console.log('RAILWAY PROCESSING: Could not capture cropped image from DOM');
-        }
       } else {
         console.log('RAILWAY PROCESSING: No crop coordinates available, using full image');
         
@@ -2073,61 +2066,69 @@ class ImageProcessingManager {
         // DO NOT apply crop styling to product images - we'll directly crop in canvas
       }
       
-      // Get final cropped image for overlay
-      const capturedImage = this.getCroppedImageFromDOM();
-      if (capturedImage) {
-        console.log('RAILWAY PROCESSING: Successfully captured image');
-        
-        // If no text to add, dispatch final event now 
-        if (!this.textInfo) {
-          console.log('RAILWAY PROCESSING: No text to add, dispatching final event');
-          
-          // Set flags to indicate processing is done
-          this.textProcessingComplete = true;
-            this.finalProcessingComplete = true;
-          
-          // Dispatch event to signal final processing is complete
-          const finalEvent = new CustomEvent('pixar-final-processing-complete', {
-            detail: { 
-              imageUrl: capturedImage, // Use the cropped image
-              timestamp: Date.now()
+      // Create a new promise chain to ensure correct execution order
+      this.getCroppedImageFromDOM()
+        .then(croppedImage => {
+          if (croppedImage) {
+            console.log('RAILWAY PROCESSING: Successfully captured cropped image');
+            
+            // If no text to add, we're done - update product image with the cropped image
+            if (!this.textInfo) {
+              console.log('RAILWAY PROCESSING: No text to add, updating image and dispatching final event');
+              
+              // Update the product image with the cropped image
+              this.updateProductImage(croppedImage);
+              
+              // Set flags to indicate processing is done
+              this.textProcessingComplete = true;
+              this.finalProcessingComplete = true;
+              
+              // Dispatch event to signal final processing is complete
+              const finalEvent = new CustomEvent('pixar-final-processing-complete', {
+                detail: { 
+                  imageUrl: croppedImage,
+                  timestamp: Date.now()
+                }
+              });
+              document.dispatchEvent(finalEvent);
+              
+              // Hide any loading popup that might still be visible
+              this.hideLoadingPopup();
+            } else {
+              console.log('RAILWAY PROCESSING: Adding Name1 & Name2 text to image');
+              
+              // If the image is captured successfully, add text to it
+              this.addTextToRailwayImage(croppedImage);
             }
-          });
-          document.dispatchEvent(finalEvent);
-          
-          // Update the product image with the cropped image
-          this.updateProductImage(capturedImage);
-          
-          // Hide any loading popup that might still be visible
-          this.hideLoadingPopup();
-        } else {
-          console.log('RAILWAY PROCESSING: Adding Name1 & Name2 text to image');
-          
-          // If the image is captured successfully, add text to it
-          this.addTextToRailwayImage(capturedImage);
-        }
-      } else {
-        console.log('RAILWAY PROCESSING: Could not capture image from DOM, using original image');
-        
-        // If we can't capture the cropped image, use the original stylized image
-        if (this.textInfo) {
-          this.addTextToRailwayImage(this.stylizedImageUrl);
-        } else {
-          // No text to add, just finish the process
-          // Set flags to indicate processing is done
-          this.textProcessingComplete = true;
-        this.finalProcessingComplete = true;
-          
-          const finalEvent = new CustomEvent('pixar-final-processing-complete', {
-            detail: { 
-              imageUrl: this.stylizedImageUrl,
-              timestamp: Date.now()
+          } else {
+            console.log('RAILWAY PROCESSING: Could not capture cropped image, using original image');
+            
+            // If we can't capture the cropped image, use the original stylized image
+            if (this.textInfo) {
+              this.addTextToRailwayImage(this.stylizedImageUrl);
+            } else {
+              // No text to add, just finish the process with original image
+              this.updateProductImage(this.stylizedImageUrl);
+              
+              // Set flags to indicate processing is done
+              this.textProcessingComplete = true;
+              this.finalProcessingComplete = true;
+              
+              const finalEvent = new CustomEvent('pixar-final-processing-complete', {
+                detail: { 
+                  imageUrl: this.stylizedImageUrl,
+                  timestamp: Date.now()
+                }
+              });
+              document.dispatchEvent(finalEvent);
+              this.hideLoadingPopup();
             }
-          });
-          document.dispatchEvent(finalEvent);
-          this.hideLoadingPopup();
-        }
-      }
+          }
+        })
+        .catch(error => {
+          console.error('RAILWAY PROCESSING: Error in processing pipeline:', error);
+          this.handleMainImageNotFound();
+        });
     };
     
     img.onerror = (error) => {
@@ -2445,6 +2446,9 @@ class ImageProcessingManager {
       });
       document.dispatchEvent(finalEvent);
       
+      // Update product image with the cropped image even without text
+      this.updateProductImage(imageUrl);
+      
       // Hide any loading popup
       this.hideLoadingPopup();
       return;
@@ -2457,8 +2461,8 @@ class ImageProcessingManager {
     }
     
     // We'll create a canvas element to add text
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
     const img = new Image();
     
     img.crossOrigin = 'anonymous';
@@ -2518,6 +2522,9 @@ class ImageProcessingManager {
         });
         document.dispatchEvent(finalEvent);
         
+        // Update product image with at least the cropped version
+        this.updateProductImage(imageUrl);
+        
         // Hide any loading popup
         this.hideLoadingPopup();
       }
@@ -2530,15 +2537,22 @@ class ImageProcessingManager {
       this.textProcessingComplete = true;
       this.finalProcessingComplete = true;
       
+      // Try to use a cached version if available
+      const cachedImage = document.querySelector('.pixar-transformed-image');
+      const currentImageUrl = cachedImage ? cachedImage.src : imageUrl;
+      
       // Still dispatch event with error
       const finalEvent = new CustomEvent('pixar-final-processing-complete', {
         detail: { 
-          imageUrl: imageUrl,
+          imageUrl: currentImageUrl,
           timestamp: Date.now(),
           error: 'Error loading image'
         }
       });
       document.dispatchEvent(finalEvent);
+      
+      // Update product image with the original Railway URL
+      this.updateProductImage(this.stylizedImageUrl);
       
       // Hide any loading popup
       this.hideLoadingPopup();
@@ -3331,18 +3345,17 @@ class ImageProcessingManager {
     try {
       console.log('🖼️ Attempting to capture cropped image from DOM');
       
-      // First try to find the main product image that we've transformed
-      const mainImage = document.querySelector('.pixar-transformed-image') || this.findMainProductImage();
-      
-      if (!mainImage) {
-        console.log('🖼️ Main product image not found for cropping');
+      // For cropping, we don't need the main product image since it might be using wrong source
+      // We'll always work directly with the Railway image URL (this.stylizedImageUrl)
+      if (!this.stylizedImageUrl) {
+        console.log('🖼️ No Railway image URL available for cropping');
         return null;
       }
       
       // Check if we have crop coordinates
       if (!this.cropCoordinates || !this.originalImageWidth) {
         console.log('🖼️ No crop coordinates available, returning full image');
-        return mainImage.src;
+        return this.stylizedImageUrl;
       }
       
       // Create a canvas with 3:4 aspect ratio for the final image
@@ -3399,7 +3412,8 @@ class ImageProcessingManager {
               ctx.fillStyle = '#FFFFFF';
               ctx.fillRect(0, 0, canvas.width, canvas.height);
               
-              // Try to draw the entire image and let the canvas handle scaling
+              // Try to draw the entire image and let the browser calculate scaling
+              // This draws the entire source image, scaled to fit our target dimensions
               ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
               
               const dataURL = canvas.toDataURL('image/png', 0.95);
@@ -3408,7 +3422,7 @@ class ImageProcessingManager {
             } catch (fallbackError) {
               console.error('🖼️ Error with fallback approach:', fallbackError);
               // Fall back to the original image source
-              resolve(img.src);
+              resolve(this.stylizedImageUrl);
             }
           }
         };
@@ -3416,16 +3430,15 @@ class ImageProcessingManager {
         img.onerror = (error) => {
           console.error('🖼️ Error loading image for cropping:', error);
           // Fall back to the original image source
-          resolve(mainImage.src);
+          resolve(this.stylizedImageUrl);
         };
         
         // Start loading the image - use the stylized image URL for cropping
-        // NOT the main image which might already be cropped
-        img.src = this.stylizedImageUrl || mainImage.src;
+        img.src = this.stylizedImageUrl;
       });
     } catch (error) {
       console.error('🖼️ Error in getCroppedImageFromDOM:', error);
-      return null;
+      return this.stylizedImageUrl;
     }
   }
 
