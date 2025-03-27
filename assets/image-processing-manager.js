@@ -1258,7 +1258,7 @@ class ImageProcessingManager {
       resultPopup.innerHTML = `
         <div style="position: relative; max-width: 600px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; height: calc(100vh - 40px); max-height: 800px;">
           <div id="pixar-result-image-container" style="flex: 1; min-height: 0; margin: 0 auto; width: 100%; max-width: 400px; border-radius: 8px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center;">
-            <img id="pixar-result-image" src="" alt="Processed image" style="max-width: 100%; max-height: 100%; display: block; object-fit: contain;">
+            <img id="pixar-result-image" src="" alt="Processed image" style="max-width: 100%; max-height: 100%; display: block; object-fit: contain; transition: all 0.3s ease-in-out; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px;">
             <div id="pixar-result-image-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;"></div>
           </div>
           
@@ -1268,21 +1268,21 @@ class ImageProcessingManager {
             <div style="margin-bottom: 15px;">
               <div style="display: flex; justify-content: space-between; margin: 0 auto; max-width: 90%;">
                 <!-- Size S -->
-                <div data-size="S" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer; background-color: #f0f5fb;">
+                <div data-size="S" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer; background-color: #f0f5fb; transition: all 0.2s ease-in-out;">
                   <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">S</div>
                   <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$85</div>
                   <div style="font-size: 12px; color: #666; margin-top: 3px;">20x30"</div>
                 </div>
                 
                 <!-- Size M -->
-                <div data-size="M" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer;">
+                <div data-size="M" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer; transition: all 0.2s ease-in-out;">
                   <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">M</div>
                   <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$130</div>
                   <div style="font-size: 12px; color: #666; margin-top: 3px;">30x40"</div>
                 </div>
                 
                 <!-- Size L -->
-                <div data-size="L" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer;">
+                <div data-size="L" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer; transition: all 0.2s ease-in-out;">
                   <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">L</div>
                   <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$190</div>
                   <div style="font-size: 12px; color: #666; margin-top: 3px;">50x70"</div>
@@ -1297,7 +1297,7 @@ class ImageProcessingManager {
             </div>
             
             <div style="text-align: center; margin-top: 10px; margin-bottom: 10px;">
-              <button id="pixar-result-continue" style="background-color: #4a7dbd; color: white; padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 0 10px; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">CONTINUE</button>
+              <button id="pixar-result-continue" style="background-color: #4a7dbd; color: white; padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 0 10px; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: background-color 0.2s ease-in-out;">CONTINUE</button>
             </div>
           </div>
         </div>
@@ -1313,26 +1313,60 @@ class ImageProcessingManager {
           resultPopup.style.display = 'none';
           document.body.style.overflow = '';
         });
+        
+        // Add hover effect for continue button
+        continueButton.addEventListener('mouseenter', () => {
+          continueButton.style.backgroundColor = '#3a6dad';
+        });
+        
+        continueButton.addEventListener('mouseleave', () => {
+          continueButton.style.backgroundColor = '#4a7dbd';
+        });
       }
       
       // Add event listeners for size selection
       const sizeOptions = resultPopup.querySelectorAll('[data-size]');
       sizeOptions.forEach(option => {
+        // Add hover effect for size options
+        option.addEventListener('mouseenter', () => {
+          if (option.getAttribute('data-size') !== this.selectedSize) {
+            option.style.backgroundColor = '#f8f8f8';
+            option.style.transform = 'translateY(-2px)';
+          }
+        });
+        
+        option.addEventListener('mouseleave', () => {
+          if (option.getAttribute('data-size') !== this.selectedSize) {
+            option.style.backgroundColor = '';
+            option.style.transform = 'translateY(0)';
+          }
+        });
+        
         option.addEventListener('click', () => {
           // Get the selected size
           const size = option.getAttribute('data-size');
+          
+          // If same size is clicked, do nothing
+          if (this.selectedSize === size) return;
+          
+          // Store previous size for transition
+          const previousSize = this.selectedSize;
           this.selectedSize = size;
           
           // Remove highlight from all options
           sizeOptions.forEach(opt => {
             opt.style.backgroundColor = '';
+            opt.style.transform = 'translateY(0)';
+            opt.style.boxShadow = 'none';
           });
           
           // Highlight selected option
           option.style.backgroundColor = '#f0f5fb';
+          option.style.transform = 'translateY(-2px)';
+          option.style.boxShadow = '0 4px 8px rgba(0,0,0,0.08)';
           
-          // Apply the appropriate aspect ratio to the image
-          this.applyAspectRatioToResultImage(size);
+          // Apply the appropriate aspect ratio to the image with animation
+          this.applyAspectRatioToResultImage(size, previousSize);
         });
       });
     }
@@ -1420,8 +1454,9 @@ class ImageProcessingManager {
   /**
    * Apply the selected aspect ratio to the result image
    * @param {string} size - The selected size (S, M, or L)
+   * @param {string} previousSize - The previously selected size (for transition effects)
    */
-  applyAspectRatioToResultImage(size) {
+  applyAspectRatioToResultImage(size, previousSize) {
     // Get the aspect ratio for the selected size
     const aspectRatio = this.sizeAspectRatios[size];
     if (!aspectRatio) return;
@@ -1441,158 +1476,18 @@ class ImageProcessingManager {
     container.style.boxShadow = 'none';
     container.style.background = 'transparent';
     
-    // Display as canvas for 30x40 (M size)
-    if (size === 'M') {
-      // Clear any previous canvas display
-      const existingEasel = document.getElementById('pixar-canvas-easel');
-      if (existingEasel) {
-        existingEasel.remove();
-      }
+    // If this is a transition between sizes, add some visual effects
+    if (previousSize && previousSize !== size) {
+      // Add transition animation to the image
+      image.style.opacity = '0.7';
+      image.style.transform = 'scale(0.96)';
       
-      // Create container for canvas display
-      const canvasContainer = document.createElement('div');
-      canvasContainer.id = 'pixar-canvas-easel';
-      canvasContainer.style.position = 'relative';
-      canvasContainer.style.width = '100%';
-      canvasContainer.style.height = '100%';
-      canvasContainer.style.display = 'flex';
-      canvasContainer.style.alignItems = 'center';
-      canvasContainer.style.justifyContent = 'center';
-      
-      // Create a wrapper to maintain proper size and position
-      const canvasWrapper = document.createElement('div');
-      canvasWrapper.style.position = 'relative';
-      canvasWrapper.style.width = '90%';
-      canvasWrapper.style.maxWidth = '400px';
-      canvasWrapper.style.margin = '0 auto';
-      
-      // Create the real canvas image container
-      const realCanvasElement = document.createElement('img');
-      realCanvasElement.src = 'https://cdn.shopify.com/s/files/1/0896/3434/1212/files/30_40.jpg?v=1743103918';
-      realCanvasElement.style.width = '100%';
-      realCanvasElement.style.height = 'auto';
-      realCanvasElement.style.display = 'block';
-      realCanvasElement.style.position = 'relative';
-      realCanvasElement.style.zIndex = '1';
-      
-      // Create image overlay container that will hold the processed image
-      const imageOverlay = document.createElement('div');
-      imageOverlay.style.position = 'absolute';
-      imageOverlay.style.top = '0';
-      imageOverlay.style.left = '0';
-      imageOverlay.style.width = '100%';
-      imageOverlay.style.height = '100%';
-      imageOverlay.style.display = 'flex';
-      imageOverlay.style.alignItems = 'center';
-      imageOverlay.style.justifyContent = 'center';
-      imageOverlay.style.zIndex = '2';
-      
-      // Add a loading indicator while we process the image
-      const loadingIndicator = document.createElement('div');
-      loadingIndicator.textContent = 'Processing...';
-      loadingIndicator.style.position = 'absolute';
-      loadingIndicator.style.top = '50%';
-      loadingIndicator.style.left = '50%';
-      loadingIndicator.style.transform = 'translate(-50%, -50%)';
-      loadingIndicator.style.color = '#666';
-      loadingIndicator.style.fontSize = '14px';
-      imageOverlay.appendChild(loadingIndicator);
-      
-      // Create canvas to maintain aspect ratio
-      const canvas = document.createElement('canvas');
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        // Determine the canvas dimensions based on the desired aspect ratio
-        let canvasWidth, canvasHeight;
-        
-        // Calculate canvas dimensions
-        if (img.width / img.height > aspectRatio) {
-          // Image is wider than target ratio, crop width
-          canvasHeight = img.height;
-          canvasWidth = img.height * aspectRatio;
-        } else {
-          // Image is taller than target ratio, crop height
-          canvasWidth = img.width;
-          canvasHeight = img.width / aspectRatio;
-        }
-        
-        // Set canvas size
-        canvas.width = canvasWidth;
-        canvas.height = canvasHeight;
-        
-        // Draw the image onto the canvas with the center crop
-        const ctx = canvas.getContext('2d');
-        
-        // Fill with transparent background
-        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-        
-        const offsetX = (img.width - canvasWidth) / 2;
-        const offsetY = (img.height - canvasHeight) / 2;
-        
-        // Draw the portion of the image that fits the aspect ratio
-        ctx.drawImage(
-          img,
-          offsetX, offsetY, canvasWidth, canvasHeight,  // Source rectangle
-          0, 0, canvasWidth, canvasHeight              // Destination rectangle
-        );
-        
-        // Remove loading indicator
-        loadingIndicator.remove();
-        
-        // Create a new image element for the display on canvas
-        const processedImg = document.createElement('img');
-        processedImg.src = canvas.toDataURL('image/png');
-        processedImg.style.maxWidth = '80%';
-        processedImg.style.maxHeight = '80%';
-        processedImg.style.objectFit = 'contain';
-        processedImg.style.position = 'absolute';
-        processedImg.style.top = '49.5%';
-        processedImg.style.left = '50%';
-        processedImg.style.transform = 'translate(-50%, -50%)';
-        processedImg.style.zIndex = '3';
-        
-        // Add the processed image to the overlay
-        imageOverlay.appendChild(processedImg);
-      };
-      
-      // Set the source to trigger onload
-      img.src = this.resultImageUrl || image.src;
-      
-      // Build the DOM structure
-      canvasWrapper.appendChild(realCanvasElement);
-      canvasWrapper.appendChild(imageOverlay);
-      canvasContainer.appendChild(canvasWrapper);
-      
-      // Replace the content of the container
-      container.innerHTML = '';
-      container.appendChild(canvasContainer);
-      
-      // Track loading of the real canvas image
-      realCanvasElement.onload = () => {
-        console.log('Canvas background image loaded successfully');
-      };
-      
-      realCanvasElement.onerror = () => {
-        console.error('Failed to load canvas background image, falling back to standard display');
-        // If the canvas image fails to load, fall back to the standard display
-        this.applyStandardDisplay(size, aspectRatio);
-      };
-    } else {
-      this.applyStandardDisplay(size, aspectRatio);
+      // Reset after animation completes
+      setTimeout(() => {
+        image.style.opacity = '1';
+        image.style.transform = 'scale(1)';
+      }, 300); // Match the transition duration from CSS
     }
-  }
-  
-  /**
-   * Apply standard display for sizes S and L
-   * @param {string} size - The selected size (S or L)
-   * @param {number} aspectRatio - The aspect ratio to apply
-   */
-  applyStandardDisplay(size, aspectRatio) {
-    // Get the image element and container
-    const image = document.getElementById('pixar-result-image');
-    const container = document.getElementById('pixar-result-image-container');
-    if (!image || !container) return;
     
     // Create canvas to maintain aspect ratio
     const canvas = document.createElement('canvas');
@@ -1633,17 +1528,15 @@ class ImageProcessingManager {
         0, 0, canvasWidth, canvasHeight              // Destination rectangle
       );
       
-      // Clear container and add original image back
-      container.innerHTML = `
-        <img id="pixar-result-image" src="" alt="Processed image" style="max-width: 100%; max-height: 100%; display: block; object-fit: contain; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px;">
-        <div id="pixar-result-image-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;"></div>
-      `;
+      // Replace the image src with the canvas data
+      image.src = canvas.toDataURL('image/png');
       
-      // Get the new image element and update its source
-      const resultImage = document.getElementById('pixar-result-image');
-      if (resultImage) {
-        resultImage.src = canvas.toDataURL('image/png');
-      }
+      // Adjust container to maintain the aspect ratio without affecting layout
+      image.style.maxWidth = '100%';
+      image.style.maxHeight = '100%';
+      image.style.objectFit = 'contain';
+      image.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+      image.style.borderRadius = '8px';
     };
     
     img.src = this.resultImageUrl || image.src;
