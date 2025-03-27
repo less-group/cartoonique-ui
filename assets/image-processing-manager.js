@@ -4467,31 +4467,34 @@ class ImageProcessingManager {
     const redirectToCart = () => {
       console.log('Executing redirect to cart...');
       
-      // This is the critical part - keep the popup visible (do not close it here)
-      // We will let the browser's navigation mechanism handle the closing
-      
+      // Set a flag in localStorage to indicate we're navigating to cart
+      // This helps with debugging
       try {
-        // Try to directly go to cart 
-        window.location.href = '/cart';
+        localStorage.setItem('cartoonique_navigating_to_cart', 'true');
+        localStorage.setItem('cartoonique_cart_navigation_time', Date.now().toString());
+      } catch (e) {
+        console.error('Error setting navigation flag:', e);
+      }
+      
+      // The most reliable way to navigate
+      try {
+        // Force reload of cart page to ensure fresh state
+        window.location.href = '/cart?t=' + Date.now();
         
-        // In case the redirect doesn't happen immediately, force reload after 1 second
+        // Set a backup timer that will force a navigation if the above doesn't work
         setTimeout(() => {
-          console.log('Forcing redirect with reload...');
+          console.log('Backup redirect to cart...');
           window.location.replace('/cart');
-        }, 1000);
+        }, 1500);
       } catch (err) {
         console.error('Error during redirect:', err);
-        
-        // Absolute fallback - if we can't redirect, try opening in a new tab
+        // Last resort - try to open cart in new window
         try {
-          window.open('/cart', '_blank');
+          window.open('/cart', '_self');
         } catch (finalError) {
-          console.error('Final error during redirect:', finalError);
-          // Only now do we close the popup, since redirects failed
-          if (popup) {
-            popup.style.display = 'none';
-            document.body.style.overflow = '';
-          }
+          console.error('All redirect methods failed!', finalError);
+          alert('Please click OK to go to your cart');
+          window.location = '/cart';
         }
       }
     };
@@ -4515,9 +4518,19 @@ class ImageProcessingManager {
       // Add a more robust approach to redirection
       console.log('Preparing to redirect to cart...');
       
-      // Show a clear status message
-      if (continueButton) {
-        continueButton.textContent = 'Going to cart...';
+      // Get the continueButton again to ensure it's defined
+      try {
+        // Find the popup and button again to avoid reference errors
+        const popupElement = document.querySelector('#pixar-result-popup');
+        const continueButtonElement = popupElement ? popupElement.querySelector('.pixar-continue-button') : null;
+        
+        // Show a clear status message on the button if it exists
+        if (continueButtonElement) {
+          continueButtonElement.textContent = 'Going to cart...';
+        }
+      } catch (err) {
+        console.error('Error updating button:', err);
+        // Continue with redirect even if button update fails
       }
       
       // Use a slightly longer delay to ensure the API call is fully processed by Shopify
