@@ -4656,7 +4656,7 @@ class ImageProcessingManager {
       try {
         const navigationData = {
           timestamp: Date.now(),
-          imageUrl: localStorage.getItem(`cartoonique_image_${variantId}`),
+          imageUrl: processedImageUrl,
           variantId: variantId,
           size: size
         };
@@ -4679,17 +4679,30 @@ class ImageProcessingManager {
       window.location.href = '/cart?nocache=' + Date.now();
     };
     
+    // First, try a simpler cart add request (no properties) if we're having issues
+    const formDataSimple = {
+      'items': [{
+        'id': variantId,
+        'quantity': 1
+      }]
+    };
+    
     fetch('/cart/add.js', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify(formData)
+      body: JSON.stringify(formDataSimple)
     })
     .then(response => {
       if (!response.ok) {
-        throw new Error('Network response was not ok: ' + response.statusText);
+        // If simpler request fails, log the error and show relevant info
+        console.error('Cart addition error with status:', response.status);
+        return response.text().then(text => {
+          console.error('Error response:', text);
+          throw new Error('Network response was not ok: ' + response.statusText);
+        });
       }
       return response.json();
     })
@@ -4720,16 +4733,33 @@ class ImageProcessingManager {
         });
       }
       
-      // Fallback to direct URL in case the fetch fails
-      const fallbackUrl = `/cart/${variantId}:1`;
+      // Try with a direct form submission as last resort
+      const form = document.createElement('form');
+      form.method = 'post';
+      form.action = '/cart/add';
       
-      // Show an error message and provide a manual link
+      const idInput = document.createElement('input');
+      idInput.type = 'hidden';
+      idInput.name = 'id';
+      idInput.value = variantId;
+      
+      const quantityInput = document.createElement('input');
+      quantityInput.type = 'hidden';
+      quantityInput.name = 'quantity';
+      quantityInput.value = '1';
+      
+      form.appendChild(idInput);
+      form.appendChild(quantityInput);
+      document.body.appendChild(form);
+      
+      // Show a message before submitting
       const errorMessage = document.createElement('div');
       errorMessage.className = 'pixar-error-message';
-      errorMessage.style.color = 'red';
+      errorMessage.style.color = 'orange';
       errorMessage.style.margin = '10px 0';
+      errorMessage.style.textAlign = 'center';
       errorMessage.innerHTML = `
-        Error adding to cart. <a href="${fallbackUrl}" style="color: blue; text-decoration: underline;">Click here</a> to try again.
+        Trying alternate method to add to cart...
       `;
       
       // Find an appropriate place to show the error
@@ -4738,6 +4768,11 @@ class ImageProcessingManager {
       if (messageContainer) {
         messageContainer.appendChild(errorMessage);
       }
+      
+      // Submit the form after a short delay
+      setTimeout(() => {
+        form.submit();
+      }, 1000);
     });
   }
   
@@ -4778,30 +4813,68 @@ class ImageProcessingManager {
           else if (window.cartoonique_memory_images && window.cartoonique_memory_images[variantId]) {
             imageUrl = window.cartoonique_memory_images[variantId];
           }
+          // Then check in navigationData as another option
+          else if (window.cartoonique_navigationData && window.cartoonique_navigationData.variantId === variantId) {
+            imageUrl = window.cartoonique_navigationData.imageUrl;
+          }
           // Finally check localStorage
           else {
             try {
-              const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-              const storedValue = cartImages[variantId];
-              
-              if (storedValue) {
-                // Handle various storage formats
-                if (typeof storedValue === 'string') {
-                  if (storedValue.startsWith('MEMORY_IMAGE:')) {
-                    const memoryVariantId = storedValue.split(':')[1];
-                    if (window.cartoonique_memory_images && window.cartoonique_memory_images[memoryVariantId]) {
-                      imageUrl = window.cartoonique_memory_images[memoryVariantId];
-                    }
-                  } else if (storedValue.startsWith('SESSION_STORAGE:')) {
-                    imageUrl = sessionStorage.getItem('cartoonique_image_' + variantId);
-                  } else if (storedValue === 'CURRENT_PROCESSED_IMAGE') {
-                    const currentVariant = sessionStorage.getItem('cartoonique_current_variant');
-                    if (currentVariant === variantId && window.cartoonique_current_image) {
-                      imageUrl = window.cartoonique_current_image;
-                    }
-                  } else {
-                    imageUrl = storedValue;
+              // Try multiple storage locations
+              const storageOptions = [
+                // Option 1: Direct cart images object
+                () => {
+                  const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
+                  return cartImages[variantId];
+                },
+                // Option 2: Single image key
+                () => localStorage.getItem(\`cartoonique_image_\${variantId}\`),
+                // Option 3: Current variant in session storage
+                () => {
+                  const currentVariant = sessionStorage.getItem('cartoonique_current_variant');
+                  if (currentVariant === variantId && window.cartoonique_current_image) {
+                    return window.cartoonique_current_image;
                   }
+                  return null;
+                },
+                // Option 4: Navigation data
+                () => {
+                  const navData = localStorage.getItem('cartoonique_navigation_data');
+                  if (navData) {
+                    try {
+                      const parsedData = JSON.parse(navData);
+                      if (parsedData.variantId === variantId) {
+                        return parsedData.imageUrl;
+                      }
+                    } catch (e) {}
+                  }
+                  return null;
+                }
+              ];
+              
+              // Try each storage option in sequence
+              for (const getOption of storageOptions) {
+                try {
+                  const result = getOption();
+                  if (result) {
+                    if (typeof result === 'string') {
+                      if (result.startsWith('MEMORY_IMAGE:')) {
+                        const memoryVariantId = result.split(':')[1];
+                        if (window.cartoonique_memory_images && window.cartoonique_memory_images[memoryVariantId]) {
+                          imageUrl = window.cartoonique_memory_images[memoryVariantId];
+                          break;
+                        }
+                      } else if (result.startsWith('SESSION_STORAGE:')) {
+                        imageUrl = sessionStorage.getItem('cartoonique_image_' + variantId);
+                        break;
+                      } else {
+                        imageUrl = result;
+                        break;
+                      }
+                    }
+                  }
+                } catch (e) {
+                  console.warn('Error trying storage option:', e);
                 }
               }
             } catch (error) {
@@ -4823,6 +4896,8 @@ class ImageProcessingManager {
             // Use this data for instant image replacement if possible
             if (navigationData && navigationData.variantId && navigationData.imageUrl) {
               cachedImages.set(navigationData.variantId, navigationData.imageUrl);
+              // Also store in window for other access methods
+              window.cartoonique_navigationData = navigationData;
             }
           }
         } catch (e) {
@@ -4834,24 +4909,39 @@ class ImageProcessingManager {
           // Target specifically the exact class combination we see in the cart
           console.log('Searching for cart images to replace...');
           
-          // Method 1: Comprehensive selector targeting all possible cart image selectors
+          // First try to find all cart items to get variant IDs
+          const cartItems = document.querySelectorAll('[data-variant-id], [data-id], [data-item-variant-id], [data-cart-item-id]');
+          const variantIds = new Set();
+          
+          cartItems.forEach(item => {
+            const variantId = item.dataset.variantId || item.dataset.id || item.dataset.itemVariantId || item.dataset.cartItemId;
+            if (variantId) {
+              variantIds.add(variantId);
+            }
+          });
+          
+          console.log('Found variant IDs in page:', Array.from(variantIds).join(', '));
+          
+          // Comprehensive selector targeting all possible cart image selectors
           const cartImages = document.querySelectorAll(
             // Standard cart selectors
-            '.cart-item__image.shape__target-image.multiply-mode__target, ' +
-            '.cart-item__image.shape__target-image, ' +
-            '.cart-item__image, ' +
+            'img.cart-item__image, ' +
+            '.cart-item__image img, ' +
+            '.cart-item__image-wrapper img, ' +
             // Cart notification popup
+            '.cart-notification-popup img, ' +
             '.cart-notification-popup-item__image, ' +
             // Mini cart & drawer cart selectors
-            '.mini-cart-item__image, ' + 
+            '.mini-cart img, ' + 
+            '.drawer-cart img, ' +
             '.drawer-cart__item-image, ' +
             // Additional generic cart selectors
             'img[src*="products"][src*="cdn"], ' +
             'img[class*="cart-item"], ' +
-            'img[class*="product-image"][data-cart-item-image]'
+            'img[class*="product-image"]'
           );
           
-          console.log('Found ' + cartImages.length + ' cart images with target classes');
+          console.log('Found ' + cartImages.length + ' potential cart images to process');
           
           // Early exit if no images found - don't waste processing
           if (cartImages.length === 0) {
@@ -4880,14 +4970,14 @@ class ImageProcessingManager {
               if (img.dataset.id) return img.dataset.id;
               
               // Check parent elements for variant ID
-              let element = img.parentElement;
+              let element = img;
               const checkedElements = new Set();
               
+              // Try up to 10 parent levels
               for (let depth = 0; depth < 10; depth++) {
                 if (!element || checkedElements.has(element)) break;
-                checkedElements.add(element);
                 
-                // Check for data attributes
+                // Data attributes on the element itself
                 const variantId = element.dataset.variantId || 
                                  element.dataset.id || 
                                  element.dataset.variant || 
@@ -4896,32 +4986,53 @@ class ImageProcessingManager {
                 
                 if (variantId) return variantId;
                 
+                // Check surrounding elements by walking the DOM tree up
+                element = element.parentElement;
+                if (!element) break;
+                checkedElements.add(element);
+                
+                // Check for data attributes
+                const parentVariantId = element.dataset.variantId || 
+                                      element.dataset.id || 
+                                      element.dataset.variant || 
+                                      element.dataset.itemId ||
+                                      element.dataset.cartItemId;
+                
+                if (parentVariantId) return parentVariantId;
+                
                 // Check href attributes
                 const href = element.getAttribute('href');
                 if (href) {
                   const variantMatch = href.match(/variant=([0-9]+)/);
                   if (variantMatch && variantMatch[1]) return variantMatch[1];
                   
-                  const pathVariantMatch = href.match(/\\?variant=([0-9]+)/);
+                  const pathVariantMatch = href.match(/\/products\/[^?]+\\?variant=([0-9]+)/);
                   if (pathVariantMatch && pathVariantMatch[1]) return pathVariantMatch[1];
                 }
                 
-                // Check for cart item key in any attribute
-                for (const attr of element.attributes) {
-                  if (attr.value && typeof attr.value === 'string') {
-                    const keyMatch = attr.value.match(/[a-z0-9]{32}/);
-                    if (keyMatch) {
-                      // This could be a cart item key - try to extract variant ID from the page
-                      const allVariantElements = document.querySelectorAll('[data-variant-id]');
-                      if (allVariantElements.length === 1) {
-                        return allVariantElements[0].dataset.variantId;
-                      }
-                    }
-                  }
+                // Try to find siblings with variant IDs
+                const siblings = element.parentElement ? element.parentElement.children : [];
+                for (let i = 0; i < siblings.length; i++) {
+                  const sibling = siblings[i];
+                  const siblingVariantId = sibling.dataset.variantId || 
+                                          sibling.dataset.id || 
+                                          sibling.dataset.variant || 
+                                          sibling.dataset.itemId ||
+                                          sibling.dataset.cartItemId;
+                  
+                  if (siblingVariantId) return siblingVariantId;
                 }
-                
-                // Move up the DOM tree
-                element = element.parentElement;
+              }
+              
+              // If we found variant IDs in the page but couldn't match this image,
+              // try the first one as a fallback
+              if (variantIds.size > 0) {
+                return Array.from(variantIds)[0];
+              }
+              
+              // Try navigation data as last resort
+              if (navigationData && navigationData.variantId) {
+                return navigationData.variantId;
               }
               
               return null;
@@ -4935,6 +5046,8 @@ class ImageProcessingManager {
               const storedImageUrl = getStoredImageForVariant(foundVariantId);
               
               if (storedImageUrl) {
+                console.log('Replacing image for variant:', foundVariantId);
+                
                 // Apply image directly without creating a new one for faster replacement
                 img.srcset = '';
                 img.sizes = '';
@@ -4986,91 +5099,58 @@ class ImageProcessingManager {
         // Run immediately for all cases
         replaceCartImages();
         
-        // Also run after short delays to catch late-loading elements
+        // Run with progressive delays to catch late-loading cart elements
         setTimeout(replaceCartImages, 100);
         setTimeout(replaceCartImages, 500);
-        setTimeout(replaceCartImages, 1000);
+        setTimeout(replaceCartImages, 1000); 
+        setTimeout(replaceCartImages, 2000);
         
         // Also observe DOM changes to catch any dynamically added content
-        const observer = new MutationObserver(() => {
-          replaceCartImages();
-        });
-        
-        // Start observing immediately
-        observer.observe(document.body, { 
-          childList: true, 
-          subtree: true,
-          attributes: true, 
-          attributeFilter: ['src', 'srcset', 'class']
-        });
+        if (typeof MutationObserver !== 'undefined') {
+          const observer = new MutationObserver((mutations) => {
+            // Only run if we see DOM changes that might include cart images
+            let shouldRun = false;
+            
+            for (const mutation of mutations) {
+              if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                for (const node of mutation.addedNodes) {
+                  if (node.nodeType === 1) { // Element node
+                    if (node.tagName === 'IMG' || 
+                        node.classList.contains('cart-item') || 
+                        node.querySelector('img')) {
+                      shouldRun = true;
+                      break;
+                    }
+                  }
+                }
+              }
+              if (shouldRun) break;
+            }
+            
+            if (shouldRun) {
+              replaceCartImages();
+            }
+          });
+          
+          // Start observing cart containers
+          const cartContainers = [
+            document.body, // Observe everything as a fallback
+            document.querySelector('.cart'), 
+            document.querySelector('#CartDrawer'),
+            document.querySelector('.cart-notification-popup')
+          ].filter(Boolean);
+          
+          cartContainers.forEach(container => {
+            observer.observe(container, { 
+              childList: true, 
+              subtree: true 
+            });
+          });
+        }
       })();
     `;
     
-    // Add the script to the document
     document.head.appendChild(script);
-    
-    // If we're already on the cart page, inject an immediate execution script
-    if (window.location.pathname.includes('/cart')) {
-      console.log('Already on cart page, triggering immediate image replacement');
-      const immediateScript = document.createElement('script');
-      immediateScript.textContent = `
-        console.log('Immediate cart image replacement executing');
-        
-        // Directly inject CSS to ensure our images display correctly
-        const style = document.createElement('style');
-        style.textContent = \`
-          .cart-item__image.shape__target-image.multiply-mode__target[data-processed="true"],
-          .cart-item__image.shape__target-image[data-processed="true"],
-          .cart-item__image[data-processed="true"],
-          .cart-notification-popup-item__image[data-processed="true"],
-          .mini-cart-item__image[data-processed="true"],
-          .drawer-cart__item-image[data-processed="true"],
-          img[data-processed="true"] {
-            object-fit: contain !important;
-            width: 100%;
-            height: auto;
-            aspect-ratio: 3/4;
-          }
-        \`;
-        document.head.appendChild(style);
-        
-        // Preload images from storage for faster display
-        try {
-          // Check for navigationData
-          const navDataStr = localStorage.getItem('cartoonique_navigation_data');
-          if (navDataStr) {
-            const navData = JSON.parse(navDataStr);
-            if (navData && navData.imageUrl) {
-              // Create a hidden preload image
-              const preloadImg = new Image();
-              preloadImg.src = navData.imageUrl;
-              preloadImg.style.position = 'absolute';
-              preloadImg.style.opacity = '0';
-              preloadImg.style.pointerEvents = 'none';
-              document.body.appendChild(preloadImg);
-              
-              // Force immediate image replacement
-              setTimeout(() => {
-                const cartImages = document.querySelectorAll('.cart-item__image, img[class*="cart-item"]');
-                if (cartImages.length > 0) {
-                  console.log('Applying immediate image replacement to ' + cartImages.length + ' cart images');
-                  cartImages.forEach(img => {
-                    img.srcset = '';
-                    img.sizes = '';
-                    img.src = navData.imageUrl;
-                    img.dataset.processed = 'true';
-                    img.style.objectFit = 'contain';
-                  });
-                }
-              }, 0);
-            }
-          }
-        } catch (e) {
-          console.warn('Error during image preloading', e);
-        }
-      `;
-      document.head.appendChild(immediateScript);
-    }
   }
 
   // Add this method to maintain compatibility with existing code

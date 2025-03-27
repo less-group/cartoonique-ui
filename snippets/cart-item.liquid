@@ -7,6 +7,13 @@
   else
     assign money_price = price | money
   endif
+  
+  assign is_processed_image = false
+  for property in item.properties
+    if property.first == '_processed_image' and property.last == 'yes'
+      assign is_processed_image = true
+    endif
+  endfor
 -%}
 
 <cart-item
@@ -36,12 +43,20 @@
             {% if item.image %}
               {% assign image = item.image %}
               <img
-                {% render 'image-attributes',
-                  image: image,
-                  size: 'medium',
-                  is_multiply_target: enable_multiply,
-                  class: 'cart-item__image shape__target-image'
-                %}
+                {% if is_processed_image %}
+                  class='cart-item__image shape__target-image'
+                  src='{{ item.image | img_url: "medium" }}'
+                  data-variant-id='{{ item.variant.id }}'
+                  loading="eager"
+                  style="object-fit: contain{% if is_processed_image %}; aspect-ratio: 3/4{% endif %};"
+                {% else %}
+                  {% render 'image-attributes',
+                    image: image,
+                    size: 'medium',
+                    is_multiply_target: enable_multiply,
+                    class: 'cart-item__image shape__target-image'
+                  %}
+                {% endif %}
               >
             {% else %}
               {{- 'product-4' | placeholder_svg_tag: 'placeholder-image cart-item__image shape__target-image' -}}

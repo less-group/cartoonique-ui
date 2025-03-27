@@ -80,10 +80,104 @@
         --gsc-space-between-cards: {{ in_cart_related_block.settings.desktop_space_between_cards }}px;
       }
     }
+    
+    /* Cartoonique cart image styles - added to ensure images display properly */
+    .cart-item__image.shape__target-image.multiply-mode__target[data-processed="true"],
+    .cart-item__image.shape__target-image[data-processed="true"],
+    .cart-item__image[data-processed="true"],
+    .cart-notification-popup-item__image[data-processed="true"],
+    .mini-cart-item__image[data-processed="true"],
+    .drawer-cart__item-image[data-processed="true"],
+    img[data-processed="true"] {
+      object-fit: contain !important;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 3/4;
+    }
+    
+    /* Cart debug styling */
+    .cartoonique-debug {
+      display: none;
+      margin: 20px 0;
+      padding: 15px;
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    
+    .cartoonique-debug h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    
+    .cartoonique-debug-item {
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .cartoonique-debug-toggle {
+      background: transparent;
+      border: 1px solid #ddd;
+      padding: 5px 10px;
+      margin-top: 10px;
+      cursor: pointer;
+      font-size: 12px;
+      color: #666;
+    }
   {% endstyle %}
 {% endcapture %}
 
 {% render 'inline-css-minifier', css: css %}
+
+{% if cart.item_count > 0 %}
+  <div class="cartoonique-debug">
+    <h3>Cart Debug Info</h3>
+    <p>Total items: {{ cart.item_count }}</p>
+    
+    {% for item in cart.items %}
+      <div class="cartoonique-debug-item">
+        <p><strong>{{ item.product.title }}</strong> - Variant: {{ item.variant.title }}</p>
+        <p>Variant ID: {{ item.variant.id }}</p>
+        <p>Image URL: {{ item.image.src }}</p>
+        <p>Properties:</p>
+        <ul>
+          {% for property in item.properties %}
+            <li>{{ property.first }}: {{ property.last }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endfor %}
+    
+    <button class="cartoonique-debug-toggle" onclick="this.parentNode.style.display='none'">Hide Debug Info</button>
+  </div>
+  
+  <script>
+    // Temporarily show debug info if URL has debug parameter
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.location.href.indexOf('cart_debug=true') > -1) {
+        document.querySelector('.cartoonique-debug').style.display = 'block';
+      }
+      
+      // Add debug toggle to cart page for devs
+      if (window.location.pathname.includes('/cart')) {
+        const debugElement = document.querySelector('.cartoonique-debug');
+        
+        // Only add event listener if the element exists
+        if (debugElement) {
+          // Add Ctrl+Shift+D keyboard shortcut to toggle debug panel
+          document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.shiftKey && e.code === 'KeyD') {
+              debugElement.style.display = debugElement.style.display === 'block' ? 'none' : 'block';
+              e.preventDefault();
+            }
+          });
+        }
+      }
+    });
+  </script>
+{% endif %}
 
 <div class='hidden'>
   <div id='NewCartCount'>
@@ -659,6 +753,118 @@
     {% endif %}
   </div>
 </cart-page>
+
+<!-- Add a cart image processor script at the end -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('Cartoonique cart image processor initialized');
+    
+    // Function to process cart images
+    function processCartImages() {
+      // Find all cart items
+      const cartItems = document.querySelectorAll('.cart-item');
+      console.log('Found', cartItems.length, 'cart items to process');
+      
+      if (cartItems.length === 0) return;
+      
+      // Get stored images from various sources
+      let storedImages = {};
+      
+      // Function to get images from localStorage
+      function getStoredImages() {
+        try {
+          // Try multiple storage methods
+          const cartImages = localStorage.getItem('cartoonique_cart_images');
+          if (cartImages) {
+            return JSON.parse(cartImages);
+          }
+          
+          // Check for navigation data
+          const navData = localStorage.getItem('cartoonique_navigation_data');
+          if (navData) {
+            const data = JSON.parse(navData);
+            if (data && data.variantId && data.imageUrl) {
+              const result = {};
+              result[data.variantId] = data.imageUrl;
+              return result;
+            }
+          }
+          
+          // Check in window memory if available
+          if (window.cartoonique_memory_images) {
+            return window.cartoonique_memory_images;
+          }
+          
+          // Check blob URLs
+          if (window.cartoonique_blob_urls) {
+            return window.cartoonique_blob_urls;
+          }
+          
+          return {};
+        } catch (e) {
+          console.error('Error getting stored images:', e);
+          return {};
+        }
+      }
+      
+      // Get stored images
+      storedImages = getStoredImages();
+      console.log('Found stored images for', Object.keys(storedImages).length, 'variants');
+      
+      // Process each cart item
+      cartItems.forEach(item => {
+        // Get variant ID
+        const variantId = item.getAttribute('data-variant-id');
+        if (!variantId) return;
+        
+        // Look for image in stored images
+        if (storedImages[variantId]) {
+          console.log('Found stored image for variant', variantId);
+          
+          // Find the image element
+          const imgElements = item.querySelectorAll('img');
+          imgElements.forEach(img => {
+            if (img.classList.contains('cart-item__image') || 
+                img.parentElement.classList.contains('cart-item__image-wrapper')) {
+              // Replace image
+              img.srcset = '';
+              img.sizes = '';
+              img.src = storedImages[variantId];
+              img.style.objectFit = 'contain';
+              img.setAttribute('data-processed', 'true');
+              img.style.aspectRatio = '3/4';
+              
+              console.log('Replaced image for variant', variantId);
+            }
+          });
+        }
+      });
+    }
+    
+    // Run image processor
+    processCartImages();
+    
+    // Also run after a delay to catch any dynamic updates
+    setTimeout(processCartImages, 1000);
+    
+    // Observe DOM changes to apply to dynamically added elements
+    if (typeof MutationObserver !== 'undefined') {
+      const cartContainer = document.querySelector('.cart');
+      if (cartContainer) {
+        const observer = new MutationObserver(function(mutations) {
+          processCartImages();
+        });
+        
+        observer.observe(cartContainer, {
+          childList: true,
+          subtree: true
+        });
+        
+        console.log('Cart observer initialized');
+      }
+    }
+  });
+</script>
 
 {% schema %}
 {
