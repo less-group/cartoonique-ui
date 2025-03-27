@@ -1252,6 +1252,45 @@ class ImageProcessingManager {
           
           <p style="text-align: center; margin-top: 25px; color: #555; font-size: 18px; font-weight: 500;">Your image has been successfully processed.</p>
           
+          <!-- Size selection menu -->
+          <div style="margin-top: 30px;">
+            <h4 style="text-align: center; font-size: 18px; margin-bottom: 15px; color: #333; font-weight: bold; text-transform: uppercase;">Choose the size</h4>
+            
+            <div style="display: flex; justify-content: space-between; margin: 0 auto; max-width: 90%;">
+              <!-- Size S -->
+              <div style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 10px; cursor: pointer; background-color: #f0f5fb;">
+                <div style="width: 50px; height: 50px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 20px;">S</div>
+                <div style="font-weight: bold; margin-top: 10px; font-size: 18px;">$85</div>
+                <div style="font-size: 14px; color: #666; margin-top: 5px;">12x16"</div>
+              </div>
+              
+              <!-- Size M -->
+              <div style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 10px; cursor: pointer;">
+                <div style="width: 50px; height: 50px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 20px;">M</div>
+                <div style="font-weight: bold; margin-top: 10px; font-size: 18px;">$130</div>
+                <div style="font-size: 14px; color: #666; margin-top: 5px;">20x28"</div>
+              </div>
+              
+              <!-- Size L -->
+              <div style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 10px; cursor: pointer;">
+                <div style="width: 50px; height: 50px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 20px;">L</div>
+                <div style="font-weight: bold; margin-top: 10px; font-size: 18px;">$190</div>
+                <div style="font-size: 14px; color: #666; margin-top: 5px;">24x36"</div>
+              </div>
+              
+              <!-- Size XL -->
+              <div style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 10px; cursor: pointer;">
+                <div style="width: 50px; height: 50px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 20px;">XL</div>
+                <div style="font-weight: bold; margin-top: 10px; font-size: 18px;">$240</div>
+                <div style="font-size: 14px; color: #666; margin-top: 5px;">28x40"</div>
+              </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+              <a href="#" style="color: #4a7dbd; text-decoration: underline; font-size: 14px;">Size guide</a>
+            </div>
+          </div>
+          
           <div style="text-align: center; margin-top: 30px;">
             <button id="pixar-result-continue" style="background-color: #4a7dbd; color: white; padding: 14px 30px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 0 10px; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">CONTINUE</button>
           </div>
@@ -1269,6 +1308,20 @@ class ImageProcessingManager {
           document.body.style.overflow = '';
         });
       }
+      
+      // Add event listeners for size selection
+      const sizeOptions = resultPopup.querySelectorAll('[style*="border: 1px solid #ddd"]');
+      sizeOptions.forEach(option => {
+        option.addEventListener('click', () => {
+          // Remove highlight from all options
+          sizeOptions.forEach(opt => {
+            opt.style.backgroundColor = '';
+          });
+          
+          // Highlight selected option
+          option.style.backgroundColor = '#f0f5fb';
+        });
+      });
     }
     
     // Set the image source
