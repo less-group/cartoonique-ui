@@ -1310,6 +1310,39 @@ class ImageProcessingManager {
       // Add event listener for the continue button
       const continueButton = document.getElementById('pixar-result-continue');
       if (continueButton) {
+        // Define the adjustColor function globally to ensure it's available
+        function adjustColor(color, amount) {
+          // Handle different color formats
+          let r, g, b;
+          
+          if (color.startsWith('rgb')) {
+            // Parse RGB format
+            const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/);
+            if (rgbMatch) {
+              r = parseInt(rgbMatch[1]);
+              g = parseInt(rgbMatch[2]);
+              b = parseInt(rgbMatch[3]);
+            } else {
+              return color; // Can't parse, return original
+            }
+          } else if (color.startsWith('#')) {
+            // Parse hex format
+            const hex = color.substring(1);
+            r = parseInt(hex.substr(0, 2), 16);
+            g = parseInt(hex.substr(2, 2), 16);
+            b = parseInt(hex.substr(4, 2), 16);
+          } else {
+            return color; // Unsupported format, return original
+          }
+          
+          // Adjust brightness
+          r = Math.max(0, Math.min(255, r + amount));
+          g = Math.max(0, Math.min(255, g + amount));
+          b = Math.max(0, Math.min(255, b + amount));
+          
+          return `rgb(${r}, ${g}, ${b})`;
+        }
+        
         continueButton.addEventListener('click', (event) => {
           // Prevent default action
           event.preventDefault();
@@ -1377,41 +1410,6 @@ class ImageProcessingManager {
             btn.style.pointerEvents = 'none';
             btn.style.opacity = '0.7';
           });
-          
-          // Function to darken a color for pulse animation (if not already defined)
-          if (typeof adjustColor !== 'function') {
-            function adjustColor(color, amount) {
-              // Handle different color formats
-              let r, g, b;
-              
-              if (color.startsWith('rgb')) {
-                // Parse RGB format
-                const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/);
-                if (rgbMatch) {
-                  r = parseInt(rgbMatch[1]);
-                  g = parseInt(rgbMatch[2]);
-                  b = parseInt(rgbMatch[3]);
-                } else {
-                  return color; // Can't parse, return original
-                }
-              } else if (color.startsWith('#')) {
-                // Parse hex format
-                const hex = color.substring(1);
-                r = parseInt(hex.substr(0, 2), 16);
-                g = parseInt(hex.substr(2, 2), 16);
-                b = parseInt(hex.substr(4, 2), 16);
-              } else {
-                return color; // Unsupported format, return original
-              }
-              
-              // Adjust brightness
-              r = Math.max(0, Math.min(255, r + amount));
-              g = Math.max(0, Math.min(255, g + amount));
-              b = Math.max(0, Math.min(255, b + amount));
-              
-              return `rgb(${r}, ${g}, ${b})`;
-            }
-          }
           
           // IMPORTANT: Don't hide the popup here - we'll keep it visible until the redirect happens
           console.log(`Continue clicked with size ${this.selectedSize || 'S'} selected, redirecting to checkout`);
