@@ -1311,8 +1311,16 @@ class ImageProcessingManager {
       const continueButton = document.getElementById('pixar-result-continue');
       if (continueButton) {
         continueButton.addEventListener('click', () => {
+          // Hide the popup
           resultPopup.style.display = 'none';
           document.body.style.overflow = '';
+          
+          // Get the selected size for checkout
+          const selectedSize = this.selectedSize || 'S';
+          console.log(`Continue clicked with size ${selectedSize} selected, redirecting to checkout`);
+          
+          // Redirect to checkout with the selected size
+          this.redirectToCheckout(selectedSize);
         });
         
         // Add hover effect for continue button
@@ -4262,6 +4270,63 @@ class ImageProcessingManager {
         parent.insertBefore(wrapper, img);
         wrapper.appendChild(img);
       }
+    }
+  }
+
+  /**
+   * Redirect user to checkout with the selected size
+   * @param {string} size - The selected size (S, M, or L)
+   */
+  redirectToCheckout(size) {
+    // Define product IDs or variant IDs for each size
+    const productVariants = {
+      'S': '40234846978188', // 20x30" variant ID
+      'M': '40234847010956', // 30x40" variant ID 
+      'L': '40234847043724'  // 50x70" variant ID
+    };
+    
+    // Get the variant ID for the selected size
+    const variantId = productVariants[size];
+    
+    if (!variantId) {
+      console.error(`No variant ID found for size ${size}`);
+      return;
+    }
+    
+    // Check if we're in a Shopify environment
+    if (typeof window.Shopify !== 'undefined') {
+      console.log(`Using Shopify cart API with variant ID: ${variantId}`);
+      
+      // Use Shopify's cart API to add the item
+      fetch('/cart/add.js', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          items: [{
+            quantity: 1,
+            id: variantId
+          }]
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Product added to cart:', data);
+        // Redirect to cart page
+        window.location.href = '/cart';
+      })
+      .catch(error => {
+        console.error('Error adding product to cart:', error);
+        // Fallback to direct cart URL
+        window.location.href = `/cart/${variantId}:1`;
+      });
+    } else {
+      // Fallback for non-Shopify environments or direct cart
+      console.log('Using direct cart URL');
+      
+      // For Shopify stores, this format works to add to cart
+      window.location.href = `/cart/${variantId}:1`;
     }
   }
 }
