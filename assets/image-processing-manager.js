@@ -1257,9 +1257,18 @@ class ImageProcessingManager {
       // Add content to the result popup
       resultPopup.innerHTML = `
         <div style="position: relative; max-width: 600px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; height: calc(100vh - 40px); max-height: 800px;">
-          <div id="pixar-result-image-container" style="flex: 1; min-height: 0; margin: 0 auto; width: 100%; max-width: 400px; border-radius: 8px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center;">
-            <img id="pixar-result-image" src="" alt="Processed image" style="max-width: 100%; max-height: 100%; display: block; object-fit: contain; transition: all 0.3s ease-in-out; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px;">
-            <div id="pixar-result-image-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;"></div>
+          <div id="pixar-result-image-container" style="flex: 1; min-height: 0; margin: 0 auto; width: 100%; max-width: 400px; position: relative; display: flex; align-items: center; justify-content: center; transform: perspective(1000px) rotateY(5deg);">
+            <!-- Canvas edge effect -->
+            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; border: 1px solid rgba(255,255,255,0.8); border-radius: 0; box-shadow: 0 6px 12px rgba(0,0,0,0.2); transform: translateZ(-5px); background: black;"></div>
+            
+            <!-- Side edge effect -->
+            <div style="position: absolute; top: 0; left: 0; bottom: 0; width: 12px; background: #111; transform: translateX(-12px) rotateY(-90deg); transform-origin: right;"></div>
+            
+            <!-- Image wrapper with border -->
+            <div style="position: relative; width: 100%; height: 100%; overflow: hidden; border: 8px solid black; box-shadow: inset 0 0 2px rgba(255,255,255,0.3);">
+              <img id="pixar-result-image" src="" alt="Processed image" style="max-width: 100%; max-height: 100%; display: block; object-fit: contain; transition: all 0.3s ease-in-out;">
+              <div id="pixar-result-image-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;"></div>
+            </div>
           </div>
           
           <!-- Fixed position controls container -->
@@ -1411,6 +1420,8 @@ class ImageProcessingManager {
       const imageContainer = document.getElementById('pixar-result-image-container');
       if (imageContainer) {
         imageContainer.style.maxHeight = '60vh';
+        // Use a smaller rotation angle on mobile for better viewing
+        imageContainer.style.transform = 'perspective(1000px) rotateY(3deg)';
       }
       
       // Adjust size options for mobile
@@ -1468,13 +1479,12 @@ class ImageProcessingManager {
     const container = document.getElementById('pixar-result-image-container');
     if (!image || !container) return;
 
-    // Set container's aspect ratio while maintaining flexibility
+    // Setup for canvas with edge display
     container.style.position = 'relative';
     container.style.display = 'flex';
     container.style.alignItems = 'center';
     container.style.justifyContent = 'center';
-    container.style.boxShadow = 'none';
-    container.style.background = 'transparent';
+    container.style.transform = 'perspective(1000px) rotateY(5deg)';
     
     // Create canvas to maintain aspect ratio
     const canvas = document.createElement('canvas');
@@ -1518,12 +1528,10 @@ class ImageProcessingManager {
       // Replace the image src with the canvas data
       image.src = canvas.toDataURL('image/png');
       
-      // Adjust container to maintain the aspect ratio without affecting layout
+      // Adjust image styles
       image.style.maxWidth = '100%';
       image.style.maxHeight = '100%';
       image.style.objectFit = 'contain';
-      image.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-      image.style.borderRadius = '8px';
     };
     
     img.src = this.resultImageUrl || image.src;
