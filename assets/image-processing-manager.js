@@ -1256,48 +1256,46 @@ class ImageProcessingManager {
       
       // Add content to the result popup
       resultPopup.innerHTML = `
-        <div style="position: relative; max-width: 700px; margin: 50px auto; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.1);">
-          <h3 style="text-align: center; font-size: 26px; margin-bottom: 20px; color: #333; font-weight: bold;">Your image is ready!</h3>
-          
-          <div id="pixar-result-image-container" style="max-width: 500px; margin: 0 auto; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); position: relative;">
+        <div style="position: relative; max-width: 600px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.1);">
+          <div id="pixar-result-image-container" style="max-width: 400px; margin: 0 auto; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); position: relative;">
             <img id="pixar-result-image" src="" alt="Processed image" style="width: 100%; display: block;">
             <div id="pixar-result-image-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;"></div>
           </div>
           
           <!-- Size selection menu -->
-          <div style="margin-top: 30px;">
+          <div style="margin-top: 15px;">
             <div style="display: flex; justify-content: space-between; margin: 0 auto; max-width: 90%;">
               <!-- Size S -->
-              <div data-size="S" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 10px; cursor: pointer; background-color: #f0f5fb;">
-                <div style="width: 50px; height: 50px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 20px;">S</div>
-                <div style="font-weight: bold; margin-top: 10px; font-size: 18px;">$85</div>
-                <div style="font-size: 14px; color: #666; margin-top: 5px;">20x30"</div>
+              <div data-size="S" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer; background-color: #f0f5fb;">
+                <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">S</div>
+                <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$85</div>
+                <div style="font-size: 12px; color: #666; margin-top: 3px;">20x30"</div>
               </div>
               
               <!-- Size M -->
-              <div data-size="M" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 10px; cursor: pointer;">
-                <div style="width: 50px; height: 50px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 20px;">M</div>
-                <div style="font-weight: bold; margin-top: 10px; font-size: 18px;">$130</div>
-                <div style="font-size: 14px; color: #666; margin-top: 5px;">30x40"</div>
+              <div data-size="M" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer;">
+                <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">M</div>
+                <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$130</div>
+                <div style="font-size: 12px; color: #666; margin-top: 3px;">30x40"</div>
               </div>
               
               <!-- Size L -->
-              <div data-size="L" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 10px; cursor: pointer;">
-                <div style="width: 50px; height: 50px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 20px;">L</div>
-                <div style="font-weight: bold; margin-top: 10px; font-size: 18px;">$190</div>
-                <div style="font-size: 14px; color: #666; margin-top: 5px;">50x70"</div>
+              <div data-size="L" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer;">
+                <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">L</div>
+                <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$190</div>
+                <div style="font-size: 12px; color: #666; margin-top: 3px;">50x70"</div>
               </div>
             </div>
             
-            <h4 style="text-align: center; font-size: 18px; margin-top: 20px; margin-bottom: 15px; color: #333; font-weight: bold; text-transform: uppercase;">Choose the size</h4>
+            <h4 style="text-align: center; font-size: 16px; margin-top: 10px; margin-bottom: 5px; color: #333; font-weight: bold; text-transform: uppercase;">Choose the size</h4>
             
-            <div style="text-align: center; margin-top: 10px;">
-              <a href="#" style="color: #4a7dbd; text-decoration: underline; font-size: 14px;">Size guide</a>
+            <div style="text-align: center; margin-top: 5px;">
+              <a href="#" style="color: #4a7dbd; text-decoration: underline; font-size: 12px;">Size guide</a>
             </div>
           </div>
           
-          <div style="text-align: center; margin-top: 30px;">
-            <button id="pixar-result-continue" style="background-color: #4a7dbd; color: white; padding: 14px 30px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 0 10px; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">CONTINUE</button>
+          <div style="text-align: center; margin-top: 15px;">
+            <button id="pixar-result-continue" style="background-color: #4a7dbd; color: white; padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 0 10px; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">CONTINUE</button>
           </div>
         </div>
       `;
@@ -1350,6 +1348,69 @@ class ImageProcessingManager {
     // Display the popup
     resultPopup.style.display = 'block';
     document.body.style.overflow = 'hidden';
+    
+    // Adjust for mobile view if needed
+    this.adjustPopupForMobile();
+  }
+  
+  /**
+   * Adjust the popup layout for mobile devices
+   */
+  adjustPopupForMobile() {
+    // Check if we're on a mobile device
+    const isMobile = window.innerWidth < 768;
+    
+    if (isMobile) {
+      const container = document.querySelector('#pixar-result-popup > div');
+      if (container) {
+        // Adjust container padding and margins for mobile
+        container.style.padding = '15px';
+        container.style.margin = '10px auto';
+        container.style.maxWidth = '90%';
+      }
+      
+      // Make image container smaller on mobile
+      const imageContainer = document.getElementById('pixar-result-image-container');
+      if (imageContainer) {
+        imageContainer.style.maxWidth = '90%';
+      }
+      
+      // Adjust size options for mobile
+      const sizeOptions = document.querySelectorAll('[data-size]');
+      sizeOptions.forEach(option => {
+        // Make size options more compact
+        option.style.padding = '5px';
+        
+        // Make circle and text smaller
+        const circle = option.querySelector('div');
+        if (circle) {
+          circle.style.width = '30px';
+          circle.style.height = '30px';
+          circle.style.fontSize = '16px';
+        }
+        
+        // Adjust prices text
+        const price = option.querySelectorAll('div')[1];
+        if (price) {
+          price.style.fontSize = '14px';
+          price.style.marginTop = '3px';
+        }
+        
+        // Adjust dimensions text
+        const dimensions = option.querySelectorAll('div')[2];
+        if (dimensions) {
+          dimensions.style.fontSize = '10px';
+          dimensions.style.marginTop = '2px';
+        }
+      });
+      
+      // Make continue button smaller
+      const continueButton = document.getElementById('pixar-result-continue');
+      if (continueButton) {
+        continueButton.style.padding = '8px 20px';
+        continueButton.style.fontSize = '14px';
+      }
+    }
   }
   
   /**
