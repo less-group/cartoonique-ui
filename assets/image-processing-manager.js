@@ -4292,14 +4292,36 @@ class ImageProcessingManager {
       return;
     }
     
-    // Get the processed image URL from the result popup
-    const processedImageContainer = document.querySelector('#pixar-result-popup .pixar-result-image-container');
-    const processedImage = processedImageContainer ? processedImageContainer.querySelector('img') : null;
-    const processedImageUrl = processedImage ? processedImage.src : '';
+    // Get the processed image URL - first try from the resultImageUrl property
+    // which is set when showResultPopup() is called
+    let processedImageUrl = this.resultImageUrl;
+    console.log('Found image from resultImageUrl:', processedImageUrl ? 'yes' : 'no');
+    
+    // If not found, try to get it from the DOM
+    if (!processedImageUrl) {
+      console.log('Trying to find image in DOM...');
+      // First try the element with ID
+      const resultImage = document.getElementById('pixar-result-image');
+      if (resultImage && resultImage.src) {
+        processedImageUrl = resultImage.src;
+        console.log('Found image with ID');
+      } else {
+        // Then try any image in the container
+        const processedImageContainer = document.querySelector('#pixar-result-popup .pixar-result-image-container');
+        const processedImage = processedImageContainer ? processedImageContainer.querySelector('img') : null;
+        if (processedImage && processedImage.src) {
+          processedImageUrl = processedImage.src;
+          console.log('Found image in container');
+        }
+      }
+    }
     
     if (!processedImageUrl) {
-      console.error('No processed image found');
-      return;
+      console.error('No processed image found - will attempt to continue anyway');
+      // Set a default empty value to avoid errors
+      processedImageUrl = '';
+    } else {
+      console.log('Using processed image URL (truncated):', processedImageUrl.substring(0, 50) + '...');
     }
     
     // Store the processed image URL in localStorage with the variant ID as the key
@@ -4375,6 +4397,11 @@ class ImageProcessingManager {
       }]
     };
     
+    // Direct redirect function without an iframe
+    const redirectToCart = () => {
+      window.location.href = '/cart';
+    };
+    
     fetch('/cart/add.js', {
       method: 'POST',
       headers: {
@@ -4391,32 +4418,9 @@ class ImageProcessingManager {
     .then(data => {
       console.log('Successfully added to cart:', data);
       
-      // Create an invisible iframe to preload the cart page
-      const preloadFrame = document.createElement('iframe');
-      preloadFrame.style.position = 'absolute';
-      preloadFrame.style.top = '-9999px';
-      preloadFrame.style.left = '-9999px';
-      preloadFrame.style.width = '1px';
-      preloadFrame.style.height = '1px';
-      preloadFrame.style.opacity = '0';
-      preloadFrame.style.pointerEvents = 'none';
-      preloadFrame.setAttribute('aria-hidden', 'true');
-      preloadFrame.src = '/cart';
-      
-      // Listen for the iframe to load, then redirect
-      preloadFrame.onload = () => {
-        console.log('Cart page preloaded, redirecting...');
-        
-        // Remove the iframe after a short delay to ensure content is cached
-        setTimeout(() => {
-          document.body.removeChild(preloadFrame);
-          
-          // Finally redirect to the cart page
-          window.location.href = '/cart';
-        }, 100);
-      };
-      
-      document.body.appendChild(preloadFrame);
+      // Simpler approach: redirect after a short delay to ensure API processing is complete
+      console.log('Redirecting to cart in 500ms...');
+      setTimeout(redirectToCart, 500);
     })
     .catch(error => {
       console.error('Error adding to cart:', error);
