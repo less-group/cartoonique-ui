@@ -1793,9 +1793,46 @@ class ImageProcessingManager {
       document.querySelector('.product-gallery img'),
       document.querySelector('.product__media img'),
       
+      // Add selectors from the screenshot
+      document.querySelector('.product-media__image'),
+      document.querySelector('img.lazyloaded[srcset*="f8336544-577a"]'),
+      document.querySelector('img[alt="product-media__image"]'),
+      document.querySelector('.media__image'),
+      document.querySelector('img.product__image'),
+      document.querySelector('img[data-zoom-src]'),
+      document.querySelector('img[data-image-id]'),
+      document.querySelector('.product-single__photo img'),
+      document.querySelector('.product-single img'),
+      document.querySelector('.product__media-item img'),
+      document.querySelector('.product-media img'),
+      
       // Thumbnails
-      ...Array.from(document.querySelectorAll('.product-gallery__thumbnail img'))
+      ...Array.from(document.querySelectorAll('.product-gallery__thumbnail img')),
+      ...Array.from(document.querySelectorAll('.product__media-thumbnail img')),
+      ...Array.from(document.querySelectorAll('.product-single__thumbnail img'))
     ].filter(Boolean); // Remove null/undefined entries
+    
+    // If we still didn't find any images, try a more generic approach
+    if (imagesToUpdate.length === 0) {
+      console.log('PRODUCT IMAGE: No images found with specific selectors, trying generic approach');
+      
+      // Look for any images that match the screenshot URL pattern
+      const allImages = document.querySelectorAll('img');
+      allImages.forEach(img => {
+        const src = img.src || '';
+        const srcset = img.srcset || '';
+        if (
+          src.includes('f8336544-577a') || 
+          srcset.includes('f8336544-577a') ||
+          src.includes('cartoonique.com/cdn/shop/files') ||
+          (img.classList.contains('lazyloaded') && img.closest('.product'))
+        ) {
+          imagesToUpdate.push(img);
+        }
+      });
+      
+      console.log(`PRODUCT IMAGE: Found ${imagesToUpdate.length} images with generic approach`);
+    }
     
     // Update each image found
     if (imagesToUpdate.length > 0) {
@@ -1846,6 +1883,16 @@ class ImageProcessingManager {
           img.srcset = imageUrl;
         }
         
+        // If there's a data-src attribute (for lazy loading), update that too
+        if (img.dataset.src) {
+          img.dataset.src = imageUrl;
+        }
+        
+        // Update any zoom-related attributes
+        if (img.dataset.zoomSrc) {
+          img.dataset.zoomSrc = imageUrl;
+        }
+        
         // Ensure the image maintains its original dimensions
         img.style.maxWidth = '100%';
         img.style.width = '100%';
@@ -1870,6 +1917,57 @@ class ImageProcessingManager {
       console.log(`PRODUCT IMAGE: Updated ${imagesToUpdate.length} product images with new design`);
     } else {
       console.warn('PRODUCT IMAGE: Could not find any product images to update');
+      
+      // Last resort: Create a new image and replace the most likely container
+      this.createReplacementImage(imageUrl);
+    }
+  }
+  
+  /**
+   * Create a new image element as a last resort when no suitable images are found
+   * @param {string} imageUrl - The URL of the processed image
+   */
+  createReplacementImage(imageUrl) {
+    console.log('PRODUCT IMAGE: Creating replacement image as last resort');
+    
+    // Find the most likely container for the product image
+    const likelyContainers = [
+      document.querySelector('.product-gallery'),
+      document.querySelector('.product__media'),
+      document.querySelector('.product-media'),
+      document.querySelector('.product-single__photos'),
+      document.querySelector('.product__photos')
+    ].filter(Boolean);
+    
+    if (likelyContainers.length > 0) {
+      const container = likelyContainers[0];
+      console.log('PRODUCT IMAGE: Found suitable container for replacement');
+      
+      // Create a new image element
+      const newImage = document.createElement('img');
+      newImage.src = imageUrl;
+      newImage.alt = 'Processed Product Image';
+      newImage.style.maxWidth = '100%';
+      newImage.style.width = '100%';
+      newImage.style.height = 'auto';
+      newImage.style.objectFit = 'contain';
+      newImage.classList.add('pixar-replacement-image');
+      
+      // Create a wrapper div
+      const wrapper = document.createElement('div');
+      wrapper.style.width = '100%';
+      wrapper.style.height = 'auto';
+      wrapper.style.aspectRatio = '3/4';
+      wrapper.style.position = 'relative';
+      wrapper.appendChild(newImage);
+      
+      // Clear and append to container
+      container.innerHTML = '';
+      container.appendChild(wrapper);
+      
+      console.log('PRODUCT IMAGE: Successfully created replacement image');
+    } else {
+      console.error('PRODUCT IMAGE: Could not find any suitable container for replacement image');
     }
   }
   
@@ -1946,13 +2044,139 @@ class ImageProcessingManager {
     }).catch(error => {
       console.error('RAILWAY PROCESSING: Error capturing image:', error);
       
-      // Mark as complete even though there was an error
-      this.finalProcessingComplete = true;
-      this.isProcessing = false;
-      document.dispatchEvent(new CustomEvent('pixar-final-processing-complete', {
-        detail: { imageUrl: this.stylizedImageUrl, error: true }
-      }));
-      console.log('FINAL PROCESSING: Dispatched pixar-final-processing-complete event (with capture error)');
+      // FALLBACK: Use direct image loading if we couldn't capture from DOM
+      console.log('RAILWAY PROCESSING: Attempting fallback direct image loading');
+      this.loadDirectImageFallback()
+        .then(directImage => {
+          console.log('RAILWAY PROCESSING: Successfully loaded fallback image');
+          
+          // Apply direct image
+          if (this.textInfo && (this.textInfo.text || this.textInfo.text2)) {
+            // Add text to the fallback image
+            this.addTextToRailwayImage(directImage)
+              .then(finalImageWithText => {
+                this.updateProductImage(finalImageWithText);
+                this.finalProcessingComplete = true;
+                this.isProcessing = false;
+                document.dispatchEvent(new CustomEvent('pixar-final-processing-complete', {
+                  detail: { imageUrl: finalImageWithText }
+                }));
+              })
+              .catch(err => {
+                console.error('RAILWAY PROCESSING: Error adding text to fallback image:', err);
+                this.updateProductImage(directImage);
+                this.finalProcessingComplete = true;
+                this.isProcessing = false;
+                document.dispatchEvent(new CustomEvent('pixar-final-processing-complete', {
+                  detail: { imageUrl: directImage, error: true }
+                }));
+              });
+          } else {
+            this.updateProductImage(directImage);
+            this.finalProcessingComplete = true;
+            this.isProcessing = false;
+            document.dispatchEvent(new CustomEvent('pixar-final-processing-complete', {
+              detail: { imageUrl: directImage }
+            }));
+          }
+        })
+        .catch(fallbackError => {
+          console.error('RAILWAY PROCESSING: Fallback also failed:', fallbackError);
+          
+          // Mark as complete even though there was an error
+          this.finalProcessingComplete = true;
+          this.isProcessing = false;
+          document.dispatchEvent(new CustomEvent('pixar-final-processing-complete', {
+            detail: { imageUrl: this.stylizedImageUrl, error: true }
+          }));
+          console.log('FINAL PROCESSING: Dispatched pixar-final-processing-complete event (with capture error)');
+        });
+    });
+  }
+  
+  /**
+   * Load a fallback image directly without requiring DOM elements
+   * @returns {Promise<string>} - Promise resolving to a data URL of the base image
+   */
+  loadDirectImageFallback() {
+    return new Promise((resolve, reject) => {
+      // Use the base mockup image URL from the screenshot
+      const baseImageUrl = 'https://cartoonique.com/cdn/shop/files/f8336544-577a-4aff-9e06-c9df35868714.webp';
+      
+      console.log('RAILWAY PROCESSING: Loading fallback image from:', baseImageUrl);
+      
+      // Create a new image element to load the base image
+      const baseImg = new Image();
+      baseImg.crossOrigin = 'anonymous';
+      
+      baseImg.onload = () => {
+        try {
+          console.log('RAILWAY PROCESSING: Fallback base image loaded, dimensions:', baseImg.width, 'x', baseImg.height);
+          
+          // Create a canvas and draw the base image
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // Set canvas size to match the image
+          canvas.width = baseImg.width;
+          canvas.height = baseImg.height;
+          
+          // Draw the base image
+          ctx.drawImage(baseImg, 0, 0, baseImg.width, baseImg.height);
+          
+          // Convert canvas to data URL
+          const dataURL = canvas.toDataURL('image/png', 0.95);
+          console.log('RAILWAY PROCESSING: Successfully captured fallback image');
+          resolve(dataURL);
+        } catch (err) {
+          console.error('RAILWAY PROCESSING: Error processing fallback image:', err);
+          reject(err);
+        }
+      };
+      
+      baseImg.onerror = (err) => {
+        console.error('RAILWAY PROCESSING: Error loading fallback image:', err);
+        
+        // Try with a different protocol as a second fallback
+        const alternateUrl = baseImageUrl.replace('https://', '//');
+        console.log('RAILWAY PROCESSING: Trying alternate URL:', alternateUrl);
+        
+        const alternateImg = new Image();
+        alternateImg.crossOrigin = 'anonymous';
+        
+        alternateImg.onload = () => {
+          try {
+            console.log('RAILWAY PROCESSING: Alternate fallback image loaded');
+            
+            // Create a canvas and draw the alternate image
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = alternateImg.width;
+            canvas.height = alternateImg.height;
+            
+            // Draw the alternate image
+            ctx.drawImage(alternateImg, 0, 0, alternateImg.width, alternateImg.height);
+            
+            // Convert to data URL
+            const dataURL = canvas.toDataURL('image/png', 0.95);
+            resolve(dataURL);
+          } catch (altErr) {
+            reject(altErr);
+          }
+        };
+        
+        alternateImg.onerror = (altErr) => {
+          console.error('RAILWAY PROCESSING: Error loading alternate fallback image:', altErr);
+          reject(altErr);
+        };
+        
+        alternateImg.src = alternateUrl;
+      };
+      
+      // Start loading the base image
+      baseImg.src = baseImageUrl;
     });
   }
   
@@ -1981,10 +2205,37 @@ class ImageProcessingManager {
         const mainImg = document.querySelector('.product-gallery__media.snap-center.is-selected img') || 
                        document.querySelector('.product-gallery__media img') ||
                        document.querySelector('.product-gallery img') ||
-                       document.querySelector('.product__media img');
+                       document.querySelector('.product__media img') ||
+                       // Add additional selectors based on the screenshot
+                       document.querySelector('.product-media__image') ||
+                       document.querySelector('img.lazyloaded[srcset*="f8336544-577a"]') ||
+                       document.querySelector('img[alt="product-media__image"]') ||
+                       document.querySelector('.media__image') ||
+                       document.querySelector('img.product__image') ||
+                       document.querySelector('img[data-zoom-src]') ||
+                       document.querySelector('img[data-image-id]') ||
+                       document.querySelector('.product-single__photo img') ||
+                       // Last resort - any image in the product container
+                       document.querySelector('.product-single img') ||
+                       document.querySelector('.product__media-item img') ||
+                       document.querySelector('.product-media img');
                               
         if (!mainImg) {
           console.error('RAILWAY PROCESSING: Could not find main product image');
+          
+          // Log all available image elements on the page to help with debugging
+          const allImages = document.querySelectorAll('img');
+          console.log('RAILWAY PROCESSING: Available images on page:', allImages.length);
+          allImages.forEach((img, index) => {
+            console.log(`Image ${index}:`, {
+              src: img.src.substring(0, 100) + '...',
+              alt: img.alt,
+              class: img.className,
+              id: img.id,
+              parentClass: img.parentElement?.className
+            });
+          });
+          
           reject(new Error('Could not find main product image'));
           return;
         }
