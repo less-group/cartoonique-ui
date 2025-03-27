@@ -4506,138 +4506,199 @@ class ImageProcessingManager {
     const numericVariantId = parseInt(variantId, 10);
     console.log('Using variant ID:', numericVariantId, 'with image URL (truncated):', processedImageUrl.substring(0, 50) + '...');
     
-    // Store the processed image URL for cart display
-    // Helper function to safely store image in various storage mechanisms
-    const storeImageSafely = (variantId, imageUrl) => {
-      try {
-        if (!variantId || !imageUrl) {
-          console.error('Missing variant ID or image URL for storage');
-          return false;
-        }
-        
-        // Handle large base64 images - convert to blob URL for better performance
-        if (imageUrl.startsWith('data:image')) {
-          console.log('Converting base64 image to blob URL for better performance');
-          try {
-            // Convert base64 to blob
-            const byteString = atob(imageUrl.split(',')[1]);
-            const mimeType = imageUrl.split(',')[0].split(':')[1].split(';')[0];
-            const ab = new ArrayBuffer(byteString.length);
-            const ia = new Uint8Array(ab);
-            
-            for (let i = 0; i < byteString.length; i++) {
-              ia[i] = byteString.charCodeAt(i);
-            }
-            
-            const blob = new Blob([ab], { type: mimeType });
-            const blobUrl = URL.createObjectURL(blob);
-            
-            // Store in localStorage - just store a marker that we're using a blob
-            // Then store the blob URL in the window object for immediate access
-            const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-            cartImages[variantId] = 'BLOB_URL:' + variantId;
-            localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
-            
-            // Store the variant ID -> blob URL mapping in the window object for immediate access
-            if (!window.cartoonique_blob_urls) {
-              window.cartoonique_blob_urls = {};
-            }
-            window.cartoonique_blob_urls[variantId] = blobUrl;
-            
-            // Store the current variant and image URL for cart page preloading
-            sessionStorage.setItem('cartoonique_current_variant', variantId);
-            window.cartoonique_current_image = blobUrl;
-            
-            // Set a flag for the cart page to know it should preload images
-            localStorage.setItem('cartoonique_preload_cart_images', 'true');
-            
-            // Also store navigation data for faster page transitions
-            const navigationData = {
-              variantId: variantId,
-              imageUrl: blobUrl,
-              timestamp: Date.now()
-            };
-            localStorage.setItem('cartoonique_navigation_data', JSON.stringify(navigationData));
-            
-            return true;
-          } catch (e) {
-            console.error('Error converting base64 to blob:', e);
-            // Fallback to storing in window object
-            if (!window.cartoonique_memory_images) {
-              window.cartoonique_memory_images = {};
-            }
-            window.cartoonique_memory_images[variantId] = imageUrl;
-            
-            // Store reference in localStorage
-            const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-            cartImages[variantId] = 'MEMORY_IMAGE:' + variantId;
-            localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
-            
-            return true;
+    // Store the processed image URL for cart display using our helper function
+    this.storeProcessedImage(numericVariantId, processedImageUrl);
+    
+    // Show loading state in the popup
+    this.showAddToCartLoading();
+    
+    // IMPORTANT: Use the standard Shopify cart API format
+    const cartData = {
+      items: [
+        {
+          id: numericVariantId,
+          quantity: 1,
+          properties: {
+            _processed_image_url: processedImageUrl,
+            _watermarked_image_url: processedImageUrl,
+            _selected_size: size
           }
-        } else {
-          // Not a base64 image, store as is
+        }
+      ]
+    };
+    
+    // Add to cart using the proper Shopify API format
+    fetch('/cart/add.js', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(cartData)
+    })
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(data => {
+          throw new Error(data.description || 'Error adding to cart');
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Product added to cart:', data);
+
+      // Set flag for cart page to preload images
+      localStorage.setItem('cartoonique_preload_cart_images', 'true');
+      
+      // Wait a moment to ensure the cart is updated
+      setTimeout(() => {
+        // Hide loading UI
+        this.hideAddToCartLoading();
+        
+        // IMPORTANT: Redirect to cart page to trigger image replacement
+        window.location.href = '/cart?t=' + Date.now();
+      }, 500);
+    })
+    .catch(error => {
+      console.error('Error adding to cart:', error);
+      alert('There was a problem adding this item to your cart: ' + error.message);
+      
+      // Hide loading UI
+      this.hideAddToCartLoading();
+    });
+  }
+  
+  /**
+   * Store the processed image for cart display
+   * @param {number} variantId - The variant ID
+   * @param {string} imageUrl - The processed image URL
+   * @returns {boolean} - Whether storage was successful
+   */
+  storeProcessedImage(variantId, imageUrl) {
+    try {
+      if (!variantId || !imageUrl) {
+        console.error('Missing variant ID or image URL for storage');
+        return false;
+      }
+      
+      // Handle large base64 images - convert to blob URL for better performance
+      if (imageUrl.startsWith('data:image')) {
+        console.log('Converting base64 image to blob URL for better performance');
+        try {
+          // Convert base64 to blob
+          const byteString = atob(imageUrl.split(',')[1]);
+          const mimeType = imageUrl.split(',')[0].split(':')[1].split(';')[0];
+          const ab = new ArrayBuffer(byteString.length);
+          const ia = new Uint8Array(ab);
+          
+          for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+          }
+          
+          const blob = new Blob([ab], { type: mimeType });
+          const blobUrl = URL.createObjectURL(blob);
+          
+          // Store in localStorage - just store a marker that we're using a blob
+          // Then store the blob URL in the window object for immediate access
           const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-          cartImages[variantId] = imageUrl;
+          cartImages[variantId] = 'BLOB_URL:' + variantId;
           localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
           
-          // Also store in window object for immediate access
+          // Store the variant ID -> blob URL mapping in the window object for immediate access
           if (!window.cartoonique_blob_urls) {
             window.cartoonique_blob_urls = {};
           }
-          window.cartoonique_blob_urls[variantId] = imageUrl;
+          window.cartoonique_blob_urls[variantId] = blobUrl;
           
-          // Set preload flag and navigation data
+          // Store the current variant and image URL for cart page preloading
+          sessionStorage.setItem('cartoonique_current_variant', variantId);
+          window.cartoonique_current_image = blobUrl;
+          
+          // Set a flag for the cart page to know it should preload images
           localStorage.setItem('cartoonique_preload_cart_images', 'true');
+          
+          // Also store navigation data for faster page transitions
           const navigationData = {
             variantId: variantId,
-            imageUrl: imageUrl,
+            imageUrl: blobUrl,
             timestamp: Date.now()
           };
           localStorage.setItem('cartoonique_navigation_data', JSON.stringify(navigationData));
           
           return true;
-        }
-      } catch (error) {
-        console.error('Storage error:', error);
-        
-        // If we still hit an error, revert to the window object approach
-        try {
-          console.log('Storing image in memory as fallback');
+        } catch (e) {
+          console.error('Error converting base64 to blob:', e);
+          // Fallback to storing in window object
           if (!window.cartoonique_memory_images) {
             window.cartoonique_memory_images = {};
           }
           window.cartoonique_memory_images[variantId] = imageUrl;
           
-          // Store just a reference in localStorage
+          // Store reference in localStorage
           const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
           cartImages[variantId] = 'MEMORY_IMAGE:' + variantId;
           localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
           
           return true;
-        } catch (fallbackError) {
-          console.error('Failed to store image with fallback method:', fallbackError);
-          return false;
         }
+      } else {
+        // Not a base64 image, store as is
+        const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
+        cartImages[variantId] = imageUrl;
+        localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
+        
+        // Also store in window object for immediate access
+        if (!window.cartoonique_blob_urls) {
+          window.cartoonique_blob_urls = {};
+        }
+        window.cartoonique_blob_urls[variantId] = imageUrl;
+        
+        // Set preload flag and navigation data
+        localStorage.setItem('cartoonique_preload_cart_images', 'true');
+        const navigationData = {
+          variantId: variantId,
+          imageUrl: imageUrl,
+          timestamp: Date.now()
+        };
+        localStorage.setItem('cartoonique_navigation_data', JSON.stringify(navigationData));
+        
+        return true;
       }
-    };
-    
-    // Try to store the image
-    const storageResult = storeImageSafely(numericVariantId, processedImageUrl);
-    
-    // Update cart image replacement code to be aware of our storage approach
-    if (typeof this.setupCartImageReplacementWithFallbacks === 'function') {
-      this.setupCartImageReplacementWithFallbacks();
-    } else {
-      console.warn('Cart image replacement method not available');
+    } catch (error) {
+      console.error('Storage error:', error);
+      
+      // If we still hit an error, revert to the window object approach
+      try {
+        console.log('Storing image in memory as fallback');
+        if (!window.cartoonique_memory_images) {
+          window.cartoonique_memory_images = {};
+        }
+        window.cartoonique_memory_images[variantId] = imageUrl;
+        
+        // Store just a reference in localStorage
+        const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
+        cartImages[variantId] = 'MEMORY_IMAGE:' + variantId;
+        localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
+        
+        return true;
+      } catch (fallbackError) {
+        console.error('Failed to store image with fallback method:', fallbackError);
+        return false;
+      }
     }
-    
-    // Show loading state in the popup instead of closing it immediately
+  }
+  
+  /**
+   * Show loading UI when adding to cart
+   */
+  showAddToCartLoading() {
     const popup = document.querySelector('#pixar-result-popup');
-    const popupContent = popup ? popup.querySelector('.result-popup__content') : null;
-    const resultImage = popup ? popup.querySelector('.result-wrapper__image') : null;
+    if (!popup) return;
     
-    if (popup && popupContent && resultImage) {
+    const popupContent = popup.querySelector('.result-popup__content');
+    const resultImage = popup.querySelector('.result-wrapper__image');
+    
+    if (popupContent && resultImage) {
       // Create loading UI
       const loadingElement = document.createElement('div');
       loadingElement.className = 'result-popup__loading';
@@ -4649,7 +4710,7 @@ class ImageProcessingManager {
       // Hide the result image and show loading
       resultImage.style.opacity = '0.3';
       popupContent.appendChild(loadingElement);
-    } else if (popup) {
+    } else {
       // Alternative loading UI if structure is different
       // Change continue button text to indicate loading
       const continueButton = popup.querySelector('.pixar-continue-button');
@@ -4659,726 +4720,34 @@ class ImageProcessingManager {
         continueButton.classList.add('loading');
       }
     }
-    
-    // Prepare for cart/checkout with line item properties
-    const formData = new FormData();
-    formData.append('id', numericVariantId);
-    formData.append('quantity', 1);
-    
-    // Add line item properties to store our image URLs with the cart item
-    formData.append('properties[_processed_image_url]', processedImageUrl);
-    formData.append('properties[_watermarked_image_url]', processedImageUrl); // Using same URL for now, but could be different in future
-    formData.append('properties[_selected_size]', size); // Add selected size as a property
-    
-    // If we generated a print-ready version, store that too
-    if (this.processedPrintImageUrl) {
-      formData.append('properties[_processed_print_image_url]', this.processedPrintImageUrl);
-    }
-    
-    // Get the form
-    const form = document.querySelector('form[action="/cart/add"]');
-    
-    // Get form action - default to /cart/add if not found
-    const formAction = form ? form.getAttribute('action') || '/cart/add' : '/cart/add';
-    
-    // Add fetch options
-    const fetchOptions = {
-      method: 'POST',
-      body: formData
-    };
-    
-    // Add to cart using fetch
-    fetch(formAction + '.js', fetchOptions)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(cartData => {
-        console.log('Product added to cart:', cartData);
-        
-        // Directly trigger our image update method for cart image refresh
-        // This ensures the image shows up immediately in the cart without refresh
-        if (typeof this.updateCartImages === 'function') {
-          this.updateCartImages(processedImageUrl, numericVariantId).then(updatedCount => {
-            console.log(`Updated ${updatedCount} cart images directly after add to cart`);
-          });
-        } else {
-          console.warn('updateCartImages method not available');
-        }
-        
-        // Check if we should go to cart or checkout
-        const goToCheckout = false; // Toggle this if you want direct checkout
-        
-        // Close popup if it exists
-        if (popup) {
-          // Remove loading UI first
-          const loadingElement = popup.querySelector('.result-popup__loading');
-          if (loadingElement) {
-            loadingElement.remove();
-          }
-          
-          // Restore image visibility
-          if (resultImage) {
-            resultImage.style.opacity = '1';
-          }
-          
-          // Reset any loading buttons
-          const continueButton = popup.querySelector('.pixar-continue-button');
-          if (continueButton) {
-            continueButton.textContent = 'Continue';
-            continueButton.disabled = false;
-            continueButton.classList.remove('loading');
-          }
-          
-          // Toggle popup closed
-          popup.setAttribute('aria-hidden', 'true');
-        }
-        
-        // Redirect based on preference
-        if (goToCheckout) {
-          // Go directly to checkout
-          window.location.href = '/checkout';
-        } else {
-          // Update the cart count
-          if (typeof this.updateCartCount === 'function') {
-            this.updateCartCount(cartData.item_count);
-          } else {
-            console.warn('updateCartCount method not available');
-            // Try to update cart count directly
-            document.querySelectorAll('.cart-count').forEach(counter => {
-              counter.textContent = cartData.item_count;
-              counter.classList.remove('hidden');
-            });
-          }
-          
-          // Look for cart drawer toggle
-          const cartDrawerToggle = document.querySelector('[data-cart-toggle], [data-action="open-drawer"][data-drawer="cart"], [aria-controls="cart-drawer"]');
-          if (cartDrawerToggle) {
-            cartDrawerToggle.click();
-          } else {
-            // If no drawer toggle, just go to cart page
-            window.location.href = '/cart';
-          }
-        }
-      })
-      .catch(error => {
-        console.error('Error adding to cart:', error);
-        alert('There was a problem adding this item to your cart. Please try again.');
-        
-        // Remove loading state if present
-        if (popup) {
-          const loadingElement = popup.querySelector('.result-popup__loading');
-          if (loadingElement) {
-            loadingElement.remove();
-          }
-          
-          // Restore image visibility
-          if (resultImage) {
-            resultImage.style.opacity = '1';
-          }
-          
-          // Reset any loading buttons
-          const continueButton = popup.querySelector('.pixar-continue-button');
-          if (continueButton) {
-            continueButton.textContent = 'Continue';
-            continueButton.disabled = false;
-            continueButton.classList.remove('loading');
-          }
-        }
-      });
   }
   
   /**
-   * Set up hooks to replace cart images with processed images
-   * This version handles fallback storage methods
+   * Hide loading UI after adding to cart
    */
-  setupCartImageReplacementWithFallbacks() {
-    console.log('Setting up cart image replacement with fallback storage handling');
+  hideAddToCartLoading() {
+    const popup = document.querySelector('#pixar-result-popup');
+    if (!popup) return;
     
-    // Create a script element with a direct approach to image replacement
-    const script = document.createElement('script');
-    script.textContent = `
-      (function() {
-        console.log('Direct cart image replacement script started with fallback support');
-        
-        // Cache DOM queries and data to avoid repeated lookups
-        const cachedImages = new Map();
-        const processedVariants = new Set();
-        
-        // Function to get an image URL from our various storage locations
-        function getStoredImageForVariant(variantId) {
-          // Check if we already looked up this variant
-          if (processedVariants.has(variantId)) {
-            return cachedImages.get(variantId) || null;
-          }
-          
-          // Mark as processed to avoid redundant lookups
-          processedVariants.add(variantId);
-          
-          let imageUrl = null;
-          
-          // First check if we have a blob URL in the window object
-          if (window.cartoonique_blob_urls && window.cartoonique_blob_urls[variantId]) {
-            imageUrl = window.cartoonique_blob_urls[variantId];
-          }
-          // Then check if we have a memory image
-          else if (window.cartoonique_memory_images && window.cartoonique_memory_images[variantId]) {
-            imageUrl = window.cartoonique_memory_images[variantId];
-          }
-          // Finally check localStorage
-          else {
-            try {
-              const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-              const storedValue = cartImages[variantId];
-              
-              if (storedValue) {
-                // Handle various storage formats
-                if (typeof storedValue === 'string') {
-                  if (storedValue.startsWith('MEMORY_IMAGE:')) {
-                    const memoryVariantId = storedValue.split(':')[1];
-                    if (window.cartoonique_memory_images && window.cartoonique_memory_images[memoryVariantId]) {
-                      imageUrl = window.cartoonique_memory_images[memoryVariantId];
-                    }
-                  } else if (storedValue.startsWith('SESSION_STORAGE:')) {
-                    imageUrl = sessionStorage.getItem('cartoonique_image_' + variantId);
-                  } else if (storedValue === 'CURRENT_PROCESSED_IMAGE') {
-                    const currentVariant = sessionStorage.getItem('cartoonique_current_variant');
-                    if (currentVariant === variantId && window.cartoonique_current_image) {
-                      imageUrl = window.cartoonique_current_image;
-                    }
-                  } else {
-                    imageUrl = storedValue;
-                  }
-                }
-              }
-            } catch (error) {
-              console.error('Error retrieving image from storage:', error);
-            }
-          }
-          
-          // Cache the result for future lookups
-          cachedImages.set(variantId, imageUrl);
-          return imageUrl;
-        }
-        
-        // Check for preload details (if coming from product page)
-        let navigationData = null;
-        try {
-          const navDataStr = localStorage.getItem('cartoonique_navigation_data');
-          if (navDataStr) {
-            navigationData = JSON.parse(navDataStr);
-            // Use this data for instant image replacement if possible
-            if (navigationData && navigationData.variantId && navigationData.imageUrl) {
-              cachedImages.set(navigationData.variantId, navigationData.imageUrl);
-            }
-          }
-        } catch (e) {
-          console.warn('Error parsing navigation data', e);
-        }
-        
-        // Direct replacement function
-        function replaceCartImages() {
-          // Target specifically the exact class combination we see in the cart
-          console.log('Searching for cart images to replace...');
-          
-          // Method 1: Direct target by class - including the exact class combination from provided HTML
-          const cartImages = document.querySelectorAll(
-            '.cart-item__image.shape__target-image.multiply-mode__target.lazyautosizes.ls-is-cached.lazyloaded, ' +
-            '.cart-item__image.shape__target-image.multiply-mode__target, ' + 
-            '.cart-item__image.shape__target-image.lazyautosizes.lazyloaded, ' +
-            '.cart-item__image.shape__target-image, ' + 
-            '.cart-item__image'
-          );
-          console.log('Found ' + cartImages.length + ' cart images with target classes');
-          
-          // Early exit if no images found - don't waste processing
-          if (cartImages.length === 0) {
-            return 0;
-          }
-          
-          let replacedCount = 0;
-          
-          cartImages.forEach(img => {
-            // Check if we've already processed this image
-            if (img.dataset.processed === 'true') {
-              return;
-            }
-            
-            // Get image src, alt and srcset
-            const src = img.src || '';
-            const alt = img.alt || '';
-            
-            // Try to find the variant ID for this image
-            let foundVariantId = null;
-            
-            // Look for variant ID in various places
-            function findVariantIdForImage(img) {
-              // First check if the image itself has any data attributes
-              if (img.dataset.variantId) return img.dataset.variantId;
-              if (img.dataset.id) return img.dataset.id;
-              
-              // Check parent elements for variant ID
-              let element = img.parentElement;
-              const checkedElements = new Set();
-              
-              for (let depth = 0; depth < 10; depth++) {
-                if (!element || checkedElements.has(element)) break;
-                checkedElements.add(element);
-                
-                // Check for data attributes
-                const variantId = element.dataset.variantId || 
-                                 element.dataset.id || 
-                                 element.dataset.variant || 
-                                 element.dataset.itemId ||
-                                 element.dataset.cartItemId;
-                
-                if (variantId) return variantId;
-                
-                // Check href attributes
-                const href = element.getAttribute('href');
-                if (href) {
-                  const variantMatch = href.match(/variant=([0-9]+)/);
-                  if (variantMatch && variantMatch[1]) return variantMatch[1];
-                  
-                  const pathVariantMatch = href.match(/\\?variant=([0-9]+)/);
-                  if (pathVariantMatch && pathVariantMatch[1]) return pathVariantMatch[1];
-                }
-                
-                // Move up the DOM tree
-                element = element.parentElement;
-              }
-              
-              // Check the cart item ID from cart drawer if available
-              const cartItemContainer = img.closest('[id^="CartItem-"]');
-              if (cartItemContainer) {
-                const cartItemId = cartItemContainer.id;
-                const idMatch = cartItemId.match(/CartItem-([0-9]+)/);
-                if (idMatch && idMatch[1]) return idMatch[1];
-              }
-              
-              return null;
-            }
-            
-            // Try to find variant ID using the function
-            foundVariantId = findVariantIdForImage(img);
-            
-            // If we found a variant ID, check if we have a stored image for it
-            if (foundVariantId) {
-              const storedImageUrl = getStoredImageForVariant(foundVariantId);
-              
-              if (storedImageUrl) {
-                // Save original attributes before changing
-                if (!img.dataset.originalSrc) {
-                  img.dataset.originalSrc = img.src || '';
-                }
-                if (!img.dataset.originalSrcset) {
-                  img.dataset.originalSrcset = img.getAttribute('srcset') || '';
-                }
-                if (!img.dataset.originalSizes) {
-                  img.dataset.originalSizes = img.getAttribute('sizes') || '';
-                }
-                
-                // Apply image directly without creating a new one for faster replacement
-                // Clear srcset completely for consistent display
-                img.removeAttribute('srcset');
-                img.removeAttribute('sizes');
-                img.removeAttribute('data-srcset');
-                img.removeAttribute('data-sizes');
-                
-                // Set the new image source
-                img.src = storedImageUrl;
-                img.dataset.processed = 'true';
-                img.loading = 'eager';
-                
-                // Also update style properties for better display
-                img.style.objectFit = 'contain';
-                img.style.width = '100%';
-                img.style.height = 'auto';
-                
-                replacedCount++;
-              }
-            }
-          });
-          
-          // Log the results only if replacements happened
-          if (replacedCount > 0) {
-            console.log('Replaced ' + replacedCount + ' cart images');
-          }
-          
-          return replacedCount;
-        }
-        
-        // Check if we're on the cart page and preloading is needed
-        if (window.location.pathname === '/cart' && localStorage.getItem('cartoonique_preload_cart_images') === 'true') {
-          // We're loading the cart page for the first time - do immediate replacement
-          console.log('Detected first cart page load, starting immediate image replacement');
-          localStorage.removeItem('cartoonique_preload_cart_images');
-          
-          // Run on page interactive - don't wait for full page load
-          if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-              replaceCartImages();
-            });
-          } else {
-            replaceCartImages();
-          }
-        }
-        
-        // Run immediately and after short delays with increasing frequency at the beginning
-        // to catch various rendering scenarios
-        replaceCartImages();
-        setTimeout(replaceCartImages, 100);
-        setTimeout(replaceCartImages, 250); 
-        setTimeout(replaceCartImages, 500);
-        setTimeout(replaceCartImages, 1000);
-        
-        // Also observe DOM changes to catch any dynamically added content
-        const observer = new MutationObserver((mutations) => {
-          // Check if any mutations involve relevant nodes before running expensive operation
-          let shouldReplace = false;
-          
-          for (const mutation of mutations) {
-            // For added nodes
-            if (mutation.addedNodes.length > 0) {
-              for (const node of mutation.addedNodes) {
-                if (node.nodeType === 1) { // Element node
-                  if (node.classList && 
-                      (node.classList.contains('cart-item') || 
-                       node.classList.contains('cart-item__image') ||
-                       node.tagName === 'IMG')) {
-                    shouldReplace = true;
-                    break;
-                  }
-                  
-                  // Check if node contains relevant elements
-                  if (node.querySelector && node.querySelector('.cart-item__image')) {
-                    shouldReplace = true;
-                    break;
-                  }
-                }
-              }
-            }
-            
-            // For attribute changes on images
-            if (mutation.type === 'attributes' && 
-                mutation.target.tagName === 'IMG' &&
-                !mutation.target.dataset.processed &&
-                (mutation.target.classList.contains('cart-item__image') ||
-                 mutation.target.classList.contains('shape__target-image'))) {
-              shouldReplace = true;
-              break;
-            }
-            
-            if (shouldReplace) break;
-          }
-          
-          // Only run replacement if needed
-          if (shouldReplace) {
-            replaceCartImages();
-          }
-        });
-        
-        // Start observing immediately
-        observer.observe(document.body, { 
-          childList: true, 
-          subtree: true,
-          attributes: true, 
-          attributeFilter: ['src', 'srcset', 'class', 'data-src', 'style']
-        });
-        
-        // Handle AJAX cart updates by listening for custom events
-        document.addEventListener('cart:refresh', function(event) {
-          console.log('Caught cart:refresh event, will update images');
-          setTimeout(replaceCartImages, 100);
-          setTimeout(replaceCartImages, 500);
-        });
-        
-        // Also listen for standard Shopify events
-        document.addEventListener('cart:updated', function(event) {
-          console.log('Caught cart:updated event, will update images');
-          setTimeout(replaceCartImages, 100);
-          setTimeout(replaceCartImages, 500);
-        });
-      })();
-    `;
-    
-    // Add the script to the document
-    document.head.appendChild(script);
-    
-    // If we're already on the cart page, inject an immediate execution script
-    if (window.location.pathname.includes('/cart')) {
-      console.log('Already on cart page, triggering immediate image replacement');
-      const immediateScript = document.createElement('script');
-      immediateScript.textContent = `
-        console.log('Immediate cart image replacement executing');
-        
-        // Directly inject CSS to ensure our images display correctly
-        const style = document.createElement('style');
-        style.textContent = \`
-          .cart-item__image.shape__target-image.multiply-mode__target[data-processed="true"],
-          .cart-item__image.shape__target-image[data-processed="true"],
-          .cart-item__image[data-processed="true"] {
-            object-fit: contain !important;
-            width: 100% !important;
-            height: auto !important;
-            aspect-ratio: 1 !important;
-          }
-        \`;
-        document.head.appendChild(style);
-      `;
-      document.head.appendChild(immediateScript);
+    // Remove loading UI
+    const loadingElement = popup.querySelector('.result-popup__loading');
+    if (loadingElement) {
+      loadingElement.remove();
     }
-  }
-
-  // Add this method to maintain compatibility with existing code
-  setupCartImageReplacement() {
-    console.log('Redirecting to setupCartImageReplacementWithFallbacks for better storage handling');
-    this.setupCartImageReplacementWithFallbacks();
-  }
-  
-  /**
-   * Directly update cart images with provided image URL or stored images
-   * @param {string} imageUrl - Optional specific image URL to use
-   * @param {string} variantId - Optional specific variant ID to target
-   * @returns {number} - Number of images updated
-   */
-  updateCartImages(imageUrl = null, variantId = null) {
-    console.log('Manually updating cart images', variantId ? `for variant ${variantId}` : '');
     
-    // Create and execute an immediate script to update cart images
-    const script = document.createElement('script');
-    script.textContent = `
-      (function() {
-        // Utility function to find images
-        function findCartImages() {
-          return document.querySelectorAll(
-            '.cart-item__image.shape__target-image.multiply-mode__target.lazyautosizes.ls-is-cached.lazyloaded, ' +
-            '.cart-item__image.shape__target-image.multiply-mode__target, ' + 
-            '.cart-item__image.shape__target-image.lazyautosizes.lazyloaded, ' +
-            '.cart-item__image.shape__target-image, ' + 
-            '.cart-item__image'
-          );
-        }
-        
-        // Get stored image for variant
-        function getStoredImageForVariant(targetVariantId) {
-          // First check provided image URL
-          if ('${imageUrl}' && targetVariantId === '${variantId}') {
-            return '${imageUrl}';
-          }
-          
-          // Then check window storage mechanisms
-          if (window.cartoonique_blob_urls && window.cartoonique_blob_urls[targetVariantId]) {
-            return window.cartoonique_blob_urls[targetVariantId];
-          }
-          
-          if (window.cartoonique_memory_images && window.cartoonique_memory_images[targetVariantId]) {
-            return window.cartoonique_memory_images[targetVariantId];
-          }
-          
-          try {
-            // Check localStorage
-            const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-            const storedValue = cartImages[targetVariantId];
-            
-            if (storedValue) {
-              if (typeof storedValue === 'string') {
-                if (storedValue.startsWith('MEMORY_IMAGE:')) {
-                  const memoryVariantId = storedValue.split(':')[1];
-                  if (window.cartoonique_memory_images && window.cartoonique_memory_images[memoryVariantId]) {
-                    return window.cartoonique_memory_images[memoryVariantId];
-                  }
-                } else if (storedValue.startsWith('SESSION_STORAGE:')) {
-                  return sessionStorage.getItem('cartoonique_image_' + targetVariantId);
-                } else if (storedValue === 'CURRENT_PROCESSED_IMAGE') {
-                  const currentVariant = sessionStorage.getItem('cartoonique_current_variant');
-                  if (currentVariant === targetVariantId && window.cartoonique_current_image) {
-                    return window.cartoonique_current_image;
-                  }
-                } else {
-                  return storedValue;
-                }
-              }
-            }
-          } catch (error) {
-            console.error('Error getting stored image:', error);
-          }
-          
-          return null;
-        }
-        
-        // Find variant ID for image
-        function findVariantIdForImage(img) {
-          // Direct data attributes
-          if (img.dataset.variantId) return img.dataset.variantId;
-          if (img.dataset.id) return img.dataset.id;
-          
-          // Check parent elements
-          let element = img.parentElement;
-          const checkedElements = new Set();
-          
-          for (let depth = 0; depth < 10; depth++) {
-            if (!element || checkedElements.has(element)) break;
-            checkedElements.add(element);
-            
-            // Data attributes
-            const variantId = element.dataset.variantId || 
-                             element.dataset.id || 
-                             element.dataset.variant || 
-                             element.dataset.itemId ||
-                             element.dataset.cartItemId;
-            
-            if (variantId) return variantId;
-            
-            // URL parameters
-            const href = element.getAttribute('href');
-            if (href) {
-              const variantMatch = href.match(/variant=([0-9]+)/);
-              if (variantMatch && variantMatch[1]) return variantMatch[1];
-              
-              const pathVariantMatch = href.match(/\\?variant=([0-9]+)/);
-              if (pathVariantMatch && pathVariantMatch[1]) return pathVariantMatch[1];
-            }
-            
-            element = element.parentElement;
-          }
-          
-          // Cart item container ID
-          const cartItemContainer = img.closest('[id^="CartItem-"]');
-          if (cartItemContainer) {
-            const cartItemId = cartItemContainer.id;
-            const idMatch = cartItemId.match(/CartItem-([0-9]+)/);
-            if (idMatch && idMatch[1]) return idMatch[1];
-          }
-          
-          // Use provided variant ID if all else fails
-          return '${variantId}' || null;
-        }
-        
-        // Apply the update
-        function updateImages() {
-          const cartImages = findCartImages();
-          console.log('Found ' + cartImages.length + ' cart images to potentially update');
-          
-          let updatedCount = 0;
-          
-          cartImages.forEach(img => {
-            // Skip already processed images unless we're forcing an update
-            if (img.dataset.processed === 'true' && !Boolean(${!!imageUrl})) {
-              return;
-            }
-            
-            // Get variant ID
-            const foundVariantId = findVariantIdForImage(img);
-            
-            // Skip if we have a specific variant ID target and this isn't it
-            if ('${variantId}' && foundVariantId !== '${variantId}') {
-              return;
-            }
-            
-            // Get image URL - either provided directly or from storage
-            const targetImageUrl = '${imageUrl}' || getStoredImageForVariant(foundVariantId);
-            
-            if (targetImageUrl) {
-              // Save original attributes if not saved already
-              if (!img.dataset.originalSrc) {
-                img.dataset.originalSrc = img.src || '';
-              }
-              if (!img.dataset.originalSrcset) {
-                img.dataset.originalSrcset = img.getAttribute('srcset') || '';
-              }
-              if (!img.dataset.originalSizes) {
-                img.dataset.originalSizes = img.getAttribute('sizes') || '';
-              }
-              
-              // Remove potentially conflicting attributes
-              img.removeAttribute('srcset');
-              img.removeAttribute('sizes');
-              img.removeAttribute('data-srcset');
-              img.removeAttribute('data-sizes');
-              
-              // Update the image
-              img.src = targetImageUrl;
-              img.dataset.processed = 'true';
-              img.loading = 'eager';
-              
-              // Style for better display
-              img.style.objectFit = 'contain';
-              img.style.width = '100%';
-              img.style.height = 'auto';
-              
-              updatedCount++;
-            }
-          });
-          
-          console.log('Updated ' + updatedCount + ' cart images');
-          return updatedCount;
-        }
-        
-        // Run update immediately and after a short delay
-        const initial = updateImages();
-        setTimeout(updateImages, 100);
-        setTimeout(updateImages, 500);
-        
-        // Return initial count
-        return initial;
-      })();
-    `;
+    // Restore image visibility
+    const resultImage = popup.querySelector('.result-wrapper__image');
+    if (resultImage) {
+      resultImage.style.opacity = '1';
+    }
     
-    document.head.appendChild(script);
-    
-    // Return a promise that resolves with the number of images updated
-    return new Promise(resolve => {
-      // Give it time to run
-      setTimeout(() => {
-        // Look for cart images with data-processed attribute as a proxy for success
-        const processedImages = document.querySelectorAll('.cart-item__image[data-processed="true"]');
-        resolve(processedImages.length);
-      }, 700);
-    });
-  }
-
-  /**
-   * Update the cart count indicator in the UI
-   * @param {number} count - The new cart count
-   */
-  updateCartCount(count) {
-    console.log('Updating cart count to:', count);
-    
-    if (!count && count !== 0) return;
-    
-    // Find all cart count indicators
-    const cartCountIndicators = document.querySelectorAll(
-      '.cart-count, .cart-count-bubble, [data-cart-count], [data-cart-indicator], .js-cart-count'
-    );
-    
-    // Update each indicator
-    cartCountIndicators.forEach(indicator => {
-      // Check if this is a span or div that should have its text content updated
-      if (indicator.tagName === 'SPAN' || indicator.tagName === 'DIV') {
-        indicator.textContent = count;
-      }
-      
-      // Check if this is an element with a data-count attribute
-      if (indicator.hasAttribute('data-count')) {
-        indicator.setAttribute('data-count', count);
-      }
-      
-      // Show/hide based on count
-      if (count > 0) {
-        indicator.classList.remove('hidden', 'hide', 'is-hidden');
-        indicator.removeAttribute('hidden');
-      } else {
-        indicator.classList.add('hidden');
-      }
-    });
-    
-    // Also dispatch a custom event for other components that might be listening
-    document.dispatchEvent(new CustomEvent('cart:updated', {
-      detail: { cartCount: count }
-    }));
+    // Reset any loading buttons
+    const continueButton = popup.querySelector('.pixar-continue-button');
+    if (continueButton) {
+      continueButton.textContent = 'Continue';
+      continueButton.disabled = false;
+      continueButton.classList.remove('loading');
+    }
   }
 }
 
