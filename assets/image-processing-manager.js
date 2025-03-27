@@ -1311,16 +1311,11 @@ class ImageProcessingManager {
       const continueButton = document.getElementById('pixar-result-continue');
       if (continueButton) {
         continueButton.addEventListener('click', () => {
-          // Hide the popup
-          resultPopup.style.display = 'none';
-          document.body.style.overflow = '';
-          
-          // Get the selected size for checkout
-          const selectedSize = this.selectedSize || 'S';
-          console.log(`Continue clicked with size ${selectedSize} selected, redirecting to checkout`);
+          // IMPORTANT: Don't hide the popup here - we'll keep it visible until the redirect happens
+          console.log(`Continue clicked with size ${this.selectedSize || 'S'} selected, redirecting to checkout`);
           
           // Redirect to checkout with the selected size
-          this.redirectToCheckout(selectedSize);
+          this.redirectToCheckout(this.selectedSize || 'S');
         });
         
         // Add hover effect for continue button
@@ -4470,7 +4465,35 @@ class ImageProcessingManager {
     
     // Direct redirect function without an iframe
     const redirectToCart = () => {
-      window.location.href = '/cart';
+      console.log('Executing redirect to cart...');
+      
+      // This is the critical part - keep the popup visible (do not close it here)
+      // We will let the browser's navigation mechanism handle the closing
+      
+      try {
+        // Try to directly go to cart 
+        window.location.href = '/cart';
+        
+        // In case the redirect doesn't happen immediately, force reload after 1 second
+        setTimeout(() => {
+          console.log('Forcing redirect with reload...');
+          window.location.replace('/cart');
+        }, 1000);
+      } catch (err) {
+        console.error('Error during redirect:', err);
+        
+        // Absolute fallback - if we can't redirect, try opening in a new tab
+        try {
+          window.open('/cart', '_blank');
+        } catch (finalError) {
+          console.error('Final error during redirect:', finalError);
+          // Only now do we close the popup, since redirects failed
+          if (popup) {
+            popup.style.display = 'none';
+            document.body.style.overflow = '';
+          }
+        }
+      }
     };
     
     fetch('/cart/add.js', {
@@ -4489,9 +4512,20 @@ class ImageProcessingManager {
     .then(data => {
       console.log('Successfully added to cart:', data);
       
-      // Simpler approach: redirect after a short delay to ensure API processing is complete
-      console.log('Redirecting to cart in 500ms...');
-      setTimeout(redirectToCart, 500);
+      // Add a more robust approach to redirection
+      console.log('Preparing to redirect to cart...');
+      
+      // Show a clear status message
+      if (continueButton) {
+        continueButton.textContent = 'Going to cart...';
+      }
+      
+      // Use a slightly longer delay to ensure the API call is fully processed by Shopify
+      console.log('Redirecting to cart in 1000ms...');
+      setTimeout(() => {
+        console.log('Now executing redirect to cart...');
+        redirectToCart();
+      }, 1000);
     })
     .catch(error => {
       console.error('Error adding to cart:', error);
