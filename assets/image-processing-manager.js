@@ -1261,28 +1261,21 @@ class ImageProcessingManager {
               <div style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 10px; cursor: pointer; background-color: #f0f5fb;">
                 <div style="width: 50px; height: 50px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 20px;">S</div>
                 <div style="font-weight: bold; margin-top: 10px; font-size: 18px;">$85</div>
-                <div style="font-size: 14px; color: #666; margin-top: 5px;">12x16"</div>
+                <div style="font-size: 14px; color: #666; margin-top: 5px;">20x30"</div>
               </div>
               
               <!-- Size M -->
               <div style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 10px; cursor: pointer;">
                 <div style="width: 50px; height: 50px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 20px;">M</div>
                 <div style="font-weight: bold; margin-top: 10px; font-size: 18px;">$130</div>
-                <div style="font-size: 14px; color: #666; margin-top: 5px;">20x28"</div>
+                <div style="font-size: 14px; color: #666; margin-top: 5px;">30x40"</div>
               </div>
               
               <!-- Size L -->
               <div style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 10px; cursor: pointer;">
                 <div style="width: 50px; height: 50px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 20px;">L</div>
                 <div style="font-weight: bold; margin-top: 10px; font-size: 18px;">$190</div>
-                <div style="font-size: 14px; color: #666; margin-top: 5px;">24x36"</div>
-              </div>
-              
-              <!-- Size XL -->
-              <div style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 10px; cursor: pointer;">
-                <div style="width: 50px; height: 50px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 20px;">XL</div>
-                <div style="font-weight: bold; margin-top: 10px; font-size: 18px;">$240</div>
-                <div style="font-size: 14px; color: #666; margin-top: 5px;">28x40"</div>
+                <div style="font-size: 14px; color: #666; margin-top: 5px;">50x70"</div>
               </div>
             </div>
             
