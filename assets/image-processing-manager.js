@@ -225,6 +225,56 @@ class ImageProcessingManager {
         this.setupPixarComponent(this.pixarComponent);
       }, { once: true });
       
+      // If component still not found after multiple attempts, create a fallback component
+      if (!window.pixarComponentRetryCount) {
+        window.pixarComponentRetryCount = 0;
+      }
+      
+      window.pixarComponentRetryCount++;
+      
+      // After 5 retries, create a fallback component
+      if (window.pixarComponentRetryCount >= 5) {
+        console.log('Creating fallback pixar component after multiple retry attempts');
+        
+        // Create component if it doesn't exist
+        if (!document.querySelector('pixar-transform-file-input')) {
+          // Create and insert a new component
+          const fallbackComponent = document.createElement('div');
+          fallbackComponent.id = 'pixar-fallback-component';
+          fallbackComponent.setAttribute('data-is-fallback', 'true');
+          
+          // Create the file input element
+          const fileInput = document.createElement('input');
+          fileInput.type = 'file';
+          fileInput.accept = 'image/*';
+          fileInput.id = 'pixar-fallback-file-input';
+          fileInput.style.display = 'none';
+          
+          // Add the file input to the component
+          fallbackComponent.appendChild(fileInput);
+          
+          // Add the component to the page
+          document.body.appendChild(fallbackComponent);
+          
+          // Set this as the pixar component
+          this.pixarComponent = fallbackComponent;
+          window.pixarComponent = fallbackComponent;
+          window.pixarComponentReady = true;
+          
+          // Set up the component
+          this.setupPixarComponent(fallbackComponent);
+          
+          // Dispatch event to notify others
+          const event = new CustomEvent('pixar-component-ready', {
+            detail: { component: fallbackComponent }
+          });
+          document.dispatchEvent(event);
+          
+          console.log('Fallback pixar component created and set up');
+          return;
+        }
+      }
+      
       // Try again
       setTimeout(() => this.findAndSetupPixarComponent(), 500);
       return;
@@ -271,13 +321,29 @@ class ImageProcessingManager {
    */
   handleFileSelected(event) {
     console.log('ImageProcessingManager.handleFileSelected called', event);
-    if (!event.target.files || !event.target.files.length) {
-      console.error('No files selected');
+    
+    // Handle both direct file objects and event.target.files
+    let file = null;
+    
+    if (event instanceof File) {
+      // Handle direct file object
+      file = event;
+      console.log('Received direct File object');
+    } else if (event.detail && event.detail.file instanceof File) {
+      // Handle custom event with file in detail
+      file = event.detail.file;
+      console.log('Received File from event.detail');
+    } else if (event.target && event.target.files && event.target.files.length) {
+      // Handle standard file input event
+      file = event.target.files[0];
+      console.log('Received File from event.target.files');
+    } else {
+      console.error('No valid file found in the event or argument');
       return;
     }
     
     // Store the original file
-    this.originalFile = event.target.files[0];
+    this.originalFile = file;
     console.log('File selected:', this.originalFile.name, this.originalFile.type, this.originalFile.size);
     
     // Reset crop and text processing flags

@@ -403,9 +403,42 @@
         if (currentFileInput) {
           currentFileInput.click();
         } else {
-          const errorElement = document.getElementById('pixar-error-message');
-          errorElement.textContent = 'Error: File input not found. Please refresh the page and try again.';
-          errorElement.style.display = 'block';
+          console.log('PIXAR-ENHANCED: No file input found in component, creating fallback');
+          
+          // Create a fallback file input
+          const fallbackInput = document.createElement('input');
+          fallbackInput.type = 'file';
+          fallbackInput.accept = 'image/*';
+          fallbackInput.style.display = 'none';
+          
+          // Add change event listener
+          fallbackInput.addEventListener('change', function(event) {
+            if (event.target.files && event.target.files.length > 0) {
+              console.log('PIXAR-ENHANCED: File selected via fallback input');
+              
+              // Hide instructions popup
+              document.getElementById('pixar-instructions-popup').style.display = 'none';
+              
+              // Show loading popup immediately
+              document.getElementById('pixar-loading-popup').style.display = 'block';
+              document.getElementById('pixar-progress-bar').style.width = '10%';
+              document.getElementById('pixar-progress-text').textContent = 'Uploading your image...';
+              
+              // Process the image
+              processImageWithRunPod(event.target.files[0]);
+            }
+          });
+          
+          // Add to document and trigger click
+          document.body.appendChild(fallbackInput);
+          fallbackInput.click();
+          
+          // Clean up after selecting (or canceling)
+          setTimeout(() => {
+            if (document.body.contains(fallbackInput)) {
+              document.body.removeChild(fallbackInput);
+            }
+          }, 5000);
         }
       });
       

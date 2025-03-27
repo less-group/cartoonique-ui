@@ -175,12 +175,53 @@
           console.log('⭐ Upload button clicked, triggering file input');
           fileInput.click();
         } else {
-          console.log('⭐ No file input found');
-          const errorElement = document.getElementById('pixar-error-message');
-          if (errorElement) {
-            errorElement.textContent = 'Error: File input not found. Please refresh the page and try again.';
-            errorElement.style.display = 'block';
-          }
+          console.log('⭐ No file input found, creating fallback input');
+          
+          // Create a fallback file input
+          const fallbackInput = document.createElement('input');
+          fallbackInput.type = 'file';
+          fallbackInput.accept = 'image/*';
+          fallbackInput.style.display = 'none';
+          
+          // Add change event listener
+          fallbackInput.addEventListener('change', function(event) {
+            if (event.target.files && event.target.files.length > 0) {
+              console.log('⭐ File selected via fallback input');
+              
+              // Hide instructions popup if visible
+              const instructionsPopup = document.getElementById('pixar-instructions-popup');
+              if (instructionsPopup) {
+                instructionsPopup.style.display = 'none';
+              }
+              
+              // Show loading popup if it exists
+              const loadingPopup = document.getElementById('pixar-loading-popup');
+              if (loadingPopup) {
+                loadingPopup.style.display = 'block';
+                const progressBar = document.getElementById('pixar-progress-bar');
+                const progressText = document.getElementById('pixar-progress-text');
+                if (progressBar) progressBar.style.width = '10%';
+                if (progressText) progressText.textContent = 'Uploading your image...';
+              }
+              
+              // Try to use the image processing manager directly
+              if (window.imageProcessingManager && typeof window.imageProcessingManager.handleFileSelected === 'function') {
+                console.log('⭐ Passing file to ImageProcessingManager');
+                window.imageProcessingManager.handleFileSelected({ target: { files: [event.target.files[0]] } });
+              }
+            }
+          });
+          
+          // Add to document and trigger click
+          document.body.appendChild(fallbackInput);
+          fallbackInput.click();
+          
+          // Clean up after selecting (or canceling)
+          setTimeout(() => {
+            if (document.body.contains(fallbackInput)) {
+              document.body.removeChild(fallbackInput);
+            }
+          }, 5000);
         }
       });
     }
