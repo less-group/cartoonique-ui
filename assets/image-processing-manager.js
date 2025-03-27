@@ -1441,57 +1441,175 @@ class ImageProcessingManager {
     container.style.boxShadow = 'none';
     container.style.background = 'transparent';
     
-    // Create canvas to maintain aspect ratio
-    const canvas = document.createElement('canvas');
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      // Determine the canvas dimensions based on the desired aspect ratio
-      let canvasWidth, canvasHeight;
-      
-      // Calculate canvas dimensions
-      if (img.width / img.height > aspectRatio) {
-        // Image is wider than target ratio, crop width
-        canvasHeight = img.height;
-        canvasWidth = img.height * aspectRatio;
-      } else {
-        // Image is taller than target ratio, crop height
-        canvasWidth = img.width;
-        canvasHeight = img.width / aspectRatio;
+    // Display as canvas easel for 30x40 (M size)
+    if (size === 'M') {
+      // Clear any previous canvas display
+      const existingEasel = document.getElementById('pixar-canvas-easel');
+      if (existingEasel) {
+        existingEasel.remove();
       }
       
-      // Set canvas size
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
+      // Create container for canvas display
+      const easelContainer = document.createElement('div');
+      easelContainer.id = 'pixar-canvas-easel';
+      easelContainer.style.position = 'relative';
+      easelContainer.style.width = '100%';
+      easelContainer.style.height = '100%';
+      easelContainer.style.display = 'flex';
+      easelContainer.style.alignItems = 'center';
+      easelContainer.style.justifyContent = 'center';
       
-      // Draw the image onto the canvas with the center crop
-      const ctx = canvas.getContext('2d');
+      // Create canvas frame
+      const canvasFrame = document.createElement('div');
+      canvasFrame.style.position = 'relative';
+      canvasFrame.style.width = '85%';
+      canvasFrame.style.maxHeight = '90%';
+      canvasFrame.style.padding = '8px';
+      canvasFrame.style.backgroundColor = '#f5f5f5';
+      canvasFrame.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+      canvasFrame.style.border = '1px solid #d0d0d0';
+      canvasFrame.style.borderRadius = '3px';
       
-      // Fill with transparent background
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      // Create inner image container
+      const innerContainer = document.createElement('div');
+      innerContainer.style.position = 'relative';
+      innerContainer.style.width = '100%';
+      innerContainer.style.height = '0';
+      innerContainer.style.paddingBottom = `${100 / aspectRatio}%`; // Maintain aspect ratio
+      innerContainer.style.overflow = 'hidden';
+      innerContainer.style.backgroundColor = 'white';
+      innerContainer.style.border = '1px solid #e0e0e0';
       
-      const offsetX = (img.width - canvasWidth) / 2;
-      const offsetY = (img.height - canvasHeight) / 2;
+      // Create the easel support image
+      const easelSupport = document.createElement('img');
+      easelSupport.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNDAgMzIwIj48cGF0aCBmaWxsPSIjOGI0NTEzIiBkPSJNMTEwLDMwdjI1MGwxMCwxMHYzMGgxMHYtMzBsMTAtMTBWMzBoLTYwdjBIMTEweiIvPjxwYXRoIGZpbGw9IiM4YjQ1MTMiIGQ9Ik00MCwyOTB2MTBsMTYwLDIwdjAtMTBsLTE2MC0yMHoiLz48cGF0aCBmaWxsPSIjOGI0NTEzIiBkPSJNMjAwLDI5MHYxMGwtMTYwLDIwdi0xMGwxNjAtMjB6Ii8+PC9zdmc+';
+      easelSupport.style.position = 'absolute';
+      easelSupport.style.bottom = '-50px';
+      easelSupport.style.left = '50%';
+      easelSupport.style.transform = 'translateX(-50%)';
+      easelSupport.style.width = '60px';
+      easelSupport.style.height = '80px';
+      easelSupport.style.opacity = '0.8';
+      easelSupport.style.pointerEvents = 'none';
+      easelSupport.style.zIndex = '-1';
       
-      // Draw the portion of the image that fits the aspect ratio
-      ctx.drawImage(
-        img,
-        offsetX, offsetY, canvasWidth, canvasHeight,  // Source rectangle
-        0, 0, canvasWidth, canvasHeight              // Destination rectangle
-      );
+      // Create canvas to maintain aspect ratio
+      const canvas = document.createElement('canvas');
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        // Determine the canvas dimensions based on the desired aspect ratio
+        let canvasWidth, canvasHeight;
+        
+        // Calculate canvas dimensions
+        if (img.width / img.height > aspectRatio) {
+          // Image is wider than target ratio, crop width
+          canvasHeight = img.height;
+          canvasWidth = img.height * aspectRatio;
+        } else {
+          // Image is taller than target ratio, crop height
+          canvasWidth = img.width;
+          canvasHeight = img.width / aspectRatio;
+        }
+        
+        // Set canvas size
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        
+        // Draw the image onto the canvas with the center crop
+        const ctx = canvas.getContext('2d');
+        
+        // Fill with transparent background
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        
+        const offsetX = (img.width - canvasWidth) / 2;
+        const offsetY = (img.height - canvasHeight) / 2;
+        
+        // Draw the portion of the image that fits the aspect ratio
+        ctx.drawImage(
+          img,
+          offsetX, offsetY, canvasWidth, canvasHeight,  // Source rectangle
+          0, 0, canvasWidth, canvasHeight              // Destination rectangle
+        );
+        
+        // Create a new image element for the canvas display
+        const canvasDisplayImg = document.createElement('img');
+        canvasDisplayImg.src = canvas.toDataURL('image/png');
+        canvasDisplayImg.style.position = 'absolute';
+        canvasDisplayImg.style.top = '0';
+        canvasDisplayImg.style.left = '0';
+        canvasDisplayImg.style.width = '100%';
+        canvasDisplayImg.style.height = '100%';
+        canvasDisplayImg.style.objectFit = 'contain';
+        
+        // Build the DOM structure
+        innerContainer.appendChild(canvasDisplayImg);
+        canvasFrame.appendChild(innerContainer);
+        easelContainer.appendChild(canvasFrame);
+        easelContainer.appendChild(easelSupport);
+        
+        // Replace the content of the container
+        container.innerHTML = '';
+        container.appendChild(easelContainer);
+      };
       
-      // Replace the image src with the canvas data
-      image.src = canvas.toDataURL('image/png');
+      img.src = this.resultImageUrl || image.src;
+    } else {
+      // For other sizes, use the standard display method with canvas
+      // Create canvas to maintain aspect ratio
+      const canvas = document.createElement('canvas');
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        // Determine the canvas dimensions based on the desired aspect ratio
+        let canvasWidth, canvasHeight;
+        
+        // Calculate canvas dimensions
+        if (img.width / img.height > aspectRatio) {
+          // Image is wider than target ratio, crop width
+          canvasHeight = img.height;
+          canvasWidth = img.height * aspectRatio;
+        } else {
+          // Image is taller than target ratio, crop height
+          canvasWidth = img.width;
+          canvasHeight = img.width / aspectRatio;
+        }
+        
+        // Set canvas size
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        
+        // Draw the image onto the canvas with the center crop
+        const ctx = canvas.getContext('2d');
+        
+        // Fill with transparent background
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        
+        const offsetX = (img.width - canvasWidth) / 2;
+        const offsetY = (img.height - canvasHeight) / 2;
+        
+        // Draw the portion of the image that fits the aspect ratio
+        ctx.drawImage(
+          img,
+          offsetX, offsetY, canvasWidth, canvasHeight,  // Source rectangle
+          0, 0, canvasWidth, canvasHeight              // Destination rectangle
+        );
+        
+        // Clear container and add original image back
+        container.innerHTML = `
+          <img id="pixar-result-image" src="" alt="Processed image" style="max-width: 100%; max-height: 100%; display: block; object-fit: contain; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px;">
+          <div id="pixar-result-image-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;"></div>
+        `;
+        
+        // Get the new image element and update its source
+        const resultImage = document.getElementById('pixar-result-image');
+        if (resultImage) {
+          resultImage.src = canvas.toDataURL('image/png');
+        }
+      };
       
-      // Adjust container to maintain the aspect ratio without affecting layout
-      image.style.maxWidth = '100%';
-      image.style.maxHeight = '100%';
-      image.style.objectFit = 'contain';
-      image.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-      image.style.borderRadius = '8px';
-    };
-    
-    img.src = this.resultImageUrl || image.src;
+      img.src = this.resultImageUrl || image.src;
+    }
   }
   
   /**
