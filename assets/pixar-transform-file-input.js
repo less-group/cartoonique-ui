@@ -65,6 +65,9 @@ class PixarTransformFileInput extends HTMLElement {
       // Debugging
       this.debug = true;
       
+      // Ensure UnifiedApiClient is available
+      this.ensureUnifiedApiClient();
+      
       // Log initial attributes
       this.log('Constructor initialized with attributes:', {
         sectionId: this.sectionId,
@@ -75,6 +78,27 @@ class PixarTransformFileInput extends HTMLElement {
         printImageUrl: this.printImageUrl,
         color: this.color
       });
+    }
+    
+    /**
+     * Ensure the UnifiedApiClient is available
+     */
+    ensureUnifiedApiClient() {
+      if (!window.unifiedApiClient && window.UnifiedApiClient) {
+        this.log('Creating UnifiedApiClient instance');
+        // Initialize the API client with Railway endpoint
+        window.unifiedApiClient = new window.UnifiedApiClient({
+          baseUrl: window.pixarApiUrl || 
+                  window.unifiedConfig?.api?.current()?.baseUrl ||
+                  'https://letzteshemd-faceswap-api-production.up.railway.app',
+          debug: this.debug
+        });
+        this.log('UnifiedApiClient instance created');
+      } else if (window.unifiedApiClient) {
+        this.log('UnifiedApiClient already available');
+      } else {
+        console.warn('[PixarTransformFileInput] UnifiedApiClient not available and cannot be created');
+      }
     }
     
     /**
@@ -794,29 +818,29 @@ class PixarTransformFileInput extends HTMLElement {
         this.log('Starting transformation process - text dialog will appear after cropping');
         this.log('Clearing previous result');
         
-        // Use image processing manager if available
-        if (window.imageProcessingManager) {
-          this.log('Using ImageProcessingManager for processing');
-          this.useImageProcessingManager();
-          return;
-        }
-        
-        // Otherwise use unified API client
+        // First try unified API client - this is the preferred method
         if (window.unifiedApiClient) {
           this.log('Using UnifiedApiClient for processing');
           await this.useUnifiedApiClient();
           return;
         }
         
+        // Use image processing manager if available as fallback
+        if (window.imageProcessingManager) {
+          this.log('Unified API client not available, using ImageProcessingManager');
+          this.useImageProcessingManager();
+          return;
+        }
+        
         // Try direct processing with RunPod if other methods are unavailable
         if (typeof window.processImageWithRunPod === 'function') {
-          this.log('Using direct processImageWithRunPod function');
+          this.log('Using direct processImageWithRunPod function as last resort');
           window.processImageWithRunPod(this.state.file);
           this.requestInProgress = false;
           return;
         }
         
-        // Both methods unavailable
+        // All methods unavailable
         throw new Error('No processing method available - Cannot find UnifiedApiClient, ImageProcessingManager, or processImageWithRunPod');
         
       } catch (error) {
@@ -864,86 +888,60 @@ class PixarTransformFileInput extends HTMLElement {
         // Update progress to show upload starting
         this.updateProgress(10);
         
-        // Prepare form data for upload
-        const formData = new FormData();
-        formData.append('file', this.state.file);
-        formData.append('productId', this.productId);
-        formData.append('variantId', this.productVariantId);
-        if (this.customerId) {
-          formData.append('customerId', this.customerId);
+        // Configure watermark
+        const watermarkConfig = {
+          url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/letzteshemd-watermark.png",
+          width: 200,
+          height: 200,
+          spaceBetweenWatermarks: 100
+        };
+        
+        // Use the transform method directly - it handles everything including polling
+        this.log('Starting transformation via UnifiedApiClient.transform');
+        const result = await apiClient.transform({
+          sourceImage: this.state.file,
+          watermark: watermarkConfig
+        }, (progress) => {
+          // Progress callback
+          this.log(`Transform progress: ${progress}%`);
+          this.updateProgress(progress);
+        });
+        
+        this.log('Transformation complete:', result);
+        
+        if (!result.success) {
+          throw new Error('Transformation failed: ' + (result.error || 'Unknown error'));
         }
         
-        // Start the upload
-        this.log('Starting upload via UnifiedApiClient');
-        const uploadResponse = await apiClient.uploadImage(formData);
-        
-        if (!uploadResponse || !uploadResponse.success) {
-          throw new Error('Upload failed: ' + (uploadResponse?.message || 'Unknown error'));
+        // Check that we have an image URL
+        const imageUrl = result.imageUrl || 
+                        result.watermarkedImageUrlToShow || 
+                        result.processedImageUrl;
+                        
+        if (!imageUrl) {
+          throw new Error('No image URL received from server');
         }
         
-        this.log('Upload successful:', uploadResponse);
+        // Store the processed image URL
+        this.processedImageUrl = imageUrl;
+        this.processedPrintImageUrl = result.processedPrintImageUrl || null;
         
-        // Update progress to show processing starting
-        this.updateProgress(30);
-          this.state.isUploading = false;
-        this.state.isProcessing = true;
+        // Update UI
+        this.state.isUploading = false;
+        this.state.isProcessing = false;
+        this.updateProgress(100);
         
-        // Get job ID from response
-        this.state.jobId = uploadResponse.jobId;
+        // Show the result
+        this.showResultContent(this.processedImageUrl);
         
-        if (!this.state.jobId) {
-          throw new Error('No job ID returned from upload');
-        }
-        
-        // Poll for job completion
-        let isComplete = false;
-        let attempts = 0;
-        const maxAttempts = 30; // Maximum polling attempts
-        
-        while (!isComplete && attempts < maxAttempts) {
-          attempts++;
-          
-          // Wait before polling again
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
-          // Get job status
-          const statusResponse = await apiClient.getTransformStatus(this.state.jobId);
-          
-          if (!statusResponse || !statusResponse.success) {
-            throw new Error('Status check failed: ' + (statusResponse?.message || 'Unknown error'));
-          }
-          
-          this.log('Status check result:', statusResponse);
-          
-          // Update progress based on status
-          const jobProgress = statusResponse.progress || 0;
-          this.updateProgress(30 + (jobProgress * 0.6)); // Scale to 30-90%
-          
-          // Check if job is complete
-          if (statusResponse.status === 'completed' && statusResponse.imageUrl) {
-            isComplete = true;
-            this.processedImageUrl = statusResponse.imageUrl;
-            this.processedPrintImageUrl = statusResponse.printImageUrl || null;
-            
-            // Update progress to show completion
-            this.updateProgress(100);
-            
-            // Show the result
-            this.state.isProcessing = false;
-            this.showResultContent(this.processedImageUrl);
-            break;
-          }
-          
-          // Check for errors
-          if (statusResponse.status === 'failed') {
-            throw new Error('Processing failed: ' + (statusResponse.message || 'Unknown error'));
-          }
-        }
-        
-        // Check if we exceeded max attempts
-        if (!isComplete) {
-          throw new Error('Processing timed out after ' + maxAttempts + ' attempts');
-        }
+        // Dispatch complete event
+        this.dispatchEvent(new CustomEvent('pixar-transform-complete', {
+          detail: {
+            imageUrl: this.processedImageUrl,
+            timestamp: Date.now()
+          },
+          bubbles: true
+        }));
         
       } catch (error) {
         console.error('[PixarTransformFileInput] UnifiedApiClient error:', error);
