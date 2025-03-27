@@ -204,10 +204,14 @@ if (typeof window.UnifiedApiClient === 'undefined') {
           success: true,
           jobId: data.jobId,
           status: statusResult.status,
+          // Try all possible image URL fields in order of preference
           imageUrl: statusResult.imageUrl || 
                    statusResult.watermarkedImageUrlToShow || 
                    statusResult.processedImageUrl || 
-                   statusResult.resultImageUrl,
+                   statusResult.watermarkedOriginalImageUrl ||
+                   statusResult.resultImageUrl ||
+                   (statusResult.image && statusResult.image.url) ||
+                   statusResult.image,
           watermarkedImageUrlToShow: statusResult.watermarkedImageUrlToShow,
           watermarkedOriginalImageUrl: statusResult.watermarkedOriginalImageUrl,
           processedImageUrl: statusResult.processedImageUrl,
@@ -267,9 +271,35 @@ if (typeof window.UnifiedApiClient === 'undefined') {
           this.log('Poll response:', data);
           
           if (data.status === 'COMPLETED') {
-            // Update progress to 100% if callback provided
-            if (onProgress) onProgress(100);
-            return data;
+            // Check if we have any image URL fields
+            const hasImageUrl = data.imageUrl || 
+                              data.watermarkedImageUrlToShow || 
+                              data.processedImageUrl || 
+                              data.watermarkedOriginalImageUrl ||
+                              data.resultImageUrl ||
+                              (data.image && data.image.url) ||
+                              data.image;
+                              
+            if (hasImageUrl) {
+              // We have both COMPLETED status and image URL - success!
+              // Update progress to 100% if callback provided
+              if (onProgress) onProgress(100);
+              return data;
+            } else {
+              // We have COMPLETED status but no image URL yet
+              // If we're within reasonable attempts, keep polling
+              if (attempts < Math.min(10, this.maxPollingAttempts / 2)) {
+                this.log('Status is COMPLETED but no image URL yet, continuing to poll');
+                // Wait before next poll
+                await new Promise(r => setTimeout(r, this.pollingInterval));
+                attempts++;
+                continue;
+              } else {
+                // We've tried enough times with COMPLETED status but no URL
+                this.log('No image URL received after multiple attempts with COMPLETED status');
+                return data; // Return what we have and let the caller handle it
+              }
+            }
           } else if (['FAILED', 'CANCELLED', 'TIMED_OUT'].includes(data.status)) {
             throw new Error(`Job failed with status: ${data.status}`);
           } else {
