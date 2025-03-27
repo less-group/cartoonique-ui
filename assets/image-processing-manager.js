@@ -183,8 +183,12 @@ class ImageProcessingManager {
         const observer = new MutationObserver((mutations) => {
           mutations.forEach((mutation) => {
             if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-              // If popup is being hidden while processing isn't complete, keep it showing
-              if (loadingPopup.style.display === 'none' && this.isProcessing && !this.finalProcessingComplete) {
+              // Only prevent hiding if processing is active AND final processing is not complete
+              // AND text processing is not complete
+              if (loadingPopup.style.display === 'none' && 
+                  this.isProcessing && 
+                  !this.finalProcessingComplete &&
+                  !this.textProcessingComplete) {
                 console.log('LOADING POPUP: Preventing early hiding of loading popup while processing is active');
                 loadingPopup.style.display = 'block';
               }
@@ -1150,10 +1154,27 @@ class ImageProcessingManager {
    */
   hideLoadingPopup() {
     const loadingPopup = document.getElementById('pixar-loading-popup');
+    // Check if the loading popup exists and is visible
     if (loadingPopup && loadingPopup.style.display !== 'none') {
-      console.log('🖼️ Hiding loading popup after processing');
-      loadingPopup.style.display = 'none';
-      document.body.style.overflow = '';
+      // Only check processing status if we're not in final completion state
+      if (this.finalProcessingComplete) {
+        console.log('🖼️ Forcing loading popup to close because final processing is complete');
+        loadingPopup.style.display = 'none';
+        document.body.style.overflow = '';
+      } else if (!this.isProcessing) {
+        console.log('🖼️ Hiding loading popup after processing');
+        loadingPopup.style.display = 'none';
+        document.body.style.overflow = '';
+      } else {
+        console.log('⚠️ Loading popup hide attempt while processing is still active - checking status');
+        // Check if we're in a state where we should allow hiding anyway
+        if (this.textProcessingComplete) {
+          console.log('🖼️ Text processing is complete, allowing popup to close even though isProcessing is true');
+          this.isProcessing = false; // Force processing to be considered complete
+          loadingPopup.style.display = 'none';
+          document.body.style.overflow = '';
+        }
+      }
     }
   }
   
@@ -2041,6 +2062,11 @@ class ImageProcessingManager {
     } catch (error) {
       console.error('RAILWAY PROCESSING: Error applying Railway image crop:', error);
       
+      // Set flags to indicate processing is done even on error
+      this.textProcessingComplete = true;
+      this.finalProcessingComplete = true;
+      this.isProcessing = false;
+      
       // Hide loading popup on error
       this.hideLoadingPopup();
       
@@ -2111,6 +2137,10 @@ class ImageProcessingManager {
         if (!this.textInfo) {
           console.log('RAILWAY PROCESSING: No text to add, dispatching final event');
           
+          // Set flags to indicate processing is done
+          this.textProcessingComplete = true;
+          this.finalProcessingComplete = true;
+          
           // Dispatch event to signal final processing is complete
           const finalEvent = new CustomEvent('pixar-final-processing-complete', {
             detail: { 
@@ -2169,6 +2199,11 @@ class ImageProcessingManager {
       this.addTextToRailwayImage(this.stylizedImageUrl);
     } else {
       // No text to add, just finish the process
+      // Set flags to indicate processing is done
+      this.textProcessingComplete = true;
+      this.finalProcessingComplete = true;
+      this.isProcessing = false;
+      
       const finalEvent = new CustomEvent('pixar-final-processing-complete', {
         detail: { 
           imageUrl: this.stylizedImageUrl,
@@ -2178,7 +2213,7 @@ class ImageProcessingManager {
       });
       document.dispatchEvent(finalEvent);
       
-      // Hide loading popup
+      // Hide any loading popup
       this.hideLoadingPopup();
     }
   }
@@ -2425,6 +2460,10 @@ class ImageProcessingManager {
     if (!this.textInfo) {
       console.error('RAILWAY TEXT: No text info available');
       
+      // Set flags to indicate processing is done
+      this.textProcessingComplete = true;
+      this.finalProcessingComplete = true;
+      
       // Dispatch a final event even with error
       const finalEvent = new CustomEvent('pixar-final-processing-complete', {
         detail: { 
@@ -2441,7 +2480,7 @@ class ImageProcessingManager {
     }
     
     // Add text with names
-    console.log('RAILWAY TEXT: Adding text with names:', this.textInfo.name1, this.textInfo.name2);
+    console.log('RAILWAY TEXT: Adding text with names:', this.textInfo.text, this.textInfo.text2);
     if (this.textInfo.subtitle) {
       console.log('RAILWAY TEXT: Adding subtitle:', this.textInfo.subtitle);
     }
@@ -2475,6 +2514,10 @@ class ImageProcessingManager {
         // Update the product image with the new image containing text
         this.updateProductImage(dataURL);
         
+        // Set flags to indicate processing is done
+        this.textProcessingComplete = true;
+        this.finalProcessingComplete = true;
+        
         // Dispatch event to signal final processing is complete
         console.log('FINAL PROCESSING: Dispatched pixar-final-processing-complete event after text processing');
         const finalEvent = new CustomEvent('pixar-final-processing-complete', {
@@ -2489,6 +2532,10 @@ class ImageProcessingManager {
         this.hideLoadingPopup();
       } catch (error) {
         console.error('RAILWAY TEXT: Error adding text to image:', error);
+        
+        // Set flags to indicate processing is done even on error
+        this.textProcessingComplete = true;
+        this.finalProcessingComplete = true;
         
         // Still dispatch event with error
         const finalEvent = new CustomEvent('pixar-final-processing-complete', {
@@ -2507,6 +2554,10 @@ class ImageProcessingManager {
     
     img.onerror = (error) => {
       console.error('RAILWAY TEXT: Error loading image:', error);
+      
+      // Set flags to indicate processing is done even on error
+      this.textProcessingComplete = true;
+      this.finalProcessingComplete = true;
       
       // Still dispatch event with error
       const finalEvent = new CustomEvent('pixar-final-processing-complete', {
