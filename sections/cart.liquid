@@ -88,11 +88,26 @@
     .cart-notification-popup-item__image[data-processed="true"],
     .mini-cart-item__image[data-processed="true"],
     .drawer-cart__item-image[data-processed="true"],
-    img[data-processed="true"] {
+    img[data-processed="true"],
+    .cartoonique-processed-image {
       object-fit: contain !important;
       width: 100%;
       height: auto;
       aspect-ratio: 3/4;
+    }
+    
+    /* Additional styles to improve visibility of processed images */
+    .cartoonique-processed-image-wrapper {
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      padding: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      transition: transform 0.3s ease;
+      overflow: hidden;
+    }
+    
+    .cartoonique-processed-image-wrapper:hover {
+      transform: scale(1.02);
     }
     
     /* Cart debug styling */
@@ -771,6 +786,12 @@
       function getStoredImages() {
         const results = {};
         
+        // First check window memory - this is the most reliable source
+        if (window.cartoonique_memory_images) {
+          console.log('Found memory images in window object');
+          Object.assign(results, window.cartoonique_memory_images);
+        }
+        
         // Try multiple methods to get stored images
         try {
           // Try each storage option and merge results
@@ -780,7 +801,20 @@
               try {
                 const cartImages = localStorage.getItem('cartoonique_cart_images');
                 if (cartImages) {
-                  return JSON.parse(cartImages);
+                  const parsed = JSON.parse(cartImages);
+                  // Process any MEMORY_IMAGE references
+                  for (const variantId in parsed) {
+                    const value = parsed[variantId];
+                    if (typeof value === 'string' && value.startsWith('MEMORY_IMAGE:')) {
+                      const memoryId = value.split(':')[1];
+                      // Check if we have this image in memory
+                      if (window.cartoonique_memory_images && window.cartoonique_memory_images[memoryId]) {
+                        parsed[variantId] = window.cartoonique_memory_images[memoryId];
+                        console.log('Resolved memory image reference for', variantId);
+                      }
+                    }
+                  }
+                  return parsed;
                 }
                 return {};
               } catch (e) {
@@ -825,14 +859,6 @@
                 console.warn('Error reading navigation data:', e);
                 return {};
               }
-            },
-            
-            // Method 4: window memory object
-            function() {
-              if (window.cartoonique_memory_images) {
-                return window.cartoonique_memory_images;
-              }
-              return {};
             }
           ];
           
@@ -876,24 +902,31 @@
           // Get the image source - handle different types of URLs
           let imgSrc = storedImages[variantId];
           
+          // Handle MEMORY_IMAGE references
+          if (typeof imgSrc === 'string' && imgSrc.startsWith('MEMORY_IMAGE:')) {
+            const memoryId = imgSrc.split(':')[1];
+            // Check if we have this image in memory
+            if (window.cartoonique_memory_images && window.cartoonique_memory_images[memoryId]) {
+              imgSrc = window.cartoonique_memory_images[memoryId];
+              console.log('Resolved memory image reference');
+            } else {
+              console.warn('Memory image reference not found', memoryId);
+              // Skip this image
+              return;
+            }
+          }
+          
           // Fix blob URLs that may no longer be valid
           if (imgSrc.startsWith('blob:')) {
             console.warn('Found blob URL which may be invalid after page reload:', imgSrc);
-            // Check if we have a fallback data URL
-            for (const methodName in storedImages) {
-              if (storedImages[methodName] && 
-                  storedImages[methodName][variantId] && 
-                  !storedImages[methodName][variantId].startsWith('blob:')) {
-                imgSrc = storedImages[methodName][variantId];
-                console.log('Using fallback image URL instead of blob URL');
-                break;
-              }
-            }
-            
-            // If we still have a blob URL, try to use a placeholder
-            if (imgSrc.startsWith('blob:')) {
-              console.warn('No valid fallback image found, using placeholder');
-              return; // Skip this image rather than showing broken image
+            // If we have a window memory image, try to use that instead
+            if (window.cartoonique_memory_images && window.cartoonique_memory_images[variantId]) {
+              imgSrc = window.cartoonique_memory_images[variantId];
+              console.log('Using memory image instead of blob URL');
+            } else {
+              // Skip this image rather than showing broken image
+              console.warn('No valid image found, skipping');
+              return;
             }
           }
           

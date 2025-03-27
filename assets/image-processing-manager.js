@@ -4457,47 +4457,35 @@ class ImageProcessingManager {
     // Handle storage of the processed image URL safely to prevent quota errors
     const storeImageSafely = (variantId, imageUrl) => {
       try {
-        // Store the image directly instead of converting to Blob URL
-        // This provides more reliable storage across page reloads
-        const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-        cartImages[variantId] = imageUrl;
-        localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
-        
-        // Also store in sessionStorage as a backup
-        try {
-          sessionStorage.setItem(`cartoonique_image_${variantId}`, imageUrl);
-        } catch (e) {
-          console.warn('Could not store image in sessionStorage, falling back to window object');
-        }
-        
-        // Store in window memory for immediate access
+        // Always store the raw image data in window memory
         if (!window.cartoonique_memory_images) {
           window.cartoonique_memory_images = {};
         }
         window.cartoonique_memory_images[variantId] = imageUrl;
+        console.log('Stored image in window memory for variant', variantId);
+        
+        // Try to store a reference in localStorage
+        try {
+          const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
+          // Store just a reference to the memory image
+          cartImages[variantId] = 'MEMORY_IMAGE:' + variantId;
+          localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
+          
+          // Also store navigation data for immediate use
+          const navigationData = {
+            timestamp: Date.now(),
+            imageUrl: imageUrl,
+            variantId: variantId
+          };
+          localStorage.setItem('cartoonique_navigation_data', JSON.stringify(navigationData));
+        } catch (e) {
+          console.warn('Could not store image reference in localStorage:', e);
+        }
         
         return true;
       } catch (error) {
         console.error('Storage error:', error);
-        
-        // If we still hit an error, revert to the window object approach
-        try {
-          console.log('Storing image in memory as fallback');
-          if (!window.cartoonique_memory_images) {
-            window.cartoonique_memory_images = {};
-          }
-          window.cartoonique_memory_images[variantId] = imageUrl;
-          
-          // Store just a reference in localStorage
-          const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-          cartImages[variantId] = 'MEMORY_IMAGE:' + variantId;
-          localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
-          
-          return true;
-        } catch (fallbackError) {
-          console.error('Failed to store image with fallback method:', fallbackError);
-          return false;
-        }
+        return false;
       }
     };
     
@@ -4627,6 +4615,17 @@ class ImageProcessingManager {
       
       // Set a flag in localStorage to indicate we're navigating to cart
       try {
+        // Make sure we have the image in window memory
+        if (!window.cartoonique_memory_images) {
+          window.cartoonique_memory_images = {};
+        }
+        
+        // Store the image in memory
+        if (processedImageUrl) {
+          window.cartoonique_memory_images[variantId] = processedImageUrl;
+        }
+        
+        // Create navigation data with the actual image
         const navigationData = {
           timestamp: Date.now(),
           imageUrl: processedImageUrl,
@@ -4636,13 +4635,12 @@ class ImageProcessingManager {
         
         localStorage.setItem('cartoonique_navigating_to_cart', 'true');
         localStorage.setItem('cartoonique_cart_navigation_time', Date.now().toString());
-        localStorage.setItem('cartoonique_preload_cart_images', 'true');
         
-        // Store more detailed navigation data if possible
+        // Store navigation data directly
         try {
           localStorage.setItem('cartoonique_navigation_data', JSON.stringify(navigationData));
         } catch(e) {
-          console.warn('Unable to store full navigation data', e);
+          console.warn('Unable to store navigation data:', e);
         }
       } catch (e) {
         console.error('Error setting navigation flags:', e);
