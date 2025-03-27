@@ -83,12 +83,12 @@
     
     /* Cartoonique cart image styles - added to ensure images display properly */
     .cart-item__image.shape__target-image.multiply-mode__target[data-processed="true"],
-    .cart-item__image.shape__target-image[data-processed="true"],
-    .cart-item__image[data-processed="true"],
-    .cart-notification-popup-item__image[data-processed="true"],
-    .mini-cart-item__image[data-processed="true"],
-    .drawer-cart__item-image[data-processed="true"],
-    img[data-processed="true"],
+    .cart-item__image.shape__target-image[data-cartoonique="processed"],
+    .cart-item__image[data-cartoonique="processed"],
+    .cart-notification-popup-item__image[data-cartoonique="processed"],
+    .mini-cart-item__image[data-cartoonique="processed"],
+    .drawer-cart__item-image[data-cartoonique="processed"],
+    img[data-cartoonique="processed"],
     .cartoonique-processed-image {
       object-fit: contain !important;
       width: 100%;
@@ -97,7 +97,8 @@
     }
     
     /* Additional styles to improve visibility of processed images */
-    .cartoonique-processed-image-wrapper {
+    .cartoonique-processed-image-wrapper,
+    .cart-item__image-wrapper:has([data-cartoonique="processed"]) {
       background-color: #f9f9f9;
       border-radius: 8px;
       padding: 5px;
@@ -106,7 +107,20 @@
       overflow: hidden;
     }
     
-    .cartoonique-processed-image-wrapper:hover {
+    /* Alternative for browsers that don't support :has() */
+    /* This class will be added via JavaScript for older browsers */
+    .cartoonique-image-wrapper {
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      padding: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      transition: transform 0.3s ease;
+      overflow: hidden;
+    }
+    
+    .cartoonique-processed-image-wrapper:hover,
+    .cart-item__image-wrapper:has([data-cartoonique="processed"]):hover,
+    .cartoonique-image-wrapper:hover {
       transform: scale(1.02);
     }
     
@@ -114,7 +128,11 @@
     .cart-item__image-wrapper:focus,
     .cart-item__image-wrapper:focus-visible,
     a:has(.multiply-mode__target):focus,
-    a:has(.multiply-mode__target):focus-visible {
+    a:has(.multiply-mode__target):focus-visible,
+    a:has([data-cartoonique="processed"]):focus,
+    a:has([data-cartoonique="processed"]):focus-visible,
+    a.cartoonique-focusable:focus,
+    a.cartoonique-focusable:focus-visible {
       outline: 2px solid #4a90e2;
       outline-offset: 2px;
       box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.3);
@@ -124,7 +142,9 @@
     
     /* Allow focus only for keyboard navigation not mouse clicks */
     .cart-item__image-wrapper:focus:not(:focus-visible),
-    a:has(.multiply-mode__target):focus:not(:focus-visible) {
+    a:has(.multiply-mode__target):focus:not(:focus-visible),
+    a:has([data-cartoonique="processed"]):focus:not(:focus-visible),
+    a.cartoonique-focusable:focus:not(:focus-visible) {
       outline: none;
       box-shadow: none;
     }
@@ -788,221 +808,380 @@
   </div>
 </cart-page>
 
-<!-- Add a cart image processor script at the end -->
+<!-- Add a :has() polyfill for older browsers -->
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    console.log('Cartoonique cart image processor initialized');
+  // Detect :has() support
+  function supportsHasSelector() {
+    try {
+      document.querySelector(':has(*)');
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  
+  // Apply fallback styles for browsers without :has() support
+  function applyHasFallbacks() {
+    // If :has() is supported, we don't need to do anything
+    if (supportsHasSelector()) {
+      console.log(':has() selector is supported, no polyfill needed');
+      return;
+    }
     
-    // Function to process cart images
-    function processCartImages() {
-      // Find all cart items
-      const cartItems = document.querySelectorAll('.cart-item');
-      console.log('Found', cartItems.length, 'cart items to process');
+    console.log('Applying :has() selector polyfill');
+    
+    // Look for cart item images that have processed data attribute
+    function updateWrappers() {
+      // Find all processed images
+      const processedImages = document.querySelectorAll('[data-cartoonique="processed"]');
       
-      if (cartItems.length === 0) return;
-      
-      // Function to get images from various storage locations
-      function getStoredImages() {
-        const results = {};
-        
-        // First check window memory - this is the most reliable source
-        if (window.cartoonique_memory_images) {
-          console.log('Found memory images in window object');
-          Object.assign(results, window.cartoonique_memory_images);
+      processedImages.forEach(img => {
+        // Find the parent wrapper
+        let wrapper = img.closest('.cart-item__image-wrapper');
+        if (wrapper) {
+          // Add our fallback class
+          wrapper.classList.add('cartoonique-image-wrapper');
         }
         
-        // Try multiple methods to get stored images
-        try {
-          // Try each storage option and merge results
-          const storageMethods = [
-            // Method 1: localStorage cart images object
-            function() {
-              try {
-                const cartImages = localStorage.getItem('cartoonique_cart_images');
-                if (cartImages) {
-                  const parsed = JSON.parse(cartImages);
-                  // Process any MEMORY_IMAGE references
-                  for (const variantId in parsed) {
-                    const value = parsed[variantId];
-                    if (typeof value === 'string' && value.startsWith('MEMORY_IMAGE:')) {
-                      const memoryId = value.split(':')[1];
-                      // Check if we have this image in memory
-                      if (window.cartoonique_memory_images && window.cartoonique_memory_images[memoryId]) {
-                        parsed[variantId] = window.cartoonique_memory_images[memoryId];
-                        console.log('Resolved memory image reference for', variantId);
-                      }
-                    }
-                  }
-                  return parsed;
-                }
-                return {};
-              } catch (e) {
-                console.warn('Error reading from localStorage:', e);
-                return {};
-              }
-            },
-            
-            // Method 2: sessionStorage individual images
-            function() {
-              const sessionImages = {};
-              try {
-                // Look for any keys that match our pattern
-                for (let i = 0; i < sessionStorage.length; i++) {
-                  const key = sessionStorage.key(i);
-                  if (key && key.startsWith('cartoonique_image_')) {
-                    const variantId = key.replace('cartoonique_image_', '');
-                    sessionImages[variantId] = sessionStorage.getItem(key);
-                  }
-                }
-                return sessionImages;
-              } catch (e) {
-                console.warn('Error reading from sessionStorage:', e);
-                return {};
-              }
-            },
-            
-            // Method 3: navigation data
-            function() {
-              try {
-                const navData = localStorage.getItem('cartoonique_navigation_data');
-                if (navData) {
-                  const data = JSON.parse(navData);
-                  if (data && data.variantId && data.imageUrl) {
-                    const result = {};
-                    result[data.variantId] = data.imageUrl;
-                    return result;
-                  }
-                }
-                return {};
-              } catch (e) {
-                console.warn('Error reading navigation data:', e);
-                return {};
-              }
-            }
-          ];
-          
-          // Try each method and combine results
-          storageMethods.forEach(method => {
-            try {
-              const images = method();
-              Object.assign(results, images);
-            } catch (e) {
-              console.warn('Error with storage method:', e);
-            }
-          });
-          
-        } catch (e) {
-          console.error('Error getting stored images:', e);
+        // Find the parent link
+        let linkParent = img.closest('a');
+        if (linkParent) {
+          // Add our focusable class for keyboard navigation
+          linkParent.classList.add('cartoonique-focusable');
         }
-        
-        return results;
-      }
+      });
       
-      // Get stored images from all sources
-      const storedImages = getStoredImages();
-      console.log('Found stored images for', Object.keys(storedImages).length, 'variants');
-      
-      // Keep track of which images we've processed
-      const processedVariants = new Set();
-      
-      // Process each cart item
-      cartItems.forEach(item => {
-        // Get variant ID
-        const variantId = item.getAttribute('data-variant-id');
-        if (!variantId || processedVariants.has(variantId)) return;
-        
-        // Mark as processed
-        processedVariants.add(variantId);
-        
-        // Look for image in stored images
-        if (storedImages[variantId]) {
-          console.log('Found stored image for variant', variantId);
-          
-          // Get the image source - handle different types of URLs
-          let imgSrc = storedImages[variantId];
-          
-          // Handle MEMORY_IMAGE references
-          if (typeof imgSrc === 'string' && imgSrc.startsWith('MEMORY_IMAGE:')) {
-            const memoryId = imgSrc.split(':')[1];
-            // Check if we have this image in memory
-            if (window.cartoonique_memory_images && window.cartoonique_memory_images[memoryId]) {
-              imgSrc = window.cartoonique_memory_images[memoryId];
-              console.log('Resolved memory image reference');
-            } else {
-              console.warn('Memory image reference not found', memoryId);
-              // Skip this image
-              return;
-            }
-          }
-          
-          // Fix blob URLs that may no longer be valid
-          if (imgSrc.startsWith('blob:')) {
-            console.warn('Found blob URL which may be invalid after page reload:', imgSrc);
-            // If we have a window memory image, try to use that instead
-            if (window.cartoonique_memory_images && window.cartoonique_memory_images[variantId]) {
-              imgSrc = window.cartoonique_memory_images[variantId];
-              console.log('Using memory image instead of blob URL');
-            } else {
-              // Skip this image rather than showing broken image
-              console.warn('No valid image found, skipping');
-              return;
-            }
-          }
-          
-          // Find all image elements in the cart item
-          const imgElements = item.querySelectorAll('img');
-          imgElements.forEach(img => {
-            const isCartImage = img.classList.contains('cart-item__image') || 
-                img.parentElement.classList.contains('cart-item__image-wrapper');
-            const isMultiplyTarget = img.classList.contains('multiply-mode__target');
-              
-            if (isCartImage || isMultiplyTarget) {
-              // Replace image
-              img.srcset = '';
-              img.sizes = '';
-              img.src = imgSrc;
-              img.style.objectFit = 'contain';
-              img.setAttribute('data-processed', 'true');
-              img.style.aspectRatio = '3/4';
-              
-              // Remove any lazy loading classes that might interfere
-              img.classList.remove('lazyload', 'lazyloading');
-              
-              // Force the image to load with a fresh element if needed
-              if (img.complete && img.naturalWidth === 0) {
-                console.log('Image failed to load, creating replacement');
-                const newImg = document.createElement('img');
-                newImg.className = img.className;
-                newImg.src = imgSrc;
-                newImg.style.objectFit = 'contain';
-                newImg.setAttribute('data-processed', 'true');
-                newImg.style.aspectRatio = '3/4';
-                newImg.loading = 'eager';
-                
-                // Replace the old image with the new one
-                img.parentNode.replaceChild(newImg, img);
-              }
-              
-              console.log('Replaced image for variant', variantId);
-            }
-          });
+      // Also handle multiply-mode__target images
+      const multiplyImages = document.querySelectorAll('.multiply-mode__target');
+      multiplyImages.forEach(img => {
+        let linkParent = img.closest('a');
+        if (linkParent) {
+          linkParent.classList.add('cartoonique-focusable');
         }
       });
     }
     
-    // Run image processor
-    processCartImages();
+    // Run initially
+    updateWrappers();
     
-    // Also run after a delay to catch any dynamic updates
-    setTimeout(processCartImages, 500);
-    setTimeout(processCartImages, 1500);
-    
-    // Observe DOM changes to apply to dynamically added elements
+    // Set up an observer to handle dynamically added images
     if (typeof MutationObserver !== 'undefined') {
-      const cartContainer = document.querySelector('.cart');
-      if (cartContainer) {
-        const observer = new MutationObserver(function(mutations) {
-          processCartImages();
+      const observer = new MutationObserver(mutations => {
+        for (const mutation of mutations) {
+          if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+            for (const node of mutation.addedNodes) {
+              if (node.nodeType === 1) { // Element node
+                if (node.hasAttribute && node.hasAttribute('data-cartoonique') || 
+                    node.classList && node.classList.contains('multiply-mode__target')) {
+                  updateWrappers();
+                  break;
+                }
+              }
+            }
+          } else if (mutation.type === 'attributes' && 
+                    (mutation.attributeName === 'data-cartoonique' || 
+                     mutation.attributeName === 'class')) {
+            updateWrappers();
+          }
+        }
+      });
+      
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['data-cartoonique', 'class']
+      });
+    }
+  }
+  
+  // Run on DOMContentLoaded
+  document.addEventListener('DOMContentLoaded', applyHasFallbacks);
+</script>
+
+<!-- Add a cart image processor script at the end -->
+<script>
+  // Early execution script to handle cart images
+  (async function() {
+    console.log('Cartoonique: Starting cart image processor');
+    
+    // Create a loading placeholder style
+    const style = document.createElement('style');
+    style.textContent = `
+      .cartoonique-loading {
+        position: relative;
+        background-color: #f9f9f9;
+        min-height: 100px;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      
+      .cartoonique-loading::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 30px;
+        height: 30px;
+        margin: -15px 0 0 -15px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #3498db;
+        border-radius: 50%;
+        animation: cartoonique-spin 1s linear infinite;
+      }
+      
+      @keyframes cartoonique-spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Preload images from IndexedDB and navigation data
+    async function preloadCartImages() {
+      // Check URL parameters for navigation data
+      const url = new URL(window.location.href);
+      const variantId = url.searchParams.get('variant_id');
+      const blobKey = url.searchParams.get('blob_key');
+      
+      if (variantId && blobKey) {
+        console.log(`Cartoonique: Found navigation data for variant ${variantId} with blob key ${blobKey}`);
+        // This will be handled by the processCartImages function
+      }
+      
+      // Preemptively check IndexedDB for any cart item images
+      try {
+        if ('indexedDB' in window) {
+          const cartItems = document.querySelectorAll('.cart-item');
+          
+          if (cartItems.length > 0) {
+            // Queue preloads for all cart items
+            cartItems.forEach(item => {
+              const itemId = item.dataset.cartItemId;
+              if (itemId) {
+                console.log(`Cartoonique: Preloading for cart item ${itemId}`);
+                // Add loading state to image
+                const imageWrapper = item.querySelector('.cart-item__image-wrapper');
+                if (imageWrapper) {
+                  imageWrapper.classList.add('cartoonique-loading');
+                }
+              }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Cartoonique: Error preloading images', error);
+      }
+    }
+    
+    // Process cart images - retrieve from various storage and apply
+    async function processCartImages() {
+      console.log('Cartoonique: Processing cart images');
+      
+      // Find all cart item images
+      const cartItems = document.querySelectorAll('.cart-item');
+      if (cartItems.length === 0) {
+        console.log('Cartoonique: No cart items found');
+        return;
+      }
+      
+      console.log(`Cartoonique: Found ${cartItems.length} cart items`);
+      
+      // Process each cart item
+      let foundCartImages = 0;
+      
+      for (const item of cartItems) {
+        const itemId = item.dataset.cartItemId;
+        if (!itemId) continue;
+        
+        const variantId = item.dataset.variantId;
+        if (!variantId) continue;
+        
+        const imageElement = item.querySelector('.cart-item__image');
+        if (!imageElement) continue;
+        
+        // Skip already processed images
+        if (imageElement.hasAttribute('data-cartoonique') && 
+            imageElement.getAttribute('data-cartoonique') === 'processed') {
+          foundCartImages++;
+          continue;
+        }
+        
+        // Check for blob key in URL parameters if we just navigated from a product page
+        const url = new URL(window.location.href);
+        const navVariantId = url.searchParams.get('variant_id');
+        const blobKey = url.searchParams.get('blob_key');
+        
+        let cartImage = null;
+        let imageSource = '';
+        
+        // Try IndexedDB first - most reliable source
+        if ('indexedDB' in window) {
+          try {
+            const dbRequest = indexedDB.open('cartoonique-images', 1);
+            
+            dbRequest.onupgradeneeded = function(event) {
+              const db = event.target.result;
+              if (!db.objectStoreNames.contains('images')) {
+                db.createObjectStore('images');
+              }
+            };
+            
+            dbRequest.onsuccess = function(event) {
+              const db = event.target.result;
+              const transaction = db.transaction(['images'], 'readonly');
+              const store = transaction.objectStore('images');
+              
+              // Try to get the image from the store
+              const key = `cart_${variantId}`;
+              const request = store.get(key);
+              
+              request.onsuccess = function() {
+                if (request.result) {
+                  cartImage = request.result;
+                  imageSource = 'indexedDB';
+                  applyCartImage(cartImage, imageElement, item, 'indexedDB');
+                  foundCartImages++;
+                } else {
+                  // If not found in IndexedDB, try localStorage and sessionStorage
+                  tryBackupStorageSources();
+                }
+              };
+              
+              request.onerror = function() {
+                console.error(`Cartoonique: Error retrieving image from IndexedDB for variant ${variantId}`);
+                tryBackupStorageSources();
+              };
+            };
+            
+            dbRequest.onerror = function() {
+              console.error('Cartoonique: Error opening IndexedDB');
+              tryBackupStorageSources();
+            };
+          } catch (error) {
+            console.error('Cartoonique: IndexedDB error', error);
+            tryBackupStorageSources();
+          }
+        } else {
+          tryBackupStorageSources();
+        }
+        
+        // Try other storage options
+        function tryBackupStorageSources() {
+          // Check if this is the variant we just navigated from
+          if (navVariantId === variantId && blobKey) {
+            // Try to get the image from sessionStorage using the blob key
+            try {
+              const storedImage = sessionStorage.getItem(blobKey);
+              if (storedImage) {
+                cartImage = storedImage;
+                imageSource = 'sessionStorage (blobKey)';
+                applyCartImage(cartImage, imageElement, item, imageSource);
+                foundCartImages++;
+                return;
+              }
+            } catch (error) {
+              console.error('Cartoonique: Error retrieving from sessionStorage with blobKey', error);
+            }
+          }
+          
+          // Try localStorage
+          try {
+            const key = `cartoonique_${variantId}`;
+            const storedImage = localStorage.getItem(key);
+            if (storedImage) {
+              cartImage = storedImage;
+              imageSource = 'localStorage';
+              applyCartImage(cartImage, imageElement, item, imageSource);
+              foundCartImages++;
+              return;
+            }
+          } catch (error) {
+            console.error('Cartoonique: Error retrieving from localStorage', error);
+          }
+          
+          // Try sessionStorage
+          try {
+            const key = `cartoonique_${variantId}`;
+            const storedImage = sessionStorage.getItem(key);
+            if (storedImage) {
+              cartImage = storedImage;
+              imageSource = 'sessionStorage';
+              applyCartImage(cartImage, imageElement, item, imageSource);
+              foundCartImages++;
+              return;
+            }
+          } catch (error) {
+            console.error('Cartoonique: Error retrieving from sessionStorage', error);
+          }
+          
+          // If we get here, we couldn't find the image
+          console.log(`Cartoonique: No stored image found for variant ${variantId}`);
+          // Remove loading state if present
+          const imageWrapper = item.querySelector('.cart-item__image-wrapper');
+          if (imageWrapper) {
+            imageWrapper.classList.remove('cartoonique-loading');
+          }
+        }
+      }
+      
+      console.log(`Cartoonique: Found ${foundCartImages} cart images of ${cartItems.length} cart items`);
+      
+      // Clean up URL parameters after processing
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('variant_id') || url.searchParams.has('blob_key')) {
+        url.searchParams.delete('variant_id');
+        url.searchParams.delete('blob_key');
+        window.history.replaceState({}, '', url.toString());
+      }
+    }
+    
+    // Apply the cart image to the element
+    function applyCartImage(cartImage, imageElement, item, source) {
+      if (!cartImage) return;
+      
+      try {
+        // Set the image source
+        imageElement.setAttribute('src', cartImage);
+        imageElement.setAttribute('loading', 'eager'); // Ensure immediate loading
+        
+        // Set important attributes for our styles and polyfill
+        imageElement.setAttribute('data-cartoonique', 'processed');
+        imageElement.classList.add('cartoonique-processed-image');
+        
+        // Get the parent wrapper and mark it processed for browsers without :has()
+        const imageWrapper = item.querySelector('.cart-item__image-wrapper');
+        if (imageWrapper) {
+          imageWrapper.classList.remove('cartoonique-loading');
+          imageWrapper.classList.add('cartoonique-processed-image-wrapper');
+        }
+        
+        console.log(`Cartoonique: Applied cart image from ${source} for item`, item.dataset.cartItemId);
+      } catch (error) {
+        console.error('Cartoonique: Error applying cart image', error);
+      }
+    }
+    
+    // Watch for cart changes using MutationObserver
+    function setupCartObserver() {
+      if (typeof MutationObserver !== 'undefined') {
+        const cartContainer = document.querySelector('.cart-items__body');
+        if (!cartContainer) return;
+        
+        const observer = new MutationObserver(mutations => {
+          let shouldProcess = false;
+          
+          for (const mutation of mutations) {
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+              shouldProcess = true;
+              break;
+            }
+          }
+          
+          if (shouldProcess) {
+            console.log('Cartoonique: Cart content changed, reprocessing images');
+            processCartImages();
+          }
         });
         
         observer.observe(cartContainer, {
@@ -1010,11 +1189,57 @@
           subtree: true
         });
         
-        console.log('Cart observer initialized');
+        console.log('Cartoonique: Cart observer setup complete');
       }
     }
-  });
+    
+    // Initialize
+    try {
+      // Start preloading images if we detect cart items
+      await preloadCartImages();
+      
+      // Process cart images when DOM is fully loaded
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+          processCartImages();
+          setupCartObserver();
+        });
+      } else {
+        processCartImages();
+        setupCartObserver();
+      }
+    } catch (error) {
+      console.error('Cartoonique: Error in cart image processor', error);
+    }
+  })();
 </script>
+
+<style>
+  /* Added cart styles for showing processed images */
+  .cart-item__image-wrapper:has([data-cartoonique="processed"]),
+  .cartoonique-image-wrapper {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease;
+  }
+  
+  .cart-item__image-wrapper:has([data-cartoonique="processed"]):hover,
+  .cartoonique-image-wrapper:hover {
+    transform: scale(1.03);
+  }
+  
+  /* Improve focus styles for keyboard navigation */
+  a:has(.multiply-mode__target):focus-visible,
+  a:has([data-cartoonique="processed"]):focus-visible,
+  .cartoonique-focusable:focus-visible {
+    outline: 2px solid #0071e3;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(0,113,227,0.3);
+    border-radius: 8px;
+  }
+</style>
 
 {% schema %}
 {
