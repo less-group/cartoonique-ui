@@ -4327,20 +4327,48 @@ class ImageProcessingManager {
     // Handle storage of the processed image URL safely to prevent quota errors
     const storeImageSafely = (variantId, imageUrl) => {
       try {
-        // For large base64 images, try to use sessionStorage instead of localStorage
-        // as it's typically used for temporary data and might have different quota limits
-        if (imageUrl.length > 1000000) { // If image is larger than ~1MB
-          console.log('Image is large, using sessionStorage instead of localStorage');
-          // Store the variant ID in localStorage with a special flag
+        // Check if this is a base64 image that we should convert to a Blob URL
+        if (imageUrl && imageUrl.startsWith('data:image/')) {
+          console.log('Converting base64 image to Blob URL for more efficient storage');
+          
+          // Convert base64 to Blob
+          const base64Data = imageUrl.split(',')[1];
+          const mimeType = imageUrl.split(',')[0].split(':')[1].split(';')[0];
+          
+          const byteCharacters = atob(base64Data);
+          const byteArrays = [];
+          
+          for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+            const slice = byteCharacters.slice(offset, offset + 512);
+            
+            const byteNumbers = new Array(slice.length);
+            for (let i = 0; i < slice.length; i++) {
+              byteNumbers[i] = slice.charCodeAt(i);
+            }
+            
+            const byteArray = new Uint8Array(byteNumbers);
+            byteArrays.push(byteArray);
+          }
+          
+          const blob = new Blob(byteArrays, { type: mimeType });
+          const blobUrl = URL.createObjectURL(blob);
+          
+          console.log('Created Blob URL:', blobUrl);
+          
+          // Store the Blob URL instead of the large base64 string
           const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-          cartImages[variantId] = 'SESSION_STORAGE:' + variantId;
+          cartImages[variantId] = blobUrl;
           localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
           
-          // Store the actual image in sessionStorage
-          sessionStorage.setItem('cartoonique_image_' + variantId, imageUrl);
+          // Store the variant ID -> blob URL mapping in the window object for immediate access
+          if (!window.cartoonique_blob_urls) {
+            window.cartoonique_blob_urls = {};
+          }
+          window.cartoonique_blob_urls[variantId] = blobUrl;
+          
           return true;
         } else {
-          // For smaller images, try using localStorage as normal
+          // Not a base64 image, store as is
           const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
           cartImages[variantId] = imageUrl;
           localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
@@ -4349,33 +4377,24 @@ class ImageProcessingManager {
       } catch (error) {
         console.error('Storage error:', error);
         
-        // If we hit a quota error, try trimming the image or using other strategies
-        if (error.name === 'QuotaExceededError') {
-          try {
-            console.log('Storage quota exceeded, trying alternative storage approach');
-            
-            // Clear out any old entries that might be taking up space
-            const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-            
-            // Only keep the current variant
-            const newCartImages = {};
-            newCartImages[variantId] = 'CURRENT_PROCESSED_IMAGE';
-            localStorage.setItem('cartoonique_cart_images', JSON.stringify(newCartImages));
-            
-            // Store in window variable for immediate use
-            window.cartoonique_current_image = imageUrl;
-            
-            // Set a flag in sessionStorage indicating we have an image in memory
-            sessionStorage.setItem('cartoonique_has_memory_image', 'true');
-            sessionStorage.setItem('cartoonique_current_variant', variantId);
-            
-            return true;
-          } catch (fallbackError) {
-            console.error('Failed to store image with fallback method:', fallbackError);
-            return false;
+        // If we still hit an error, revert to the window object approach
+        try {
+          console.log('Storing image in memory as fallback');
+          if (!window.cartoonique_memory_images) {
+            window.cartoonique_memory_images = {};
           }
+          window.cartoonique_memory_images[variantId] = imageUrl;
+          
+          // Store just a reference in localStorage
+          const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
+          cartImages[variantId] = 'MEMORY_IMAGE:' + variantId;
+          localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
+          
+          return true;
+        } catch (fallbackError) {
+          console.error('Failed to store image with fallback method:', fallbackError);
+          return false;
         }
-        return false;
       }
     };
     
@@ -4529,12 +4548,33 @@ class ImageProcessingManager {
         
         // Function to get an image URL from our various storage locations
         function getStoredImageForVariant(variantId) {
-          // First check localStorage
+          // First check if we have a blob URL in the window object
+          if (window.cartoonique_blob_urls && window.cartoonique_blob_urls[variantId]) {
+            console.log('Found blob URL in window object for variant:', variantId);
+            return window.cartoonique_blob_urls[variantId];
+          }
+          
+          // Then check if we have a memory image
+          if (window.cartoonique_memory_images && window.cartoonique_memory_images[variantId]) {
+            console.log('Found memory image for variant:', variantId);
+            return window.cartoonique_memory_images[variantId];
+          }
+          
+          // Otherwise, check localStorage
           try {
             const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
             const storedValue = cartImages[variantId];
             
             if (!storedValue) {
+              return null;
+            }
+            
+            // Check if it's a reference to a memory image
+            if (typeof storedValue === 'string' && storedValue.startsWith('MEMORY_IMAGE:')) {
+              const memoryVariantId = storedValue.split(':')[1];
+              if (window.cartoonique_memory_images && window.cartoonique_memory_images[memoryVariantId]) {
+                return window.cartoonique_memory_images[memoryVariantId];
+              }
               return null;
             }
             
@@ -4553,7 +4593,7 @@ class ImageProcessingManager {
               }
             }
             
-            // Otherwise it's the actual image URL
+            // Otherwise it's the actual image URL or Blob URL
             return storedValue;
           } catch (error) {
             console.error('Error retrieving image from storage:', error);
