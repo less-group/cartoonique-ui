@@ -185,133 +185,156 @@
           
           // Add change event listener
           fallbackInput.addEventListener('change', function(event) {
-            if (event.target.files && event.target.files.length > 0) {
-              console.log('⭐ File selected via fallback input');
+            if (event.target.files && event.target.files.length) {
+              console.log('⭐ Fallback input file selected:', event.target.files[0].name);
               
-              // Hide instructions popup if visible
+              // Get the selected file
+              const selectedFile = event.target.files[0];
+              
+              // Hide instructions popup if it exists
               const instructionsPopup = document.getElementById('pixar-instructions-popup');
               if (instructionsPopup) {
                 instructionsPopup.style.display = 'none';
               }
               
-              // Show loading popup if it exists
+              // Show loading popup
               const loadingPopup = document.getElementById('pixar-loading-popup');
               if (loadingPopup) {
                 loadingPopup.style.display = 'block';
-                const progressBar = document.getElementById('pixar-progress-bar');
-                const progressText = document.getElementById('pixar-progress-text');
-                if (progressBar) progressBar.style.width = '10%';
-                if (progressText) progressText.textContent = 'Uploading your image...';
+                document.body.style.overflow = 'hidden';
               }
               
-              // Process the selected file
-              const selectedFile = event.target.files[0];
-              
-              // Option 1: Try to use the window.processImageWithRunPod function directly
+              // OPTION 1: Try to use the global processImageWithRunPod function
               if (typeof window.processImageWithRunPod === 'function') {
                 console.log('⭐ Using global processImageWithRunPod function');
                 window.processImageWithRunPod(selectedFile);
-              } 
-              // Option 2: Try to use the image processing manager
-              else if (window.imageProcessingManager && typeof window.imageProcessingManager.handleFileSelected === 'function') {
-                console.log('⭐ Passing file to ImageProcessingManager');
-                window.imageProcessingManager.handleFileSelected({ target: { files: [selectedFile] } });
+                return;
               }
-              // Option 3: Implement the Railway API call directly as a fallback
-              else {
-                console.log('⭐ Using direct implementation to call Railway API');
-                // Create a FileReader to read the file as a data URL
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                  const imageBase64 = e.target.result;
-                  console.log('⭐ File successfully read as base64');
+              
+              // OPTION 2: Try to use the Image Processing Manager
+              if (window.imageProcessingManager) {
+                console.log('⭐ Using ImageProcessingManager.handleFileSelected');
+                window.imageProcessingManager.handleFileSelected(event);
+                return;
+              }
+              
+              // OPTION 3: Direct implementation (FALLBACK)
+              console.log('⭐ No processImageWithRunPod or ImageProcessingManager found, implementing direct API call');
+              
+              // Create a unique file identifier to prevent duplicate processing
+              const fileIdentifier = `${selectedFile.name}-${selectedFile.size}-${selectedFile.lastModified || Date.now()}`;
+              
+              // Check global tracking
+              if (!window.railwayApiCallsInProgress) {
+                window.railwayApiCallsInProgress = {};
+              }
+              
+              if (window.railwayApiCallsInProgress[fileIdentifier]) {
+                console.log('⭐ This file is already being processed, skipping duplicate API call');
+                return;
+              }
+              
+              // Mark file as being processed
+              window.railwayApiCallsInProgress[fileIdentifier] = true;
+              
+              const reader = new FileReader();
+              reader.onload = function(e) {
+                const imageBase64 = e.target.result;
+                
+                // Create payload with image and watermark
+                const payload = {
+                  image: imageBase64,
+                  style: 'pixar',
+                  watermark: {
+                    url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/watermark.png",
+                    width: 200,
+                    height: 100,
+                    spaceBetweenWatermarks: 100
+                  }
+                };
+                
+                // Call the API endpoint
+                fetch('https://letzteshemd-faceswap-api-production.up.railway.app/transform', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify(payload),
+                  timeout: 60000 // 60 second timeout
+                })
+                .then(response => {
+                  console.log('⭐ Transform API response received, status:', response.status);
+                  if (!response.ok) {
+                    throw new Error(`API response error: ${response.status}`);
+                  }
+                  return response.json();
+                })
+                .then(data => {
+                  console.log('⭐ Transform response data:', data);
                   
-                  // Create payload with image and watermark only
-                  const payload = {
-                    image: imageBase64,
-                    style: 'pixar',
-                    watermark: {
-                      url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/watermark.png",
-                      width: 200,
-                      height: 100,
-                      spaceBetweenWatermarks: 100
-                    }
-                  };
+                  // Check for explicit error field in response
+                  if (data.error) {
+                    throw new Error(data.error);
+                  }
                   
-                  console.log('⭐ Sending image data directly to Railway API');
+                  // Extract jobId
+                  let jobId = data.jobId || data.id;
                   
-                  // Call the transform endpoint
-                  fetch('https://letzteshemd-faceswap-api-production.up.railway.app/transform', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload),
-                    timeout: 60000 // 60 second timeout
-                  })
-                  .then(response => {
-                    console.log('⭐ Transform API response received, status:', response.status);
-                    if (!response.ok) {
-                      throw new Error(`API response error: ${response.status}`);
-                    }
-                    return response.json();
-                  })
-                  .then(data => {
-                    console.log('⭐ Transform response data:', data);
+                  if (jobId) {
+                    console.log('⭐ Successfully received jobId:', jobId);
                     
-                    // Check for explicit error field in response
-                    if (data.error) {
-                      throw new Error(data.error);
-                    }
-                    
-                    // Extract jobId
-                    let jobId = data.jobId || data.id;
-                    
-                    if (jobId) {
-                      console.log('⭐ Successfully received jobId:', jobId);
-                      
-                      // Dispatch event for other components to handle
+                    // Start polling for job status if we have a global tracking system
+                    if (window.imageProcessingManager && typeof window.imageProcessingManager.pollRailwayJobStatus === 'function') {
+                      window.imageProcessingManager.pollRailwayJobStatus(jobId);
+                    } else {
+                      // Otherwise dispatch event for other components to handle
                       const customEvent = new CustomEvent('pixar-job-started', {
                         detail: { jobId: jobId, file: selectedFile }
                       });
                       document.dispatchEvent(customEvent);
-                      
-                      // Show success message on button
-                      const uploadButton = document.querySelector('#direct-pixar-loader-container button');
-                      if (uploadButton) {
-                        uploadButton.textContent = '✅ IMAGE UPLOADED - PROCESSING';
-                        uploadButton.style.backgroundColor = '#FFA500';
-                      }
-                    } else {
-                      console.error('⭐ No jobId in response');
-                      throw new Error('Failed to process image. Please try again.');
-                    }
-                  })
-                  .catch(error => {
-                    console.error('⭐ Error in transform call:', error);
-                    // Show error message
-                    const errorElement = document.getElementById('pixar-error-message');
-                    if (errorElement) {
-                      errorElement.textContent = 'Error: ' + (error.message || 'Unknown error processing image');
-                      errorElement.style.display = 'block';
                     }
                     
-                    // Hide loading popup
-                    if (loadingPopup) {
-                      loadingPopup.style.display = 'none';
+                    // Show success message on button
+                    const uploadButton = document.querySelector('#direct-pixar-loader-container button');
+                    if (uploadButton) {
+                      uploadButton.textContent = '✅ IMAGE UPLOADED - PROCESSING';
+                      uploadButton.style.backgroundColor = '#FFA500';
                     }
-                  });
-                };
-                reader.onerror = function(error) {
-                  console.error('⭐ Error reading file:', error);
+                  } else {
+                    console.error('⭐ No jobId in response');
+                    throw new Error('Failed to process image. Please try again.');
+                  }
+                })
+                .catch(error => {
+                  console.error('⭐ Error in transform call:', error);
+                  // Remove file from tracking on error
+                  delete window.railwayApiCallsInProgress[fileIdentifier];
+                  
+                  // Show error message
                   const errorElement = document.getElementById('pixar-error-message');
                   if (errorElement) {
-                    errorElement.textContent = 'Error: Could not read file';
+                    errorElement.textContent = 'Error: ' + (error.message || 'Unknown error processing image');
                     errorElement.style.display = 'block';
                   }
-                };
-                reader.readAsDataURL(selectedFile);
-              }
+                  
+                  // Hide loading popup
+                  if (loadingPopup) {
+                    loadingPopup.style.display = 'none';
+                  }
+                });
+              };
+              reader.onerror = function(error) {
+                console.error('⭐ Error reading file:', error);
+                // Remove file from tracking on error
+                delete window.railwayApiCallsInProgress[fileIdentifier];
+                
+                const errorElement = document.getElementById('pixar-error-message');
+                if (errorElement) {
+                  errorElement.textContent = 'Error: Could not read file';
+                  errorElement.style.display = 'block';
+                }
+              };
+              reader.readAsDataURL(selectedFile);
             }
           });
           

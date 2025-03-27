@@ -350,68 +350,87 @@ class ImageProcessingManager {
     this.cropComplete = false;
     this.textProcessingComplete = false;
     
-    // IMPORTANT: Send the original file to Railway immediately for processing in the background
-    // while the user is doing cropping and text editing
-    if (typeof window.processImageWithRunPod === 'function' && this.originalFile) {
-      console.log('🖼️ Immediately sending original image to Railway for processing in the background');
-      // Pass isOriginal: true to indicate this is the uncropped image
-      window.processImageWithRunPod(this.originalFile, { isOriginal: true });
+    // Create a unique file identifier to prevent duplicate processing
+    // Use filename + size + last modified as a simple way to identify the same file
+    const fileIdentifier = `${file.name}-${file.size}-${file.lastModified || Date.now()}`;
+    
+    // Initialize/access the tracking for API calls
+    if (!window.railwayApiCallsInProgress) {
+      window.railwayApiCallsInProgress = {};
+    }
+    
+    // Check if we're already processing this file
+    if (window.railwayApiCallsInProgress[fileIdentifier]) {
+      console.log('🖼️ Already processing this file with Railway API, skipping duplicate request');
     } else {
-      console.log('🖼️ processImageWithRunPod not available, implementing direct Railway API call');
+      // Mark this file as being processed
+      window.railwayApiCallsInProgress[fileIdentifier] = true;
       
-      // Implement direct API call to Railway as a fallback
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const imageBase64 = e.target.result;
+      // IMPORTANT: Send the original file to Railway immediately for processing in the background
+      // while the user is doing cropping and text editing
+      if (typeof window.processImageWithRunPod === 'function' && this.originalFile) {
+        console.log('🖼️ Immediately sending original image to Railway for processing in the background');
+        // Pass isOriginal: true to indicate this is the uncropped image
+        window.processImageWithRunPod(this.originalFile, { isOriginal: true });
+      } else {
+        console.log('🖼️ processImageWithRunPod not available, implementing direct Railway API call');
         
-        // Create payload
-        const payload = {
-          image: imageBase64,
-          style: 'pixar',
-          watermark: {
-            url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/watermark.png",
-            width: 200,
-            height: 100,
-            spaceBetweenWatermarks: 100
-          }
+        // Implement direct API call to Railway as a fallback
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const imageBase64 = e.target.result;
+          
+          // Create payload
+          const payload = {
+            image: imageBase64,
+            style: 'pixar',
+            watermark: {
+              url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/watermark.png",
+              width: 200,
+              height: 100,
+              spaceBetweenWatermarks: 100
+            }
+          };
+          
+          console.log('🖼️ Sending image directly to Railway API');
+          
+          // Call the transform endpoint
+          fetch('https://letzteshemd-faceswap-api-production.up.railway.app/transform', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload),
+            timeout: 60000 // 60 second timeout
+          })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`API response error: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then(data => {
+            console.log('🖼️ Transform response from Railway:', data);
+            
+            // Extract jobId
+            let jobId = data.jobId || data.id;
+            
+            if (jobId) {
+              console.log('🖼️ Successfully received jobId:', jobId);
+              
+              // Start polling for the job result
+              this.pollRailwayJobStatus(jobId);
+            }
+          })
+          .catch(error => {
+            console.error('🖼️ Error in Railway transform call:', error);
+            // Remove file from tracking on error so it can be retried
+            delete window.railwayApiCallsInProgress[fileIdentifier];
+          });
         };
         
-        console.log('🖼️ Sending image directly to Railway API');
-        
-        // Call the transform endpoint
-        fetch('https://letzteshemd-faceswap-api-production.up.railway.app/transform', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload),
-          timeout: 60000 // 60 second timeout
-        })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`API response error: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(data => {
-          console.log('🖼️ Transform response from Railway:', data);
-          
-          // Extract jobId
-          let jobId = data.jobId || data.id;
-          
-          if (jobId) {
-            console.log('🖼️ Successfully received jobId:', jobId);
-            
-            // Start polling for the job result
-            this.pollRailwayJobStatus(jobId);
-          }
-        })
-        .catch(error => {
-          console.error('🖼️ Error in Railway transform call:', error);
-        });
-      };
-      
-      reader.readAsDataURL(this.originalFile);
+        reader.readAsDataURL(this.originalFile);
+      }
     }
     
     // Convert file to data URL for later use
@@ -431,6 +450,8 @@ class ImageProcessingManager {
     };
     reader.onerror = (error) => {
       console.error('Error reading file:', error);
+      // Remove file from tracking on error so it can be retried
+      delete window.railwayApiCallsInProgress[fileIdentifier];
     };
     reader.readAsDataURL(this.originalFile);
   }
@@ -2690,6 +2711,17 @@ class ImageProcessingManager {
       return;
     }
     
+    // Skip if this job was already processed (using a global registry)
+    if (!window.railwayJobsStatus) {
+      window.railwayJobsStatus = {};
+    }
+    
+    // Check if we already have a result for this job
+    if (window.railwayJobsStatus[jobId] === 'COMPLETED' || window.railwayJobsStatus[jobId] === 'FAILED') {
+      console.log(`🖼️ Job ${jobId} was already processed with status: ${window.railwayJobsStatus[jobId]}, skipping poll`);
+      return;
+    }
+    
     fetch(`https://letzteshemd-faceswap-api-production.up.railway.app/status/${jobId}`, {
       method: 'GET'
     })
@@ -2701,6 +2733,11 @@ class ImageProcessingManager {
     })
     .then(data => {
       console.log(`🖼️ Railway job status for ${jobId}:`, data);
+      
+      // Store the current status
+      if (data.status) {
+        window.railwayJobsStatus[jobId] = data.status.toUpperCase();
+      }
       
       // Check job status
       if (data.status && data.status.toUpperCase() === 'COMPLETED') {
@@ -2718,11 +2755,20 @@ class ImageProcessingManager {
           this.stylizedImageUrl = imageUrl;
           this.transformationComplete = true;
           
-          // Trigger the transform complete event
-          const customEvent = new CustomEvent('pixar-transform-complete', {
-            detail: { imageUrl: imageUrl, timestamp: Date.now() }
-          });
-          document.dispatchEvent(customEvent);
+          // Prevent duplicate events by checking if we've already dispatched for this job
+          if (!window.railwayJobsEventDispatched) {
+            window.railwayJobsEventDispatched = {};
+          }
+          
+          if (!window.railwayJobsEventDispatched[jobId]) {
+            window.railwayJobsEventDispatched[jobId] = true;
+            
+            // Trigger the transform complete event
+            const customEvent = new CustomEvent('pixar-transform-complete', {
+              detail: { imageUrl: imageUrl, timestamp: Date.now() }
+            });
+            document.dispatchEvent(customEvent);
+          }
           
           // If crop is already complete, apply final processing
           if (this.cropComplete && this.textProcessingComplete) {
@@ -2746,6 +2792,78 @@ class ImageProcessingManager {
       setTimeout(() => this.pollRailwayJobStatus(jobId, attempt + 1), backoffTime);
     });
   }
+  
+  /**
+   * Utility method to clean up stale Railway job registrations
+   * This helps prevent memory leaks from unfinished jobs
+   * Called periodically or when the page is idle
+   */
+  cleanupStaleJobs() {
+    // Clean up the tracking objects
+    if (window.railwayApiCallsInProgress) {
+      console.log('🖼️ Cleaning up stale Railway API calls tracking');
+      
+      // Remove tracking for files that have been processed more than 5 minutes ago
+      const now = Date.now();
+      const cutoffTime = 5 * 60 * 1000; // 5 minutes
+      
+      // Initialize timestamps for tracking if not already done
+      if (!window.railwayApiCallTimestamps) {
+        window.railwayApiCallTimestamps = {};
+        
+        // For existing entries, set current timestamp
+        for (const fileId in window.railwayApiCallsInProgress) {
+          window.railwayApiCallTimestamps[fileId] = now;
+        }
+      }
+      
+      // Check each file and remove stale entries
+      for (const fileId in window.railwayApiCallsInProgress) {
+        // If no timestamp exists, create one now
+        if (!window.railwayApiCallTimestamps[fileId]) {
+          window.railwayApiCallTimestamps[fileId] = now;
+          continue;
+        }
+        
+        const timestamp = window.railwayApiCallTimestamps[fileId];
+        if (now - timestamp > cutoffTime) {
+          console.log(`🖼️ Removing stale API call tracking for file ${fileId}`);
+          delete window.railwayApiCallsInProgress[fileId];
+          delete window.railwayApiCallTimestamps[fileId];
+        }
+      }
+    }
+  }
+  
+  /**
+   * Returns stats about ongoing Railway API calls and job statuses
+   * Useful for debugging duplicate calls
+   */
+  getRailwayStats() {
+    const stats = {
+      activeApiCalls: 0,
+      completedJobs: 0,
+      failedJobs: 0,
+      pendingJobs: 0,
+      totalTrackedFiles: 0
+    };
+    
+    if (window.railwayApiCallsInProgress) {
+      stats.totalTrackedFiles = Object.keys(window.railwayApiCallsInProgress).length;
+      stats.activeApiCalls = stats.totalTrackedFiles;
+    }
+    
+    if (window.railwayJobsStatus) {
+      for (const jobId in window.railwayJobsStatus) {
+        const status = window.railwayJobsStatus[jobId];
+        if (status === 'COMPLETED') stats.completedJobs++;
+        else if (status === 'FAILED') stats.failedJobs++;
+        else stats.pendingJobs++;
+      }
+    }
+    
+    return stats;
+  }
 }
 
 // Initialize static instance property
@@ -2758,18 +2876,56 @@ window.ImageProcessingManager = ImageProcessingManager;
 if (!window.imageProcessingManager) {
   window.imageProcessingManager = new ImageProcessingManager();
   console.log('🖼️ Image Processing Manager loaded and initialized');
+  
+  // Set up periodic cleanup of stale jobs
+  setInterval(() => {
+    if (window.imageProcessingManager) {
+      window.imageProcessingManager.cleanupStaleJobs();
+    }
+  }, 5 * 60 * 1000); // Run every 5 minutes
+  
+  // Also set up cleanup when the page becomes idle
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(() => {
+      if (window.imageProcessingManager) {
+        window.imageProcessingManager.cleanupStaleJobs();
+      }
+    });
+  }
 }
 
 // Make the global functions reference our manager's methods
 if (window.processImageWithRunPod && !window.originalProcessImageWithRunPod) {
   window.originalProcessImageWithRunPod = window.processImageWithRunPod;
-  window.processImageWithRunPod = function(file) {
+  window.processImageWithRunPod = function(file, options = {}) {
     console.log('🖼️ Image Processing Manager intercepted processImageWithRunPod call for file:', file.name);
+    
+    // Create a unique file identifier to prevent duplicate processing
+    const fileIdentifier = `${file.name}-${file.size}-${file.lastModified || Date.now()}`;
+    
+    // Initialize/access the tracking for API calls
+    if (!window.railwayApiCallsInProgress) {
+      window.railwayApiCallsInProgress = {};
+    }
+    
+    // Check if we're already processing this file
+    if (window.railwayApiCallsInProgress[fileIdentifier]) {
+      console.log('🖼️ Already processing this file with Railway API via processImageWithRunPod, skipping duplicate request');
+      return;
+    }
+    
+    // Mark this file as being processed
+    window.railwayApiCallsInProgress[fileIdentifier] = true;
     
     // Call the original function to send to backend
     if (window.originalProcessImageWithRunPod) {
       console.log('🖼️ Delegating to original processImageWithRunPod implementation');
-      window.originalProcessImageWithRunPod(file);
+      try {
+        window.originalProcessImageWithRunPod(file, options);
+      } catch(err) {
+        console.error('🖼️ Error in original processImageWithRunPod:', err);
+        delete window.railwayApiCallsInProgress[fileIdentifier];
+      }
     }
   };
 } else {
@@ -2780,13 +2936,35 @@ if (window.processImageWithRunPod && !window.originalProcessImageWithRunPod) {
     if (window.processImageWithRunPod && !window.originalProcessImageWithRunPod) {
       console.log('🖼️ Found processImageWithRunPod on retry, setting up interception');
       window.originalProcessImageWithRunPod = window.processImageWithRunPod;
-      window.processImageWithRunPod = function(file) {
+      window.processImageWithRunPod = function(file, options = {}) {
         console.log('🖼️ Image Processing Manager intercepted processImageWithRunPod call for file:', file.name);
+        
+        // Create a unique file identifier to prevent duplicate processing
+        const fileIdentifier = `${file.name}-${file.size}-${file.lastModified || Date.now()}`;
+        
+        // Initialize/access the tracking for API calls
+        if (!window.railwayApiCallsInProgress) {
+          window.railwayApiCallsInProgress = {};
+        }
+        
+        // Check if we're already processing this file
+        if (window.railwayApiCallsInProgress[fileIdentifier]) {
+          console.log('🖼️ Already processing this file with Railway API via processImageWithRunPod, skipping duplicate request');
+          return;
+        }
+        
+        // Mark this file as being processed
+        window.railwayApiCallsInProgress[fileIdentifier] = true;
         
         // Call the original function to send to backend
         if (window.originalProcessImageWithRunPod) {
           console.log('🖼️ Delegating to original processImageWithRunPod implementation');
-          window.originalProcessImageWithRunPod(file);
+          try {
+            window.originalProcessImageWithRunPod(file, options);
+          } catch(err) {
+            console.error('🖼️ Error in original processImageWithRunPod:', err);
+            delete window.railwayApiCallsInProgress[fileIdentifier];
+          }
         }
       };
     } else {
@@ -2810,8 +2988,7 @@ if (originalHandleCropComplete) {
     // After cropping is complete, check if we need to send to Railway
     // Only send if the image wasn't already sent in handleFileSelected
     if (this.processedImage && !this.sentToRailway && typeof window.processImageWithRunPod !== 'function') {
-      console.log('🖼️ Cropping complete, sending to Railway now since it wasn\'t sent earlier');
-      this.sentToRailway = true;
+      console.log('🖼️ Cropping complete, checking if we need to send to Railway');
       
       // Convert data URL to File object for processImageWithRunPod
       const byteString = atob(this.processedImage.split(',')[1]);
@@ -2829,6 +3006,32 @@ if (originalHandleCropComplete) {
       
       console.log('🖼️ Created File object from cropped image data URL');
       
+      // Create a unique file identifier
+      const fileIdentifier = `${filename}-${blob.size}-${Date.now()}`;
+      
+      // Initialize/access the tracking for API calls
+      if (!window.railwayApiCallsInProgress) {
+        window.railwayApiCallsInProgress = {};
+      }
+      
+      // Check if we're already processing this file or if we've already sent the original
+      const originalFileIdentifier = this.originalFile ? 
+        `${this.originalFile.name}-${this.originalFile.size}-${this.originalFile.lastModified || Date.now()}` : null;
+      
+      if (originalFileIdentifier && window.railwayApiCallsInProgress[originalFileIdentifier]) {
+        console.log('🖼️ Original file is already being processed by Railway, skipping duplicate request');
+        return;
+      }
+      
+      if (window.railwayApiCallsInProgress[fileIdentifier]) {
+        console.log('🖼️ Cropped image is already being processed by Railway, skipping duplicate request');
+        return;
+      }
+      
+      // Mark as sent to Railway to avoid duplicate sends
+      this.sentToRailway = true;
+      window.railwayApiCallsInProgress[fileIdentifier] = true;
+      
       // Now send to Railway via processImageWithRunPod if it exists
       if (typeof window.processImageWithRunPod === 'function') {
         console.log('🖼️ Calling processImageWithRunPod with cropped image file');
@@ -2844,6 +3047,8 @@ if (originalHandleCropComplete) {
         window.pixarComponent.handleFileSelect(fakeEvent);
       } else {
         console.error('🖼️ Failed to find method to send image to Railway after cropping');
+        // Remove tracking since we couldn't process
+        delete window.railwayApiCallsInProgress[fileIdentifier];
       }
     } else {
       console.log('🖼️ Cropping complete, but image was already sent to Railway earlier or processImageWithRunPod not available');
