@@ -1264,12 +1264,8 @@ class ImageProcessingManager {
             <div id="pixar-result-image-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;"></div>
           </div>
           
-          <p style="text-align: center; margin-top: 25px; color: #555; font-size: 18px; font-weight: 500;">Your image has been successfully processed.</p>
-          
           <!-- Size selection menu -->
           <div style="margin-top: 30px;">
-            <h4 style="text-align: center; font-size: 18px; margin-bottom: 15px; color: #333; font-weight: bold; text-transform: uppercase;">Choose the size</h4>
-            
             <div style="display: flex; justify-content: space-between; margin: 0 auto; max-width: 90%;">
               <!-- Size S -->
               <div data-size="S" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 10px; cursor: pointer; background-color: #f0f5fb;">
@@ -1293,7 +1289,9 @@ class ImageProcessingManager {
               </div>
             </div>
             
-            <div style="text-align: center; margin-top: 20px;">
+            <h4 style="text-align: center; font-size: 18px; margin-top: 20px; margin-bottom: 15px; color: #333; font-weight: bold; text-transform: uppercase;">Choose the size</h4>
+            
+            <div style="text-align: center; margin-top: 10px;">
               <a href="#" style="color: #4a7dbd; text-decoration: underline; font-size: 14px;">Size guide</a>
             </div>
           </div>
