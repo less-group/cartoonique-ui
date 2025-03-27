@@ -4324,14 +4324,66 @@ class ImageProcessingManager {
       console.log('Using processed image URL (truncated):', processedImageUrl.substring(0, 50) + '...');
     }
     
-    // Store the processed image URL in localStorage with the variant ID as the key
-    // This will be used by the cart page to display the processed image
-    const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-    cartImages[variantId] = processedImageUrl;
-    localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
+    // Handle storage of the processed image URL safely to prevent quota errors
+    const storeImageSafely = (variantId, imageUrl) => {
+      try {
+        // For large base64 images, try to use sessionStorage instead of localStorage
+        // as it's typically used for temporary data and might have different quota limits
+        if (imageUrl.length > 1000000) { // If image is larger than ~1MB
+          console.log('Image is large, using sessionStorage instead of localStorage');
+          // Store the variant ID in localStorage with a special flag
+          const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
+          cartImages[variantId] = 'SESSION_STORAGE:' + variantId;
+          localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
+          
+          // Store the actual image in sessionStorage
+          sessionStorage.setItem('cartoonique_image_' + variantId, imageUrl);
+          return true;
+        } else {
+          // For smaller images, try using localStorage as normal
+          const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
+          cartImages[variantId] = imageUrl;
+          localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
+          return true;
+        }
+      } catch (error) {
+        console.error('Storage error:', error);
+        
+        // If we hit a quota error, try trimming the image or using other strategies
+        if (error.name === 'QuotaExceededError') {
+          try {
+            console.log('Storage quota exceeded, trying alternative storage approach');
+            
+            // Clear out any old entries that might be taking up space
+            const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
+            
+            // Only keep the current variant
+            const newCartImages = {};
+            newCartImages[variantId] = 'CURRENT_PROCESSED_IMAGE';
+            localStorage.setItem('cartoonique_cart_images', JSON.stringify(newCartImages));
+            
+            // Store in window variable for immediate use
+            window.cartoonique_current_image = imageUrl;
+            
+            // Set a flag in sessionStorage indicating we have an image in memory
+            sessionStorage.setItem('cartoonique_has_memory_image', 'true');
+            sessionStorage.setItem('cartoonique_current_variant', variantId);
+            
+            return true;
+          } catch (fallbackError) {
+            console.error('Failed to store image with fallback method:', fallbackError);
+            return false;
+          }
+        }
+        return false;
+      }
+    };
     
-    // Set up cart image replacement to ensure the image is shown correctly in the cart
-    this.setupCartImageReplacement();
+    // Try to store the image
+    const storageResult = storeImageSafely(variantId, processedImageUrl);
+    
+    // Update cart image replacement code to be aware of our storage approach
+    this.setupCartImageReplacementWithFallbacks();
     
     // Show loading state in the popup instead of closing it immediately
     const popup = document.querySelector('#pixar-result-popup');
@@ -4391,7 +4443,7 @@ class ImageProcessingManager {
         'id': variantId,
         'quantity': 1,
         'properties': {
-          '_processed_image': processedImageUrl,
+          '_processed_image': 'yes', // Just store a flag, not the full URL
           '_selected_size': size
         }
       }]
@@ -4464,41 +4516,50 @@ class ImageProcessingManager {
   
   /**
    * Set up hooks to replace cart images with processed images
-   * This adds event listeners for page load and DOM mutations 
+   * This version handles fallback storage methods
    */
-  setupCartImageReplacement() {
-    console.log('Setting up cart image replacement for exact Dawn theme structure');
-    
-    // Store the current state of processed images in localStorage for the cart page to access
-    const processedImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-    
-    if (Object.keys(processedImages).length === 0) {
-      console.log('No processed images found in localStorage, nothing to replace');
-      return;
-    }
-    
-    console.log('Processed images available:', processedImages);
+  setupCartImageReplacementWithFallbacks() {
+    console.log('Setting up cart image replacement with fallback storage handling');
     
     // Create a script element with a direct approach to image replacement
     const script = document.createElement('script');
     script.textContent = `
       (function() {
-        console.log('Direct cart image replacement script started');
+        console.log('Direct cart image replacement script started with fallback support');
         
-        // Access the stored processed images
-        const processedImages = ${JSON.stringify(processedImages)};
-        console.log('Processed images loaded in script:', processedImages);
-        
-        // Extract the file IDs from the URLs
-        const fileIdMapping = {};
-        Object.keys(processedImages).forEach(variantId => {
-          const url = processedImages[variantId];
-          const fileIdMatch = url.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i);
-          if (fileIdMatch && fileIdMatch[1]) {
-            fileIdMapping[fileIdMatch[1]] = url;
-            console.log('Mapped file ID ' + fileIdMatch[1] + ' to URL ' + url);
+        // Function to get an image URL from our various storage locations
+        function getStoredImageForVariant(variantId) {
+          // First check localStorage
+          try {
+            const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
+            const storedValue = cartImages[variantId];
+            
+            if (!storedValue) {
+              return null;
+            }
+            
+            // Check if it's a reference to sessionStorage
+            if (typeof storedValue === 'string' && storedValue.startsWith('SESSION_STORAGE:')) {
+              // Get the actual image from sessionStorage
+              return sessionStorage.getItem('cartoonique_image_' + variantId);
+            }
+            
+            // Check if it's a reference to memory storage
+            if (storedValue === 'CURRENT_PROCESSED_IMAGE') {
+              // Check if we have a current variant in sessionStorage
+              const currentVariant = sessionStorage.getItem('cartoonique_current_variant');
+              if (currentVariant === variantId && window.cartoonique_current_image) {
+                return window.cartoonique_current_image;
+              }
+            }
+            
+            // Otherwise it's the actual image URL
+            return storedValue;
+          } catch (error) {
+            console.error('Error retrieving image from storage:', error);
+            return null;
           }
-        });
+        }
         
         // Direct replacement function
         function replaceCartImages() {
@@ -4528,10 +4589,58 @@ class ImageProcessingManager {
               classes: img.className 
             });
             
-            // Check for file ID matches in src or alt
-            for (const fileId in fileIdMapping) {
-              if (src.includes(fileId) || alt.includes(fileId)) {
-                console.log('Found matching file ID: ' + fileId);
+            // Try to find the variant ID for this image
+            let foundVariantId = null;
+            
+            // Look for variant ID in various places
+            function findVariantIdForImage(img) {
+              // First check if the image itself has any data attributes
+              if (img.dataset.variantId) return img.dataset.variantId;
+              if (img.dataset.id) return img.dataset.id;
+              
+              // Check parent elements for variant ID
+              let element = img.parentElement;
+              const checkedElements = new Set();
+              
+              for (let depth = 0; depth < 10; depth++) {
+                if (!element || checkedElements.has(element)) break;
+                checkedElements.add(element);
+                
+                // Check for data attributes
+                const variantId = element.dataset.variantId || 
+                                 element.dataset.id || 
+                                 element.dataset.variant || 
+                                 element.dataset.itemId ||
+                                 element.dataset.cartItemId;
+                
+                if (variantId) return variantId;
+                
+                // Check href attributes
+                const href = element.getAttribute('href');
+                if (href) {
+                  const variantMatch = href.match(/variant=([0-9]+)/);
+                  if (variantMatch && variantMatch[1]) return variantMatch[1];
+                  
+                  const pathVariantMatch = href.match(/\\?variant=([0-9]+)/);
+                  if (pathVariantMatch && pathVariantMatch[1]) return pathVariantMatch[1];
+                }
+                
+                // Move up the DOM tree
+                element = element.parentElement;
+              }
+              
+              return null;
+            }
+            
+            // Try to find variant ID using the function
+            foundVariantId = findVariantIdForImage(img);
+            
+            // If we found a variant ID, check if we have a stored image for it
+            if (foundVariantId) {
+              const storedImageUrl = getStoredImageForVariant(foundVariantId);
+              
+              if (storedImageUrl) {
+                console.log('Found stored image for variant:', foundVariantId);
                 
                 // Create a new image that will replace the original
                 const newImg = new Image();
@@ -4549,7 +4658,7 @@ class ImageProcessingManager {
                   newImg.className = img.className;
                   
                   // Apply our processed image
-                  newImg.src = fileIdMapping[fileId];
+                  newImg.src = storedImageUrl;
                   newImg.srcset = '';
                   newImg.sizes = '';
                   newImg.alt = alt;
@@ -4565,60 +4674,14 @@ class ImageProcessingManager {
                 };
                 
                 newImg.onerror = function() {
-                  console.error('Failed to load processed image:', fileIdMapping[fileId]);
+                  console.error('Failed to load processed image');
                 };
                 
                 // Start loading the image
-                newImg.src = fileIdMapping[fileId];
-                
-                // Break out of the loop once we've found a match
-                return;
+                newImg.src = storedImageUrl;
               }
             }
           });
-          
-          // Method 2: More general approach if the first method didn't find any matches
-          if (replacedCount === 0) {
-            console.log('No images replaced with direct class targeting, trying fallback approach');
-            
-            // Try to find the cart item container and look for images within
-            const cartItemContainers = document.querySelectorAll(
-              '.cart-item, .cart__item, .cart-table__row, [data-cart-item], .cart_item, ' + 
-              '.cart__items, .cart-items'
-            );
-            
-            console.log('Found ' + cartItemContainers.length + ' cart item containers');
-            
-            cartItemContainers.forEach(container => {
-              // Find all images in this container
-              const images = container.querySelectorAll('img');
-              console.log('Found ' + images.length + ' images in container');
-              
-              images.forEach(img => {
-                // Skip if already processed
-                if (img.dataset.processed === 'true') return;
-                
-                const src = img.src || '';
-                const alt = img.alt || '';
-                
-                // Check for file ID matches
-                for (const fileId in fileIdMapping) {
-                  if (src.includes(fileId) || alt.includes(fileId)) {
-                    console.log('Found matching file ID in container image: ' + fileId);
-                    
-                    // Simply replace the src directly
-                    img.src = fileIdMapping[fileId];
-                    img.srcset = '';
-                    img.sizes = '';
-                    img.dataset.processed = 'true';
-                    replacedCount++;
-                    console.log('Successfully replaced container image');
-                    return;
-                  }
-                }
-              });
-            });
-          }
           
           // Log the results
           console.log('Finished replacing cart images, replaced ' + replacedCount + ' images');
@@ -4684,6 +4747,12 @@ class ImageProcessingManager {
       `;
       document.head.appendChild(immediateScript);
     }
+  }
+
+  // Add this method to maintain compatibility with existing code
+  setupCartImageReplacement() {
+    console.log('Redirecting to setupCartImageReplacementWithFallbacks for better storage handling');
+    this.setupCartImageReplacementWithFallbacks();
   }
 }
 
