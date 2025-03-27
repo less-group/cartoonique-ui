@@ -27,6 +27,7 @@ class ImageProcessingManager {
     this.transformationComplete = false;
     this.textProcessingComplete = false;
     this.finalProcessingComplete = false;
+    this.resultPopupShown = false;
     
     // User customization state
     this.userSelectedStyle = 'pixarStyle';
@@ -173,6 +174,22 @@ class ImageProcessingManager {
     document.addEventListener('pixar-transform-complete', (event) => {
       console.log('Received pixar-transform-complete event with data:', event.detail);
       this.handleTransformComplete(event);
+    });
+    
+    // Listen for final processing complete event
+    document.addEventListener('pixar-final-processing-complete', (event) => {
+      console.log('Received pixar-final-processing-complete event with data:', event.detail);
+      
+      // Reset resultPopupShown flag to allow showing again for new sessions
+      this.resultPopupShown = false;
+      
+      // Show the result popup with the processed image if it's not already showing
+      if (event.detail && event.detail.imageUrl) {
+        // Slightly delay to ensure loading popup is closed first
+        setTimeout(() => {
+          this.showResultPopup(event.detail.imageUrl);
+        }, 100);
+      }
     });
     
     // Track loading popup element - we'll use this to know when to hide it
@@ -1161,6 +1178,11 @@ class ImageProcessingManager {
         console.log('🖼️ Forcing loading popup to close because final processing is complete');
         loadingPopup.style.display = 'none';
         document.body.style.overflow = '';
+        
+        // Show the result popup if processing is complete
+        if (this.finalImageUrl || this.stylizedImageUrl) {
+          this.showResultPopup(this.finalImageUrl || this.stylizedImageUrl);
+        }
       } else if (!this.isProcessing) {
         console.log('🖼️ Hiding loading popup after processing');
         loadingPopup.style.display = 'none';
@@ -1173,9 +1195,91 @@ class ImageProcessingManager {
           this.isProcessing = false; // Force processing to be considered complete
           loadingPopup.style.display = 'none';
           document.body.style.overflow = '';
+          
+          // Show the result popup if we're now complete
+          if (this.finalProcessingComplete && (this.finalImageUrl || this.stylizedImageUrl)) {
+            this.showResultPopup(this.finalImageUrl || this.stylizedImageUrl);
+          }
         }
       }
     }
+  }
+  
+  /**
+   * Show the result popup with the processed image
+   * @param {string} imageUrl - The URL of the processed image to display
+   */
+  showResultPopup(imageUrl) {
+    console.log('RESULT POPUP: Showing result popup with image:', imageUrl);
+    
+    // Prevent showing multiple times
+    if (this.resultPopupShown) {
+      console.log('RESULT POPUP: Already shown, not showing again');
+      return;
+    }
+    
+    this.resultPopupShown = true;
+    
+    // Check if popup already exists
+    let resultPopup = document.getElementById('pixar-result-popup');
+    
+    // Create the popup if it doesn't exist
+    if (!resultPopup) {
+      resultPopup = document.createElement('div');
+      resultPopup.id = 'pixar-result-popup';
+      resultPopup.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.98);
+        z-index: 99999999;
+        display: none;
+        overflow: auto;
+        padding: 20px;
+        box-sizing: border-box;
+      `;
+      
+      // Add content to the result popup
+      resultPopup.innerHTML = `
+        <div style="position: relative; max-width: 700px; margin: 50px auto; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.1);">
+          <h3 style="text-align: center; font-size: 26px; margin-bottom: 20px; color: #333; font-weight: bold;">Your image is ready!</h3>
+          
+          <div style="max-width: 500px; margin: 0 auto; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <img id="pixar-result-image" src="" alt="Processed image" style="width: 100%; display: block;">
+          </div>
+          
+          <p style="text-align: center; margin-top: 25px; color: #555; font-size: 18px; font-weight: 500;">Your image has been successfully processed.</p>
+          
+          <div style="text-align: center; margin-top: 30px;">
+            <button id="pixar-result-continue" style="background-color: #4a7dbd; color: white; padding: 14px 30px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 0 10px; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">CONTINUE</button>
+          </div>
+        </div>
+      `;
+      
+      // Add the popup to the document body
+      document.body.appendChild(resultPopup);
+      
+      // Add event listener for the continue button
+      const continueButton = document.getElementById('pixar-result-continue');
+      if (continueButton) {
+        continueButton.addEventListener('click', () => {
+          resultPopup.style.display = 'none';
+          document.body.style.overflow = '';
+        });
+      }
+    }
+    
+    // Set the image source
+    const resultImage = document.getElementById('pixar-result-image');
+    if (resultImage) {
+      resultImage.src = imageUrl;
+    }
+    
+    // Display the popup
+    resultPopup.style.display = 'block';
+    document.body.style.overflow = 'hidden';
   }
   
   /**
@@ -1727,6 +1831,10 @@ class ImageProcessingManager {
       setTimeout(() => {
         if (loadingPopup) {
           loadingPopup.style.display = 'none';
+          document.body.style.overflow = '';
+          
+          // Show the result popup with the processed image
+          this.showResultPopup(this.finalImageUrl);
         }
       }, 1000);
     };
@@ -1751,6 +1859,10 @@ class ImageProcessingManager {
       // Hide any loading UI
       if (loadingPopup) {
         loadingPopup.style.display = 'none';
+        document.body.style.overflow = '';
+        
+        // Show the result popup with the fallback image
+        this.showResultPopup(this.stylizedImageUrl);
       }
     };
     

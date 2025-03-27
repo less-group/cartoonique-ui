@@ -791,6 +791,14 @@
         uploadButton.textContent = '✅ IMAGE UPLOADED - READY TO ADD TO CART';
         uploadButton.style.backgroundColor = '#4CAF50';
       }
+      
+      // Get the image processing manager instance if available
+      const imageManager = window.imageProcessingManager;
+      
+      // Show the result popup if the manager is available and has the showResultPopup method
+      if (imageManager && typeof imageManager.showResultPopup === 'function' && event.detail && event.detail.imageUrl) {
+        imageManager.showResultPopup(event.detail.imageUrl);
+      }
     });
     
     // Also listen for UnifiedApiClient progress updates
