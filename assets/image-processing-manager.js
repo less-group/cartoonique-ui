@@ -4472,20 +4472,24 @@ class ImageProcessingManager {
       try {
         localStorage.setItem('cartoonique_navigating_to_cart', 'true');
         localStorage.setItem('cartoonique_cart_navigation_time', Date.now().toString());
+        
+        // Pre-process cart images list to make it available immediately when cart loads
+        localStorage.setItem('cartoonique_preload_cart_images', 'true');
       } catch (e) {
         console.error('Error setting navigation flag:', e);
       }
       
       // The most reliable way to navigate
       try {
-        // Force reload of cart page to ensure fresh state
-        window.location.href = '/cart?t=' + Date.now();
+        // Add cache-control header to prevent browser caching
+        const cacheBuster = Date.now();
+        window.location.href = '/cart?t=' + cacheBuster + '&no_cache=1';
         
         // Set a backup timer that will force a navigation if the above doesn't work
         setTimeout(() => {
           console.log('Backup redirect to cart...');
-          window.location.replace('/cart');
-        }, 1500);
+          window.location.replace('/cart?no_cache=1');
+        }, 1000); // Reduced from 1500ms to 1000ms for faster experience
       } catch (err) {
         console.error('Error during redirect:', err);
         // Last resort - try to open cart in new window
@@ -4657,24 +4661,22 @@ class ImageProcessingManager {
           const cartImages = document.querySelectorAll('.cart-item__image.shape__target-image.multiply-mode__target, .cart-item__image.shape__target-image, .cart-item__image');
           console.log('Found ' + cartImages.length + ' cart images with target classes');
           
+          // Early exit if no images found - don't waste processing
+          if (cartImages.length === 0) {
+            return 0;
+          }
+          
           let replacedCount = 0;
           
           cartImages.forEach(img => {
             // Check if we've already processed this image
             if (img.dataset.processed === 'true') {
-              console.log('Image already processed, skipping');
               return;
             }
             
             // Get image src, alt and srcset
             const src = img.src || '';
             const alt = img.alt || '';
-            
-            console.log('Processing cart image:', { 
-              src: src, 
-              alt: alt, 
-              classes: img.className 
-            });
             
             // Try to find the variant ID for this image
             let foundVariantId = null;
@@ -4727,86 +4729,57 @@ class ImageProcessingManager {
               const storedImageUrl = getStoredImageForVariant(foundVariantId);
               
               if (storedImageUrl) {
-                console.log('Found stored image for variant:', foundVariantId);
-                
-                // Create a new image that will replace the original
-                const newImg = new Image();
-                newImg.onload = function() {
-                  console.log('Processed image loaded successfully');
-                  
-                  // Copy all attributes from the original image except src
-                  Array.from(img.attributes).forEach(attr => {
-                    if (attr.name !== 'src' && attr.name !== 'srcset' && attr.name !== 'sizes') {
-                      newImg.setAttribute(attr.name, attr.value);
-                    }
-                  });
-                  
-                  // Copy all classes to maintain theme styling
-                  newImg.className = img.className;
-                  
-                  // Apply our processed image
-                  newImg.src = storedImageUrl;
-                  newImg.srcset = '';
-                  newImg.sizes = '';
-                  newImg.alt = alt;
-                  newImg.dataset.processed = 'true';
-                  
-                  // Force eager loading
-                  newImg.loading = 'eager';
-                  
-                  // Replace the original image with our new one
-                  img.parentNode.replaceChild(newImg, img);
-                  replacedCount++;
-                  console.log('Successfully replaced cart image with processed version');
-                };
-                
-                newImg.onerror = function() {
-                  console.error('Failed to load processed image');
-                };
-                
-                // Start loading the image
-                newImg.src = storedImageUrl;
+                // Apply image directly without creating a new one for faster replacement
+                img.srcset = '';
+                img.sizes = '';
+                img.src = storedImageUrl;
+                img.dataset.processed = 'true';
+                img.loading = 'eager';
+                replacedCount++;
               }
             }
           });
           
-          // Log the results
-          console.log('Finished replacing cart images, replaced ' + replacedCount + ' images');
+          // Log the results only if replacements happened
+          if (replacedCount > 0) {
+            console.log('Replaced ' + replacedCount + ' cart images');
+          }
+          
           return replacedCount;
         }
         
-        // Run immediately
-        let replaced = replaceCartImages();
+        // Check if we're on the cart page and preloading is needed
+        if (window.location.pathname === '/cart' && localStorage.getItem('cartoonique_preload_cart_images') === 'true') {
+          // We're loading the cart page for the first time - do immediate replacement
+          console.log('Detected first cart page load, starting immediate image replacement');
+          localStorage.removeItem('cartoonique_preload_cart_images');
+          
+          // Run on page interactive - don't wait for full page load
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+              replaceCartImages();
+            });
+          } else {
+            replaceCartImages();
+          }
+        }
         
-        // Run again after short delays to catch any lazy-loaded content
-        setTimeout(() => { replaceCartImages(); }, 100);
-        setTimeout(() => { replaceCartImages(); }, 500);
-        setTimeout(() => { replaceCartImages(); }, 1000);
-        setTimeout(() => { replaceCartImages(); }, 2000);
+        // Run immediately and after short delays
+        replaceCartImages();
+        setTimeout(replaceCartImages, 100);
+        setTimeout(replaceCartImages, 500);
         
         // Also observe DOM changes to catch any dynamically added content
-        const observer = new MutationObserver(mutations => {
-          setTimeout(() => { replaceCartImages(); }, 100);
+        const observer = new MutationObserver(() => {
+          replaceCartImages();
         });
         
-        // Start observing after a short delay
-        setTimeout(() => {
-          observer.observe(document.body, { 
-            childList: true, 
-            subtree: true,
-            attributes: true, 
-            attributeFilter: ['src', 'srcset', 'class']
-          });
-          console.log('Started observing DOM for changes');
-        }, 500);
-        
-        // Also check on interaction events
-        window.addEventListener('load', replaceCartImages);
-        document.addEventListener('DOMContentLoaded', replaceCartImages);
-        window.addEventListener('scroll', function() {
-          if (window.lastScrollTime && Date.now() - window.lastScrollTime < 500) return;
-          window.lastScrollTime = Date.now();
-          replaceCartImages();
+        // Start observing immediately
+        observer.observe(document.body, { 
+          childList: true, 
+          subtree: true,
+          attributes: true, 
+          attributeFilter: ['src', 'srcset', 'class']
         });
       })();
     `;
