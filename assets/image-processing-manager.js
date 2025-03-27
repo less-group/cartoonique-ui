@@ -1256,46 +1256,49 @@ class ImageProcessingManager {
       
       // Add content to the result popup
       resultPopup.innerHTML = `
-        <div style="position: relative; max-width: 600px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.1);">
-          <div id="pixar-result-image-container" style="max-width: 400px; margin: 0 auto; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); position: relative;">
-            <img id="pixar-result-image" src="" alt="Processed image" style="width: 100%; display: block;">
+        <div style="position: relative; max-width: 600px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; height: calc(100vh - 40px); max-height: 800px;">
+          <div id="pixar-result-image-container" style="flex: 1; min-height: 0; margin: 0 auto; width: 100%; max-width: 400px; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); position: relative; display: flex; align-items: center; justify-content: center;">
+            <img id="pixar-result-image" src="" alt="Processed image" style="max-width: 100%; max-height: 100%; display: block; object-fit: contain;">
             <div id="pixar-result-image-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;"></div>
           </div>
           
-          <!-- Size selection menu -->
-          <div style="margin-top: 15px;">
-            <div style="display: flex; justify-content: space-between; margin: 0 auto; max-width: 90%;">
-              <!-- Size S -->
-              <div data-size="S" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer; background-color: #f0f5fb;">
-                <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">S</div>
-                <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$85</div>
-                <div style="font-size: 12px; color: #666; margin-top: 3px;">20x30"</div>
+          <!-- Fixed position controls container -->
+          <div style="flex-shrink: 0; margin-top: 15px;">
+            <!-- Size selection menu -->
+            <div style="margin-bottom: 15px;">
+              <div style="display: flex; justify-content: space-between; margin: 0 auto; max-width: 90%;">
+                <!-- Size S -->
+                <div data-size="S" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer; background-color: #f0f5fb;">
+                  <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">S</div>
+                  <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$85</div>
+                  <div style="font-size: 12px; color: #666; margin-top: 3px;">20x30"</div>
+                </div>
+                
+                <!-- Size M -->
+                <div data-size="M" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer;">
+                  <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">M</div>
+                  <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$130</div>
+                  <div style="font-size: 12px; color: #666; margin-top: 3px;">30x40"</div>
+                </div>
+                
+                <!-- Size L -->
+                <div data-size="L" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer;">
+                  <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">L</div>
+                  <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$190</div>
+                  <div style="font-size: 12px; color: #666; margin-top: 3px;">50x70"</div>
+                </div>
               </div>
               
-              <!-- Size M -->
-              <div data-size="M" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer;">
-                <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">M</div>
-                <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$130</div>
-                <div style="font-size: 12px; color: #666; margin-top: 3px;">30x40"</div>
-              </div>
+              <h4 style="text-align: center; font-size: 16px; margin-top: 10px; margin-bottom: 5px; color: #333; font-weight: bold; text-transform: uppercase;">Choose the size</h4>
               
-              <!-- Size L -->
-              <div data-size="L" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer;">
-                <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">L</div>
-                <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$190</div>
-                <div style="font-size: 12px; color: #666; margin-top: 3px;">50x70"</div>
+              <div style="text-align: center; margin-top: 5px;">
+                <a href="#" style="color: #4a7dbd; text-decoration: underline; font-size: 12px;">Size guide</a>
               </div>
             </div>
             
-            <h4 style="text-align: center; font-size: 16px; margin-top: 10px; margin-bottom: 5px; color: #333; font-weight: bold; text-transform: uppercase;">Choose the size</h4>
-            
-            <div style="text-align: center; margin-top: 5px;">
-              <a href="#" style="color: #4a7dbd; text-decoration: underline; font-size: 12px;">Size guide</a>
+            <div style="text-align: center; margin-top: 10px; margin-bottom: 10px;">
+              <button id="pixar-result-continue" style="background-color: #4a7dbd; color: white; padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 0 10px; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">CONTINUE</button>
             </div>
-          </div>
-          
-          <div style="text-align: center; margin-top: 15px;">
-            <button id="pixar-result-continue" style="background-color: #4a7dbd; color: white; padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 0 10px; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">CONTINUE</button>
           </div>
         </div>
       `;
@@ -1367,12 +1370,13 @@ class ImageProcessingManager {
         container.style.padding = '15px';
         container.style.margin = '10px auto';
         container.style.maxWidth = '90%';
+        container.style.height = 'calc(100vh - 20px)';
       }
       
       // Make image container smaller on mobile
       const imageContainer = document.getElementById('pixar-result-image-container');
       if (imageContainer) {
-        imageContainer.style.maxWidth = '90%';
+        imageContainer.style.maxHeight = '60vh';
       }
       
       // Adjust size options for mobile
@@ -1418,64 +1422,68 @@ class ImageProcessingManager {
    * @param {string} size - The selected size (S, M, or L)
    */
   applyAspectRatioToResultImage(size) {
-    const container = document.getElementById('pixar-result-image-container');
-    const image = document.getElementById('pixar-result-image');
-    const overlay = document.getElementById('pixar-result-image-overlay');
-    
-    if (!container || !image || !this.resultImageUrl) {
-      console.error('RESULT POPUP: Missing elements for aspect ratio adjustment');
-      return;
-    }
-    
     // Get the aspect ratio for the selected size
-    const aspectRatio = this.sizeAspectRatios[size] || this.sizeAspectRatios['S'];
+    const aspectRatio = this.sizeAspectRatios[size];
+    if (!aspectRatio) return;
     
-    // Load the image to get its natural dimensions
+    console.log(`Applying aspect ratio ${aspectRatio} for size ${size}`);
+    
+    // Get the image element and container
+    const image = document.getElementById('pixar-result-image');
+    const container = document.getElementById('pixar-result-image-container');
+    if (!image || !container) return;
+
+    // Set container's aspect ratio while maintaining flexibility
+    container.style.position = 'relative';
+    container.style.display = 'flex';
+    container.style.alignItems = 'center';
+    container.style.justifyContent = 'center';
+    
+    // Create canvas to maintain aspect ratio
+    const canvas = document.createElement('canvas');
     const img = new Image();
+    img.crossOrigin = 'anonymous';
     img.onload = () => {
-      const imgWidth = img.width;
-      const imgHeight = img.height;
-      const imgRatio = imgWidth / imgHeight;
+      // Determine the canvas dimensions based on the desired aspect ratio
+      let canvasWidth, canvasHeight;
       
-      // Create a canvas to crop/resize the image according to the target aspect ratio
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      // Calculate dimensions to maintain aspect ratio
-      let targetWidth, targetHeight, offsetX = 0, offsetY = 0;
-      
-      if (imgRatio > aspectRatio) {
-        // Image is wider than target ratio, crop from sides
-        targetHeight = imgHeight;
-        targetWidth = imgHeight * aspectRatio;
-        offsetX = (imgWidth - targetWidth) / 2;
+      // Calculate canvas dimensions
+      if (img.width / img.height > aspectRatio) {
+        // Image is wider than target ratio, crop width
+        canvasHeight = img.height;
+        canvasWidth = img.height * aspectRatio;
       } else {
-        // Image is taller than target ratio, crop from top/bottom
-        targetWidth = imgWidth;
-        targetHeight = imgWidth / aspectRatio;
-        offsetY = (imgHeight - targetHeight) / 2;
+        // Image is taller than target ratio, crop height
+        canvasWidth = img.width;
+        canvasHeight = img.width / aspectRatio;
       }
       
-      // Set canvas dimensions to match target aspect ratio
-      canvas.width = targetWidth;
-      canvas.height = targetHeight;
+      // Set canvas size
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
       
-      // Draw the cropped image onto the canvas
+      // Draw the image onto the canvas with the center crop
+      const ctx = canvas.getContext('2d');
+      const offsetX = (img.width - canvasWidth) / 2;
+      const offsetY = (img.height - canvasHeight) / 2;
+      
+      // Draw the portion of the image that fits the aspect ratio
       ctx.drawImage(
         img,
-        offsetX, offsetY, targetWidth, targetHeight,  // Source rectangle
-        0, 0, targetWidth, targetHeight               // Destination rectangle
+        offsetX, offsetY, canvasWidth, canvasHeight,  // Source rectangle
+        0, 0, canvasWidth, canvasHeight              // Destination rectangle
       );
       
-      // Set the cropped image as the source
-      const croppedImageUrl = canvas.toDataURL('image/jpeg');
-      image.src = croppedImageUrl;
+      // Replace the image src with the canvas data
+      image.src = canvas.toDataURL();
       
-      console.log(`RESULT POPUP: Applied aspect ratio ${aspectRatio} (size ${size}) to result image`);
+      // Adjust container to maintain the aspect ratio without affecting layout
+      image.style.maxWidth = '100%';
+      image.style.maxHeight = '100%';
+      image.style.objectFit = 'contain';
     };
     
-    // Set the source to trigger onload
-    img.src = this.resultImageUrl;
+    img.src = this.resultImageUrl || image.src;
   }
   
   /**
