@@ -1220,6 +1220,19 @@ class ImageProcessingManager {
     
     this.resultPopupShown = true;
     
+    // Store the original image URL for aspect ratio adjustments
+    this.resultImageUrl = imageUrl;
+    
+    // Define aspect ratios for each size
+    this.sizeAspectRatios = {
+      'S': 20/30, // 20x30"
+      'M': 30/40, // 30x40"
+      'L': 50/70  // 50x70"
+    };
+    
+    // Default selected size
+    this.selectedSize = 'S';
+    
     // Check if popup already exists
     let resultPopup = document.getElementById('pixar-result-popup');
     
@@ -1246,8 +1259,9 @@ class ImageProcessingManager {
         <div style="position: relative; max-width: 700px; margin: 50px auto; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.1);">
           <h3 style="text-align: center; font-size: 26px; margin-bottom: 20px; color: #333; font-weight: bold;">Your image is ready!</h3>
           
-          <div style="max-width: 500px; margin: 0 auto; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+          <div id="pixar-result-image-container" style="max-width: 500px; margin: 0 auto; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); position: relative;">
             <img id="pixar-result-image" src="" alt="Processed image" style="width: 100%; display: block;">
+            <div id="pixar-result-image-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;"></div>
           </div>
           
           <p style="text-align: center; margin-top: 25px; color: #555; font-size: 18px; font-weight: 500;">Your image has been successfully processed.</p>
@@ -1258,21 +1272,21 @@ class ImageProcessingManager {
             
             <div style="display: flex; justify-content: space-between; margin: 0 auto; max-width: 90%;">
               <!-- Size S -->
-              <div style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 10px; cursor: pointer; background-color: #f0f5fb;">
+              <div data-size="S" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 10px; cursor: pointer; background-color: #f0f5fb;">
                 <div style="width: 50px; height: 50px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 20px;">S</div>
                 <div style="font-weight: bold; margin-top: 10px; font-size: 18px;">$85</div>
                 <div style="font-size: 14px; color: #666; margin-top: 5px;">20x30"</div>
               </div>
               
               <!-- Size M -->
-              <div style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 10px; cursor: pointer;">
+              <div data-size="M" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 10px; cursor: pointer;">
                 <div style="width: 50px; height: 50px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 20px;">M</div>
                 <div style="font-weight: bold; margin-top: 10px; font-size: 18px;">$130</div>
                 <div style="font-size: 14px; color: #666; margin-top: 5px;">30x40"</div>
               </div>
               
               <!-- Size L -->
-              <div style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 10px; cursor: pointer;">
+              <div data-size="L" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 10px; cursor: pointer;">
                 <div style="width: 50px; height: 50px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 20px;">L</div>
                 <div style="font-weight: bold; margin-top: 10px; font-size: 18px;">$190</div>
                 <div style="font-size: 14px; color: #666; margin-top: 5px;">50x70"</div>
@@ -1303,9 +1317,13 @@ class ImageProcessingManager {
       }
       
       // Add event listeners for size selection
-      const sizeOptions = resultPopup.querySelectorAll('[style*="border: 1px solid #ddd"]');
+      const sizeOptions = resultPopup.querySelectorAll('[data-size]');
       sizeOptions.forEach(option => {
         option.addEventListener('click', () => {
+          // Get the selected size
+          const size = option.getAttribute('data-size');
+          this.selectedSize = size;
+          
           // Remove highlight from all options
           sizeOptions.forEach(opt => {
             opt.style.backgroundColor = '';
@@ -1313,6 +1331,9 @@ class ImageProcessingManager {
           
           // Highlight selected option
           option.style.backgroundColor = '#f0f5fb';
+          
+          // Apply the appropriate aspect ratio to the image
+          this.applyAspectRatioToResultImage(size);
         });
       });
     }
@@ -1321,11 +1342,81 @@ class ImageProcessingManager {
     const resultImage = document.getElementById('pixar-result-image');
     if (resultImage) {
       resultImage.src = imageUrl;
+      
+      // When the image is loaded, apply the default aspect ratio (Size S)
+      resultImage.onload = () => {
+        this.applyAspectRatioToResultImage(this.selectedSize);
+      };
     }
     
     // Display the popup
     resultPopup.style.display = 'block';
     document.body.style.overflow = 'hidden';
+  }
+  
+  /**
+   * Apply the selected aspect ratio to the result image
+   * @param {string} size - The selected size (S, M, or L)
+   */
+  applyAspectRatioToResultImage(size) {
+    const container = document.getElementById('pixar-result-image-container');
+    const image = document.getElementById('pixar-result-image');
+    const overlay = document.getElementById('pixar-result-image-overlay');
+    
+    if (!container || !image || !this.resultImageUrl) {
+      console.error('RESULT POPUP: Missing elements for aspect ratio adjustment');
+      return;
+    }
+    
+    // Get the aspect ratio for the selected size
+    const aspectRatio = this.sizeAspectRatios[size] || this.sizeAspectRatios['S'];
+    
+    // Load the image to get its natural dimensions
+    const img = new Image();
+    img.onload = () => {
+      const imgWidth = img.width;
+      const imgHeight = img.height;
+      const imgRatio = imgWidth / imgHeight;
+      
+      // Create a canvas to crop/resize the image according to the target aspect ratio
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Calculate dimensions to maintain aspect ratio
+      let targetWidth, targetHeight, offsetX = 0, offsetY = 0;
+      
+      if (imgRatio > aspectRatio) {
+        // Image is wider than target ratio, crop from sides
+        targetHeight = imgHeight;
+        targetWidth = imgHeight * aspectRatio;
+        offsetX = (imgWidth - targetWidth) / 2;
+      } else {
+        // Image is taller than target ratio, crop from top/bottom
+        targetWidth = imgWidth;
+        targetHeight = imgWidth / aspectRatio;
+        offsetY = (imgHeight - targetHeight) / 2;
+      }
+      
+      // Set canvas dimensions to match target aspect ratio
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      
+      // Draw the cropped image onto the canvas
+      ctx.drawImage(
+        img,
+        offsetX, offsetY, targetWidth, targetHeight,  // Source rectangle
+        0, 0, targetWidth, targetHeight               // Destination rectangle
+      );
+      
+      // Set the cropped image as the source
+      const croppedImageUrl = canvas.toDataURL('image/jpeg');
+      image.src = croppedImageUrl;
+      
+      console.log(`RESULT POPUP: Applied aspect ratio ${aspectRatio} (size ${size}) to result image`);
+    };
+    
+    // Set the source to trigger onload
+    img.src = this.resultImageUrl;
   }
   
   /**
