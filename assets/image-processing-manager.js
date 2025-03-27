@@ -316,7 +316,7 @@ class ImageProcessingManager {
   }
   
   /**
-   * Handle when a file is selected via file input
+   * Handle when a file is selected from the input
    * @param {Event} event - The file input change event
    */
   handleFileSelected(event) {
@@ -350,87 +350,26 @@ class ImageProcessingManager {
     this.cropComplete = false;
     this.textProcessingComplete = false;
     
-    // Create a unique file identifier to prevent duplicate processing
-    // Use filename + size + last modified as a simple way to identify the same file
-    const fileIdentifier = `${file.name}-${file.size}-${file.lastModified || Date.now()}`;
-    
-    // Initialize/access the tracking for API calls
-    if (!window.railwayApiCallsInProgress) {
-      window.railwayApiCallsInProgress = {};
-    }
-    
-    // Check if we're already processing this file
-    if (window.railwayApiCallsInProgress[fileIdentifier]) {
-      console.log('🖼️ Already processing this file with Railway API, skipping duplicate request');
+    // IMPORTANT: Send the original file to Railway immediately for processing in the background
+    // while the user is doing cropping and text editing
+    if (typeof window.processImageWithRunPod === 'function' && this.originalFile) {
+      console.log('🖼️ Immediately sending original image to Railway for processing in the background via global function');
+      // Pass isOriginal: true to indicate this is the uncropped image
+      window.processImageWithRunPod(this.originalFile, { isOriginal: true });
     } else {
-      // Mark this file as being processed
-      window.railwayApiCallsInProgress[fileIdentifier] = true;
-      
-      // IMPORTANT: Send the original file to Railway immediately for processing in the background
-      // while the user is doing cropping and text editing
-      if (typeof window.processImageWithRunPod === 'function' && this.originalFile) {
-        console.log('🖼️ Immediately sending original image to Railway for processing in the background');
-        // Pass isOriginal: true to indicate this is the uncropped image
-        window.processImageWithRunPod(this.originalFile, { isOriginal: true });
-      } else {
-        console.log('🖼️ processImageWithRunPod not available, implementing direct Railway API call');
-        
-        // Implement direct API call to Railway as a fallback
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const imageBase64 = e.target.result;
-          
-          // Create payload
-          const payload = {
-            image: imageBase64,
-            style: 'pixar',
-            watermark: {
-              url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/watermark.png",
-              width: 200,
-              height: 100,
-              spaceBetweenWatermarks: 100
-            }
-          };
-          
-          console.log('🖼️ Sending image directly to Railway API');
-          
-          // Call the transform endpoint
-          fetch('https://letzteshemd-faceswap-api-production.up.railway.app/transform', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload),
-            timeout: 60000 // 60 second timeout
-          })
-          .then(response => {
-            if (!response.ok) {
-              throw new Error(`API response error: ${response.status}`);
-            }
-            return response.json();
-          })
-          .then(data => {
-            console.log('🖼️ Transform response from Railway:', data);
-            
-            // Extract jobId
-            let jobId = data.jobId || data.id;
-            
-            if (jobId) {
-              console.log('🖼️ Successfully received jobId:', jobId);
-              
-              // Start polling for the job result
-              this.pollRailwayJobStatus(jobId);
-            }
-          })
-          .catch(error => {
-            console.error('🖼️ Error in Railway transform call:', error);
-            // Remove file from tracking on error so it can be retried
-            delete window.railwayApiCallsInProgress[fileIdentifier];
-          });
-        };
-        
-        reader.readAsDataURL(this.originalFile);
-      }
+      console.log('🖼️ Global processImageWithRunPod not available, using centralized method');
+      // Use our centralized method instead of implementing API call here
+      this.sendImageToRailway(this.originalFile, { isOriginal: true })
+        .then(result => {
+          if (result.alreadyProcessing) {
+            console.log('🖼️ File is already being processed, no need to send again');
+          } else {
+            console.log(`🖼️ File sent to Railway, job ID: ${result.jobId}`);
+          }
+        })
+        .catch(error => {
+          console.error('🖼️ Error sending file to Railway:', error);
+        });
     }
     
     // Convert file to data URL for later use
@@ -450,8 +389,6 @@ class ImageProcessingManager {
     };
     reader.onerror = (error) => {
       console.error('Error reading file:', error);
-      // Remove file from tracking on error so it can be retried
-      delete window.railwayApiCallsInProgress[fileIdentifier];
     };
     reader.readAsDataURL(this.originalFile);
   }
@@ -2701,24 +2638,39 @@ class ImageProcessingManager {
   /**
    * Poll Railway job status
    * @param {string} jobId - The job ID to poll
+   * @param {number} attempt - The current attempt number (for backoff)
    */
   pollRailwayJobStatus(jobId, attempt = 1) {
     console.log(`🖼️ Polling Railway job status for job ${jobId}, attempt ${attempt}`);
     
-    // Implement reasonable timeout/limits
-    if (attempt > 30) {
-      console.log(`🖼️ Giving up on polling job ${jobId} after ${attempt} attempts`);
-      return;
-    }
-    
-    // Skip if this job was already processed (using a global registry)
+    // Initialize job status tracking if needed
     if (!window.railwayJobsStatus) {
       window.railwayJobsStatus = {};
     }
     
-    // Check if we already have a result for this job
+    // Check if this job is already completed or failed
     if (window.railwayJobsStatus[jobId] === 'COMPLETED' || window.railwayJobsStatus[jobId] === 'FAILED') {
-      console.log(`🖼️ Job ${jobId} was already processed with status: ${window.railwayJobsStatus[jobId]}, skipping poll`);
+      console.log(`🖼️ Job ${jobId} already has final status: ${window.railwayJobsStatus[jobId]}, skipping poll`);
+      return;
+    }
+    
+    // Track that we're polling this job
+    window.railwayJobsStatus[jobId] = window.railwayJobsStatus[jobId] || 'PENDING';
+    
+    // Implement reasonable timeout/limits
+    if (attempt > 30) {
+      console.log(`🖼️ Giving up on polling job ${jobId} after ${attempt} attempts`);
+      window.railwayJobsStatus[jobId] = 'FAILED';
+      return;
+    }
+    
+    // Also track if we've already processed this job's completion
+    if (!window.railwayJobsProcessed) {
+      window.railwayJobsProcessed = {};
+    }
+    
+    if (window.railwayJobsProcessed[jobId]) {
+      console.log(`🖼️ Job ${jobId} already processed, skipping poll`);
       return;
     }
     
@@ -2734,7 +2686,7 @@ class ImageProcessingManager {
     .then(data => {
       console.log(`🖼️ Railway job status for ${jobId}:`, data);
       
-      // Store the current status
+      // Update global status tracking
       if (data.status) {
         window.railwayJobsStatus[jobId] = data.status.toUpperCase();
       }
@@ -2751,15 +2703,19 @@ class ImageProcessingManager {
         if (imageUrl) {
           console.log('🖼️ Railway job completed, image URL:', imageUrl);
           
+          // Mark as processed to prevent duplicate processing
+          window.railwayJobsProcessed[jobId] = true;
+          
           // Store the URL and mark as complete
           this.stylizedImageUrl = imageUrl;
           this.transformationComplete = true;
           
-          // Prevent duplicate events by checking if we've already dispatched for this job
+          // Track that we've dispatched an event for this job
           if (!window.railwayJobsEventDispatched) {
             window.railwayJobsEventDispatched = {};
           }
           
+          // Only dispatch event once per job
           if (!window.railwayJobsEventDispatched[jobId]) {
             window.railwayJobsEventDispatched[jobId] = true;
             
@@ -2777,6 +2733,7 @@ class ImageProcessingManager {
         }
       } else if (data.status && data.status.toUpperCase() === 'FAILED') {
         console.error('🖼️ Railway job failed:', data);
+        window.railwayJobsStatus[jobId] = 'FAILED';
       } else {
         // Continue polling with exponential backoff
         const backoffTime = Math.min(1000 * Math.pow(1.5, Math.min(attempt - 1, 10)), 10000);
@@ -2864,6 +2821,143 @@ class ImageProcessingManager {
     
     return stats;
   }
+
+  /**
+   * Centralized method to send an image to Railway API
+   * This is the ONLY method that should directly call the Railway API
+   * @param {File} file - The file to send
+   * @param {Object} options - Additional options
+   * @returns {Promise} - Promise that resolves with the job ID
+   */
+  sendImageToRailway(file, options = {}) {
+    if (!file) {
+      console.error('🖼️ Cannot send to Railway: No file provided');
+      return Promise.reject(new Error('No file provided'));
+    }
+    
+    // Create a unique file identifier to prevent duplicate processing
+    const fileIdentifier = `${file.name}-${file.size}-${file.lastModified || Date.now()}`;
+    
+    // Initialize tracking for API calls if not already done
+    if (!window.railwayApiCallsInProgress) {
+      window.railwayApiCallsInProgress = {};
+    }
+    
+    // Check if we're already processing this file
+    if (window.railwayApiCallsInProgress[fileIdentifier]) {
+      console.log(`🖼️ Already processing file ${file.name}, skipping duplicate request`);
+      return Promise.resolve({ 
+        alreadyProcessing: true, 
+        fileIdentifier: fileIdentifier 
+      });
+    }
+    
+    // Mark this file as being processed
+    window.railwayApiCallsInProgress[fileIdentifier] = true;
+    
+    // Initialize tracking timestamps if not already done
+    if (!window.railwayApiCallTimestamps) {
+      window.railwayApiCallTimestamps = {};
+    }
+    window.railwayApiCallTimestamps[fileIdentifier] = Date.now();
+    
+    return new Promise((resolve, reject) => {
+      // Use FileReader to convert file to base64
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        const imageBase64 = e.target.result;
+        
+        // Create payload
+        const payload = {
+          image: imageBase64,
+          style: 'pixar',
+          watermark: {
+            url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/watermark.png",
+            width: 200,
+            height: 100,
+            spaceBetweenWatermarks: 100
+          }
+        };
+        
+        console.log(`🖼️ Sending image ${file.name} to Railway API`);
+        
+        // Call the Railway transform endpoint
+        fetch('https://letzteshemd-faceswap-api-production.up.railway.app/transform', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload),
+          timeout: 60000 // 60 second timeout
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`API response error: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('🖼️ Railway API response:', data);
+          
+          // Extract jobId
+          const jobId = data.jobId || data.id;
+          
+          if (jobId) {
+            console.log(`🖼️ Successfully received jobId: ${jobId} for file ${file.name}`);
+            
+            // Initialize job status tracking if needed
+            if (!window.railwayJobsStatus) {
+              window.railwayJobsStatus = {};
+            }
+            
+            // Mark job as 'PENDING' initially
+            window.railwayJobsStatus[jobId] = 'PENDING';
+            
+            // Start polling for status - but only once
+            this.pollRailwayJobStatus(jobId);
+            
+            // Return the job ID
+            resolve({
+              jobId: jobId,
+              fileIdentifier: fileIdentifier
+            });
+          } else {
+            const error = new Error('No job ID returned from Railway API');
+            console.error('🖼️ ' + error.message);
+            
+            // Clean up tracking
+            delete window.railwayApiCallsInProgress[fileIdentifier];
+            delete window.railwayApiCallTimestamps[fileIdentifier];
+            
+            reject(error);
+          }
+        })
+        .catch(error => {
+          console.error('🖼️ Error calling Railway API:', error);
+          
+          // Clean up tracking on error
+          delete window.railwayApiCallsInProgress[fileIdentifier];
+          delete window.railwayApiCallTimestamps[fileIdentifier];
+          
+          reject(error);
+        });
+      };
+      
+      reader.onerror = (error) => {
+        console.error('🖼️ Error reading file:', error);
+        
+        // Clean up tracking on error
+        delete window.railwayApiCallsInProgress[fileIdentifier];
+        delete window.railwayApiCallTimestamps[fileIdentifier];
+        
+        reject(new Error('Could not read file'));
+      };
+      
+      // Start the file reading process
+      reader.readAsDataURL(file);
+    });
+  }
 }
 
 // Initialize static instance property
@@ -2900,31 +2994,38 @@ if (window.processImageWithRunPod && !window.originalProcessImageWithRunPod) {
   window.processImageWithRunPod = function(file, options = {}) {
     console.log('🖼️ Image Processing Manager intercepted processImageWithRunPod call for file:', file.name);
     
-    // Create a unique file identifier to prevent duplicate processing
-    const fileIdentifier = `${file.name}-${file.size}-${file.lastModified || Date.now()}`;
-    
-    // Initialize/access the tracking for API calls
-    if (!window.railwayApiCallsInProgress) {
-      window.railwayApiCallsInProgress = {};
-    }
-    
-    // Check if we're already processing this file
-    if (window.railwayApiCallsInProgress[fileIdentifier]) {
-      console.log('🖼️ Already processing this file with Railway API via processImageWithRunPod, skipping duplicate request');
-      return;
-    }
-    
-    // Mark this file as being processed
-    window.railwayApiCallsInProgress[fileIdentifier] = true;
-    
-    // Call the original function to send to backend
-    if (window.originalProcessImageWithRunPod) {
-      console.log('🖼️ Delegating to original processImageWithRunPod implementation');
-      try {
-        window.originalProcessImageWithRunPod(file, options);
-      } catch(err) {
-        console.error('🖼️ Error in original processImageWithRunPod:', err);
-        delete window.railwayApiCallsInProgress[fileIdentifier];
+    // Delegate to our centralized method if we have an ImageProcessingManager instance
+    if (window.imageProcessingManager) {
+      window.imageProcessingManager.sendImageToRailway(file, options)
+        .then(result => {
+          if (result.alreadyProcessing) {
+            console.log('🖼️ File is already being processed by Railway, avoiding duplicate call');
+          } else {
+            console.log(`🖼️ File sent to Railway via centralized method, job ID: ${result.jobId}`);
+          }
+        })
+        .catch(error => {
+          console.error('🖼️ Error sending to Railway via centralized method:', error);
+          
+          // Fallback to original implementation only if our centralized method fails
+          if (window.originalProcessImageWithRunPod) {
+            console.log('🖼️ Falling back to original processImageWithRunPod implementation');
+            try {
+              window.originalProcessImageWithRunPod(file, options);
+            } catch(err) {
+              console.error('🖼️ Error in original processImageWithRunPod:', err);
+            }
+          }
+        });
+    } else {
+      // If ImageProcessingManager isn't available, use the original function
+      console.log('🖼️ ImageProcessingManager not available, using original implementation');
+      if (window.originalProcessImageWithRunPod) {
+        try {
+          window.originalProcessImageWithRunPod(file, options);
+        } catch(err) {
+          console.error('🖼️ Error in original processImageWithRunPod:', err);
+        }
       }
     }
   };
@@ -2939,31 +3040,38 @@ if (window.processImageWithRunPod && !window.originalProcessImageWithRunPod) {
       window.processImageWithRunPod = function(file, options = {}) {
         console.log('🖼️ Image Processing Manager intercepted processImageWithRunPod call for file:', file.name);
         
-        // Create a unique file identifier to prevent duplicate processing
-        const fileIdentifier = `${file.name}-${file.size}-${file.lastModified || Date.now()}`;
-        
-        // Initialize/access the tracking for API calls
-        if (!window.railwayApiCallsInProgress) {
-          window.railwayApiCallsInProgress = {};
-        }
-        
-        // Check if we're already processing this file
-        if (window.railwayApiCallsInProgress[fileIdentifier]) {
-          console.log('🖼️ Already processing this file with Railway API via processImageWithRunPod, skipping duplicate request');
-          return;
-        }
-        
-        // Mark this file as being processed
-        window.railwayApiCallsInProgress[fileIdentifier] = true;
-        
-        // Call the original function to send to backend
-        if (window.originalProcessImageWithRunPod) {
-          console.log('🖼️ Delegating to original processImageWithRunPod implementation');
-          try {
-            window.originalProcessImageWithRunPod(file, options);
-          } catch(err) {
-            console.error('🖼️ Error in original processImageWithRunPod:', err);
-            delete window.railwayApiCallsInProgress[fileIdentifier];
+        // Delegate to our centralized method if we have an ImageProcessingManager instance
+        if (window.imageProcessingManager) {
+          window.imageProcessingManager.sendImageToRailway(file, options)
+            .then(result => {
+              if (result.alreadyProcessing) {
+                console.log('🖼️ File is already being processed by Railway, avoiding duplicate call');
+              } else {
+                console.log(`🖼️ File sent to Railway via centralized method, job ID: ${result.jobId}`);
+              }
+            })
+            .catch(error => {
+              console.error('🖼️ Error sending to Railway via centralized method:', error);
+              
+              // Fallback to original implementation only if our centralized method fails
+              if (window.originalProcessImageWithRunPod) {
+                console.log('🖼️ Falling back to original processImageWithRunPod implementation');
+                try {
+                  window.originalProcessImageWithRunPod(file, options);
+                } catch(err) {
+                  console.error('🖼️ Error in original processImageWithRunPod:', err);
+                }
+              }
+            });
+        } else {
+          // If ImageProcessingManager isn't available, use the original function
+          console.log('🖼️ ImageProcessingManager not available, using original implementation');
+          if (window.originalProcessImageWithRunPod) {
+            try {
+              window.originalProcessImageWithRunPod(file, options);
+            } catch(err) {
+              console.error('🖼️ Error in original processImageWithRunPod:', err);
+            }
           }
         }
       };
@@ -3006,52 +3114,34 @@ if (originalHandleCropComplete) {
       
       console.log('🖼️ Created File object from cropped image data URL');
       
-      // Create a unique file identifier
-      const fileIdentifier = `${filename}-${blob.size}-${Date.now()}`;
-      
-      // Initialize/access the tracking for API calls
-      if (!window.railwayApiCallsInProgress) {
-        window.railwayApiCallsInProgress = {};
-      }
-      
-      // Check if we're already processing this file or if we've already sent the original
-      const originalFileIdentifier = this.originalFile ? 
-        `${this.originalFile.name}-${this.originalFile.size}-${this.originalFile.lastModified || Date.now()}` : null;
-      
-      if (originalFileIdentifier && window.railwayApiCallsInProgress[originalFileIdentifier]) {
-        console.log('🖼️ Original file is already being processed by Railway, skipping duplicate request');
-        return;
-      }
-      
-      if (window.railwayApiCallsInProgress[fileIdentifier]) {
-        console.log('🖼️ Cropped image is already being processed by Railway, skipping duplicate request');
-        return;
-      }
-      
-      // Mark as sent to Railway to avoid duplicate sends
-      this.sentToRailway = true;
-      window.railwayApiCallsInProgress[fileIdentifier] = true;
-      
-      // Now send to Railway via processImageWithRunPod if it exists
-      if (typeof window.processImageWithRunPod === 'function') {
-        console.log('🖼️ Calling processImageWithRunPod with cropped image file');
-        window.processImageWithRunPod(file);
-      } else if (typeof window.pixarComponent?.handleFileSelect === 'function') {
-        console.log('🖼️ processImageWithRunPod not found, trying pixarComponent.handleFileSelect');
-        // Create a fake event object
-        const fakeEvent = {
-          target: {
-            files: [file]
+      // Use our centralized method to send the cropped image
+      this.sendImageToRailway(file, { isCropped: true })
+        .then(result => {
+          if (result.alreadyProcessing) {
+            console.log('🖼️ Cropped file is already being processed');
+          } else {
+            // Mark as sent to Railway to avoid duplicate sends
+            this.sentToRailway = true;
+            console.log(`🖼️ Cropped image sent to Railway, job ID: ${result.jobId}`);
           }
-        };
-        window.pixarComponent.handleFileSelect(fakeEvent);
-      } else {
-        console.error('🖼️ Failed to find method to send image to Railway after cropping');
-        // Remove tracking since we couldn't process
-        delete window.railwayApiCallsInProgress[fileIdentifier];
-      }
+        })
+        .catch(error => {
+          console.error('🖼️ Error sending cropped image to Railway:', error);
+          
+          // Try using the component's handleFileSelect if our method fails
+          if (typeof window.pixarComponent?.handleFileSelect === 'function') {
+            console.log('🖼️ Falling back to pixarComponent.handleFileSelect with cropped image');
+            // Create a fake event object
+            const fakeEvent = {
+              target: {
+                files: [file]
+              }
+            };
+            window.pixarComponent.handleFileSelect(fakeEvent);
+          }
+        });
     } else {
-      console.log('🖼️ Cropping complete, but image was already sent to Railway earlier or processImageWithRunPod not available');
+      console.log('🖼️ Cropping complete, but image was already sent to Railway earlier or processImageWithRunPod is available');
     }
   };
   console.log('🖼️ Enhanced handleCropComplete method installed');
