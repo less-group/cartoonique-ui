@@ -1310,8 +1310,8 @@ class ImageProcessingManager {
       // Add event listener for the continue button
       const continueButton = document.getElementById('pixar-result-continue');
       if (continueButton) {
-        // Define the adjustColor function globally to ensure it's available
-        function adjustColor(color, amount) {
+        // Define the adjustColor function for use in the event listener
+        const adjustColor = (color, amount) => {
           // Handle different color formats
           let r, g, b;
           
@@ -1341,8 +1341,9 @@ class ImageProcessingManager {
           b = Math.max(0, Math.min(255, b + amount));
           
           return `rgb(${r}, ${g}, ${b})`;
-        }
-        
+        };
+
+        // Add click event listener
         continueButton.addEventListener('click', (event) => {
           // Prevent default action
           event.preventDefault();
@@ -1353,6 +1354,32 @@ class ImageProcessingManager {
           button.textContent = 'Adding to cart...';
           button.disabled = true;
           button.classList.add('loading');
+          
+          // Update the text shown on the popup to indicate cart redirection
+          const imageContainer = document.getElementById('pixar-result-image-container');
+          if (imageContainer) {
+            // Create status message if it doesn't exist
+            let statusMessage = document.getElementById('pixar-cart-status');
+            if (!statusMessage) {
+              statusMessage = document.createElement('div');
+              statusMessage.id = 'pixar-cart-status';
+              statusMessage.style.cssText = `
+                position: absolute;
+                bottom: 10px;
+                left: 0;
+                right: 0;
+                background: rgba(0, 0, 0, 0.7);
+                color: white;
+                padding: 8px;
+                text-align: center;
+                font-weight: bold;
+                border-radius: 0 0 8px 8px;
+                z-index: 10;
+              `;
+              imageContainer.appendChild(statusMessage);
+            }
+            statusMessage.textContent = 'Adding to cart... You will be redirected shortly';
+          }
           
           // Add loading spinner style if not already present
           if (!document.querySelector('#pixar-loading-spinner-style')) {
@@ -1411,8 +1438,12 @@ class ImageProcessingManager {
             btn.style.opacity = '0.7';
           });
           
-          // IMPORTANT: Don't hide the popup here - we'll keep it visible until the redirect happens
+          // Update message to indicate cart redirection is happening
           console.log(`Continue clicked with size ${this.selectedSize || 'S'} selected, redirecting to checkout`);
+          
+          // Flag to indicate we're in the process of redirecting to cart
+          localStorage.setItem('cartoonique_redirecting_to_cart', 'true');
+          localStorage.setItem('cartoonique_preload_cart_images', 'true');
           
           // Redirect to checkout with the selected size
           this.redirectToCheckout(this.selectedSize || 'S');
@@ -1432,70 +1463,24 @@ class ImageProcessingManager {
         });
       }
       
-      // Add event listeners for size selection
-      const sizeOptions = resultPopup.querySelectorAll('[data-size]');
-      sizeOptions.forEach(option => {
-        // Add hover effect for size options
-        option.addEventListener('mouseenter', () => {
-          if (option.getAttribute('data-size') !== this.selectedSize) {
-            option.style.backgroundColor = '#f8f8f8';
-            option.style.transform = 'translateY(-2px)';
-          }
-        });
+      // Set the image source
+      const resultImage = document.getElementById('pixar-result-image');
+      if (resultImage) {
+        resultImage.src = imageUrl;
         
-        option.addEventListener('mouseleave', () => {
-          if (option.getAttribute('data-size') !== this.selectedSize) {
-            option.style.backgroundColor = '';
-            option.style.transform = 'translateY(0)';
-          }
-        });
-        
-        option.addEventListener('click', () => {
-          // Get the selected size
-          const size = option.getAttribute('data-size');
-          
-          // If same size is clicked, do nothing
-          if (this.selectedSize === size) return;
-          
-          // Store previous size for transition
-          const previousSize = this.selectedSize;
-          this.selectedSize = size;
-          
-          // Remove highlight from all options
-          sizeOptions.forEach(opt => {
-            opt.style.backgroundColor = '';
-            opt.style.transform = 'translateY(0)';
-            opt.style.boxShadow = 'none';
-          });
-          
-          // Highlight selected option
-          option.style.backgroundColor = '#f0f5fb';
-          option.style.transform = 'translateY(-2px)';
-          option.style.boxShadow = '0 4px 8px rgba(0,0,0,0.08)';
-          
-          // Apply the appropriate aspect ratio to the image with animation
-          this.applyAspectRatioToResultImage(size, previousSize);
-        });
-      });
-    }
-    
-    // Set the image source
-    const resultImage = document.getElementById('pixar-result-image');
-    if (resultImage) {
-      resultImage.src = imageUrl;
+        // When the image is loaded, apply the default aspect ratio (Size S)
+        resultImage.onload = () => {
+          this.applyAspectRatioToResultImage(this.selectedSize);
+        };
+      }
       
-      // When the image is loaded, apply the default aspect ratio (Size S)
-      resultImage.onload = () => {
-        this.applyAspectRatioToResultImage(this.selectedSize);
-      };
+      // Display the popup
+      resultPopup.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      
+      // Adjust for mobile view if needed
+      this.adjustPopupForMobile();
     }
-    
-    // Display the popup
-    resultPopup.style.display = 'block';
-    document.body.style.overflow = 'hidden';
-    
-    // Adjust for mobile view if needed
-    this.adjustPopupForMobile();
   }
   
   /**
@@ -4373,429 +4358,679 @@ class ImageProcessingManager {
   }
 
   /**
-   * Redirect to checkout (or cart) with the processed image
-   * @param {string} size - The size of the product (e.g., "30x40")
+   * Redirect user to checkout with the selected size
+   * @param {string} size - The selected size (S, M, or L)
    */
   redirectToCheckout(size) {
     console.log('Adding to cart with size:', size);
     
     // Keep track of the product variant based on size
-    let variantId = null;
+    const variantId = {
+      'S': '54215893451100',  // Shopify variant ID for size S
+      'M': '54215893483868',  // Shopify variant ID for size M
+      'L': '54215893516636'   // Shopify variant ID for size L
+    }[size];
     
-    // First try to find the variant selector
-    const variantSelector = document.querySelector('select.product-variant-select, select[name="id"], [data-variant-selector]');
-    if (variantSelector) {
-      variantId = variantSelector.value;
-      console.log('Found variant ID from selector:', variantId);
-    }
-    
-    // If not found, check if specific size mapping exists
     if (!variantId) {
-      // Try size-based variant mapping if defined
-      const sizeVariantMap = {
-        'S': '54215893451100',  // Shopify variant ID for size S
-        'M': '54215893483868',  // Shopify variant ID for size M
-        'L': '54215893516636'   // Shopify variant ID for size L
-      };
-      
-      if (sizeVariantMap[size]) {
-        variantId = sizeVariantMap[size];
-        console.log('Using mapped variant ID for size', size, ':', variantId);
-      }
+      console.error('Invalid size selected:', size);
+      return;
     }
     
-    // If still not found, try to find from metadata or other elements
-    if (!variantId) {
-      console.warn('No direct variant ID found, searching in metadata');
-      // Check meta tags
-      const metaVariant = document.querySelector('meta[property="product:variant_id"], [data-variant-id]');
-      if (metaVariant) {
-        variantId = metaVariant.getAttribute('content') || metaVariant.getAttribute('data-variant-id');
-        console.log('Found variant ID from metadata:', variantId);
-      }
-      
-      // If still not found, look through the page for common patterns
-      if (!variantId) {
-        console.warn('Searching for variant ID in page content');
-        // Look for JSON in scripts
-        const scriptTags = document.querySelectorAll('script');
-        for (const script of scriptTags) {
-          if (script.textContent && script.textContent.includes('variantId')) {
-            const match = script.textContent.match(/variantId['":\s]+(\d+)/);
-            if (match && match[1]) {
-              variantId = match[1];
-              console.log('Found variant ID in script content:', variantId);
-              break;
-            }
-          }
-        }
-      }
-    }
+    // Get the processed image URL - first try from the resultImageUrl property
+    // which is set when showResultPopup() is called
+    let processedImageUrl = this.resultImageUrl;
+    console.log('Found image from resultImageUrl:', processedImageUrl ? 'yes' : 'no');
     
-    // Check for processed image URL through various methods
-    let processedImageUrl = this.processedImageUrl || this.resultImageUrl;
-    
+    // If not found, try to get it from the DOM
     if (!processedImageUrl) {
-      console.warn('No direct processed image found, searching in DOM');
-      
-      // Try to find from DOM
+      console.log('Trying to find image in DOM...');
+      // First try the element with ID
       const resultImage = document.getElementById('pixar-result-image');
       if (resultImage && resultImage.src) {
         processedImageUrl = resultImage.src;
-        console.log('Found image from element with ID');
+        console.log('Found image with ID');
       } else {
-        // Try common containers
-        const selectors = [
-          '#pixar-result-popup .pixar-result-image-container img',
-          '.result-wrapper__image img',
-          '.pixar-result-image',
-          '[data-processed-image]'
-        ];
-        
-        for (const selector of selectors) {
-          const el = document.querySelector(selector);
-          if (el && el.src) {
-            processedImageUrl = el.src;
-            console.log('Found image from selector:', selector);
-            break;
-          }
+        // Then try any image in the container
+        const processedImageContainer = document.querySelector('#pixar-result-popup .pixar-result-image-container');
+        const processedImage = processedImageContainer ? processedImageContainer.querySelector('img') : null;
+        if (processedImage && processedImage.src) {
+          processedImageUrl = processedImage.src;
+          console.log('Found image in container');
         }
       }
     }
     
-    // If we still don't have a processed image, check for a fallback method
     if (!processedImageUrl) {
-      console.warn('No processed image URL found, checking for fallback methods');
-      
-      // Try the generateTransformedImage method if it exists
-      if (typeof this.generateTransformedImage === 'function') {
+      console.error('No processed image found - will attempt to continue anyway');
+      // Set a default empty value to avoid errors
+      processedImageUrl = '';
+    } else {
+      console.log('Using processed image URL (truncated):', processedImageUrl.substring(0, 50) + '...');
+    }
+    
+    // Handle storage of the processed image URL safely to prevent quota errors
+    const storeImageSafely = (variantId, imageUrl) => {
+      try {
+        // Check if this is a base64 image that we should convert to a Blob URL
+        if (imageUrl && imageUrl.startsWith('data:image/')) {
+          console.log('Converting base64 image to Blob URL for more efficient storage');
+          
+          // Convert base64 to Blob
+          const base64Data = imageUrl.split(',')[1];
+          const mimeType = imageUrl.split(',')[0].split(':')[1].split(';')[0];
+          
+          const byteCharacters = atob(base64Data);
+          const byteArrays = [];
+          
+          for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+            const slice = byteCharacters.slice(offset, offset + 512);
+            
+            const byteNumbers = new Array(slice.length);
+            for (let i = 0; i < slice.length; i++) {
+              byteNumbers[i] = slice.charCodeAt(i);
+            }
+            
+            const byteArray = new Uint8Array(byteNumbers);
+            byteArrays.push(byteArray);
+          }
+          
+          const blob = new Blob(byteArrays, { type: mimeType });
+          const blobUrl = URL.createObjectURL(blob);
+          
+          console.log('Created Blob URL:', blobUrl);
+          
+          // Store the Blob URL instead of the large base64 string
+          const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
+          cartImages[variantId] = blobUrl;
+          localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
+          
+          // Store the variant ID -> blob URL mapping in the window object for immediate access
+          if (!window.cartoonique_blob_urls) {
+            window.cartoonique_blob_urls = {};
+          }
+          window.cartoonique_blob_urls[variantId] = blobUrl;
+          
+          return true;
+        } else {
+          // Not a base64 image, store as is
+          const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
+          cartImages[variantId] = imageUrl;
+          localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
+          return true;
+        }
+      } catch (error) {
+        console.error('Storage error:', error);
+        
+        // If we still hit an error, revert to the window object approach
         try {
-          console.log('Trying to generate transformed image');
-          this.generateTransformedImage();
-          // Check if this set the processed image URL
-          processedImageUrl = this.processedImageUrl;
-        } catch (error) {
-          console.error('Error generating transformed image:', error);
-        }
-      } else {
-        console.warn('generateTransformedImage method not found');
-        
-        // Try to get the primary product image as a fallback
-        const productImage = this.findMainProductImage ? this.findMainProductImage() : null;
-        if (productImage && productImage.src) {
-          processedImageUrl = productImage.src;
-          console.log('Using main product image as fallback');
+          console.log('Storing image in memory as fallback');
+          if (!window.cartoonique_memory_images) {
+            window.cartoonique_memory_images = {};
+          }
+          window.cartoonique_memory_images[variantId] = imageUrl;
+          
+          // Store just a reference in localStorage
+          const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
+          cartImages[variantId] = 'MEMORY_IMAGE:' + variantId;
+          localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
+          
+          return true;
+        } catch (fallbackError) {
+          console.error('Failed to store image with fallback method:', fallbackError);
+          return false;
         }
       }
-    }
-    
-    // Final check if we have what we need
-    if (!variantId) {
-      console.error('Failed to find a valid variant ID');
-      alert('Unable to find product variant. Please try again or contact support.');
-      return;
-    }
-    
-    if (!processedImageUrl) {
-      console.error('Failed to find a processed image');
-      alert('Unable to find processed image. Please try again or contact support.');
-      return;
-    }
-    
-    // Ensure we have a numeric variant ID
-    const numericVariantId = parseInt(variantId, 10);
-    console.log('Using variant ID:', numericVariantId, 'with image URL (truncated):', processedImageUrl.substring(0, 50) + '...');
-    
-    // Generate a unique reference ID for this image
-    const imageReferenceId = 'image_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
-    
-    // Store the actual image using our helper function
-    this.storeProcessedImage(numericVariantId, processedImageUrl, imageReferenceId);
-    
-    // Show loading state in the popup
-    this.showAddToCartLoading();
-    
-    // IMPORTANT: Create cart data with SMALL properties (not the full image)
-    const cartData = {
-      items: [
-        {
-          id: numericVariantId,
-          quantity: 1,
-          properties: {
-            _selected_size: size,
-            _has_custom_image: 'true',
-            _image_reference_id: imageReferenceId
-          }
-        }
-      ]
     };
     
-    // Add to cart using the proper Shopify API format
+    // Try to store the image
+    const storageResult = storeImageSafely(variantId, processedImageUrl);
+    
+    // Update cart image replacement code to be aware of our storage approach
+    this.setupCartImageReplacementWithFallbacks();
+    
+    // Show loading state in the popup instead of closing it immediately
+    const popup = document.querySelector('#pixar-result-popup');
+    if (popup) {
+      // Change continue button text to indicate loading
+      const continueButton = popup.querySelector('.pixar-continue-button');
+      if (continueButton) {
+        const originalButtonText = continueButton.textContent;
+        continueButton.textContent = 'Adding to cart...';
+        continueButton.disabled = true;
+        // Add a spinning indicator to the button
+        continueButton.classList.add('loading');
+        
+        // Add a CSS spinner if not already present
+        if (!document.querySelector('#pixar-loading-spinner-style')) {
+          const style = document.createElement('style');
+          style.id = 'pixar-loading-spinner-style';
+          style.textContent = `
+            .pixar-continue-button.loading {
+              position: relative;
+              color: transparent !important;
+              transition: background-color 0.3s ease;
+            }
+            .pixar-continue-button.loading::after {
+              content: '';
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              width: 24px;
+              height: 24px;
+              margin: -12px 0 0 -12px;
+              border-radius: 50%;
+              border: 3px solid rgba(255, 255, 255, 0.8);
+              border-top-color: transparent;
+              animation: pixar-spinner 0.8s linear infinite;
+              box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+            }
+            @keyframes pixar-spinner {
+              to {transform: rotate(360deg);}
+            }
+            /* Second animation for pulse effect */
+            .pixar-continue-button.loading {
+              animation: pixar-pulse 2s infinite ease-in-out;
+            }
+            @keyframes pixar-pulse {
+              0% { background-color: var(--original-bg, #1a73e8); }
+              50% { background-color: var(--pulse-bg, #0d47a1); }
+              100% { background-color: var(--original-bg, #1a73e8); }
+            }
+          `;
+          document.head.appendChild(style);
+          
+          // Cache the original background color for pulse animation
+          const computedStyle = window.getComputedStyle(continueButton);
+          const originalBg = computedStyle.backgroundColor;
+          document.documentElement.style.setProperty('--original-bg', originalBg);
+          document.documentElement.style.setProperty('--pulse-bg', adjustColor(originalBg, -20));
+        }
+      }
+      
+      // Disable size buttons during the transition
+      const sizeButtons = popup.querySelectorAll('.pixar-size-option');
+      sizeButtons.forEach(button => {
+        button.disabled = true;
+      });
+    }
+    
+    // Function to darken a color for pulse animation
+    function adjustColor(color, amount) {
+      // Handle different color formats
+      let r, g, b;
+      
+      if (color.startsWith('rgb')) {
+        // Parse RGB format
+        const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/);
+        if (rgbMatch) {
+          r = parseInt(rgbMatch[1]);
+          g = parseInt(rgbMatch[2]);
+          b = parseInt(rgbMatch[3]);
+        } else {
+          return color; // Can't parse, return original
+        }
+      } else if (color.startsWith('#')) {
+        // Parse hex format
+        const hex = color.substring(1);
+        r = parseInt(hex.substr(0, 2), 16);
+        g = parseInt(hex.substr(2, 2), 16);
+        b = parseInt(hex.substr(4, 2), 16);
+      } else {
+        return color; // Unsupported format, return original
+      }
+      
+      // Adjust brightness
+      r = Math.max(0, Math.min(255, r + amount));
+      g = Math.max(0, Math.min(255, g + amount));
+      b = Math.max(0, Math.min(255, b + amount));
+      
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+    
+    // Use Shopify's cart API to add the item
+    console.log('Using Shopify cart API to add item with variant ID:', variantId);
+    
+    // Get the processed image URL to include as a custom line item property
+    const formData = {
+      'items': [{
+        'id': variantId,
+        'quantity': 1,
+        'properties': {
+          '_processed_image': 'yes', // Just store a flag, not the full URL
+          '_selected_size': size
+        }
+      }]
+    };
+    
+    // Direct redirect function without an iframe
+    const redirectToCart = () => {
+      console.log('Executing immediate redirect to cart...');
+      
+      // Set a flag in localStorage to indicate we're navigating to cart
+      try {
+        const navigationData = {
+          timestamp: Date.now(),
+          imageUrl: localStorage.getItem(`cartoonique_image_${variantId}`),
+          variantId: variantId,
+          size: size
+        };
+        
+        localStorage.setItem('cartoonique_navigating_to_cart', 'true');
+        localStorage.setItem('cartoonique_cart_navigation_time', Date.now().toString());
+        localStorage.setItem('cartoonique_preload_cart_images', 'true');
+        
+        // Store more detailed navigation data if possible
+        try {
+          localStorage.setItem('cartoonique_navigation_data', JSON.stringify(navigationData));
+        } catch(e) {
+          console.warn('Unable to store full navigation data', e);
+        }
+      } catch (e) {
+        console.error('Error setting navigation flags:', e);
+      }
+      
+      // The most reliable way to navigate - directly change location
+      window.location.href = '/cart?nocache=' + Date.now();
+    };
+    
     fetch('/cart/add.js', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify(cartData)
+      body: JSON.stringify(formData)
     })
     .then(response => {
       if (!response.ok) {
-        return response.json().then(data => {
-          throw new Error(data.description || 'Error adding to cart');
-        });
+        throw new Error('Network response was not ok: ' + response.statusText);
       }
       return response.json();
     })
     .then(data => {
-      console.log('Product added to cart:', data);
+      console.log('Successfully added to cart:', data);
       
-      // Ensure the client-side storage mechanism is loaded
-      this.setupClientStorage();
-
-      // Set flag for cart page to preload images
-      localStorage.setItem('cartoonique_preload_cart_images', 'true');
+      // Immediately redirect to cart page
+      redirectToCart();
       
-      // Wait a moment to ensure the cart is updated
-      setTimeout(() => {
-        // Hide loading UI
-        this.hideAddToCartLoading();
-        
-        // IMPORTANT: Redirect to cart page to trigger image replacement
-        window.location.href = '/cart?t=' + Date.now();
-      }, 500);
+      // No delays or waiting - direct redirection
     })
     .catch(error => {
       console.error('Error adding to cart:', error);
-      alert('There was a problem adding this item to your cart: ' + error.message);
       
-      // Hide loading UI
-      this.hideAddToCartLoading();
+      // Reset the button state on error
+      const continueButton = popup && popup.querySelector('.pixar-continue-button');
+      if (continueButton) {
+        continueButton.textContent = 'Continue';
+        continueButton.disabled = false;
+        continueButton.classList.remove('loading');
+      }
+      
+      // Re-enable size buttons
+      const sizeButtons = popup && popup.querySelectorAll('.pixar-size-option');
+      if (sizeButtons) {
+        sizeButtons.forEach(button => {
+          button.disabled = false;
+        });
+      }
+      
+      // Fallback to direct URL in case the fetch fails
+      const fallbackUrl = `/cart/${variantId}:1`;
+      
+      // Show an error message and provide a manual link
+      const errorMessage = document.createElement('div');
+      errorMessage.className = 'pixar-error-message';
+      errorMessage.style.color = 'red';
+      errorMessage.style.margin = '10px 0';
+      errorMessage.innerHTML = `
+        Error adding to cart. <a href="${fallbackUrl}" style="color: blue; text-decoration: underline;">Click here</a> to try again.
+      `;
+      
+      // Find an appropriate place to show the error
+      const messageContainer = popup && popup.querySelector('.pixar-result-buttons') || 
+                              popup && popup.querySelector('.pixar-result-controls');
+      if (messageContainer) {
+        messageContainer.appendChild(errorMessage);
+      }
     });
   }
   
   /**
-   * Set up client-side storage mechanism for images
+   * Set up hooks to replace cart images with processed images
+   * This version handles fallback storage methods
    */
-  setupClientStorage() {
-    // Create script to set up storage
+  setupCartImageReplacementWithFallbacks() {
+    console.log('Setting up cart image replacement with fallback storage handling');
+    
+    // Create a script element with a direct approach to image replacement
     const script = document.createElement('script');
     script.textContent = `
-      // Initialize cartoonique storage
-      if (!window.cartoonique_storage_initialized) {
-        console.log('Initializing cartoonique image storage');
+      (function() {
+        console.log('Direct cart image replacement script started with fallback support');
         
-        // Create storage objects if they don't exist
-        window.cartoonique_blob_urls = window.cartoonique_blob_urls || {};
-        window.cartoonique_memory_images = window.cartoonique_memory_images || {};
+        // Cache DOM queries and data to avoid repeated lookups
+        const cachedImages = new Map();
+        const processedVariants = new Set();
         
-        // Flag to prevent multiple initializations
-        window.cartoonique_storage_initialized = true;
-      }
+        // Function to get an image URL from our various storage locations
+        function getStoredImageForVariant(variantId) {
+          // Check if we already looked up this variant
+          if (processedVariants.has(variantId)) {
+            return cachedImages.get(variantId) || null;
+          }
+          
+          // Mark as processed to avoid redundant lookups
+          processedVariants.add(variantId);
+          
+          let imageUrl = null;
+          
+          // First check if we have a blob URL in the window object
+          if (window.cartoonique_blob_urls && window.cartoonique_blob_urls[variantId]) {
+            imageUrl = window.cartoonique_blob_urls[variantId];
+          }
+          // Then check if we have a memory image
+          else if (window.cartoonique_memory_images && window.cartoonique_memory_images[variantId]) {
+            imageUrl = window.cartoonique_memory_images[variantId];
+          }
+          // Finally check localStorage
+          else {
+            try {
+              const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
+              const storedValue = cartImages[variantId];
+              
+              if (storedValue) {
+                // Handle various storage formats
+                if (typeof storedValue === 'string') {
+                  if (storedValue.startsWith('MEMORY_IMAGE:')) {
+                    const memoryVariantId = storedValue.split(':')[1];
+                    if (window.cartoonique_memory_images && window.cartoonique_memory_images[memoryVariantId]) {
+                      imageUrl = window.cartoonique_memory_images[memoryVariantId];
+                    }
+                  } else if (storedValue.startsWith('SESSION_STORAGE:')) {
+                    imageUrl = sessionStorage.getItem('cartoonique_image_' + variantId);
+                  } else if (storedValue === 'CURRENT_PROCESSED_IMAGE') {
+                    const currentVariant = sessionStorage.getItem('cartoonique_current_variant');
+                    if (currentVariant === variantId && window.cartoonique_current_image) {
+                      imageUrl = window.cartoonique_current_image;
+                    }
+                  } else {
+                    imageUrl = storedValue;
+                  }
+                }
+              }
+            } catch (error) {
+              console.error('Error retrieving image from storage:', error);
+            }
+          }
+          
+          // Cache the result for future lookups
+          cachedImages.set(variantId, imageUrl);
+          return imageUrl;
+        }
+        
+        // Check for preload details (if coming from product page)
+        let navigationData = null;
+        try {
+          const navDataStr = localStorage.getItem('cartoonique_navigation_data');
+          if (navDataStr) {
+            navigationData = JSON.parse(navDataStr);
+            // Use this data for instant image replacement if possible
+            if (navigationData && navigationData.variantId && navigationData.imageUrl) {
+              cachedImages.set(navigationData.variantId, navigationData.imageUrl);
+            }
+          }
+        } catch (e) {
+          console.warn('Error parsing navigation data', e);
+        }
+        
+        // Direct replacement function
+        function replaceCartImages() {
+          // Target specifically the exact class combination we see in the cart
+          console.log('Searching for cart images to replace...');
+          
+          // Method 1: Comprehensive selector targeting all possible cart image selectors
+          const cartImages = document.querySelectorAll(
+            // Standard cart selectors
+            '.cart-item__image.shape__target-image.multiply-mode__target, ' +
+            '.cart-item__image.shape__target-image, ' +
+            '.cart-item__image, ' +
+            // Cart notification popup
+            '.cart-notification-popup-item__image, ' +
+            // Mini cart & drawer cart selectors
+            '.mini-cart-item__image, ' + 
+            '.drawer-cart__item-image, ' +
+            // Additional generic cart selectors
+            'img[src*="products"][src*="cdn"], ' +
+            'img[class*="cart-item"], ' +
+            'img[class*="product-image"][data-cart-item-image]'
+          );
+          
+          console.log('Found ' + cartImages.length + ' cart images with target classes');
+          
+          // Early exit if no images found - don't waste processing
+          if (cartImages.length === 0) {
+            return 0;
+          }
+          
+          let replacedCount = 0;
+          
+          cartImages.forEach(img => {
+            // Check if we've already processed this image
+            if (img.dataset.processed === 'true') {
+              return;
+            }
+            
+            // Get image src, alt and srcset
+            const src = img.src || '';
+            const alt = img.alt || '';
+            
+            // Try to find the variant ID for this image
+            let foundVariantId = null;
+            
+            // Look for variant ID in various places
+            function findVariantIdForImage(img) {
+              // First check if the image itself has any data attributes
+              if (img.dataset.variantId) return img.dataset.variantId;
+              if (img.dataset.id) return img.dataset.id;
+              
+              // Check parent elements for variant ID
+              let element = img.parentElement;
+              const checkedElements = new Set();
+              
+              for (let depth = 0; depth < 10; depth++) {
+                if (!element || checkedElements.has(element)) break;
+                checkedElements.add(element);
+                
+                // Check for data attributes
+                const variantId = element.dataset.variantId || 
+                                 element.dataset.id || 
+                                 element.dataset.variant || 
+                                 element.dataset.itemId ||
+                                 element.dataset.cartItemId;
+                
+                if (variantId) return variantId;
+                
+                // Check href attributes
+                const href = element.getAttribute('href');
+                if (href) {
+                  const variantMatch = href.match(/variant=([0-9]+)/);
+                  if (variantMatch && variantMatch[1]) return variantMatch[1];
+                  
+                  const pathVariantMatch = href.match(/\\?variant=([0-9]+)/);
+                  if (pathVariantMatch && pathVariantMatch[1]) return pathVariantMatch[1];
+                }
+                
+                // Check for cart item key in any attribute
+                for (const attr of element.attributes) {
+                  if (attr.value && typeof attr.value === 'string') {
+                    const keyMatch = attr.value.match(/[a-z0-9]{32}/);
+                    if (keyMatch) {
+                      // This could be a cart item key - try to extract variant ID from the page
+                      const allVariantElements = document.querySelectorAll('[data-variant-id]');
+                      if (allVariantElements.length === 1) {
+                        return allVariantElements[0].dataset.variantId;
+                      }
+                    }
+                  }
+                }
+                
+                // Move up the DOM tree
+                element = element.parentElement;
+              }
+              
+              return null;
+            }
+            
+            // Try to find variant ID using the function
+            foundVariantId = findVariantIdForImage(img);
+            
+            // If we found a variant ID, check if we have a stored image for it
+            if (foundVariantId) {
+              const storedImageUrl = getStoredImageForVariant(foundVariantId);
+              
+              if (storedImageUrl) {
+                // Apply image directly without creating a new one for faster replacement
+                img.srcset = '';
+                img.sizes = '';
+                img.src = storedImageUrl;
+                img.dataset.processed = 'true';
+                img.loading = 'eager';
+                img.style.objectFit = 'contain';
+                replacedCount++;
+              }
+            } else {
+              // If no variant ID was found, try to use the navigationData as fallback
+              // This helps when redirecting from product page to cart
+              if (navigationData && navigationData.imageUrl) {
+                console.log('Using navigation data fallback for image replacement');
+                img.srcset = '';
+                img.sizes = '';
+                img.src = navigationData.imageUrl;
+                img.dataset.processed = 'true';
+                img.loading = 'eager';
+                img.style.objectFit = 'contain';
+                replacedCount++;
+              }
+            }
+          });
+          
+          // Log the results only if replacements happened
+          if (replacedCount > 0) {
+            console.log('Replaced ' + replacedCount + ' cart images');
+          }
+          
+          return replacedCount;
+        }
+        
+        // Check if we're on the cart page and preloading is needed
+        if (window.location.pathname.includes('/cart') && localStorage.getItem('cartoonique_preload_cart_images') === 'true') {
+          // We're loading the cart page for the first time after adding to cart
+          console.log('Detected cart page load after adding product, starting immediate image replacement');
+          localStorage.removeItem('cartoonique_preload_cart_images');
+          
+          // For cart pages, run replacement immediately
+          replaceCartImages();
+          
+          // And also run after DOM is fully loaded
+          document.addEventListener('DOMContentLoaded', () => {
+            replaceCartImages();
+          });
+        }
+        
+        // Run immediately for all cases
+        replaceCartImages();
+        
+        // Also run after short delays to catch late-loading elements
+        setTimeout(replaceCartImages, 100);
+        setTimeout(replaceCartImages, 500);
+        setTimeout(replaceCartImages, 1000);
+        
+        // Also observe DOM changes to catch any dynamically added content
+        const observer = new MutationObserver(() => {
+          replaceCartImages();
+        });
+        
+        // Start observing immediately
+        observer.observe(document.body, { 
+          childList: true, 
+          subtree: true,
+          attributes: true, 
+          attributeFilter: ['src', 'srcset', 'class']
+        });
+      })();
     `;
     
+    // Add the script to the document
     document.head.appendChild(script);
-  }
-  
-  /**
-   * Store the processed image for cart display
-   * @param {number} variantId - The variant ID
-   * @param {string} imageUrl - The processed image URL
-   * @param {string} referenceId - Optional reference ID for the image
-   * @returns {boolean} - Whether storage was successful
-   */
-  storeProcessedImage(variantId, imageUrl, referenceId = null) {
-    try {
-      if (!variantId || !imageUrl) {
-        console.error('Missing variant ID or image URL for storage');
-        return false;
-      }
-      
-      // Initialize client storage
-      this.setupClientStorage();
-      
-      // Use either provided reference ID or create a key from the variant ID
-      const storageKey = referenceId || 'variant_' + variantId;
-      
-      // Handle large base64 images - convert to blob URL for better performance
-      if (imageUrl.startsWith('data:image')) {
-        console.log('Converting base64 image to blob URL for better performance');
+    
+    // If we're already on the cart page, inject an immediate execution script
+    if (window.location.pathname.includes('/cart')) {
+      console.log('Already on cart page, triggering immediate image replacement');
+      const immediateScript = document.createElement('script');
+      immediateScript.textContent = `
+        console.log('Immediate cart image replacement executing');
+        
+        // Directly inject CSS to ensure our images display correctly
+        const style = document.createElement('style');
+        style.textContent = \`
+          .cart-item__image.shape__target-image.multiply-mode__target[data-processed="true"],
+          .cart-item__image.shape__target-image[data-processed="true"],
+          .cart-item__image[data-processed="true"],
+          .cart-notification-popup-item__image[data-processed="true"],
+          .mini-cart-item__image[data-processed="true"],
+          .drawer-cart__item-image[data-processed="true"],
+          img[data-processed="true"] {
+            object-fit: contain !important;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 3/4;
+          }
+        \`;
+        document.head.appendChild(style);
+        
+        // Preload images from storage for faster display
         try {
-          // Convert base64 to blob
-          const byteString = atob(imageUrl.split(',')[1]);
-          const mimeType = imageUrl.split(',')[0].split(':')[1].split(';')[0];
-          const ab = new ArrayBuffer(byteString.length);
-          const ia = new Uint8Array(ab);
-          
-          for (let i = 0; i < byteString.length; i++) {
-            ia[i] = byteString.charCodeAt(i);
+          // Check for navigationData
+          const navDataStr = localStorage.getItem('cartoonique_navigation_data');
+          if (navDataStr) {
+            const navData = JSON.parse(navDataStr);
+            if (navData && navData.imageUrl) {
+              // Create a hidden preload image
+              const preloadImg = new Image();
+              preloadImg.src = navData.imageUrl;
+              preloadImg.style.position = 'absolute';
+              preloadImg.style.opacity = '0';
+              preloadImg.style.pointerEvents = 'none';
+              document.body.appendChild(preloadImg);
+              
+              // Force immediate image replacement
+              setTimeout(() => {
+                const cartImages = document.querySelectorAll('.cart-item__image, img[class*="cart-item"]');
+                if (cartImages.length > 0) {
+                  console.log('Applying immediate image replacement to ' + cartImages.length + ' cart images');
+                  cartImages.forEach(img => {
+                    img.srcset = '';
+                    img.sizes = '';
+                    img.src = navData.imageUrl;
+                    img.dataset.processed = 'true';
+                    img.style.objectFit = 'contain';
+                  });
+                }
+              }, 0);
+            }
           }
-          
-          const blob = new Blob([ab], { type: mimeType });
-          const blobUrl = URL.createObjectURL(blob);
-          
-          // Store reference in localStorage - NOT the full image data
-          const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-          cartImages[storageKey] = 'BLOB_URL:' + storageKey;
-          localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
-          
-          // Store the key -> blob URL mapping in the window object for immediate access
-          if (!window.cartoonique_blob_urls) {
-            window.cartoonique_blob_urls = {};
-          }
-          window.cartoonique_blob_urls[storageKey] = blobUrl;
-          
-          // Also map the variant ID to this storage key
-          cartImages['variant_' + variantId] = storageKey;
-          localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
-          
-          // Store the current reference for cart page preloading
-          sessionStorage.setItem('cartoonique_current_reference', storageKey);
-          window.cartoonique_current_image = blobUrl;
-          
-          // Set a flag for the cart page to know it should preload images
-          localStorage.setItem('cartoonique_preload_cart_images', 'true');
-          
-          // Also store navigation data for faster page transitions
-          const navigationData = {
-            variantId: variantId,
-            referenceId: storageKey,
-            imageUrl: blobUrl,
-            timestamp: Date.now()
-          };
-          localStorage.setItem('cartoonique_navigation_data', JSON.stringify(navigationData));
-          
-          return true;
         } catch (e) {
-          console.error('Error converting base64 to blob:', e);
-          // Fallback to storing in window object
-          if (!window.cartoonique_memory_images) {
-            window.cartoonique_memory_images = {};
-          }
-          window.cartoonique_memory_images[storageKey] = imageUrl;
-          
-          // Store reference in localStorage
-          const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-          cartImages[storageKey] = 'MEMORY_IMAGE:' + storageKey;
-          cartImages['variant_' + variantId] = storageKey;
-          localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
-          
-          return true;
+          console.warn('Error during image preloading', e);
         }
-      } else {
-        // Not a base64 image, store the URL as is
-        const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-        cartImages[storageKey] = imageUrl;
-        cartImages['variant_' + variantId] = storageKey;
-        localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
-        
-        // Also store in window object for immediate access
-        if (!window.cartoonique_blob_urls) {
-          window.cartoonique_blob_urls = {};
-        }
-        window.cartoonique_blob_urls[storageKey] = imageUrl;
-        
-        // Set preload flag and navigation data
-        localStorage.setItem('cartoonique_preload_cart_images', 'true');
-        const navigationData = {
-          variantId: variantId,
-          referenceId: storageKey,
-          imageUrl: imageUrl,
-          timestamp: Date.now()
-        };
-        localStorage.setItem('cartoonique_navigation_data', JSON.stringify(navigationData));
-        
-        return true;
-      }
-    } catch (error) {
-      console.error('Storage error:', error);
-      
-      // If we still hit an error, revert to the window object approach
-      try {
-        console.log('Storing image in memory as fallback');
-        if (!window.cartoonique_memory_images) {
-          window.cartoonique_memory_images = {};
-        }
-        
-        // Use provided reference ID or create a key
-        const storageKey = referenceId || 'variant_' + variantId;
-        
-        window.cartoonique_memory_images[storageKey] = imageUrl;
-        
-        // Store just a reference in localStorage
-        const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-        cartImages[storageKey] = 'MEMORY_IMAGE:' + storageKey;
-        cartImages['variant_' + variantId] = storageKey;
-        localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
-        
-        return true;
-      } catch (fallbackError) {
-        console.error('Failed to store image with fallback method:', fallbackError);
-        return false;
-      }
-    }
-  }
-  
-  /**
-   * Show loading UI when adding to cart
-   */
-  showAddToCartLoading() {
-    const popup = document.querySelector('#pixar-result-popup');
-    if (!popup) return;
-    
-    const popupContent = popup.querySelector('.result-popup__content');
-    const resultImage = popup.querySelector('.result-wrapper__image');
-    
-    if (popupContent && resultImage) {
-      // Create loading UI
-      const loadingElement = document.createElement('div');
-      loadingElement.className = 'result-popup__loading';
-      loadingElement.innerHTML = `
-        <div class="loading-spinner"></div>
-        <p>Adding to cart...</p>
       `;
-      
-      // Hide the result image and show loading
-      resultImage.style.opacity = '0.3';
-      popupContent.appendChild(loadingElement);
-          } else {
-      // Alternative loading UI if structure is different
-      // Change continue button text to indicate loading
-      const continueButton = popup.querySelector('.pixar-continue-button');
-      if (continueButton) {
-        continueButton.textContent = 'Adding to cart...';
-        continueButton.disabled = true;
-        continueButton.classList.add('loading');
-      }
+      document.head.appendChild(immediateScript);
     }
   }
-  
-  /**
-   * Hide loading UI after adding to cart
-   */
-  hideAddToCartLoading() {
-    const popup = document.querySelector('#pixar-result-popup');
-    if (!popup) return;
-    
-    // Remove loading UI
-    const loadingElement = popup.querySelector('.result-popup__loading');
-    if (loadingElement) {
-      loadingElement.remove();
-    }
-    
-    // Restore image visibility
-    const resultImage = popup.querySelector('.result-wrapper__image');
-    if (resultImage) {
-      resultImage.style.opacity = '1';
-    }
-    
-    // Reset any loading buttons
-    const continueButton = popup.querySelector('.pixar-continue-button');
-    if (continueButton) {
-      continueButton.textContent = 'Continue';
-      continueButton.disabled = false;
-      continueButton.classList.remove('loading');
-    }
+
+  // Add this method to maintain compatibility with existing code
+  setupCartImageReplacement() {
+    console.log('Redirecting to setupCartImageReplacementWithFallbacks for better storage handling');
+    this.setupCartImageReplacementWithFallbacks();
   }
 }
 
