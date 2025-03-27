@@ -203,9 +203,10 @@
     container.style.cssText = `
       position: relative;
       display: block;
-      margin: 20px auto;
+      margin: 10px auto;
       text-align: center;
-      max-width: 300px;
+      width: 100%;
+      max-width: none;
     `;
     
     // Create button
@@ -223,21 +224,38 @@
       display: block;
       width: 100%;
       text-transform: uppercase;
+      margin-bottom: 10px;
+      height: 50px; /* Match height of Add to cart button */
     `;
     
-    // Add hover effect
-    button.addEventListener('mouseover', function() {
-      this.style.backgroundColor = '#3a6dac';
-      this.style.transform = 'translateY(-2px)';
-      this.style.boxShadow = '0 6px 12px rgba(0,0,0,0.15)';
-      this.style.transition = 'all 0.2s ease-in-out';
-    });
-    
-    button.addEventListener('mouseout', function() {
-      this.style.backgroundColor = '#4a7dbd';
-      this.style.transform = 'translateY(0)';
-      this.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
-    });
+    // Try to match the current theme's button style
+    setTimeout(() => {
+      try {
+        // Find the Add to cart button to copy its styles
+        const addToCartBtn = document.querySelector('button[aria-label="Add to cart"]') || 
+                           document.querySelector('.add-to-cart-btn') || 
+                           document.querySelector('button[name="add"]');
+        
+        if (addToCartBtn) {
+          // Get computed styles
+          const styles = window.getComputedStyle(addToCartBtn);
+          
+          // Apply matching styles
+          button.style.backgroundColor = '#4a7dbd'; // Keep our blue color
+          button.style.color = styles.color;
+          button.style.padding = styles.padding;
+          button.style.fontSize = styles.fontSize;
+          button.style.borderRadius = styles.borderRadius;
+          button.style.height = styles.height;
+          button.style.fontFamily = styles.fontFamily;
+          button.style.width = styles.width;
+          button.style.lineHeight = styles.lineHeight;
+          button.style.fontWeight = styles.fontWeight;
+        }
+      } catch(e) {
+        console.log('⭐ Error matching button styles:', e);
+      }
+    }, 300);
     
     // Add click event
     button.addEventListener('click', function() {
@@ -257,15 +275,105 @@
     // Add button to container
     container.appendChild(button);
     
-    // Find where to append the button
-    let targetContainer = document.querySelector('.product__container') || 
-                         document.querySelector('.product__info-container') ||
-                         document.querySelector('.product-form__buttons') ||
-                         document.querySelector('.product__buttons');
+    // DIRECT TARGET: Find Add to cart button or form
+    const addToCartButton = document.querySelector('button[data-testid="AddToCartButton"]') || 
+                          document.querySelector('button[aria-label="Add to cart"]') ||
+                          document.querySelector('.add-to-cart-btn') || 
+                          document.querySelector('button[name="add"]') ||
+                          document.querySelector('.add-to-cart') || 
+                          document.querySelector('[data-action="add-to-cart"]') ||
+                          document.querySelector('.product-form__submit') ||
+                          document.querySelector('button:not([type="button"]):contains("Add to cart")');
+                          
+    // Get the ADD TO CART text content button if none found by ID/class
+    if (!addToCartButton) {
+      const allButtons = document.querySelectorAll('button');
+      for (const btn of allButtons) {
+        if (btn.textContent.trim().toLowerCase().includes('add to cart')) {
+          addToCartButton = btn;
+          break;
+        }
+      }
+    }
+    
+    // Look for cart form or buttons container
+    let targetContainer;
+    
+    if (addToCartButton) {
+      console.log('⭐ Add to cart button found, inserting upload button before it');
+      // Get the parent of the add to cart button
+      targetContainer = addToCartButton.closest('form[action*="/cart/add"]') || 
+                        addToCartButton.closest('.product-form__buttons') ||
+                        addToCartButton.closest('.cart-functions') ||
+                        addToCartButton.parentNode;
+      
+      // Insert our button directly before the add to cart button
+      if (targetContainer) {
+        targetContainer.insertBefore(container, addToCartButton);
+        console.log('⭐ Upload button container added before Add to cart button');
+        return;
+      }
+    }
+    
+    // Try finding the blue Add to cart button shown in the screenshot
+    const blueAddToCartButton = document.querySelector('button.add-to-cart');
+    if (blueAddToCartButton) {
+      console.log('⭐ Blue Add to cart button found, inserting upload button before it');
+      const buttonParent = blueAddToCartButton.parentNode;
+      if (buttonParent) {
+        buttonParent.insertBefore(container, blueAddToCartButton);
+        console.log('⭐ Upload button container added before blue Add to cart button');
+        return;
+      }
+    }
+    
+    // Special case for the theme in the screenshot - look for Size options and add after them
+    let sizeContainer = document.querySelector('.size-option-cont') || 
+                      document.querySelector('.color-option-cont');
+    
+    // Try to find fieldset with Size legend
+    if (!sizeContainer) {
+      const fieldsets = document.querySelectorAll('fieldset');
+      for (const fieldset of fieldsets) {
+        const legend = fieldset.querySelector('legend');
+        if (legend && legend.textContent.includes('Size')) {
+          sizeContainer = fieldset;
+          break;
+        }
+      }
+    }
+    
+    if (sizeContainer) {
+      const sizeParent = sizeContainer.parentNode;
+      if (sizeParent) {
+        const nextElement = sizeContainer.nextElementSibling;
+        if (nextElement) {
+          sizeParent.insertBefore(container, nextElement);
+        } else {
+          sizeParent.appendChild(container);
+        }
+        console.log('⭐ Upload button container added after size options');
+        return;
+      }
+    }
+    
+    // Fallback to other containers if specific targets not found
+    targetContainer = document.querySelector('.product-form__buttons') || 
+                     document.querySelector('.cart-functions') ||
+                     document.querySelector('form[action*="/cart/add"]') ||
+                     document.querySelector('.product__container') || 
+                     document.querySelector('.product__info-container');
     
     if (targetContainer) {
-      targetContainer.appendChild(container);
-      console.log('⭐ Upload button container added to page');
+      // If it's a form and we found the submit button, insert before
+      if (targetContainer.tagName === 'FORM' && targetContainer.querySelector('button[type="submit"]')) {
+        const submitButton = targetContainer.querySelector('button[type="submit"]');
+        targetContainer.insertBefore(container, submitButton);
+      } else {
+        // Otherwise prepend as the first element
+        targetContainer.prepend(container);
+      }
+      console.log('⭐ Upload button container added to product form container');
     } else {
       console.log('⭐ Could not find target container for upload button, appending to product page');
       // Use different selectors for various themes
