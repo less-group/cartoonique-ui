@@ -112,7 +112,9 @@
     
     /* Add proper focus styles for accessibility */
     .cart-item__image-wrapper:focus,
-    .cart-item__image-wrapper:focus-visible {
+    .cart-item__image-wrapper:focus-visible,
+    a:has(.multiply-mode__target):focus,
+    a:has(.multiply-mode__target):focus-visible {
       outline: 2px solid #4a90e2;
       outline-offset: 2px;
       box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.3);
@@ -121,7 +123,8 @@
     }
     
     /* Allow focus only for keyboard navigation not mouse clicks */
-    .cart-item__image-wrapper:focus:not(:focus-visible) {
+    .cart-item__image-wrapper:focus:not(:focus-visible),
+    a:has(.multiply-mode__target):focus:not(:focus-visible) {
       outline: none;
       box-shadow: none;
     }
@@ -949,8 +952,11 @@
           // Find all image elements in the cart item
           const imgElements = item.querySelectorAll('img');
           imgElements.forEach(img => {
-            if (img.classList.contains('cart-item__image') || 
-                img.parentElement.classList.contains('cart-item__image-wrapper')) {
+            const isCartImage = img.classList.contains('cart-item__image') || 
+                img.parentElement.classList.contains('cart-item__image-wrapper');
+            const isMultiplyTarget = img.classList.contains('multiply-mode__target');
+              
+            if (isCartImage || isMultiplyTarget) {
               // Replace image
               img.srcset = '';
               img.sizes = '';
@@ -958,6 +964,9 @@
               img.style.objectFit = 'contain';
               img.setAttribute('data-processed', 'true');
               img.style.aspectRatio = '3/4';
+              
+              // Remove any lazy loading classes that might interfere
+              img.classList.remove('lazyload', 'lazyloading');
               
               // Force the image to load with a fresh element if needed
               if (img.complete && img.naturalWidth === 0) {

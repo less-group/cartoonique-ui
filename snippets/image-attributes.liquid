@@ -20,17 +20,19 @@
 class='{% if loading == 'lazy' %}lazyload{% endif %}
 {{ class }}
 {{ class_from_parent }}
-{% if is_multiply_target %} multiply-mode__target {% endif %}' alt='{{ image.alt | escape }}' width='1' height='1'
-style='object-position: {{ image.presentation.focal_point }}; {% if is_in_header %}aspect-ratio: {{ image.aspect_ratio }} / 1;{% endif %}' src='
-{{- image | image_url: width: 160 -}}
-'
+{% if is_multiply_target %} multiply-mode__target {% endif %}' 
+alt='{{ image.alt | escape }}' 
+width='1' height='1'
+loading='{{ loading }}'
+style='object-position: {{ image.presentation.focal_point }}; {% if is_in_header %}aspect-ratio: {{ image.aspect_ratio }} / 1;{% endif %}' 
+src='{{- image | image_url: width: 160 -}}'
 {% if loading == 'lazy' %}
   data-srcset='
   {%- for res in res_list -%}
     {{ image | image_url: width: res }}
     {{ res }}w,
   {%- endfor -%}
-  ' data-sizes='auto' loading='{{ loading }}'
+  ' data-sizes='auto'
   {% if parent_fit == blank %}
     data-parent-fit='cover' data-aspectratio='
     {{- image.aspect_ratio -}}
