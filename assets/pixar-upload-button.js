@@ -762,11 +762,32 @@
       const loadingPopup = document.getElementById('pixar-loading-popup');
       if (loadingPopup) {
         loadingPopup.style.display = 'none';
+        document.body.style.overflow = '';
       }
       
       // Update upload button text
       const uploadButton = document.querySelector('#direct-pixar-loader-container button');
       if (uploadButton) {
+        uploadButton.textContent = '✅ IMAGE UPLOADED - READY TO ADD TO CART';
+        uploadButton.style.backgroundColor = '#4CAF50';
+      }
+    });
+    
+    // Also listen for final processing complete event
+    document.addEventListener('pixar-final-processing-complete', function(event) {
+      console.log('⭐ Final processing complete event received', event);
+      
+      // Make sure loading popup is hidden
+      const loadingPopup = document.getElementById('pixar-loading-popup');
+      if (loadingPopup && loadingPopup.style.display !== 'none') {
+        console.log('⭐ Closing loading popup after final processing');
+        loadingPopup.style.display = 'none';
+        document.body.style.overflow = '';
+      }
+      
+      // Update upload button text if not already done
+      const uploadButton = document.querySelector('#direct-pixar-loader-container button');
+      if (uploadButton && uploadButton.textContent !== '✅ IMAGE UPLOADED - READY TO ADD TO CART') {
         uploadButton.textContent = '✅ IMAGE UPLOADED - READY TO ADD TO CART';
         uploadButton.style.backgroundColor = '#4CAF50';
       }

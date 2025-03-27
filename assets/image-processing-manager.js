@@ -1095,6 +1095,69 @@ class ImageProcessingManager {
   }
   
   /**
+   * Apply final processing to image after both crop and text completion
+   */
+  applyFinalProcessing() {
+    console.log('FINAL PROCESSING: Applying to RAILWAY image:', this.stylizedImageUrl);
+    
+    try {
+      // Use the crop coordinates relative to original image
+      console.log('FINAL PROCESSING: Using crop coordinates:', this.cropCoordinates);
+      
+      // Take different paths based on whether this is direct vs Railway
+      if (this.stylizedImageUrl) {
+        // RAILWAY / API path - use CSS cropping and text overlays
+        console.log('FINAL PROCESSING: Using CSS-based cropping for Railway image');
+        console.log('FINAL PROCESSING: Text info stored:', this.textInfo ? 'Yes' : 'No');
+      
+        // First apply crop styling and update product image
+        this.applyRailwayCropStyling();
+        
+        // Add text after the Railway image is loaded and cropped
+        if (this.textInfo) {
+          // Add text after we've cropped and loaded the image
+          this.addTextToRailwayImage(this.stylizedImageUrl);
+        } else {
+          // If no text to add, dispatch the final processing event right away
+          // since we've already updated the product image
+          const finalEvent = new CustomEvent('pixar-final-processing-complete', {
+            detail: { 
+              imageUrl: this.stylizedImageUrl,
+              timestamp: Date.now()
+            }
+          });
+          document.dispatchEvent(finalEvent);
+          
+          // Hide any loading popup that might still be visible
+          this.hideLoadingPopup();
+        }
+      } else {
+        console.error('FINAL PROCESSING: No stylized image URL to process');
+        
+        // Hide any loading popup that might still be visible
+        this.hideLoadingPopup();
+      }
+    } catch (error) {
+      console.error('FINAL PROCESSING: Error applying final processing:', error);
+      
+      // Hide any loading popup that might still be visible in case of error
+      this.hideLoadingPopup();
+    }
+  }
+  
+  /**
+   * Helper method to hide any loading popup that might be visible
+   */
+  hideLoadingPopup() {
+    const loadingPopup = document.getElementById('pixar-loading-popup');
+    if (loadingPopup && loadingPopup.style.display !== 'none') {
+      console.log('🖼️ Hiding loading popup after processing');
+      loadingPopup.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+  }
+  
+  /**
    * Apply the final processing to combine stylized image with cropping and text
    */
   applyFinalProcessing() {
@@ -1943,113 +2006,138 @@ class ImageProcessingManager {
    * Apply CSS-based cropping for Railway images
    */
   applyRailwayCropStyling() {
-    console.log('FINAL PROCESSING: Applying Railway image with CSS-based cropping');
+    console.log('RAILWAY PROCESSING: Applying Railway image with CSS-based cropping');
     
-    // Clean up any existing text overlays
-    document.querySelectorAll('.pixar-text-overlay, .pixar-text-fallback').forEach(el => el.remove());
-    
-    // First, update the product image with the Railway URL (without text)
-    this.updateProductImage(this.stylizedImageUrl);
-    
-    // Move directly to capturing the image without CSS cropping
-    // Get the updated product image directly
-    this.getCroppedImageFromDOM().then(croppedImage => {
-      console.log('RAILWAY PROCESSING: Successfully captured image');
+    try {
+      // Update the product image with the Railway image
+      this.updateProductImage(this.stylizedImageUrl);
       
-      // Check if we need to add text - allow for either name to be present
-      if (this.textInfo && (this.textInfo.text || this.textInfo.text2)) {
-        console.log('RAILWAY PROCESSING: Adding Name1 & Name2 text to image');
+      // Get the main displayed image to apply the crop to
+      const mainImage = this.findMainProductImage();
+      if (mainImage) {
+        console.log('RAILWAY PROCESSING: Found main product image:', mainImage.src);
         
-        // Add text to the cropped image
-        this.addTextToRailwayImage(croppedImage)
-          .then(finalImageWithText => {
-            // Apply the final image with cropping and text embedded
-            console.log('RAILWAY PROCESSING: Text added to image, applying to product');
-            this.updateProductImage(finalImageWithText);
-            
-            // NOW that processing is truly complete, dispatch event and set flag
-            this.finalProcessingComplete = true;
-            this.isProcessing = false;
-            document.dispatchEvent(new CustomEvent('pixar-final-processing-complete', {
-              detail: { imageUrl: finalImageWithText }
-            }));
-            console.log('FINAL PROCESSING: Dispatched pixar-final-processing-complete event after text processing');
-          })
-          .catch(error => {
-            console.error('RAILWAY PROCESSING: Error adding text to image:', error);
-            
-            // Mark as complete even though there was an error
-            this.finalProcessingComplete = true;
-            this.isProcessing = false;
-            document.dispatchEvent(new CustomEvent('pixar-final-processing-complete', {
-              detail: { imageUrl: croppedImage, error: true }
-            }));
-            console.log('FINAL PROCESSING: Dispatched pixar-final-processing-complete event (with error)');
-          });
-      } else {
-        // No valid text needed (we require both name1 and name2), just use the cropped image
-        console.log('RAILWAY PROCESSING: No text added - requires both Name1 and Name2');
-        this.updateProductImage(croppedImage);
+        // Check dimensions
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
         
-        // Now that processing is complete, dispatch event
-        this.finalProcessingComplete = true;
-        this.isProcessing = false;
-        document.dispatchEvent(new CustomEvent('pixar-final-processing-complete', {
-          detail: { imageUrl: croppedImage }
-        }));
-        console.log('FINAL PROCESSING: Dispatched pixar-final-processing-complete event after cropping');
-      }
-    }).catch(error => {
-      console.error('RAILWAY PROCESSING: Error capturing image:', error);
-      
-      // FALLBACK: Use direct image loading if we couldn't capture from DOM
-      console.log('RAILWAY PROCESSING: Attempting fallback direct image loading');
-      this.loadDirectImageFallback()
-        .then(directImage => {
-          console.log('RAILWAY PROCESSING: Successfully loaded fallback image');
+        img.onload = () => {
+          console.log('RAILWAY PROCESSING: Original image loaded', img.width, 'x', img.height);
           
-          // Apply direct image
-          if (this.textInfo && (this.textInfo.text || this.textInfo.text2)) {
-            // Add text to the fallback image
-            this.addTextToRailwayImage(directImage)
-              .then(finalImageWithText => {
-                this.updateProductImage(finalImageWithText);
-                this.finalProcessingComplete = true;
-                this.isProcessing = false;
-                document.dispatchEvent(new CustomEvent('pixar-final-processing-complete', {
-                  detail: { imageUrl: finalImageWithText }
-                }));
-              })
-              .catch(err => {
-                console.error('RAILWAY PROCESSING: Error adding text to fallback image:', err);
-                this.updateProductImage(directImage);
-                this.finalProcessingComplete = true;
-                this.isProcessing = false;
-                document.dispatchEvent(new CustomEvent('pixar-final-processing-complete', {
-                  detail: { imageUrl: directImage, error: true }
-                }));
-              });
+          // Calculate crop dimensions
+          this.originalImageWidth = img.width;
+          this.originalImageHeight = img.height;
+          
+          // Get the cropped area from our crop coordinates
+          if (this.cropCoordinates) {
+            const crop = this.cropCoordinates;
+            
+            // Calculate scaling factor if original images sizes don't match
+            const scaleX = this.originalImageWidth / crop.originalImageWidth;
+            const scaleY = this.originalImageHeight / crop.originalImageHeight;
+            
+            // Calculate cropped dimensions in the displayed image
+            this.croppedImageX = crop.x * scaleX;
+            this.croppedImageY = crop.y * scaleY;
+            this.croppedImageWidth = crop.width * scaleX;
+            this.croppedImageHeight = crop.height * scaleY;
+            
+            // Apply crop styling to all product images
+            this.applyCropStylingToImages();
+            
+            // Get cropped image for text overlays
+            const croppedImage = this.getCroppedImageFromDOM();
+            if (croppedImage) {
+              console.log('RAILWAY PROCESSING: Successfully captured cropped image');
+            } else {
+              console.log('RAILWAY PROCESSING: Could not capture cropped image from DOM');
+            }
           } else {
-            this.updateProductImage(directImage);
-            this.finalProcessingComplete = true;
-            this.isProcessing = false;
-            document.dispatchEvent(new CustomEvent('pixar-final-processing-complete', {
-              detail: { imageUrl: directImage }
-            }));
+            console.log('RAILWAY PROCESSING: No crop coordinates available, using full image');
           }
-        })
-        .catch(fallbackError => {
-          console.error('RAILWAY PROCESSING: Fallback also failed:', fallbackError);
           
-          // Mark as complete even though there was an error
-          this.finalProcessingComplete = true;
-          this.isProcessing = false;
-          document.dispatchEvent(new CustomEvent('pixar-final-processing-complete', {
-            detail: { imageUrl: this.stylizedImageUrl, error: true }
-          }));
-          console.log('FINAL PROCESSING: Dispatched pixar-final-processing-complete event (with capture error)');
+          // Get final cropped image for overlay
+          const capturedImage = this.getCroppedImageFromDOM();
+          if (capturedImage) {
+            console.log('RAILWAY PROCESSING: Successfully captured image');
+            
+            // If no text to add, dispatch final event now 
+            if (!this.textInfo) {
+              console.log('RAILWAY PROCESSING: No text to add, dispatching final event');
+              
+              // Dispatch event to signal final processing is complete
+              const finalEvent = new CustomEvent('pixar-final-processing-complete', {
+                detail: { 
+                  imageUrl: this.stylizedImageUrl,
+                  timestamp: Date.now()
+                }
+              });
+              document.dispatchEvent(finalEvent);
+              
+              // Hide any loading popup that might still be visible
+              this.hideLoadingPopup();
+            } else {
+              console.log('RAILWAY PROCESSING: Adding Name1 & Name2 text to image');
+            }
+          } else {
+            console.log('RAILWAY PROCESSING: Could not capture image from DOM');
+            
+            // Hide any loading popup even on error
+            this.hideLoadingPopup();
+          }
+        };
+        
+        img.onerror = (error) => {
+          console.error('RAILWAY PROCESSING: Error loading image:', error);
+          
+          // Hide loading popup on error
+          this.hideLoadingPopup();
+          
+          // Dispatch final event with error
+          const finalEvent = new CustomEvent('pixar-final-processing-complete', {
+            detail: { 
+              imageUrl: this.stylizedImageUrl,
+              timestamp: Date.now(),
+              error: 'Error loading image for cropping'
+            }
+          });
+          document.dispatchEvent(finalEvent);
+        };
+        
+        // Start loading the image
+        img.src = this.stylizedImageUrl;
+      } else {
+        console.error('RAILWAY PROCESSING: Could not find main product image to apply crop to');
+        
+        // Hide loading popup on error
+        this.hideLoadingPopup();
+        
+        // Dispatch final event with error
+        const finalEvent = new CustomEvent('pixar-final-processing-complete', {
+          detail: { 
+            imageUrl: this.stylizedImageUrl,
+            timestamp: Date.now(),
+            error: 'Could not find main product image'
+          }
         });
-    });
+        document.dispatchEvent(finalEvent);
+      }
+    } catch (error) {
+      console.error('RAILWAY PROCESSING: Error applying Railway image crop:', error);
+      
+      // Hide loading popup on error
+      this.hideLoadingPopup();
+      
+      // Dispatch final event with error
+      const finalEvent = new CustomEvent('pixar-final-processing-complete', {
+        detail: { 
+          imageUrl: this.stylizedImageUrl,
+          timestamp: Date.now(),
+          error: error.message || 'Error applying Railway image crop'
+        }
+      });
+      document.dispatchEvent(finalEvent);
+    }
   }
   
   /**
@@ -2284,350 +2372,115 @@ class ImageProcessingManager {
   }
   
   /**
-   * Add text to a Railway image using canvas
-   * @param {string} imageUrl - The URL of the Railway image
-   * @returns {Promise<string>} - Promise resolving to a data URL of the image with text
+   * Add text to the Railway processed image
+   * @param {string} imageUrl - The URL of the image to add text to
    */
   addTextToRailwayImage(imageUrl) {
-    return new Promise((resolve, reject) => {
-      // Create an image object to load the Railway image
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
+    console.log('RAILWAY TEXT: Image loaded, dimensions:', this.croppedImageWidth, 'x', this.croppedImageHeight);
+    
+    // Use text from the stored text info
+    if (!this.textInfo) {
+      console.error('RAILWAY TEXT: No text info available');
       
-      img.onload = () => {
-        console.log('RAILWAY TEXT: Image loaded, dimensions:', img.width, 'x', img.height);
-        
-        // Create a canvas to draw the image and add text
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        // Set canvas dimensions to match the image
-        canvas.width = img.width;
-        canvas.height = img.height;
-        
-        // Draw the original image onto the canvas
-        ctx.drawImage(img, 0, 0, img.width, img.height);
-        
-        // Get both names from textInfo
-        const name1 = this.textInfo.text || '';
-        const name2 = this.textInfo.text2 || '';
-        const subtitle = this.textInfo.subtitle || '';
-        
-        console.log('RAILWAY TEXT: Adding text with names:', name1, name2);
-        if (subtitle) {
-          console.log('RAILWAY TEXT: Adding subtitle:', subtitle);
+      // Dispatch a final event even with error
+      const finalEvent = new CustomEvent('pixar-final-processing-complete', {
+        detail: { 
+          imageUrl: imageUrl,
+          timestamp: Date.now(),
+          error: 'No text info available'
         }
+      });
+      document.dispatchEvent(finalEvent);
+      
+      // Hide any loading popup
+      this.hideLoadingPopup();
+      return;
+    }
+    
+    // Add text with names
+    console.log('RAILWAY TEXT: Adding text with names:', this.textInfo.name1, this.textInfo.name2);
+    if (this.textInfo.subtitle) {
+      console.log('RAILWAY TEXT: Adding subtitle:', this.textInfo.subtitle);
+    }
+    
+    // We'll create a canvas element to add text
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        // Calculate canvas size (use the cropped image dimensions)
+        const width = this.croppedImageWidth;
+        const height = this.croppedImageHeight;
         
-        // Format text in "Name 1 & Name 2" format
-        let formattedText = '';
-        if (name1 && name2) {
-          formattedText = name1.toUpperCase() + ' & ' + name2.toUpperCase();
-        } else if (name1) {
-          formattedText = name1.toUpperCase();
-        } else if (name2) {
-          formattedText = name2.toUpperCase();
-        }
+        // Set up canvas dimensions
+        canvas.width = width;
+        canvas.height = height;
         
-        // Calculate text length for font sizing
-        const textLength = (name1.length + name2.length + (name1 && name2 ? 3 : 0));
+        // Draw the image first
+        ctx.drawImage(img, 0, 0, width, height);
         
-        // Calculate usable width - use 80% of the canvas width to leave margin
-        const usableWidth = canvas.width * 0.8;
+        // Now add the text
+        this.drawTextOnCanvas(ctx, width, height);
         
-        // Auto-fit text based on canvas width and text length - INITIAL ESTIMATE
-        const maxFontSize = 200; // Increased from 150 to allow larger text
-        const calculatedFontSize = Math.floor(usableWidth / (textLength * 0.45)); // Reduced multiplier from 0.55 to 0.45 for bigger text
-        let scaledFontSize = Math.min(maxFontSize, calculatedFontSize);
-        
-        // Ensure minimum font size for readability
-        const minFontSize = Math.max(30, Math.floor(canvas.width / 16)); // Increased minimum font size
-        scaledFontSize = Math.max(minFontSize, scaledFontSize);
-        
-        // Now precisely calculate width for Name1 & Name2 format
-        ctx.font = `900 ${scaledFontSize}px 'Montserrat', 'Arial Black', sans-serif`;
-        
-        // Measure the exact width of each component
-        const firstPartWidth = ctx.measureText(name1.toUpperCase()).width;
-        const ampersandWidth = ctx.measureText(' & ').width;
-        const secondPartWidth = ctx.measureText(name2.toUpperCase()).width;
-        const totalTextWidth = firstPartWidth + ampersandWidth + secondPartWidth;
-        
-        // Calculate the scaling factor needed to make text exactly 80% of canvas width
-        const targetWidth = usableWidth;
-        const scaleFactor = targetWidth / totalTextWidth;
-        
-        // Apply the scaling factor to font size (scale up or down as needed)
-        scaledFontSize = Math.floor(scaledFontSize * scaleFactor);
-        
-        // Apply final bounds
-        scaledFontSize = Math.max(minFontSize, Math.min(maxFontSize, scaledFontSize));
-        
-        console.log('RAILWAY TEXT: Font size precision scaling - initial:', calculatedFontSize, 
-                   'measured width:', totalTextWidth, 'target width:', targetWidth, 
-                   'scale factor:', scaleFactor, 'final size:', scaledFontSize);
-        
-        console.log('RAILWAY TEXT: Font size calculation - usableWidth:', usableWidth, 'textLength:', textLength);
-        console.log('RAILWAY TEXT: Calculated font size:', scaledFontSize, 'from raw calculation:', calculatedFontSize);
-        
-        // Apply text settings
-        ctx.font = `900 ${scaledFontSize}px 'Montserrat', 'Arial Black', sans-serif`;
-        ctx.fillStyle = this.textInfo.color || '#FFFFFF';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        // Calculate letter spacing inversely proportional to font size
-        // As font size increases, letter spacing should decrease
-        const letterSpacingEm = Math.max(0.01, 0.04 - (scaledFontSize / 2000)); // Reduced letter spacing for taller text
-        console.log('RAILWAY TEXT: Dynamic letter spacing:', letterSpacingEm + 'em', 'for font size:', scaledFontSize);
-        
-        // Do a test measurement to see if the text would fit within the usable width
-        const maxFontWidth = canvas.width * 0.8;
-        const testTextWidth = ctx.measureText(formattedText).width;
-        if (testTextWidth > maxFontWidth) {
-          // If it doesn't fit, recalculate font size to ensure it fits
-          scaledFontSize = Math.floor(scaledFontSize * (maxFontWidth / testTextWidth)); // Removed safety margin
-          console.log('RAILWAY TEXT: Adjusting font size to', scaledFontSize, 'because text width', testTextWidth, 'exceeds usable width', maxFontWidth);
-          ctx.font = `900 ${scaledFontSize}px 'Montserrat', 'Arial Black', sans-serif`;
-        }
-        
-        // Add shadow for better visibility
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
-        ctx.shadowBlur = 7; // Increased shadow blur
-        ctx.shadowOffsetX = 3; // Increased shadow offset
-        ctx.shadowOffsetY = 3; // Increased shadow offset
-        
-        // Calculate text position (centered horizontally, near bottom)
-        const x = canvas.width / 2;
-        const y = canvas.height * 0.87; // Position at 87% from top (was 0.92)
-        
-        // Handle multi-line text and special ampersand case
-        const lines = formattedText.split('\n');
-        const lineHeight = scaledFontSize * 1.2; // 1.2x line height
-        
-        if (lines.length > 1) {
-          // For multi-line text, calculate the total height and position accordingly
-          const totalTextHeight = lineHeight * lines.length;
-          let startY;
-          
-          if (this.textInfo.position === 'top') {
-            startY = y;
-          } else if (this.textInfo.position === 'bottom') {
-            startY = y - (totalTextHeight - lineHeight);
-          } else {
-            startY = y - (totalTextHeight / 2) + (lineHeight / 2);
-          }
-          
-          console.log('FINAL PROCESSING: Drawing multi-line text, total height:', totalTextHeight);
-          
-          // Draw each line
-          lines.forEach((line, index) => {
-            const lineY = startY + (index * lineHeight);
-            ctx.fillText(line, x, lineY);
-            console.log('FINAL PROCESSING: Drawing line', index, 'at Y:', lineY);
-          });
-        } else {
-          // Handle all text rendering cases
-          if (name1 && name2) {
-            // Canvas doesn't support HTML, so we'll draw the ampersand with special spacing
-            // Calculate letter spacing proportional to font size
-            const letterSpacingPx = scaledFontSize * letterSpacingEm;
-            const ampersandWidth = ctx.measureText(' & ').width;
-            
-            // Draw Name 1 with adjusted letter spacing
-            const name1Text = name1.toUpperCase();
-            
-            // Calculate the total width with adjusted spacing
-            let totalName1Width = 0;
-            for (let i = 0; i < name1Text.length; i++) {
-              totalName1Width += ctx.measureText(name1Text[i]).width;
-            }
-            // Add spacing between all characters except the last
-            totalName1Width += letterSpacingPx * (name1Text.length - 1);
-            
-            // Draw Name 2 with adjusted letter spacing
-            const name2Text = name2.toUpperCase();
-            
-            // Calculate the total width with adjusted spacing
-            let totalName2Width = 0;
-            for (let i = 0; i < name2Text.length; i++) {
-              totalName2Width += ctx.measureText(name2Text[i]).width;
-            }
-            // Add spacing between all characters except the last
-            totalName2Width += letterSpacingPx * (name2Text.length - 1);
-            
-            // Calculate total width for centering
-            const totalWidth = totalName1Width + ampersandWidth + totalName2Width;
-            
-            // Adjust font size if total width exceeds 80% of canvas width
-            if (totalWidth > canvas.width * 0.8) {
-              const scaleFactor = (canvas.width * 0.8) / totalWidth;
-              scaledFontSize = Math.floor(scaledFontSize * scaleFactor);
-              ctx.font = `900 ${scaledFontSize}px 'Montserrat', 'Arial Black', sans-serif`;
-              
-              // Recalculate everything with new font size
-              const newLetterSpacingPx = scaledFontSize * letterSpacingEm;
-              const newAmpersandWidth = ctx.measureText(' & ').width;
-              
-              // Recalculate Name1 width
-              let newTotalName1Width = 0;
-              for (let i = 0; i < name1Text.length; i++) {
-                newTotalName1Width += ctx.measureText(name1Text[i]).width;
-              }
-              newTotalName1Width += newLetterSpacingPx * (name1Text.length - 1);
-              
-              // Recalculate Name2 width
-              let newTotalName2Width = 0;
-              for (let i = 0; i < name2Text.length; i++) {
-                newTotalName2Width += ctx.measureText(name2Text[i]).width;
-              }
-              newTotalName2Width += newLetterSpacingPx * (name2Text.length - 1);
-              
-              // Update all variables with new measurements
-              totalName1Width = newTotalName1Width;
-              totalName2Width = newTotalName2Width;
-              const newTotalWidth = totalName1Width + newAmpersandWidth + totalName2Width;
-              
-              console.log('FINAL PROCESSING: Adjusted font size to', scaledFontSize, 'for custom letter spacing, new total width:', newTotalWidth);
-            }
-            
-            // Calculate starting position for the entire text
-            const startX = x - (totalWidth / 2);
-            
-            // Starting position for first name
-            let currentX = startX;
-            
-            // Draw each character of Name 1 with spacing
-            for (let i = 0; i < name1Text.length; i++) {
-              const char = name1Text[i];
-              const charWidth = ctx.measureText(char).width;
-              
-              // Draw the character
-              ctx.fillText(char, currentX + (charWidth / 2), y);
-              
-              // Move to the next position
-              currentX += charWidth + letterSpacingPx;
-            }
-            
-            // Adjust for the last letter spacing that we don't need
-            currentX -= letterSpacingPx;
-            
-            // Draw ampersand with slightly different styling if possible
-            ctx.fillText('&', currentX + (ampersandWidth / 2), y);
-            currentX += ampersandWidth;
-            
-            // Draw each character of Name 2 with spacing
-            for (let i = 0; i < name2Text.length; i++) {
-              const char = name2Text[i];
-              const charWidth = ctx.measureText(char).width;
-              
-              // Draw the character
-              ctx.fillText(char, currentX + (charWidth / 2), y);
-              
-              // Move to the next position
-              currentX += charWidth + letterSpacingPx;
-            }
-            
-            console.log('FINAL PROCESSING: Drew "Name 1 & Name 2" format with adjusted letter spacing');
-          } else if (name1) {
-            // Draw just name1
-            ctx.fillText(name1.toUpperCase(), x, y);
-            console.log('FINAL PROCESSING: Drew single name (name1):', name1);
-          } else if (name2) {
-            // Draw just name2
-            ctx.fillText(name2.toUpperCase(), x, y);
-            console.log('FINAL PROCESSING: Drew single name (name2):', name2);
-          } else {
-            console.log('FINAL PROCESSING: No text to draw - empty names');
-          }
-        }
-        
-        // After drawing the main text, add the subtitle if available
-        if (subtitle) {
-          // Calculate subtitle font size (smaller than main text, but proportional)
-          const subtitleFontSize = Math.max(Math.floor(scaledFontSize * 0.35), 16);
-          
-          // Set subtitle styling
-          ctx.font = `italic ${subtitleFontSize}px 'Montserrat', 'Arial', sans-serif`;
-          ctx.fillStyle = this.textFields.color || '#FFFFFF';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          
-          // Add shadow for subtitle
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
-          ctx.shadowBlur = 5;
-          ctx.shadowOffsetX = 2;
-          ctx.shadowOffsetY = 2;
-          
-          // Position subtitle below the main text
-          const subtitleY = y + (scaledFontSize * 0.8);
-          
-          // Check if subtitle is too long and needs to be wrapped
-          const maxSubtitleWidth = usableWidth * 0.9; // Use slightly more width than main text
-          const subtitleWidth = ctx.measureText(subtitle).width;
-          
-          if (subtitleWidth > maxSubtitleWidth) {
-            console.log('FINAL PROCESSING: Subtitle too long, wrapping or truncating');
-            
-            // Try to break subtitle into words for wrapping
-            const words = subtitle.split(' ');
-            let line = '';
-            let lines = [];
-            
-            // Create wrapped lines that fit the max width
-            for (let i = 0; i < words.length; i++) {
-              const testLine = line + (line ? ' ' : '') + words[i];
-              const testWidth = ctx.measureText(testLine).width;
-              
-              if (testWidth > maxSubtitleWidth && line !== '') {
-                lines.push(line);
-                line = words[i];
-              } else {
-                line = testLine;
-              }
-            }
-            
-            // Add the last line
-            if (line) {
-              lines.push(line);
-            }
-            
-            // If we have more than 2 lines, truncate to 2 lines with ellipsis
-            if (lines.length > 2) {
-              console.log('FINAL PROCESSING: Subtitle has too many lines, truncating to 2');
-              const lastLine = lines[1];
-              const truncateAt = Math.floor(lastLine.length * 0.8);
-              lines[1] = lastLine.substring(0, truncateAt) + '...';
-              lines = lines.slice(0, 2);
-            }
-            
-            // Draw each line of the subtitle
-            const lineHeight = subtitleFontSize * 1.2;
-            lines.forEach((line, index) => {
-              ctx.fillText(line, x, subtitleY + (index * lineHeight));
-            });
-            
-            console.log('FINAL PROCESSING: Wrapped subtitle into', lines.length, 'lines');
-          } else {
-            // Draw the subtitle as a single line
-            ctx.fillText(subtitle, x, subtitleY);
-            console.log('FINAL PROCESSING: Subtitle added as single line at Y:', subtitleY);
-          }
-        }
-        
-        // Convert canvas to data URL and resolve the promise
+        // Convert the canvas to a data URL
         const dataURL = canvas.toDataURL('image/png');
         console.log('RAILWAY TEXT: Canvas converted to data URL');
-        resolve(dataURL);
-      };
+        
+        // Update the product image with the new image containing text
+        this.updateProductImage(dataURL);
+        
+        // Dispatch event to signal final processing is complete
+        console.log('FINAL PROCESSING: Dispatched pixar-final-processing-complete event after text processing');
+        const finalEvent = new CustomEvent('pixar-final-processing-complete', {
+          detail: { 
+            imageUrl: dataURL,
+            timestamp: Date.now()
+          }
+        });
+        document.dispatchEvent(finalEvent);
+        
+        // Hide any loading popup that might still be visible
+        this.hideLoadingPopup();
+      } catch (error) {
+        console.error('RAILWAY TEXT: Error adding text to image:', error);
+        
+        // Still dispatch event with error
+        const finalEvent = new CustomEvent('pixar-final-processing-complete', {
+          detail: { 
+            imageUrl: imageUrl,
+            timestamp: Date.now(),
+            error: error.message || 'Error adding text to image'
+          }
+        });
+        document.dispatchEvent(finalEvent);
+        
+        // Hide any loading popup
+        this.hideLoadingPopup();
+      }
+    };
+    
+    img.onerror = (error) => {
+      console.error('RAILWAY TEXT: Error loading image:', error);
       
-      img.onerror = (error) => {
-        console.error('RAILWAY TEXT: Error loading image:', error);
-        reject(error);
-      };
+      // Still dispatch event with error
+      const finalEvent = new CustomEvent('pixar-final-processing-complete', {
+        detail: { 
+          imageUrl: imageUrl,
+          timestamp: Date.now(),
+          error: 'Error loading image'
+        }
+      });
+      document.dispatchEvent(finalEvent);
       
-      // Set the source to load the image
-      img.src = imageUrl;
-    });
+      // Hide any loading popup
+      this.hideLoadingPopup();
+    };
+    
+    // Start loading the image
+    img.src = imageUrl;
   }
 
   // Add a new method to check if processing is complete
@@ -2957,6 +2810,315 @@ class ImageProcessingManager {
       // Start the file reading process
       reader.readAsDataURL(file);
     });
+  }
+
+  /**
+   * Draw text on canvas with proper styling
+   * @param {CanvasRenderingContext2D} ctx - Canvas context
+   * @param {number} width - Canvas width
+   * @param {number} height - Canvas height
+   */
+  drawTextOnCanvas(ctx, width, height) {
+    // Get both names from textInfo
+    const name1 = this.textInfo.name1 || this.textInfo.text || '';
+    const name2 = this.textInfo.name2 || this.textInfo.text2 || '';
+    const subtitle = this.textInfo.subtitle || '';
+    
+    // Format text in "Name 1 & Name 2" format
+    let formattedText = '';
+    if (name1 && name2) {
+      formattedText = name1.toUpperCase() + ' & ' + name2.toUpperCase();
+    } else if (name1) {
+      formattedText = name1.toUpperCase();
+    } else if (name2) {
+      formattedText = name2.toUpperCase();
+    }
+    
+    // Calculate text length for font sizing
+    const textLength = (name1.length + name2.length + (name1 && name2 ? 3 : 0));
+    
+    // Calculate usable width - use 80% of the canvas width to leave margin
+    const usableWidth = width * 0.8;
+    
+    // Auto-fit text based on canvas width and text length - INITIAL ESTIMATE
+    const maxFontSize = 200; // Increased from 150 to allow larger text
+    const calculatedFontSize = Math.floor(usableWidth / (textLength * 0.45)); // Reduced multiplier from 0.55 to 0.45 for bigger text
+    let scaledFontSize = Math.min(maxFontSize, calculatedFontSize);
+    
+    // Ensure minimum font size for readability
+    const minFontSize = Math.max(30, Math.floor(width / 16)); // Increased minimum font size
+    scaledFontSize = Math.max(minFontSize, scaledFontSize);
+    
+    // Now precisely calculate width for Name1 & Name2 format
+    ctx.font = `900 ${scaledFontSize}px 'Montserrat', 'Arial Black', sans-serif`;
+    
+    // Measure the exact width of each component
+    const firstPartWidth = ctx.measureText(name1.toUpperCase()).width;
+    const ampersandWidth = ctx.measureText(' & ').width;
+    const secondPartWidth = ctx.measureText(name2.toUpperCase()).width;
+    const totalTextWidth = firstPartWidth + ampersandWidth + secondPartWidth;
+    
+    // Calculate the scaling factor needed to make text exactly 80% of canvas width
+    const targetWidth = usableWidth;
+    const scaleFactor = targetWidth / totalTextWidth;
+    
+    // Apply the scaling factor to font size (scale up or down as needed)
+    scaledFontSize = Math.floor(scaledFontSize * scaleFactor);
+    
+    // Apply final bounds
+    scaledFontSize = Math.max(minFontSize, Math.min(maxFontSize, scaledFontSize));
+    
+    console.log('RAILWAY TEXT: Font size precision scaling - initial:', calculatedFontSize, 
+               'measured width:', totalTextWidth, 'target width:', targetWidth, 
+               'scale factor:', scaleFactor, 'final size:', scaledFontSize);
+    
+    console.log('RAILWAY TEXT: Font size calculation - usableWidth:', usableWidth, 'textLength:', textLength);
+    console.log('RAILWAY TEXT: Calculated font size:', scaledFontSize, 'from raw calculation:', calculatedFontSize);
+    
+    // Apply text settings
+    ctx.font = `900 ${scaledFontSize}px 'Montserrat', 'Arial Black', sans-serif`;
+    ctx.fillStyle = this.textInfo.color || '#FFFFFF';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Calculate letter spacing inversely proportional to font size
+    // As font size increases, letter spacing should decrease
+    const letterSpacingEm = Math.max(0.01, 0.04 - (scaledFontSize / 2000)); // Reduced letter spacing for taller text
+    console.log('RAILWAY TEXT: Dynamic letter spacing:', letterSpacingEm + 'em', 'for font size:', scaledFontSize);
+    
+    // Do a test measurement to see if the text would fit within the usable width
+    const maxFontWidth = width * 0.8;
+    const testTextWidth = ctx.measureText(formattedText).width;
+    if (testTextWidth > maxFontWidth) {
+      // If it doesn't fit, recalculate font size to ensure it fits
+      scaledFontSize = Math.floor(scaledFontSize * (maxFontWidth / testTextWidth)); // Removed safety margin
+      console.log('RAILWAY TEXT: Adjusting font size to', scaledFontSize, 'because text width', testTextWidth, 'exceeds usable width', maxFontWidth);
+      ctx.font = `900 ${scaledFontSize}px 'Montserrat', 'Arial Black', sans-serif`;
+    }
+    
+    // Add shadow for better visibility
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+    ctx.shadowBlur = 7; // Increased shadow blur
+    ctx.shadowOffsetX = 3; // Increased shadow offset
+    ctx.shadowOffsetY = 3; // Increased shadow offset
+    
+    // Calculate text position (centered horizontally, near bottom)
+    const x = width / 2;
+    const y = height * 0.87; // Position at 87% from top (was 0.92)
+    
+    // Handle multi-line text and special ampersand case
+    const lines = formattedText.split('\n');
+    const lineHeight = scaledFontSize * 1.2; // 1.2x line height
+    
+    if (lines.length > 1) {
+      // For multi-line text, calculate the total height and position accordingly
+      const totalTextHeight = lineHeight * lines.length;
+      let startY;
+      
+      if (this.textInfo.position === 'top') {
+        startY = y;
+      } else if (this.textInfo.position === 'bottom') {
+        startY = y - (totalTextHeight - lineHeight);
+      } else {
+        startY = y - (totalTextHeight / 2) + (lineHeight / 2);
+      }
+      
+      console.log('FINAL PROCESSING: Drawing multi-line text, total height:', totalTextHeight);
+      
+      // Draw each line
+      lines.forEach((line, index) => {
+        const lineY = startY + (index * lineHeight);
+        ctx.fillText(line, x, lineY);
+        console.log('FINAL PROCESSING: Drawing line', index, 'at Y:', lineY);
+      });
+    } else {
+      // Handle all text rendering cases
+      if (name1 && name2) {
+        // Canvas doesn't support HTML, so we'll draw the ampersand with special spacing
+        // Calculate letter spacing proportional to font size
+        const letterSpacingPx = scaledFontSize * letterSpacingEm;
+        const ampersandWidth = ctx.measureText(' & ').width;
+        
+        // Draw Name 1 with adjusted letter spacing
+        const name1Text = name1.toUpperCase();
+        
+        // Calculate the total width with adjusted spacing
+        let totalName1Width = 0;
+        for (let i = 0; i < name1Text.length; i++) {
+          totalName1Width += ctx.measureText(name1Text[i]).width;
+        }
+        // Add spacing between all characters except the last
+        totalName1Width += letterSpacingPx * (name1Text.length - 1);
+        
+        // Draw Name 2 with adjusted letter spacing
+        const name2Text = name2.toUpperCase();
+        
+        // Calculate the total width with adjusted spacing
+        let totalName2Width = 0;
+        for (let i = 0; i < name2Text.length; i++) {
+          totalName2Width += ctx.measureText(name2Text[i]).width;
+        }
+        // Add spacing between all characters except the last
+        totalName2Width += letterSpacingPx * (name2Text.length - 1);
+        
+        // Calculate total width for centering
+        const totalWidth = totalName1Width + ampersandWidth + totalName2Width;
+        
+        // Adjust font size if total width exceeds 80% of canvas width
+        if (totalWidth > width * 0.8) {
+          const scaleFactor = (width * 0.8) / totalWidth;
+          scaledFontSize = Math.floor(scaledFontSize * scaleFactor);
+          ctx.font = `900 ${scaledFontSize}px 'Montserrat', 'Arial Black', sans-serif`;
+          
+          // Recalculate everything with new font size
+          const newLetterSpacingPx = scaledFontSize * letterSpacingEm;
+          const newAmpersandWidth = ctx.measureText(' & ').width;
+          
+          // Recalculate Name1 width
+          let newTotalName1Width = 0;
+          for (let i = 0; i < name1Text.length; i++) {
+            newTotalName1Width += ctx.measureText(name1Text[i]).width;
+          }
+          newTotalName1Width += newLetterSpacingPx * (name1Text.length - 1);
+          
+          // Recalculate Name2 width
+          let newTotalName2Width = 0;
+          for (let i = 0; i < name2Text.length; i++) {
+            newTotalName2Width += ctx.measureText(name2Text[i]).width;
+          }
+          newTotalName2Width += newLetterSpacingPx * (name2Text.length - 1);
+          
+          // Update all variables with new measurements
+          totalName1Width = newTotalName1Width;
+          totalName2Width = newTotalName2Width;
+          const newTotalWidth = totalName1Width + newAmpersandWidth + totalName2Width;
+          
+          console.log('FINAL PROCESSING: Adjusted font size to', scaledFontSize, 'for custom letter spacing, new total width:', newTotalWidth);
+        }
+        
+        // Calculate starting position for the entire text
+        const startX = x - (totalWidth / 2);
+        
+        // Starting position for first name
+        let currentX = startX;
+        
+        // Draw each character of Name 1 with spacing
+        for (let i = 0; i < name1Text.length; i++) {
+          const char = name1Text[i];
+          const charWidth = ctx.measureText(char).width;
+          
+          // Draw the character
+          ctx.fillText(char, currentX + (charWidth / 2), y);
+          
+          // Move to the next position
+          currentX += charWidth + letterSpacingPx;
+        }
+        
+        // Adjust for the last letter spacing that we don't need
+        currentX -= letterSpacingPx;
+        
+        // Draw ampersand with slightly different styling if possible
+        ctx.fillText('&', currentX + (ampersandWidth / 2), y);
+        currentX += ampersandWidth;
+        
+        // Draw each character of Name 2 with spacing
+        for (let i = 0; i < name2Text.length; i++) {
+          const char = name2Text[i];
+          const charWidth = ctx.measureText(char).width;
+          
+          // Draw the character
+          ctx.fillText(char, currentX + (charWidth / 2), y);
+          
+          // Move to the next position
+          currentX += charWidth + letterSpacingPx;
+        }
+        
+        console.log('FINAL PROCESSING: Drew "Name 1 & Name 2" format with adjusted letter spacing');
+      } else if (name1) {
+        // Draw just name1
+        ctx.fillText(name1.toUpperCase(), x, y);
+        console.log('FINAL PROCESSING: Drew single name (name1):', name1);
+      } else if (name2) {
+        // Draw just name2
+        ctx.fillText(name2.toUpperCase(), x, y);
+        console.log('FINAL PROCESSING: Drew single name (name2):', name2);
+      } else {
+        console.log('FINAL PROCESSING: No text to draw - empty names');
+      }
+    }
+    
+    // After drawing the main text, add the subtitle if available
+    if (subtitle) {
+      // Calculate subtitle font size (smaller than main text, but proportional)
+      const subtitleFontSize = Math.max(Math.floor(scaledFontSize * 0.35), 16);
+      
+      // Set subtitle styling
+      ctx.font = `italic ${subtitleFontSize}px 'Montserrat', 'Arial', sans-serif`;
+      ctx.fillStyle = this.textInfo.color || '#FFFFFF';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      // Add shadow for subtitle
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+      ctx.shadowBlur = 5;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
+      
+      // Position subtitle below the main text
+      const subtitleY = y + (scaledFontSize * 0.8);
+      
+      // Check if subtitle is too long and needs to be wrapped
+      const maxSubtitleWidth = usableWidth * 0.9; // Use slightly more width than main text
+      const subtitleWidth = ctx.measureText(subtitle).width;
+      
+      if (subtitleWidth > maxSubtitleWidth) {
+        console.log('FINAL PROCESSING: Subtitle too long, wrapping or truncating');
+        
+        // Try to break subtitle into words for wrapping
+        const words = subtitle.split(' ');
+        let line = '';
+        let lines = [];
+        
+        // Create wrapped lines that fit the max width
+        for (let i = 0; i < words.length; i++) {
+          const testLine = line + (line ? ' ' : '') + words[i];
+          const testWidth = ctx.measureText(testLine).width;
+          
+          if (testWidth > maxSubtitleWidth && line !== '') {
+            lines.push(line);
+            line = words[i];
+          } else {
+            line = testLine;
+          }
+        }
+        
+        // Add the last line
+        if (line) {
+          lines.push(line);
+        }
+        
+        // If we have more than 2 lines, truncate to 2 lines with ellipsis
+        if (lines.length > 2) {
+          console.log('FINAL PROCESSING: Subtitle has too many lines, truncating to 2');
+          const lastLine = lines[1];
+          const truncateAt = Math.floor(lastLine.length * 0.8);
+          lines[1] = lastLine.substring(0, truncateAt) + '...';
+          lines = lines.slice(0, 2);
+        }
+        
+        // Draw each line of the subtitle
+        const lineHeight = subtitleFontSize * 1.2;
+        lines.forEach((line, index) => {
+          ctx.fillText(line, x, subtitleY + (index * lineHeight));
+        });
+        
+        console.log('FINAL PROCESSING: Wrapped subtitle into', lines.length, 'lines');
+      } else {
+        // Draw the subtitle as a single line
+        ctx.fillText(subtitle, x, subtitleY);
+        console.log('FINAL PROCESSING: Subtitle added as single line at Y:', subtitleY);
+      }
+    }
   }
 }
 
