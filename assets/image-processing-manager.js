@@ -4278,84 +4278,184 @@ class ImageProcessingManager {
    * @param {string} size - The selected size (S, M, or L)
    */
   redirectToCheckout(size) {
-    // Define product IDs or variant IDs for each size
-    const productVariants = {
-      'S': '40234846978188', // 20x30" variant ID
-      'M': '40234847010956', // 30x40" variant ID 
-      'L': '40234847043724'  // 50x70" variant ID
-    };
+    console.log('Adding to cart with size:', size);
     
-    // Get the variant ID for the selected size
-    const variantId = productVariants[size];
+    // Keep track of the product variant based on size
+    const variantId = {
+      'S': '54215893451100',  // Shopify variant ID for size S
+      'M': '54215893483868',  // Shopify variant ID for size M
+      'L': '54215893516636'   // Shopify variant ID for size L
+    }[size];
     
     if (!variantId) {
-      console.error(`No variant ID found for size ${size}`);
+      console.error('Invalid size selected:', size);
       return;
     }
     
-    // Get the current image URL (processed with correct aspect ratio)
-    const resultImage = document.getElementById('pixar-result-image');
-    const processedImageUrl = resultImage ? resultImage.src : this.resultImageUrl;
+    // Get the processed image URL from the result popup
+    const processedImageContainer = document.querySelector('#pixar-result-popup .pixar-result-image-container');
+    const processedImage = processedImageContainer ? processedImageContainer.querySelector('img') : null;
+    const processedImageUrl = processedImage ? processedImage.src : '';
     
-    // Store the processed image URL in localStorage so we can access it later for cart image replacement
-    if (processedImageUrl) {
-      try {
-        // Store mapping between variant ID and processed image
-        const cartImageMapping = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
-        cartImageMapping[variantId] = processedImageUrl;
-        localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImageMapping));
-        console.log(`Stored processed image for variant ${variantId} in localStorage`);
-      } catch (error) {
-        console.error('Error storing processed image in localStorage:', error);
-      }
+    if (!processedImageUrl) {
+      console.error('No processed image found');
+      return;
     }
     
-    // Check if we're in a Shopify environment
-    if (typeof window.Shopify !== 'undefined') {
-      console.log(`Using Shopify cart API with variant ID: ${variantId}`);
-      
-      // Use Shopify's cart API to add the item
-      fetch('/cart/add.js', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          items: [{
-            quantity: 1,
-            id: variantId,
-            properties: {
-              '_processed_image': processedImageUrl,
-              '_selected_size': size
+    // Store the processed image URL in localStorage with the variant ID as the key
+    // This will be used by the cart page to display the processed image
+    const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
+    cartImages[variantId] = processedImageUrl;
+    localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
+    
+    // Set up cart image replacement to ensure the image is shown correctly in the cart
+    this.setupCartImageReplacement();
+    
+    // Show loading state in the popup instead of closing it immediately
+    const popup = document.querySelector('#pixar-result-popup');
+    if (popup) {
+      // Change continue button text to indicate loading
+      const continueButton = popup.querySelector('.pixar-continue-button');
+      if (continueButton) {
+        const originalButtonText = continueButton.textContent;
+        continueButton.textContent = 'Adding to cart...';
+        continueButton.disabled = true;
+        // Add a spinning indicator to the button
+        continueButton.classList.add('loading');
+        
+        // Add a CSS spinner if not already present
+        if (!document.querySelector('#pixar-loading-spinner-style')) {
+          const style = document.createElement('style');
+          style.id = 'pixar-loading-spinner-style';
+          style.textContent = `
+            .pixar-continue-button.loading {
+              position: relative;
+              color: transparent !important;
             }
-          }]
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Product added to cart:', data);
-        
-        // Set up a hook to replace cart images when the page loads
-        this.setupCartImageReplacement();
-        
-        // Redirect to cart page
-        window.location.href = '/cart';
-      })
-      .catch(error => {
-        console.error('Error adding product to cart:', error);
-        // Fallback to direct cart URL
-        window.location.href = `/cart/${variantId}:1`;
+            .pixar-continue-button.loading::after {
+              content: '';
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              width: 20px;
+              height: 20px;
+              margin: -10px 0 0 -10px;
+              border-radius: 50%;
+              border: 2px solid #ffffff;
+              border-top-color: transparent;
+              animation: pixar-spinner 0.8s linear infinite;
+            }
+            @keyframes pixar-spinner {
+              to {transform: rotate(360deg);}
+            }
+          `;
+          document.head.appendChild(style);
+        }
+      }
+      
+      // Disable size buttons during the transition
+      const sizeButtons = popup.querySelectorAll('.pixar-size-option');
+      sizeButtons.forEach(button => {
+        button.disabled = true;
       });
-    } else {
-      // Fallback for non-Shopify environments or direct cart
-      console.log('Using direct cart URL');
-      
-      // For Shopify stores, this format works to add to cart
-      window.location.href = `/cart/${variantId}:1`;
-      
-      // We'll need to set up the image replacement when the cart page loads
-      this.setupCartImageReplacement();
     }
+    
+    // Use Shopify's cart API to add the item
+    console.log('Using Shopify cart API to add item with variant ID:', variantId);
+    
+    // Get the processed image URL to include as a custom line item property
+    const formData = {
+      'items': [{
+        'id': variantId,
+        'quantity': 1,
+        'properties': {
+          '_processed_image': processedImageUrl,
+          '_selected_size': size
+        }
+      }]
+    };
+    
+    fetch('/cart/add.js', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Error adding to cart');
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Successfully added to cart:', data);
+      
+      // Create an invisible iframe to preload the cart page
+      const preloadFrame = document.createElement('iframe');
+      preloadFrame.style.position = 'absolute';
+      preloadFrame.style.top = '-9999px';
+      preloadFrame.style.left = '-9999px';
+      preloadFrame.style.width = '1px';
+      preloadFrame.style.height = '1px';
+      preloadFrame.style.opacity = '0';
+      preloadFrame.style.pointerEvents = 'none';
+      preloadFrame.setAttribute('aria-hidden', 'true');
+      preloadFrame.src = '/cart';
+      
+      // Listen for the iframe to load, then redirect
+      preloadFrame.onload = () => {
+        console.log('Cart page preloaded, redirecting...');
+        
+        // Remove the iframe after a short delay to ensure content is cached
+        setTimeout(() => {
+          document.body.removeChild(preloadFrame);
+          
+          // Finally redirect to the cart page
+          window.location.href = '/cart';
+        }, 100);
+      };
+      
+      document.body.appendChild(preloadFrame);
+    })
+    .catch(error => {
+      console.error('Error adding to cart:', error);
+      
+      // Reset the button state on error
+      const continueButton = popup && popup.querySelector('.pixar-continue-button');
+      if (continueButton) {
+        continueButton.textContent = 'Continue';
+        continueButton.disabled = false;
+        continueButton.classList.remove('loading');
+      }
+      
+      // Re-enable size buttons
+      const sizeButtons = popup && popup.querySelectorAll('.pixar-size-option');
+      if (sizeButtons) {
+        sizeButtons.forEach(button => {
+          button.disabled = false;
+        });
+      }
+      
+      // Fallback to direct URL in case the fetch fails
+      const fallbackUrl = `/cart/${variantId}:1`;
+      
+      // Show an error message and provide a manual link
+      const errorMessage = document.createElement('div');
+      errorMessage.className = 'pixar-error-message';
+      errorMessage.style.color = 'red';
+      errorMessage.style.margin = '10px 0';
+      errorMessage.innerHTML = `
+        Error adding to cart. <a href="${fallbackUrl}" style="color: blue; text-decoration: underline;">Click here</a> to try again.
+      `;
+      
+      // Find an appropriate place to show the error
+      const messageContainer = popup && popup.querySelector('.pixar-result-buttons') || 
+                              popup && popup.querySelector('.pixar-result-controls');
+      if (messageContainer) {
+        messageContainer.appendChild(errorMessage);
+      }
+    });
   }
   
   /**
