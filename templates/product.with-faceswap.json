@@ -131,7 +131,7 @@
         "enable_video_looping": true,
         "enable_image_zoom": true,
         "max_image_zoom_level": 3,
-        "img_ratio": "portrait",
+        "img_ratio": 0.75,
         "background": "",
         "background_gradient": "",
         "text_color": "",
