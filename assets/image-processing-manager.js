@@ -1860,11 +1860,18 @@ class ImageProcessingManager {
         mainImage.setAttribute('src', imageUrl);
         mainImage.setAttribute('srcset', imageUrl);
         
-        // Aurora theme specific - if the image is inside a product gallery, handle it specially
-        const isInProductGallery = !!mainImage.closest('.product-gallery__media');
-        if (isInProductGallery) {
-          // Find the gallery media container
-          const mediaContainer = mainImage.closest('.product-gallery__media');
+        // Handle Aurora theme specific configuration
+        // First check if we're in an Aurora theme
+        const isAuroraTheme = !!document.querySelector('.product-gallery__media') || 
+                               !!document.querySelector('.product-gallery__media-list');
+                               
+        if (isAuroraTheme) {
+          console.log('PRODUCT IMAGE: Detected Aurora theme, applying special handling');
+          
+          // Find the gallery media container - this could be several levels up
+          const mediaContainer = mainImage.closest('.product-gallery__media') || 
+                                mainImage.closest('.product__media');
+                                
           if (mediaContainer) {
             // Add a special class to identify our customization
             mediaContainer.classList.add('pixar-transformed-media-container');
@@ -1878,39 +1885,48 @@ class ImageProcessingManager {
               });
             }
             
-            // Ensure the media container respects our aspect ratio
+            // Force the container to respect our aspect ratio, not the theme's
             mediaContainer.style.aspectRatio = '3/4';
             
-            // Handle thumbnails if present
-            const thumbnails = document.querySelectorAll('.product-gallery__thumbnail img');
-            if (thumbnails.length > 0) {
-              // Find the active thumbnail
-              const activeThumbnailButton = document.querySelector('.product-gallery__thumbnail[aria-current="true"]');
-              if (activeThumbnailButton) {
-                const thumbnailImg = activeThumbnailButton.querySelector('img');
-                if (thumbnailImg) {
-                  thumbnailImg.src = imageUrl;
-                  thumbnailImg.srcset = imageUrl;
-                }
+            // Also handle the parent list item if it exists
+            const mediaListItem = mediaContainer.closest('.product-gallery__media-list-item');
+            if (mediaListItem) {
+              if (!mediaListItem.dataset.originalStyles) {
+                mediaListItem.dataset.originalStyles = JSON.stringify({
+                  aspectRatio: mediaListItem.style.aspectRatio,
+                  width: mediaListItem.style.width,
+                  height: mediaListItem.style.height
+                });
               }
+              mediaListItem.classList.add('pixar-transformed-list-item');
+              mediaListItem.style.aspectRatio = '3/4';
+            }
+            
+            // Update media wrapper if present
+            const mediaWrapper = mainImage.closest('.product-gallery__media-wrapper');
+            if (mediaWrapper) {
+              if (!mediaWrapper.dataset.originalStyles) {
+                mediaWrapper.dataset.originalStyles = JSON.stringify({
+                  aspectRatio: mediaWrapper.style.aspectRatio,
+                  paddingBottom: mediaWrapper.style.paddingBottom
+                });
+              }
+              mediaWrapper.classList.add('pixar-transformed-wrapper');
+              mediaWrapper.style.aspectRatio = '3/4';
+              // Remove any padding-bottom that might be forcing square ratio
+              mediaWrapper.style.paddingBottom = 'unset';
             }
           }
+          
+          // Handle thumbnails - find the active thumbnail and update it
+          this.updateActiveThumbnail(imageUrl);
         }
         
         // Mark as transformed for future reference
         mainImage.classList.add('pixar-transformed-image');
         
-        // Handle container aspect ratio
+        // Handle general container aspect ratio for any theme
         let container = mainImage.parentElement;
-        
-        // Look for special Aurora theme media container
-        if (!container.classList.contains('product-gallery__media')) {
-          // In Aurora, we might need to go one level up to find the true container
-          const mediaContainer = mainImage.closest('.product-gallery__media');
-          if (mediaContainer) {
-            container = mediaContainer;
-          }
-        }
         
         if (container) {
           // Save original container styling if not already saved
@@ -1925,7 +1941,8 @@ class ImageProcessingManager {
               maxHeight: container.style.maxHeight,
               minWidth: container.style.minWidth,
               minHeight: container.style.minHeight,
-              overflow: container.style.overflow
+              overflow: container.style.overflow,
+              paddingBottom: container.style.paddingBottom
             });
           }
           
@@ -1939,6 +1956,8 @@ class ImageProcessingManager {
           container.style.height = 'auto';
           container.style.aspectRatio = '3/4';
           container.style.overflow = 'visible';
+          // Remove any padding-bottom that might be forcing square ratio
+          container.style.paddingBottom = 'unset';
           
           // Add a helpful class for later identification
           container.classList.add('pixar-image-container');
@@ -1950,59 +1969,21 @@ class ImageProcessingManager {
               grandparent.dataset.originalStyles = JSON.stringify({
                 overflow: grandparent.style.overflow,
                 maxHeight: grandparent.style.maxHeight,
-                height: grandparent.style.height
+                height: grandparent.style.height,
+                paddingBottom: grandparent.style.paddingBottom
               });
             }
             
             // Ensure grandparent doesn't constrain height
             grandparent.style.overflow = 'visible';
             grandparent.style.maxHeight = 'none';
+            // Remove padding-bottom if it exists
+            grandparent.style.paddingBottom = 'unset';
           }
         }
         
         // As a final measure, set explicit inline styles with !important to override any CSS rules
-        // This creates a style element with high specificity rules for our exact image
-        const styleId = 'pixar-image-override-styles';
-        let styleEl = document.getElementById(styleId);
-        if (!styleEl) {
-          styleEl = document.createElement('style');
-          styleEl.id = styleId;
-          document.head.appendChild(styleEl);
-        }
-        
-        // Create a high-specificity CSS rule for this specific image and Aurora theme elements
-        styleEl.textContent = `
-          .pixar-transformed-image {
-            object-fit: contain !important;
-            object-position: center !important;
-            width: 100% !important;
-            height: auto !important;
-            aspect-ratio: 3/4 !important;
-            max-width: 100% !important;
-            max-height: none !important;
-          }
-          
-          .pixar-image-container {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            position: relative !important;
-            width: 100% !important;
-            height: auto !important;
-            aspect-ratio: 3/4 !important;
-            overflow: visible !important;
-          }
-          
-          /* Aurora theme specific overrides */
-          .product-gallery__media.pixar-transformed-media-container {
-            aspect-ratio: 3/4 !important;
-          }
-          
-          .product-gallery__media-list-wrapper .product-gallery__media.pixar-transformed-media-container img {
-            aspect-ratio: 3/4 !important;
-            object-fit: contain !important;
-          }
-        `;
+        this.injectOverrideStyles();
         
         // Also search for and update any alternate views or thumbnails with same image pattern
         let additionalImagesUpdated = 0;
@@ -2032,6 +2013,112 @@ class ImageProcessingManager {
     } catch (error) {
       console.error('PRODUCT IMAGE: Error updating product image:', error);
     }
+  }
+  
+  /**
+   * Updates the active thumbnail with the new image
+   * @param {string} imageUrl - The URL of the new image
+   */
+  updateActiveThumbnail(imageUrl) {
+    try {
+      // Look for thumbnails in various theme structures
+      const thumbnailSelectors = [
+        // Aurora theme thumbnails
+        '.product-gallery__thumbnail[aria-current="true"] img',
+        '.product-gallery__thumbnail--active img',
+        '.product-gallery__thumbnail.is-active img',
+        // General Shopify thumbnails
+        '.product-single__thumbnails .active img',
+        '.product__thumbnails .active-thumb img'
+      ];
+      
+      for (const selector of thumbnailSelectors) {
+        const activeThumbnailImg = document.querySelector(selector);
+        if (activeThumbnailImg) {
+          console.log('PRODUCT IMAGE: Updating active thumbnail');
+          activeThumbnailImg.src = imageUrl;
+          activeThumbnailImg.srcset = imageUrl;
+          
+          // Also update container if needed
+          const container = activeThumbnailImg.closest('.product-gallery__thumbnail');
+          if (container) {
+            container.classList.add('pixar-transformed-thumbnail');
+          }
+          break;
+        }
+      }
+    } catch (error) {
+      console.error('PRODUCT IMAGE: Error updating thumbnail:', error);
+    }
+  }
+  
+  /**
+   * Injects CSS override styles to handle theme-specific styling
+   */
+  injectOverrideStyles() {
+    const styleId = 'pixar-image-override-styles';
+    let styleEl = document.getElementById(styleId);
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = styleId;
+      document.head.appendChild(styleEl);
+    }
+    
+    // Create high-specificity CSS rules to override theme styling
+    styleEl.textContent = `
+      /* General image overrides */
+      .pixar-transformed-image {
+        object-fit: contain !important;
+        object-position: center !important;
+        width: 100% !important;
+        height: auto !important;
+        aspect-ratio: 3/4 !important;
+        max-width: 100% !important;
+        max-height: none !important;
+      }
+      
+      .pixar-image-container {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        position: relative !important;
+        width: 100% !important;
+        height: auto !important;
+        aspect-ratio: 3/4 !important;
+        overflow: visible !important;
+        padding-bottom: unset !important;
+      }
+      
+      /* Aurora theme specific overrides */
+      .product-gallery__media.pixar-transformed-media-container {
+        aspect-ratio: 3/4 !important;
+        padding-bottom: unset !important;
+      }
+      
+      .product-gallery__media-wrapper.pixar-transformed-wrapper {
+        aspect-ratio: 3/4 !important;
+        padding-bottom: unset !important;
+      }
+      
+      .product-gallery__media-list-item.pixar-transformed-list-item {
+        aspect-ratio: 3/4 !important;
+      }
+      
+      /* Target square images specifically in Aurora theme */
+      .product-gallery--layout-grid.product-gallery--img-ratio-square .pixar-transformed-media-container,
+      .product-gallery--layout-grid.product-gallery--img-ratio-square .pixar-transformed-image,
+      .product-gallery--layout-list.product-gallery--img-ratio-square .pixar-transformed-media-container,
+      .product-gallery--layout-list.product-gallery--img-ratio-square .pixar-transformed-image {
+        aspect-ratio: 3/4 !important;
+        padding-bottom: unset !important;
+      }
+      
+      /* Handle thumbnails */
+      .product-gallery__thumbnail.pixar-transformed-thumbnail img {
+        aspect-ratio: 3/4 !important;
+        object-fit: contain !important;
+      }
+    `;
   }
   
   /**
