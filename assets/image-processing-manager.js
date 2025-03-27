@@ -1307,6 +1307,52 @@ class ImageProcessingManager {
       // Add the popup to the document body
       document.body.appendChild(resultPopup);
       
+      // Add event listeners for size buttons first
+      const sizeOptions = resultPopup.querySelectorAll('[data-size]');
+      sizeOptions.forEach(option => {
+        // Add hover effect for size options
+        option.addEventListener('mouseenter', () => {
+          if (option.getAttribute('data-size') !== this.selectedSize) {
+            option.style.backgroundColor = '#f8f8f8';
+            option.style.transform = 'translateY(-2px)';
+          }
+        });
+        
+        option.addEventListener('mouseleave', () => {
+          if (option.getAttribute('data-size') !== this.selectedSize) {
+            option.style.backgroundColor = '';
+            option.style.transform = 'translateY(0)';
+          }
+        });
+        
+        option.addEventListener('click', () => {
+          // Get the selected size
+          const size = option.getAttribute('data-size');
+          
+          // If same size is clicked, do nothing
+          if (this.selectedSize === size) return;
+          
+          // Store previous size for transition
+          const previousSize = this.selectedSize;
+          this.selectedSize = size;
+          
+          // Remove highlight from all options
+          sizeOptions.forEach(opt => {
+            opt.style.backgroundColor = '';
+            opt.style.transform = 'translateY(0)';
+            opt.style.boxShadow = 'none';
+          });
+          
+          // Highlight selected option
+          option.style.backgroundColor = '#f0f5fb';
+          option.style.transform = 'translateY(-2px)';
+          option.style.boxShadow = '0 4px 8px rgba(0,0,0,0.08)';
+          
+          // Apply the appropriate aspect ratio to the image with animation
+          this.applyAspectRatioToResultImage(size, previousSize);
+        });
+      });
+      
       // Add event listener for the continue button
       const continueButton = document.getElementById('pixar-result-continue');
       if (continueButton) {
