@@ -110,6 +110,22 @@
       transform: scale(1.02);
     }
     
+    /* Add proper focus styles for accessibility */
+    .cart-item__image-wrapper:focus,
+    .cart-item__image-wrapper:focus-visible {
+      outline: 2px solid #4a90e2;
+      outline-offset: 2px;
+      box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.3);
+      position: relative;
+      z-index: 2;
+    }
+    
+    /* Allow focus only for keyboard navigation not mouse clicks */
+    .cart-item__image-wrapper:focus:not(:focus-visible) {
+      outline: none;
+      box-shadow: none;
+    }
+    
     /* Cart debug styling */
     .cartoonique-debug {
       display: none;

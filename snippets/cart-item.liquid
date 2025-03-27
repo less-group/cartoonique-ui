@@ -36,9 +36,8 @@
           <a
             href='{{ item.url }}'
             class='cart-item__image-wrapper shape shape--{{ img_ratio }} {% if img_ratio contains 'fit' %} shape--fit {% endif %} {% if enable_multiply %} multiply-mode {% endif %} {% if is_processed_image %} cartoonique-processed-image-wrapper {% endif %}'
-            aria-hidden='true'
-            tabindex='-1'
             aria-label='{{ item.product.title | strip_html | escape }}'
+            role="img"
           >
             {% if item.image %}
               {% assign image = item.image %}
@@ -49,6 +48,7 @@
                   data-variant-id='{{ item.variant.id }}'
                   loading="eager"
                   style="object-fit: contain{% if is_processed_image %}; aspect-ratio: 3/4{% endif %};"
+                  alt="{{ item.product.title | escape }}"
                 {% else %}
                   {% render 'image-attributes',
                     image: image,
