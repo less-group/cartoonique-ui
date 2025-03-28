@@ -115,13 +115,14 @@ class ImageCropper {
         font-size: 24px;
         margin-bottom: 20px;
         font-weight: bold;
+        color: #000000;
       }
       
       .image-cropper-subtitle {
         text-align: center;
         font-size: 16px;
         margin-bottom: 30px;
-        color: #666;
+        color: #000000;
       }
       
       .image-cropper-area {
@@ -155,7 +156,7 @@ class ImageCropper {
         width: 100%;
         height: 100%;
         box-sizing: border-box;
-        border: 4px solid #00C2FF;
+        border: 4px solid #4A7DBD;
         box-shadow: 0 0 0 9999px rgba(255, 255, 255, 0.75);
       }
       
@@ -163,7 +164,7 @@ class ImageCropper {
         position: absolute;
         width: 20px;
         height: 20px;
-        background-color: #00C2FF;
+        background-color: #4A7DBD;
         border-radius: 0;
       }
       
@@ -208,13 +209,13 @@ class ImageCropper {
       }
       
       .image-cropper-apply {
-        background-color: #4CAF50;
+        background-color: #4A7DBD;
         color: white;
         border: none;
       }
       
       .image-cropper-apply:hover {
-        background-color: #3d8b40;
+        background-color: #3A6AA6;
       }
       
       .image-cropper-cancel {
@@ -648,7 +649,7 @@ class ImageCropper {
     
     // Ensure crop box styling
     this.cropBox.style.boxShadow = '0 0 0 9999px rgba(255, 255, 255, 0.75)';
-    this.cropBox.style.border = '4px solid #00C2FF';
+    this.cropBox.style.border = '4px solid #4A7DBD';
     
     // Update cursor style based on lock direction
     if (this.lockAxis === 'y') {

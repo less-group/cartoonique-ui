@@ -115,7 +115,7 @@ class PixarTextOverlay extends HTMLElement {
         font-weight: 600;
         margin: 0;
         font-family: 'Montserrat', sans-serif;
-        color: #2D3748;
+        color: #000000;
       }
       
       .close-button {
@@ -126,7 +126,7 @@ class PixarTextOverlay extends HTMLElement {
         border: none;
         cursor: pointer;
         font-size: 1.5rem;
-        color: #718096;
+        color: #4A7DBD;
         transition: color 0.2s;
         width: 32px;
         height: 32px;
@@ -137,7 +137,7 @@ class PixarTextOverlay extends HTMLElement {
       }
       
       .close-button:hover {
-        color: #2D3748;
+        color: #3A6AA6;
         background-color: #f7fafc;
       }
       
@@ -158,16 +158,16 @@ class PixarTextOverlay extends HTMLElement {
         border-radius: 4px;
         font-size: 16px;
         background-color: #F7FAFC;
-        color: #2D3748;
+        color: #000000;
         transition: all 0.2s;
         font-family: 'Montserrat', sans-serif;
       }
       
       input:focus {
         outline: none;
-        border-color: #4299E1;
+        border-color: #4A7DBD;
         background-color: white;
-        box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.15);
+        box-shadow: 0 0 0 2px rgba(74, 125, 189, 0.15);
       }
       
       input:hover {
@@ -215,7 +215,7 @@ class PixarTextOverlay extends HTMLElement {
         margin-bottom: 5px;
         font-weight: 600;
         font-size: 14px;
-        color: #4A5568;
+        color: #000000;
         font-family: 'Montserrat', sans-serif;
       }
       
@@ -241,7 +241,7 @@ class PixarTextOverlay extends HTMLElement {
       
       .btn-cancel {
         background-color: #EDF2F7;
-        color: #4A5568;
+        color: #000000;
       }
       
       .btn-cancel:hover {
@@ -249,14 +249,14 @@ class PixarTextOverlay extends HTMLElement {
       }
       
       .btn-submit {
-        background-color: #4299E1;
+        background-color: #4A7DBD;
         color: white;
-        box-shadow: 0 4px 6px rgba(66, 153, 225, 0.2);
+        box-shadow: 0 4px 6px rgba(74, 125, 189, 0.2);
       }
       
       .btn-submit:hover {
-        background-color: #3182CE;
-        box-shadow: 0 4px 10px rgba(66, 153, 225, 0.3);
+        background-color: #3A6AA6;
+        box-shadow: 0 4px 10px rgba(74, 125, 189, 0.3);
       }
     `;
     

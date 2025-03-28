@@ -1272,33 +1272,33 @@ class ImageProcessingManager {
                 <div data-size="S" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer; background-color: #f0f5fb; transition: all 0.2s ease-in-out;">
                   <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">S</div>
                   <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$85</div>
-                  <div style="font-size: 12px; color: #666; margin-top: 3px;">20x30"</div>
+                  <div style="font-size: 12px; color: #000000; margin-top: 3px;">20x30"</div>
                 </div>
                 
                 <!-- Size M -->
                 <div data-size="M" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer; transition: all 0.2s ease-in-out;">
                   <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">M</div>
                   <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$130</div>
-                  <div style="font-size: 12px; color: #666; margin-top: 3px;">30x40"</div>
+                  <div style="font-size: 12px; color: #000000; margin-top: 3px;">30x40"</div>
                 </div>
                 
                 <!-- Size L -->
                 <div data-size="L" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer; transition: all 0.2s ease-in-out;">
                   <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">L</div>
                   <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$190</div>
-                  <div style="font-size: 12px; color: #666; margin-top: 3px;">50x70"</div>
+                  <div style="font-size: 12px; color: #000000; margin-top: 3px;">50x70"</div>
                 </div>
               </div>
               
-              <h4 style="text-align: center; font-size: 16px; margin-top: 10px; margin-bottom: 5px; color: #333; font-weight: bold; text-transform: uppercase;">Choose the size</h4>
+              <h4 style="text-align: center; font-size: 16px; margin-top: 10px; margin-bottom: 5px; color: #000000; font-weight: bold; text-transform: uppercase;">Choose the size</h4>
               
               <div style="text-align: center; margin-top: 5px;">
-                <a href="#" style="color: #4a7dbd; text-decoration: underline; font-size: 12px;">Size guide</a>
+                <a href="#" style="color: #4A7DBD; text-decoration: underline; font-size: 12px;">Size guide</a>
               </div>
             </div>
             
             <div style="text-align: center; margin-top: 10px; margin-bottom: 10px;">
-              <button id="pixar-result-continue" style="background-color: #4a7dbd; color: white; padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 0 10px; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: background-color 0.2s ease-in-out;">CONTINUE</button>
+              <button id="pixar-result-continue" style="background-color: #4A7DBD; color: white; padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 0 10px; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: background-color 0.2s ease-in-out;">CONTINUE</button>
             </div>
           </div>
         </div>

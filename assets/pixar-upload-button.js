@@ -109,7 +109,7 @@
         </p>
 
         <div id="pixar-upload-buttons" style="text-align: center;">
-          <button id="pixar-upload-button" style="background-color: #4a7dbd; color: white; padding: 18px 40px; font-size: 20px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 10px auto; display: block; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">UPLOAD PHOTO</button>
+          <button id="pixar-upload-button" style="background-color: #4A7DBD; color: white; padding: 18px 40px; font-size: 20px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 10px auto; display: block; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">UPLOAD PHOTO</button>
         </div>
         
         <div id="pixar-error-message" style="display: none; text-align: center; color: red; margin-top: 20px;"></div>
@@ -136,15 +136,15 @@
     // Add content to the loading popup
     loadingPopup.innerHTML = `
       <div style="position: relative; max-width: 700px; margin: 100px auto; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.1);">
-        <h3 style="text-align: center; font-size: 26px; margin-bottom: 30px; color: #333; font-weight: bold;">Generating, please wait...</h3>
+        <h3 style="text-align: center; font-size: 26px; margin-bottom: 30px; color: #000000; font-weight: bold;">Generating, please wait...</h3>
         
         <div style="width: 90%; max-width: 500px; height: 12px; background-color: #f5f5f5; border-radius: 20px; margin: 30px auto; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
-          <div id="pixar-progress-bar" style="height: 100%; width: 10%; background: linear-gradient(to right, #4a7dbd, #6a9ad0); transition: width 1s ease-in-out; border-radius: 20px;"></div>
+          <div id="pixar-progress-bar" style="height: 100%; width: 10%; background: linear-gradient(to right, #4A7DBD, #6a9ad0); transition: width 1s ease-in-out; border-radius: 20px;"></div>
         </div>
         
-        <p id="pixar-progress-text" style="text-align: center; margin: 20px 0; color: #555; font-size: 18px; font-weight: 500;">Preparing your image...</p>
+        <p id="pixar-progress-text" style="text-align: center; margin: 20px 0; color: #000000; font-size: 18px; font-weight: 500;">Preparing your image...</p>
         
-        <p style="text-align: center; margin-top: 15px; color: #777; font-size: 15px;">Usually takes 2 to 3 minutes.</p>
+        <p style="text-align: center; margin-top: 15px; color: #000000; font-size: 15px;">Usually takes 2 to 3 minutes.</p>
       </div>
     `;
     
