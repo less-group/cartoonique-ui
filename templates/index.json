@@ -12,7 +12,7 @@
     "image_banner_rLgWE8": {
       "type": "image-banner",
       "custom_css": [
-        "@media (min-width: 768px) {.image-banner {height: 80vh !important; min-height: 200px !important; } .image-banner__content {position: absolute !important; bottom: 2% !important; left: 5% !important; width: 50% !important; max-width: 50% !important; text-align: left !important; }"
+        "@media (min-width: 768px) {.image-banner {height: 80vh !important; min-height: 200px !important; } .image-banner__content {position: absolute !important; bottom: 2% !important; left: 5% !important; width: 50% !important; max-width: 50% !important; text-align: left !important; } .overlay {background-color: rgba(0, 0, 0, 0.5) !important; border-radius: 16px !important; }}"
       ],
       "settings": {
         "color_scheme": "secondary",
