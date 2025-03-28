@@ -98,7 +98,7 @@
       "settings": {
         "color_scheme": "default",
         "container_size": "page-width",
-        "layout": "left",
+        "layout": "right",
         "desktop_image_ratio": 0.6,
         "mobile_image_ratio": 1,
         "drag": 50,
