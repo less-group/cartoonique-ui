@@ -246,85 +246,6 @@
         "section_spacing_bottom": 0
       }
     },
-    "dd10bcbe-6b5f-450d-ade6-fd728dbc9b00": {
-      "type": "instagram",
-      "blocks": {
-        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-0": {
-          "type": "post",
-          "settings": {
-            "link": "",
-            "icon": "none"
-          }
-        },
-        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-1": {
-          "type": "post",
-          "settings": {
-            "link": "",
-            "icon": "none"
-          }
-        },
-        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-2": {
-          "type": "post",
-          "settings": {
-            "link": "",
-            "icon": "none"
-          }
-        },
-        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-3": {
-          "type": "post",
-          "settings": {
-            "link": "",
-            "icon": "none"
-          }
-        },
-        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-4": {
-          "type": "post",
-          "settings": {
-            "link": "",
-            "icon": "none"
-          }
-        },
-        "post_NyW7d8": {
-          "type": "post",
-          "settings": {
-            "link": "",
-            "icon": "none"
-          }
-        }
-      },
-      "block_order": [
-        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-0",
-        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-1",
-        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-2",
-        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-3",
-        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-4",
-        "post_NyW7d8"
-      ],
-      "settings": {
-        "color_scheme": "default",
-        "container_size": "large",
-        "desktop_layout": "grid",
-        "mobile_layout": "slideshow",
-        "title": "Gallery",
-        "heading_size": "h5",
-        "text": "Show your products, collections, and social media posts or tell about recent events.",
-        "body_size": "body3",
-        "content_alignment": "center",
-        "img_ratio": 1,
-        "desktop_columns": 5,
-        "desktop_space_between_cards": 20,
-        "mobile_space_between_cards": 16,
-        "show_arrows_on_hover": true,
-        "btn_text": "",
-        "btn_url": "",
-        "btn_style": "outline",
-        "autoplay_mode": "disabled",
-        "autoplay_interval": 3,
-        "add_side_paddings": true,
-        "section_spacing_top": 34,
-        "section_spacing_bottom": 100
-      }
-    },
     "custom_liquid_6hP6y8": {
       "type": "custom-liquid",
       "settings": {
@@ -397,12 +318,94 @@
         "text": "Answers to most common questions about products, orders, shipments, and payments.",
         "body_size": "body3",
         "content_alignment": "center",
-        "btn_text": "View All",
+        "btn_text": "",
         "btn_url": "",
         "btn_style": "solid",
         "add_side_paddings": true,
         "section_spacing_top": 40,
-        "section_spacing_bottom": 40
+        "section_spacing_bottom": 0
+      }
+    },
+    "custom_liquid_YkGgxQ": {
+      "type": "custom-liquid",
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "large",
+        "custom_liquid": "<div class=\"custom-button-container\" style=\"padding-top: 0px;\">\n    <a href=\"/pages/frequently-asked-questions\" class=\"custom-button\">\n        VIEW ALL\n    </a>\n</div>",
+        "add_side_paddings": true,
+        "section_spacing_top": 0,
+        "section_spacing_bottom": 48
+      }
+    },
+    "dd10bcbe-6b5f-450d-ade6-fd728dbc9b00": {
+      "type": "instagram",
+      "blocks": {
+        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-0": {
+          "type": "post",
+          "settings": {
+            "link": "",
+            "icon": "none"
+          }
+        },
+        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-1": {
+          "type": "post",
+          "settings": {
+            "link": "",
+            "icon": "none"
+          }
+        },
+        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-2": {
+          "type": "post",
+          "settings": {
+            "link": "",
+            "icon": "none"
+          }
+        },
+        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-3": {
+          "type": "post",
+          "settings": {
+            "link": "",
+            "icon": "none"
+          }
+        },
+        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-4": {
+          "type": "post",
+          "settings": {
+            "link": "",
+            "icon": "none"
+          }
+        }
+      },
+      "block_order": [
+        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-0",
+        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-1",
+        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-2",
+        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-3",
+        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-4"
+      ],
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "large",
+        "desktop_layout": "grid",
+        "mobile_layout": "slideshow",
+        "title": "IMAGES FROM IG",
+        "heading_size": "h5",
+        "text": "Show your products, collections, and social media posts or tell about recent events.",
+        "body_size": "body3",
+        "content_alignment": "center",
+        "img_ratio": 1,
+        "desktop_columns": 5,
+        "desktop_space_between_cards": 20,
+        "mobile_space_between_cards": 16,
+        "show_arrows_on_hover": true,
+        "btn_text": "",
+        "btn_url": "",
+        "btn_style": "outline",
+        "autoplay_mode": "disabled",
+        "autoplay_interval": 3,
+        "add_side_paddings": true,
+        "section_spacing_top": 34,
+        "section_spacing_bottom": 100
       }
     },
     "newsletter_9AqaGT": {
@@ -465,9 +468,10 @@
     "412725f2-05f4-4ccc-923b-c9d7af83b3a4",
     "custom_liquid_MPwmrD",
     "73d14667-7990-4c4e-b25e-4bcc5aa291bb",
-    "dd10bcbe-6b5f-450d-ade6-fd728dbc9b00",
     "custom_liquid_6hP6y8",
     "faq_wVkKGi",
+    "custom_liquid_YkGgxQ",
+    "dd10bcbe-6b5f-450d-ade6-fd728dbc9b00",
     "newsletter_9AqaGT"
   ]
 }
