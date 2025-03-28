@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "ff03a7f7-70a4-4aa2-8e65-56be8e7dbefc": {
@@ -15,81 +24,79 @@
     "main": {
       "type": "product",
       "blocks": {
-        "vendor": {
-          "type": "vendor",
-          "disabled": true,
-          "settings": {}
-        },
         "title": {
           "type": "title",
           "settings": {
-            "heading_tag": "h2"
+            "heading_size": "h1"
           }
         },
-        "badges": {
-          "type": "badges",
-          "disabled": true,
-          "settings": {}
+        "rating_EDcFiT": {
+          "type": "rating",
+          "settings": {
+            "rating_style": "review_count_and_stars",
+            "product_card_rating_hide_if_zero_reviews": false,
+            "product_rating_color": "#f49a13"
+          }
         },
         "price": {
           "type": "price",
           "settings": {
-            "show_taxes_notice": false
+            "price_size": "xs",
+            "show_currency_code": true,
+            "show_compared_at_price": true,
+            "show_tax_status": false,
+            "show_sale_amount_badge": true,
+            "highlight_sale_price": true
           }
         },
-        "rating": {
-          "type": "rating",
+        "inventory_status": {
+          "type": "inventory_status",
+          "disabled": true,
           "settings": {
-            "show_empty": false
+            "show_inventory_status": "always",
+            "inventory_threshhold": 11,
+            "inventory_notice_type": "label",
+            "high_inventory_text": "Many in stock",
+            "low_inventory_text": "Act now, few in stock!",
+            "show_progress_bar": true,
+            "progress_bar_type": "solid",
+            "progress_bar_size": "4",
+            "progress_bar_max_value": "50",
+            "high_inventory_label_color": "#000000",
+            "high_inventory_color": "#20d020",
+            "high_inventory_gradient": "",
+            "high_inventory_progress_bar_bg": "#f5f5f5",
+            "low_inventory_label_color": "#000000",
+            "low_inventory_color": "#ff3d3d",
+            "low_inventory_gradient": "",
+            "low_inventory_progress_bar_bg": "#f5f5f5"
           }
-        },
-        "payment_terms": {
-          "type": "payment_terms",
-          "disabled": true,
-          "settings": {}
-        },
-        "separator": {
-          "type": "separator",
-          "disabled": true,
-          "settings": {}
         },
         "description": {
           "type": "description",
           "disabled": true,
           "settings": {
-            "collapse_content": false
+            "block_style": "static",
+            "title": "",
+            "heading_size": "h3",
+            "body_size": "body6",
+            "icon": "none",
+            "icon_size": 24
           }
         },
         "variant_picker": {
           "type": "variant_picker",
           "settings": {
-            "hide_sold_out_variants": false,
-            "stack_blocks": true,
-            "selector_style": "block",
-            "swatch_selector_style": "swatch",
-            "variant_image_options": "",
-            "size_chart_page": "grossentabelle"
-          }
-        },
-        "pixar_integration": {
-          "type": "html",
-          "settings": {
-            "heading": "Upload Your Photo",
-            "type": "static",
-            "heading_size": "h3",
-            "icon": "image",
-            "html": "{% render 'aurora-pixar-integration', product: product, section: section %}"
-          }
-        },
-        "buy_buttons": {
-          "type": "buy_buttons",
-          "settings": {
-            "show_payment_button": false,
-            "show_gift_card_recipient": true,
-            "atc_button_background": "",
-            "atc_button_text_color": "",
-            "payment_button_background": "",
-            "payment_button_text_color": ""
+            "option_type": "button-solid",
+            "show_swatches": false,
+            "primary_swatch_option_type": "swatches",
+            "secondary_swatch_option_type": "swatches",
+            "hide_single_value_options": true,
+            "option_name": "",
+            "information_drawer_button_label": "",
+            "text": "",
+            "page": "",
+            "image_width": 60
           }
         },
         "quantity_selector": {
@@ -97,46 +104,59 @@
           "disabled": true,
           "settings": {}
         },
-        "custom_html": {
-          "type": "html",
-          "disabled": true,
+        "buy_buttons": {
+          "type": "buy_buttons",
           "settings": {
-            "html": "<style>.file-input-wrapper__popup-open-btn { display: block !important; visibility: visible !important; opacity: 1 !important; }</style>"
+            "show_dynamic_checkout": false,
+            "enable_pickup_availability": false,
+            "enable_gift_card": false,
+            "show_payment_icons": false,
+            "show_sticky_btn_on_mobile": true,
+            "buttons_size": "xl",
+            "add_to_cart_btn_style": "solid",
+            "checkout_btn_style": "outline"
           }
         }
       },
       "block_order": [
-        "vendor",
         "title",
-        "badges",
+        "rating_EDcFiT",
         "price",
-        "rating",
-        "payment_terms",
-        "separator",
+        "inventory_status",
         "description",
         "variant_picker",
-        "pixar_integration",
-        "buy_buttons",
         "quantity_selector",
-        "custom_html"
+        "buy_buttons"
+      ],
+      "custom_css": [
+        ".pill--solid.selected {background-color: #d8ecfc !important; color: #000000 !important; border-color: #0000000 !important;}",
+        ".product__info .h1 {margin-bottom: 4px !important;}",
+        ".product__info .block-rating_yCV3gG {margin-top: 0 !important; margin-bottom: 8px !important;}",
+        ".product__info .block-price {margin-top: 0 !important; margin-bottom: 8px !important;}",
+        ".product-mobile-media {margin-bottom: 2px !important;}",
+        ".product__info .product-general-info-block:first-child {margin-top: 0 !important; padding-top: 0 !important;}"
       ],
       "settings": {
-        "full_width": true,
-        "show_fixed_add_to_cart": true,
-        "desktop_media_width": 55,
-        "desktop_media_layout": "carousel_thumbnails_left",
-        "mobile_media_size": "expanded",
-        "mobile_carousel_control": "floating_dots",
+        "color_scheme": "default",
+        "container_size": "medium",
+        "media_to_content_ratio": "fixed",
+        "img_ratio": "square",
+        "layout": "thumbnails-bottom",
+        "desktop_space_between_media": 20,
+        "thumbnails_size": 80,
+        "mobile_layout": "thumbnails-bottom-overlay",
+        "mobile_space_between_media": 12,
+        "show_only_selected_variants": false,
+        "enable_image_zoom": false,
         "enable_video_autoplay": false,
-        "enable_video_looping": true,
-        "enable_image_zoom": true,
-        "max_image_zoom_level": 3,
-        "img_ratio": 0.75,
-        "background": "",
-        "background_gradient": "",
-        "text_color": "",
-        "input_background": "rgba(0,0,0,0)",
-        "input_text_color": ""
+        "enable_video_controls": false,
+        "enable_video_looping": false,
+        "scale_video": false,
+        "add_side_paddings": true,
+        "desktop_spacing_top": 12,
+        "desktop_spacing_bottom": 12,
+        "mobile_spacing_top": 8,
+        "mobile_spacing_bottom": 8
       }
     },
     "related-products": {
@@ -171,7 +191,9 @@
           }
         }
       },
-      "block_order": ["image_block"],
+      "block_order": [
+        "image_block"
+      ],
       "settings": {
         "color_scheme": "default",
         "container_size": "page-width",
@@ -228,7 +250,10 @@
           }
         }
       },
-      "block_order": ["question_1", "question_2"],
+      "block_order": [
+        "question_1",
+        "question_2"
+      ],
       "settings": {
         "color_scheme": "custom-2",
         "enable_background_around_container": false,
@@ -248,25 +273,11 @@
         "section_spacing_top": 20,
         "section_spacing_bottom": 20
       }
-    },
-    "direct_pixar_test": {
-      "type": "custom-liquid",
-      "settings": {
-        "full_width": false,
-        "container_size": "medium",
-        "custom_liquid": "<div id=\"direct-pixar-test\" style=\"border: 2px solid red; padding: 15px; margin: 15px 0;\">\n  <h3>Direct Pixar Component Test</h3>\n  <p>This section tests direct component loading</p>\n  <div id=\"direct-component-area\" style=\"min-height: 50px; border: 1px solid #ccc;\">\n    <!-- Component will be created here -->\n  </div>\n  <button id=\"direct-test-button\" style=\"margin-top: 10px; padding: 8px 15px; background: blue; color: white;\">Create Component</button>\n  \n  <script>\n    document.addEventListener('DOMContentLoaded', function() {\n      console.log('Direct test section loaded');\n      \n      // Add click handler to test button\n      const testButton = document.getElementById('direct-test-button');\n      if (testButton) {\n        testButton.addEventListener('click', function() {\n          console.log('Creating direct component');\n          \n          // Find component area\n          const componentArea = document.getElementById('direct-component-area');\n          if (componentArea) {\n            // Create component\n            const component = document.createElement('pixar-transform-file-input');\n            component.setAttribute('data-product-id', '{{ product.id }}');\n            component.setAttribute('data-product-variant-id', '{{ product.selected_or_first_available_variant.id }}');\n            component.setAttribute('data-section-id', 'direct-test');\n            \n            // Add to page\n            componentArea.innerHTML = '';\n            componentArea.appendChild(component);\n            \n            console.log('Component created');\n            \n            // Update button\n            testButton.textContent = 'Component Created';\n            testButton.disabled = true;\n          }\n        });\n      }\n    });\n  </script>\n</div>",
-        "background": "",
-        "background_gradient": "",
-        "text_color": "",
-        "section_spacing_top": 36,
-        "section_spacing_bottom": 36
-      }
     }
   },
   "order": [
     "ff03a7f7-70a4-4aa2-8e65-56be8e7dbefc",
     "main",
-    "direct_pixar_test",
     "related-products",
     "images_with_text",
     "faq_section"
