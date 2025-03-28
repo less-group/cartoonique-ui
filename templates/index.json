@@ -11,6 +11,9 @@
   "sections": {
     "image_banner_rLgWE8": {
       "type": "image-banner",
+      "custom_css": [
+        "@media (min-width: 768px) {.image-banner {height: 80vh !important; min-height: 200px !important; } .image-banner__content {position: absolute !important; bottom: 2% !important; left: 5% !important; width: 50% !important; max-width: 50% !important; text-align: left !important; }"
+      ],
       "settings": {
         "color_scheme": "secondary",
         "enable_background_around_container": false,
@@ -26,7 +29,7 @@
         "heading_size": "h2",
         "text": "",
         "body_size": "body3",
-        "desktop_content_position": "align-items:flex-end;justify-content:flex-start;",
+        "desktop_content_position": "align-items:center;justify-content:center;",
         "desktop_content_align": "left",
         "content_max_width": 528,
         "content_spacing": 100,
@@ -44,45 +47,6 @@
         "add_side_paddings": true,
         "section_spacing_top": 0,
         "section_spacing_bottom": 0
-      }
-    },
-    "image_banner_NDr8NT": {
-      "type": "image-banner",
-      "custom_css": [
-        "@media (min-width: 768px) {.image-banner {height: 80vh !important; min-height: 200px !important; } .image-banner__content {position: absolute !important; bottom: 2% !important; left: 5% !important; width: 50% !important; max-width: 50% !important; text-align: left !important; }"
-      ],
-      "settings": {
-        "color_scheme": "secondary",
-        "enable_background_around_container": false,
-        "container_size": "full-screen",
-        "desktop_ratio": 0.1,
-        "mobile_ratio": 1.4,
-        "desktop_img": "shopify://shop_images/Screenshot_2025-01-17_at_03.50.50.png",
-        "desktop_overlay_opacity": 40,
-        "mobile_overlay_opacity": 40,
-        "caption": "",
-        "title": "Turn yourself and your loved ones into a cartoon character",
-        "heading_size": "h3",
-        "text": "",
-        "body_size": "body3",
-        "desktop_content_position": "align-items:flex-end;justify-content:flex-start;",
-        "desktop_content_align": "left",
-        "content_max_width": 528,
-        "content_spacing": 100,
-        "mobile_content_position": "align-items:flex-end;justify-content:center;",
-        "mobile_content_align": "center",
-        "desktop_content_background": "none",
-        "mobile_content_background": "none",
-        "btn_text": "SHOP NOW",
-        "btn_url": "shopify://collections/all",
-        "btn_style": "solid",
-        "extra_btn_text": "",
-        "extra_btn_url": "",
-        "extra_btn_style": "solid",
-        "disable_lazy_loading": true,
-        "add_side_paddings": false,
-        "section_spacing_top": 0,
-        "section_spacing_bottom": 20
       }
     },
     "featured_collection_EQXYJP": {
@@ -501,7 +465,6 @@
   },
   "order": [
     "image_banner_rLgWE8",
-    "image_banner_NDr8NT",
     "featured_collection_EQXYJP",
     "412725f2-05f4-4ccc-923b-c9d7af83b3a4",
     "custom_liquid_MPwmrD",
