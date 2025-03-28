@@ -1,1 +1,510 @@
-{"sections":{"image_banner_NDr8NT":{"type":"image-banner","custom_css":["@media (min-width: 768px) {.image-banner {height: 80vh !important; min-height: 200px !important; } .image-banner__content {position: absolute !important; bottom: 2% !important; left: 5% !important; width: 50% !important; max-width: 50% !important; text-align: left !important; } .image-banner__buttons {margin-top: 10px !important; } .image-banner__heading {max-width: 60% !important; font-size: 2.5rem !important; line-height: 1.2 !important; white-space: normal !important; }}"],"settings":{"color_scheme":"secondary","enable_background_around_container":false,"container_size":"full-screen","desktop_ratio":0.1,"mobile_ratio":1.4,"desktop_img":"shopify:\/\/shop_images\/Screenshot2025-01-22at00.50.43.png","desktop_overlay_opacity":40,"mobile_overlay_opacity":40,"caption":"","title":"Turn yourself and your loved ones into a cartoon character","heading_size":"h3","text":"","body_size":"body3","desktop_content_position":"align-items:flex-end;justify-content:flex-start;","desktop_content_align":"left","content_max_width":528,"content_spacing":100,"mobile_content_position":"align-items:flex-end;justify-content:center;","mobile_content_align":"center","desktop_content_background":"none","mobile_content_background":"none","btn_text":"SHOP NOW","btn_url":"shopify:\/\/collections\/all","btn_style":"solid","extra_btn_text":"","extra_btn_url":"","extra_btn_style":"solid","disable_lazy_loading":true,"add_side_paddings":true,"section_spacing_top":0,"section_spacing_bottom":20}},"8878505b-0411-4b21-a1ce-7936ab3f37fe":{"type":"scrolling-text","blocks":{"template--16205923156144__8878505b-0411-4b21-a1ce-7936ab3f37fe-announcement-1":{"type":"announcement","settings":{"announcement_text":"FREE DELIVERY","font_family":"body","font_style":"solid","font_size":14,"letter_spacing":0,"spacing_between_messages":70,"top_and_bottom_spacing":8,"link":"","icon":"star-solid","icon_size":24,"scrolling_direction":"right_to_left","scrolling_speed":30,"background_color":"#ffffff","background_color_gradient":"","text_color":"#000000","text_color_gradient":""}}},"block_order":["template--16205923156144__8878505b-0411-4b21-a1ce-7936ab3f37fe-announcement-1"],"disabled":true,"settings":{"color_scheme":"custom-2","container_size":"full-screen","section_layout":"parallel","inclination_degree":0,"crossing_point_position":0,"overlay_opacity":0,"add_side_paddings":false,"section_spacing_top":16,"section_spacing_bottom":16}},"featured_collection_EQXYJP":{"type":"featured-collection","custom_css":[".product-card,.collection-card {box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06); border-radius: 12px; background-color: #fff; overflow: hidden; margin: 20px; position: relative; transition: box-shadow 0.3s ease;}",".product-card:hover,.collection-card:hover {box-shadow: 0 12px 5px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08); transform: none !important;}",".product-card__image,.collection-card__image {transform: none !important;}"],"settings":{"color_scheme":"custom-3","container_size":"page-width","desktop_layout":"carousel","mobile_layout":"carousel","title":"Explore Cartoonique Portraits","heading_size":"h1","alignment":"left","collection":"","featured_products":["test"],"img_ratio":"portrait","product_card_align":"left","cards_to_show":16,"desktop_columns":4,"desktop_space_between_cards":16,"mobile_space_between_cards":16,"show_navigation_on_hover":true,"collection_card_position":"after-all-items","collection_card_content_position":"on-image-bottom","collection_card_content_align":"left","collection_card_heading_size":"h6","collection_card_show_product_count":"caption","collection_card_overlay_opacity":15,"autoplay_mode":"disabled","autoplay_interval":3,"add_side_paddings":true,"section_spacing_top":32,"section_spacing_bottom":32}},"412725f2-05f4-4ccc-923b-c9d7af83b3a4":{"type":"before-after-images","settings":{"color_scheme":"default","container_size":"page-width","layout":"right","desktop_image_ratio":0.6,"mobile_image_ratio":1,"drag":50,"subheading":"","heading":"Before and After","heading_size":"h2","body_richtext":"<p>Add the two images to compare the view or effects before and after becoming your customer.<\/p>","body_size":"body3","btn_text":"Shop Now","btn_url":"shopify:\/\/products\/test","btn_style":"solid","content_alignment":"center","before_img":"shopify:\/\/shop_images\/image_copy.png","before_img_label":"Before","before_img_subheading":"","before_img_heading":"","before_img_heading_size":"h4","before_img_heading_color":"#ffffff","after_img":"shopify:\/\/shop_images\/image.png","after_img_label":"After","after_img_subheading":"","after_img_heading":"","after_img_heading_size":"h4","after_img_heading_color":"#ffffff","disable_lazy_loading":false,"add_side_paddings":true,"section_spacing_top":48,"section_spacing_bottom":48}},"custom_liquid_MPwmrD":{"type":"custom-liquid","settings":{"color_scheme":"default","container_size":"page-width","custom_liquid":"<div class=\"custom-split-section\">\n    <div class=\"custom-split-container\">\n        <div class=\"custom-image\">\n            <img src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0896\/3434\/1212\/files\/image.png?v=1741515671\n\" alt=\"Feature image\">\n        <\/div>\n        <div class=\"custom-content\">\n            <h2 class=\"custom-headline\">How It Works?<\/h2>\n\n            <div class=\"custom-feature\">\n                <img class=\"custom-icon\" src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0896\/3434\/1212\/files\/1.png?v=1741521198\" alt=\"Icon 1\">\n                <div class=\"custom-feature-text\">\n                    <h4>Personalised Just for You<\/h4>\n                    <p>Each print shows the exact moon phase from your special date.<\/p>\n                <\/div>\n            <\/div>\n\n            <div class=\"custom-feature\">\n                <img class=\"custom-icon\"\nsrc=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0896\/3434\/1212\/files\/2.png?v=1741521198\" alt=\"Icon 2\">\n                <div class=\"custom-feature-text\">\n                    <h4>Made in the UK<\/h4>\n                    <p>High-quality printing with free UK delivery included.<\/p>\n                <\/div>\n            <\/div>\n\n            <div class=\"custom-feature\">\n                <img class=\"custom-icon\" src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0896\/3434\/1212\/files\/3.png?v=1741521198\" alt=\"Icon 3\">\n                <div class=\"custom-feature-text\">\n                    <h4>Thoughtful Gift<\/h4>\n                    <p>A unique way to capture the moments that matter most.<\/p>\n                <\/div>\n            <\/div>\n        <\/div>\n    <\/div>\n<\/div>\n\n<style>\n.custom-split-section {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    padding: 40px 0;\n    background-color: #fff;\n}\n\n.custom-split-container {\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 24px;\n    max-width: 1200px;\n    width: 100%;\n}\n\n\/* Rounded image container *\/\n.custom-image {\n    width: 100%;\n    max-width: 500px; \/* Optional - Adjust max size *\/\n    height: 100%;\n    aspect-ratio: 16 \/ 9; \/* Keeps image proportions *\/\n    border-radius: 22px;\n    overflow: hidden;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    background-color: #f5f5f5;\n}\n\n\/* Ensuring the image stays within the container *\/\n.custom-image img {\n    width: 100%;\n    height: 100%;\n    object-fit: cover;\n    border-radius: 22px;\n    display: block;\n}\n\n\/* Content styling *\/\n.custom-content {\n    display: flex;\n    flex-direction: column;\n    justify-content: center;\n    align-items: flex-start;\n    gap: 16px;\n}\n\n.custom-headline {\n    font-size: 28px;\n    font-weight: bold;\n    text-align: center;\n    width: 100%;\n    margin-bottom: 16px;\n}\n\n\/* Feature items *\/\n.custom-feature {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    text-align: left;\n    width: 100%;\n}\n\n\/* Higher resolution icons *\/\n.custom-icon {\n    width: 65px;\n    height: 65px;\n    object-fit: contain;\n    image-rendering: crisp-edges;\n    image-rendering: -webkit-optimize-contrast;\n}\n\n.custom-feature-text h4 {\n    font-size: 18px;\n    margin: 0;\n    font-weight: bold;\n}\n\n.custom-feature-text p {\n    font-size: 14px;\n    margin: 4px 0 0;\n}\n\n@media (max-width: 768px) {\n    .custom-split-container {\n        grid-template-columns: 1fr;\n    }\n\n    .custom-image {\n        display: none;\n    }\n\n    .custom-content {\n        align-items: flex-start;\n        text-align: left;\n        width: 100%;\n    }\n\n    .custom-feature {\n        flex-direction: row;\n        align-items: center;\n        justify-content: flex-start;\n        text-align: left;\n        width: 100%;\n    }\n\n    .custom-icon {\n        width: 65px;\n        height: 65px;\n    }\n\n    .custom-feature-text h4 {\n        font-size: 16px;\n    }\n\n    .custom-feature-text p {\n        font-size: 14px;\n    }\n}\n<\/style>","add_side_paddings":true,"section_spacing_top":20,"section_spacing_bottom":20}},"73d14667-7990-4c4e-b25e-4bcc5aa291bb":{"type":"testimonials","blocks":{"template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-0":{"type":"quote","settings":{"rating":4.5,"text":"<p>Add authentic testimonials of your customers talking about your products or brand in their own words, so that future customers can identify with them and their needs.<\/p>","author_name":"Author","author_details":"Author details","quote_product":"","link":""}},"template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-1":{"type":"quote","settings":{"rating":4.5,"text":"<p>Add authentic testimonials of your customers talking about your products or brand in their own words, so that future customers can identify with them and their needs.<\/p>","author_name":"Author","author_details":"Author details","quote_product":"","link":""}},"template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-2":{"type":"quote","settings":{"rating":4.5,"text":"<p>Add authentic testimonials of your customers talking about your products or brand in their own words, so that future customers can identify with them and their needs.<\/p>","author_name":"Author","author_details":"Author details","quote_product":"","link":""}},"template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-3":{"type":"quote","settings":{"rating":4.5,"text":"<p>Add authentic testimonials of your customers talking about your products or brand in their own words, so that future customers can identify with them and their needs.<\/p>","author_name":"Author","author_details":"Author details","quote_product":"","link":""}},"template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-4":{"type":"quote","settings":{"rating":4.5,"text":"<p>Add authentic testimonials of your customers talking about your products or brand in their own words, so that future customers can identify with them and their needs.<\/p>","author_name":"Author","author_details":"Author details","quote_product":"","link":""}},"template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-5":{"type":"quote","settings":{"rating":4.5,"text":"<p>Add authentic testimonials of your customers talking about your products or brand in their own words, so that future customers can identify with them and their needs.<\/p>","author_name":"Author","author_details":"Author details","quote_product":"","link":""}}},"block_order":["template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-0","template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-1","template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-2","template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-3","template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-4","template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-5"],"settings":{"color_scheme":"custom-2","enable_background_around_container":true,"color_testimonials":true,"container_size":"page-width","desktop_layout":"bottom-slideshow","mobile_layout":"slideshow","cards_per_slide":3,"desktop_space_between_cards":16,"desktop_quote_alignment":"left","mobile_quote_alignment":"left","show_rating":true,"stars_color":"#f49a13","caption":"","title":"Customer stories","heading_size":"h3","text":"<p>Show customer reviews: tweets, blog posts, or interviews. Invite customers to share their impressions of your products.<\/p>","body_size":"body3","btn_text":"","btn_url":"","overlay_opacity":20,"image_size":100,"autoplay_mode":"disabled","autoplay_interval":3,"add_side_paddings":true,"section_spacing_top":0,"section_spacing_bottom":0}},"dd10bcbe-6b5f-450d-ade6-fd728dbc9b00":{"type":"instagram","blocks":{"template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-0":{"type":"post","settings":{"link":"","icon":"none"}},"template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-1":{"type":"post","settings":{"link":"","icon":"none"}},"template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-2":{"type":"post","settings":{"link":"","icon":"none"}},"template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-3":{"type":"post","settings":{"link":"","icon":"none"}},"template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-4":{"type":"post","settings":{"link":"","icon":"none"}},"post_NyW7d8":{"type":"post","settings":{"link":"","icon":"none"}}},"block_order":["template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-0","template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-1","template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-2","template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-3","template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-4","post_NyW7d8"],"settings":{"color_scheme":"default","container_size":"large","desktop_layout":"grid","mobile_layout":"slideshow","title":"Gallery","heading_size":"h5","text":"Show your products, collections, and social media posts or tell about recent events.","body_size":"body3","content_alignment":"center","img_ratio":1,"desktop_columns":5,"desktop_space_between_cards":20,"mobile_space_between_cards":16,"show_arrows_on_hover":true,"btn_text":"","btn_url":"","btn_style":"outline","autoplay_mode":"disabled","autoplay_interval":3,"add_side_paddings":true,"section_spacing_top":34,"section_spacing_bottom":100}},"custom_liquid_6hP6y8":{"type":"custom-liquid","settings":{"color_scheme":"default","container_size":"large","custom_liquid":"<div class=\"custom-split-section\">\n    <div class=\"custom-split-container\">\n        <div class=\"custom-image\">\n            <img src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0896\/3434\/1212\/files\/image.png?v=1741515671\" alt=\"Feature image\">\n        <\/div>\n        <div class=\"custom-content\">\n            <h2 class=\"custom-headline\">How It Works?<\/h2>\n\n            <div class=\"custom-feature\">\n                <img class=\"custom-icon\" src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0896\/3434\/1212\/files\/1.png?v=1741521198\" alt=\"Icon 1\">\n                <div class=\"custom-feature-text\">\n                    <h4>Personalised Just for You<\/h4>\n                    <p>Each print shows the exact moon phase from your special date.<\/p>\n                <\/div>\n            <\/div>\n\n            <div class=\"custom-feature\">\n                <img class=\"custom-icon\" src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0896\/3434\/1212\/files\/2.png?v=1741521198\" alt=\"Icon 2\">\n                <div class=\"custom-feature-text\">\n                    <h4>Made in the UK<\/h4>\n                    <p>High-quality printing with free UK delivery included.<\/p>\n                <\/div>\n            <\/div>\n\n            <div class=\"custom-feature\">\n                <img class=\"custom-icon\" src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0896\/3434\/1212\/files\/3.png?v=1741521198\" alt=\"Icon 3\">\n                <div class=\"custom-feature-text\">\n                    <h4>Thoughtful Gift<\/h4>\n                    <p>A unique way to capture the moments that matter most.<\/p>\n                <\/div>\n            <\/div>\n\n            <!-- New 4th Feature -->\n            <div class=\"custom-feature\">\n                <img class=\"custom-icon\" src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0896\/3434\/1212\/files\/2.png?v=1741521198\" alt=\"Icon 4\">\n                <div class=\"custom-feature-text\">\n                    <h4>Eco-Friendly Materials<\/h4>\n                    <p>We use sustainable materials and eco-conscious packaging.<\/p>\n                <\/div>\n            <\/div>\n\n            <!-- Button Section - Using Custom Styling -->\n            <div class=\"custom-button-container\">\n                <a href=\"\/collections\/all\" class=\"custom-button\">\n                    Shop Now\n                <\/a>\n            <\/div>\n\n        <\/div>\n    <\/div>\n<\/div>\n\n<style>\n.custom-split-section {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    padding: 40px 0;\n    background-color: #fff;\n}\n\n.custom-split-container {\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 24px;\n    max-width: 1200px;\n    width: 100%;\n}\n\n\/* Rounded image container *\/\n.custom-image {\n    width: 100%;\n    max-width: 500px;\n    height: 100%;\n    aspect-ratio: 16 \/ 9;\n    border-radius: 22px;\n    overflow: hidden;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    background-color: #f5f5f5;\n}\n\n\/* Ensuring the image stays within the container *\/\n.custom-image img {\n    width: 100%;\n    height: 100%;\n    object-fit: cover;\n    border-radius: 22px;\n    display: block;\n}\n\n\/* Content styling *\/\n.custom-content {\n    display: flex;\n    flex-direction: column;\n    justify-content: center;\n    align-items: flex-start;\n    gap: 16px;\n}\n\n.custom-headline {\n    font-size: 28px;\n    font-weight: bold;\n    text-align: center;\n    width: 100%;\n    margin-bottom: 16px;\n}\n\n\/* Feature items *\/\n.custom-feature {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    text-align: left;\n    width: 100%;\n}\n\n\/* Higher resolution icons *\/\n.custom-icon {\n    width: 65px;\n    height: 65px;\n    object-fit: contain;\n    image-rendering: crisp-edges;\n    image-rendering: -webkit-optimize-contrast;\n}\n\n.custom-feature-text h4 {\n    font-size: 18px;\n    margin: 0;\n    font-weight: bold;\n}\n\n.custom-feature-text p {\n    font-size: 14px;\n    margin: 4px 0 0;\n}\n\n\/* Button Styling - Custom settings *\/\n.custom-button-container {\n    text-align: center;\n    width: 100%;\n    margin: 24px 0 0; \/* Your requested margin *\/\n}\n\n.custom-button {\n    display: inline-block;\n    padding: 12px 32px; \/* Your requested padding *\/\n    font-size: 16px;\n    font-weight: bold;\n    border-radius: 18px;\n    background-color: #ffc93c; \/* Your requested button color *\/\n    color: #000; \/* Ensuring readability *\/\n    text-decoration: none;\n    transition: background-color 0.3s ease;\n}\n.custom-button:hover {\n    background-color: #f9d57a; \n}\n\n\/* Mobile Styles *\/\n@media (max-width: 768px) {\n    .custom-split-container {\n        grid-template-columns: 1fr;\n    }\n\n    .custom-image {\n        display: none;\n    }\n\n    .custom-content {\n        align-items: flex-start;\n        text-align: left;\n        width: 100%;\n    }\n\n    .custom-feature {\n        flex-direction: row;\n        align-items: center;\n        justify-content: flex-start;\n        text-align: left;\n        width: 100%;\n    }\n\n    .custom-icon {\n        width: 65px;\n        height: 65px;\n    }\n\n    .custom-feature-text h4 {\n        font-size: 16px;\n    }\n\n    .custom-feature-text p {\n        font-size: 14px;\n    }\n\n    .custom-button-container {\n        text-align: center;\n        width: 100%;\n        margin-top: 24px;\n    }\n}\n<\/style>","add_side_paddings":true,"section_spacing_top":48,"section_spacing_bottom":48}},"faq_wVkKGi":{"type":"faq","blocks":{"question_xjdbLn":{"type":"question","settings":{"title":"Frequently asked question","heading_size":"caption2","icon":"none","icon_size":24,"text":"<p>Brief and clear answer<\/p>","page":"","body_size":"body3","image_width":100}},"question_dwyPDp":{"type":"question","settings":{"title":"Frequently asked question","heading_size":"caption2","icon":"none","icon_size":24,"text":"<p>Brief and clear answer<\/p>","page":"","body_size":"body3","image_width":100}},"question_VW88mg":{"type":"question","settings":{"title":"Frequently asked question","heading_size":"caption2","icon":"none","icon_size":24,"text":"<p>Brief and clear answer<\/p>","page":"","body_size":"body3","image_width":100}}},"block_order":["question_xjdbLn","question_dwyPDp","question_VW88mg"],"custom_css":[],"settings":{"color_scheme":"default","enable_background_around_container":false,"color_tabs":"content_tabs_separately","container_size":"medium","section_layout":"bottom-tabs","expand_first_tab":true,"title":"Frequently Asked Questions","heading_size":"h3","text":"Answers to most common questions about products, orders, shipments, and payments.","body_size":"body3","content_alignment":"center","btn_text":"View All","btn_url":"","btn_style":"solid","add_side_paddings":true,"section_spacing_top":40,"section_spacing_bottom":40}},"newsletter_9AqaGT":{"type":"newsletter","blocks":{"title_L9JzRN":{"type":"title","settings":{"title":"Let's Keep In Touch","heading_size":"h4"}},"text_ttQakB":{"type":"text","settings":{"text":"Invite customers to subscribe for early sale access, new in, promotions, and more.","body_size":"body3"}},"subscribe_EKzHFN":{"type":"subscribe","settings":{"input_style":"solid","show_signup_checkbox":false,"signup_checkbox_text":"I agree to the consent rules"}}},"block_order":["title_L9JzRN","text_ttQakB","subscribe_EKzHFN"],"settings":{"color_scheme":"custom-2","enable_background_around_container":false,"container_size":"full-screen","desktop_ratio":0.1,"mobile_ratio":0.2,"desktop_overlay_opacity":0,"mobile_overlay_opacity":0,"desktop_content_position":"align-items: center;justify-content:center;","desktop_content_align":"center","content_max_width":704,"content_spacing":16,"mobile_content_position":"align-items:center;justify-content:center;","mobile_content_align":"center","desktop_content_background":"solid","mobile_content_background":"solid","disable_lazy_loading":false,"add_side_paddings":true,"section_spacing_top":0,"section_spacing_bottom":10}}},"order":["image_banner_NDr8NT","8878505b-0411-4b21-a1ce-7936ab3f37fe","featured_collection_EQXYJP","412725f2-05f4-4ccc-923b-c9d7af83b3a4","custom_liquid_MPwmrD","73d14667-7990-4c4e-b25e-4bcc5aa291bb","dd10bcbe-6b5f-450d-ade6-fd728dbc9b00","custom_liquid_6hP6y8","faq_wVkKGi","newsletter_9AqaGT"]}
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "image_banner_NDr8NT": {
+      "type": "image-banner",
+      "custom_css": [
+        "@media (min-width: 768px) {.image-banner {height: 80vh !important; min-height: 200px !important; } .image-banner__content {position: absolute !important; bottom: 2% !important; left: 5% !important; width: 50% !important; max-width: 50% !important; text-align: left !important; }"
+      ],
+      "settings": {
+        "color_scheme": "secondary",
+        "enable_background_around_container": false,
+        "container_size": "full-screen",
+        "desktop_ratio": 0.1,
+        "mobile_ratio": 1.4,
+        "desktop_img": "shopify://shop_images/Screenshot2025-01-22at00.50.43.png",
+        "desktop_overlay_opacity": 40,
+        "mobile_overlay_opacity": 40,
+        "caption": "",
+        "title": "Turn yourself and your loved ones into a cartoon character",
+        "heading_size": "h3",
+        "text": "",
+        "body_size": "body3",
+        "desktop_content_position": "align-items:flex-end;justify-content:flex-start;",
+        "desktop_content_align": "left",
+        "content_max_width": 528,
+        "content_spacing": 100,
+        "mobile_content_position": "align-items:flex-end;justify-content:center;",
+        "mobile_content_align": "center",
+        "desktop_content_background": "none",
+        "mobile_content_background": "none",
+        "btn_text": "SHOP NOW",
+        "btn_url": "shopify://collections/all",
+        "btn_style": "solid",
+        "extra_btn_text": "",
+        "extra_btn_url": "",
+        "extra_btn_style": "solid",
+        "disable_lazy_loading": true,
+        "add_side_paddings": false,
+        "section_spacing_top": 0,
+        "section_spacing_bottom": 20
+      }
+    },
+    "8878505b-0411-4b21-a1ce-7936ab3f37fe": {
+      "type": "scrolling-text",
+      "blocks": {
+        "template--16205923156144__8878505b-0411-4b21-a1ce-7936ab3f37fe-announcement-1": {
+          "type": "announcement",
+          "settings": {
+            "announcement_text": "FREE DELIVERY",
+            "font_family": "body",
+            "font_style": "solid",
+            "font_size": 14,
+            "letter_spacing": 0,
+            "spacing_between_messages": 70,
+            "top_and_bottom_spacing": 8,
+            "link": "",
+            "icon": "star-solid",
+            "icon_size": 24,
+            "scrolling_direction": "right_to_left",
+            "scrolling_speed": 30,
+            "background_color": "#ffffff",
+            "background_color_gradient": "",
+            "text_color": "#000000",
+            "text_color_gradient": ""
+          }
+        }
+      },
+      "block_order": [
+        "template--16205923156144__8878505b-0411-4b21-a1ce-7936ab3f37fe-announcement-1"
+      ],
+      "disabled": true,
+      "settings": {
+        "color_scheme": "custom-2",
+        "container_size": "full-screen",
+        "section_layout": "parallel",
+        "inclination_degree": 0,
+        "crossing_point_position": 0,
+        "overlay_opacity": 0,
+        "add_side_paddings": false,
+        "section_spacing_top": 16,
+        "section_spacing_bottom": 16
+      }
+    },
+    "featured_collection_EQXYJP": {
+      "type": "featured-collection",
+      "custom_css": [
+        ".product-card,.collection-card {box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06); border-radius: 12px; background-color: #fff; overflow: hidden; margin: 20px; position: relative; transition: box-shadow 0.3s ease;}",
+        ".product-card:hover,.collection-card:hover {box-shadow: 0 12px 5px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08); transform: none !important;}",
+        ".product-card__image,.collection-card__image {transform: none !important;}"
+      ],
+      "settings": {
+        "color_scheme": "custom-3",
+        "container_size": "page-width",
+        "desktop_layout": "carousel",
+        "mobile_layout": "carousel",
+        "title": "Explore Cartoonique Portraits",
+        "heading_size": "h1",
+        "alignment": "left",
+        "collection": "",
+        "featured_products": [
+          "test"
+        ],
+        "img_ratio": "portrait",
+        "product_card_align": "left",
+        "cards_to_show": 16,
+        "desktop_columns": 4,
+        "desktop_space_between_cards": 16,
+        "mobile_space_between_cards": 16,
+        "show_navigation_on_hover": true,
+        "collection_card_position": "after-all-items",
+        "collection_card_content_position": "on-image-bottom",
+        "collection_card_content_align": "left",
+        "collection_card_heading_size": "h6",
+        "collection_card_show_product_count": "caption",
+        "collection_card_overlay_opacity": 15,
+        "autoplay_mode": "disabled",
+        "autoplay_interval": 3,
+        "add_side_paddings": true,
+        "section_spacing_top": 32,
+        "section_spacing_bottom": 32
+      }
+    },
+    "412725f2-05f4-4ccc-923b-c9d7af83b3a4": {
+      "type": "before-after-images",
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "page-width",
+        "layout": "right",
+        "desktop_image_ratio": 0.6,
+        "mobile_image_ratio": 1,
+        "drag": 50,
+        "subheading": "",
+        "heading": "Before and After",
+        "heading_size": "h2",
+        "body_richtext": "<p>Add the two images to compare the view or effects before and after becoming your customer.</p>",
+        "body_size": "body3",
+        "btn_text": "Shop Now",
+        "btn_url": "shopify://products/test",
+        "btn_style": "solid",
+        "content_alignment": "center",
+        "before_img": "shopify://shop_images/image_copy.png",
+        "before_img_label": "Before",
+        "before_img_subheading": "",
+        "before_img_heading": "",
+        "before_img_heading_size": "h4",
+        "before_img_heading_color": "#ffffff",
+        "after_img": "shopify://shop_images/image.png",
+        "after_img_label": "After",
+        "after_img_subheading": "",
+        "after_img_heading": "",
+        "after_img_heading_size": "h4",
+        "after_img_heading_color": "#ffffff",
+        "disable_lazy_loading": false,
+        "add_side_paddings": true,
+        "section_spacing_top": 48,
+        "section_spacing_bottom": 48
+      }
+    },
+    "custom_liquid_MPwmrD": {
+      "type": "custom-liquid",
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "page-width",
+        "custom_liquid": "<div class=\"custom-split-section\">\n    <div class=\"custom-split-container\">\n        <div class=\"custom-image\">\n            <img src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/image.png?v=1741515671\n\" alt=\"Feature image\">\n        </div>\n        <div class=\"custom-content\">\n            <h2 class=\"custom-headline\">How It Works?</h2>\n\n            <div class=\"custom-feature\">\n                <img class=\"custom-icon\" src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/1.png?v=1741521198\" alt=\"Icon 1\">\n                <div class=\"custom-feature-text\">\n                    <h4>Personalised Just for You</h4>\n                    <p>Each print shows the exact moon phase from your special date.</p>\n                </div>\n            </div>\n\n            <div class=\"custom-feature\">\n                <img class=\"custom-icon\"\nsrc=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/2.png?v=1741521198\" alt=\"Icon 2\">\n                <div class=\"custom-feature-text\">\n                    <h4>Made in the UK</h4>\n                    <p>High-quality printing with free UK delivery included.</p>\n                </div>\n            </div>\n\n            <div class=\"custom-feature\">\n                <img class=\"custom-icon\" src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/3.png?v=1741521198\" alt=\"Icon 3\">\n                <div class=\"custom-feature-text\">\n                    <h4>Thoughtful Gift</h4>\n                    <p>A unique way to capture the moments that matter most.</p>\n                </div>\n            </div>\n        </div>\n    </div>\n</div>\n\n<style>\n.custom-split-section {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    padding: 40px 0;\n    background-color: #fff;\n}\n\n.custom-split-container {\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 24px;\n    max-width: 1200px;\n    width: 100%;\n}\n\n/* Rounded image container */\n.custom-image {\n    width: 100%;\n    max-width: 500px; /* Optional - Adjust max size */\n    height: 100%;\n    aspect-ratio: 16 / 9; /* Keeps image proportions */\n    border-radius: 22px;\n    overflow: hidden;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    background-color: #f5f5f5;\n}\n\n/* Ensuring the image stays within the container */\n.custom-image img {\n    width: 100%;\n    height: 100%;\n    object-fit: cover;\n    border-radius: 22px;\n    display: block;\n}\n\n/* Content styling */\n.custom-content {\n    display: flex;\n    flex-direction: column;\n    justify-content: center;\n    align-items: flex-start;\n    gap: 16px;\n}\n\n.custom-headline {\n    font-size: 28px;\n    font-weight: bold;\n    text-align: center;\n    width: 100%;\n    margin-bottom: 16px;\n}\n\n/* Feature items */\n.custom-feature {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    text-align: left;\n    width: 100%;\n}\n\n/* Higher resolution icons */\n.custom-icon {\n    width: 65px;\n    height: 65px;\n    object-fit: contain;\n    image-rendering: crisp-edges;\n    image-rendering: -webkit-optimize-contrast;\n}\n\n.custom-feature-text h4 {\n    font-size: 18px;\n    margin: 0;\n    font-weight: bold;\n}\n\n.custom-feature-text p {\n    font-size: 14px;\n    margin: 4px 0 0;\n}\n\n@media (max-width: 768px) {\n    .custom-split-container {\n        grid-template-columns: 1fr;\n    }\n\n    .custom-image {\n        display: none;\n    }\n\n    .custom-content {\n        align-items: flex-start;\n        text-align: left;\n        width: 100%;\n    }\n\n    .custom-feature {\n        flex-direction: row;\n        align-items: center;\n        justify-content: flex-start;\n        text-align: left;\n        width: 100%;\n    }\n\n    .custom-icon {\n        width: 65px;\n        height: 65px;\n    }\n\n    .custom-feature-text h4 {\n        font-size: 16px;\n    }\n\n    .custom-feature-text p {\n        font-size: 14px;\n    }\n}\n</style>",
+        "add_side_paddings": true,
+        "section_spacing_top": 20,
+        "section_spacing_bottom": 20
+      }
+    },
+    "73d14667-7990-4c4e-b25e-4bcc5aa291bb": {
+      "type": "testimonials",
+      "blocks": {
+        "template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-0": {
+          "type": "quote",
+          "settings": {
+            "rating": 4.5,
+            "text": "<p>Add authentic testimonials of your customers talking about your products or brand in their own words, so that future customers can identify with them and their needs.</p>",
+            "author_name": "Author",
+            "author_details": "Author details",
+            "quote_product": "",
+            "link": ""
+          }
+        },
+        "template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-1": {
+          "type": "quote",
+          "settings": {
+            "rating": 4.5,
+            "text": "<p>Add authentic testimonials of your customers talking about your products or brand in their own words, so that future customers can identify with them and their needs.</p>",
+            "author_name": "Author",
+            "author_details": "Author details",
+            "quote_product": "",
+            "link": ""
+          }
+        },
+        "template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-2": {
+          "type": "quote",
+          "settings": {
+            "rating": 4.5,
+            "text": "<p>Add authentic testimonials of your customers talking about your products or brand in their own words, so that future customers can identify with them and their needs.</p>",
+            "author_name": "Author",
+            "author_details": "Author details",
+            "quote_product": "",
+            "link": ""
+          }
+        },
+        "template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-3": {
+          "type": "quote",
+          "settings": {
+            "rating": 4.5,
+            "text": "<p>Add authentic testimonials of your customers talking about your products or brand in their own words, so that future customers can identify with them and their needs.</p>",
+            "author_name": "Author",
+            "author_details": "Author details",
+            "quote_product": "",
+            "link": ""
+          }
+        },
+        "template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-4": {
+          "type": "quote",
+          "settings": {
+            "rating": 4.5,
+            "text": "<p>Add authentic testimonials of your customers talking about your products or brand in their own words, so that future customers can identify with them and their needs.</p>",
+            "author_name": "Author",
+            "author_details": "Author details",
+            "quote_product": "",
+            "link": ""
+          }
+        },
+        "template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-5": {
+          "type": "quote",
+          "settings": {
+            "rating": 4.5,
+            "text": "<p>Add authentic testimonials of your customers talking about your products or brand in their own words, so that future customers can identify with them and their needs.</p>",
+            "author_name": "Author",
+            "author_details": "Author details",
+            "quote_product": "",
+            "link": ""
+          }
+        }
+      },
+      "block_order": [
+        "template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-0",
+        "template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-1",
+        "template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-2",
+        "template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-3",
+        "template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-4",
+        "template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-5"
+      ],
+      "settings": {
+        "color_scheme": "custom-2",
+        "enable_background_around_container": true,
+        "color_testimonials": true,
+        "container_size": "page-width",
+        "desktop_layout": "bottom-slideshow",
+        "mobile_layout": "slideshow",
+        "cards_per_slide": 3,
+        "desktop_space_between_cards": 16,
+        "desktop_quote_alignment": "left",
+        "mobile_quote_alignment": "left",
+        "show_rating": true,
+        "stars_color": "#f49a13",
+        "caption": "",
+        "title": "Customer stories",
+        "heading_size": "h3",
+        "text": "<p>Show customer reviews: tweets, blog posts, or interviews. Invite customers to share their impressions of your products.</p>",
+        "body_size": "body3",
+        "btn_text": "",
+        "btn_url": "",
+        "overlay_opacity": 20,
+        "image_size": 100,
+        "autoplay_mode": "disabled",
+        "autoplay_interval": 3,
+        "add_side_paddings": true,
+        "section_spacing_top": 0,
+        "section_spacing_bottom": 0
+      }
+    },
+    "dd10bcbe-6b5f-450d-ade6-fd728dbc9b00": {
+      "type": "instagram",
+      "blocks": {
+        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-0": {
+          "type": "post",
+          "settings": {
+            "link": "",
+            "icon": "none"
+          }
+        },
+        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-1": {
+          "type": "post",
+          "settings": {
+            "link": "",
+            "icon": "none"
+          }
+        },
+        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-2": {
+          "type": "post",
+          "settings": {
+            "link": "",
+            "icon": "none"
+          }
+        },
+        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-3": {
+          "type": "post",
+          "settings": {
+            "link": "",
+            "icon": "none"
+          }
+        },
+        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-4": {
+          "type": "post",
+          "settings": {
+            "link": "",
+            "icon": "none"
+          }
+        },
+        "post_NyW7d8": {
+          "type": "post",
+          "settings": {
+            "link": "",
+            "icon": "none"
+          }
+        }
+      },
+      "block_order": [
+        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-0",
+        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-1",
+        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-2",
+        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-3",
+        "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-4",
+        "post_NyW7d8"
+      ],
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "large",
+        "desktop_layout": "grid",
+        "mobile_layout": "slideshow",
+        "title": "Gallery",
+        "heading_size": "h5",
+        "text": "Show your products, collections, and social media posts or tell about recent events.",
+        "body_size": "body3",
+        "content_alignment": "center",
+        "img_ratio": 1,
+        "desktop_columns": 5,
+        "desktop_space_between_cards": 20,
+        "mobile_space_between_cards": 16,
+        "show_arrows_on_hover": true,
+        "btn_text": "",
+        "btn_url": "",
+        "btn_style": "outline",
+        "autoplay_mode": "disabled",
+        "autoplay_interval": 3,
+        "add_side_paddings": true,
+        "section_spacing_top": 34,
+        "section_spacing_bottom": 100
+      }
+    },
+    "custom_liquid_6hP6y8": {
+      "type": "custom-liquid",
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "large",
+        "custom_liquid": "<div class=\"custom-split-section\">\n    <div class=\"custom-split-container\">\n        <div class=\"custom-image\">\n            <img src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/image.png?v=1741515671\" alt=\"Feature image\">\n        </div>\n        <div class=\"custom-content\">\n            <h2 class=\"custom-headline\">How It Works?</h2>\n\n            <div class=\"custom-feature\">\n                <img class=\"custom-icon\" src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/1.png?v=1741521198\" alt=\"Icon 1\">\n                <div class=\"custom-feature-text\">\n                    <h4>Personalised Just for You</h4>\n                    <p>Each print shows the exact moon phase from your special date.</p>\n                </div>\n            </div>\n\n            <div class=\"custom-feature\">\n                <img class=\"custom-icon\" src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/2.png?v=1741521198\" alt=\"Icon 2\">\n                <div class=\"custom-feature-text\">\n                    <h4>Made in the UK</h4>\n                    <p>High-quality printing with free UK delivery included.</p>\n                </div>\n            </div>\n\n            <div class=\"custom-feature\">\n                <img class=\"custom-icon\" src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/3.png?v=1741521198\" alt=\"Icon 3\">\n                <div class=\"custom-feature-text\">\n                    <h4>Thoughtful Gift</h4>\n                    <p>A unique way to capture the moments that matter most.</p>\n                </div>\n            </div>\n\n            <!-- New 4th Feature -->\n            <div class=\"custom-feature\">\n                <img class=\"custom-icon\" src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/2.png?v=1741521198\" alt=\"Icon 4\">\n                <div class=\"custom-feature-text\">\n                    <h4>Eco-Friendly Materials</h4>\n                    <p>We use sustainable materials and eco-conscious packaging.</p>\n                </div>\n            </div>\n\n            <!-- Button Section - Using Custom Styling -->\n            <div class=\"custom-button-container\">\n                <a href=\"/collections/all\" class=\"custom-button\">\n                    Shop Now\n                </a>\n            </div>\n\n        </div>\n    </div>\n</div>\n\n<style>\n.custom-split-section {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    padding: 40px 0;\n    background-color: #fff;\n}\n\n.custom-split-container {\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 24px;\n    max-width: 1200px;\n    width: 100%;\n}\n\n/* Rounded image container */\n.custom-image {\n    width: 100%;\n    max-width: 500px;\n    height: 100%;\n    aspect-ratio: 16 / 9;\n    border-radius: 22px;\n    overflow: hidden;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    background-color: #f5f5f5;\n}\n\n/* Ensuring the image stays within the container */\n.custom-image img {\n    width: 100%;\n    height: 100%;\n    object-fit: cover;\n    border-radius: 22px;\n    display: block;\n}\n\n/* Content styling */\n.custom-content {\n    display: flex;\n    flex-direction: column;\n    justify-content: center;\n    align-items: flex-start;\n    gap: 16px;\n}\n\n.custom-headline {\n    font-size: 28px;\n    font-weight: bold;\n    text-align: center;\n    width: 100%;\n    margin-bottom: 16px;\n}\n\n/* Feature items */\n.custom-feature {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    text-align: left;\n    width: 100%;\n}\n\n/* Higher resolution icons */\n.custom-icon {\n    width: 65px;\n    height: 65px;\n    object-fit: contain;\n    image-rendering: crisp-edges;\n    image-rendering: -webkit-optimize-contrast;\n}\n\n.custom-feature-text h4 {\n    font-size: 18px;\n    margin: 0;\n    font-weight: bold;\n}\n\n.custom-feature-text p {\n    font-size: 14px;\n    margin: 4px 0 0;\n}\n\n/* Button Styling - Custom settings */\n.custom-button-container {\n    text-align: center;\n    width: 100%;\n    margin: 24px 0 0; /* Your requested margin */\n}\n\n.custom-button {\n    display: inline-block;\n    padding: 12px 32px; /* Your requested padding */\n    font-size: 16px;\n    font-weight: bold;\n    border-radius: 18px;\n    background-color: #ffc93c; /* Your requested button color */\n    color: #000; /* Ensuring readability */\n    text-decoration: none;\n    transition: background-color 0.3s ease;\n}\n.custom-button:hover {\n    background-color: #f9d57a; \n}\n\n/* Mobile Styles */\n@media (max-width: 768px) {\n    .custom-split-container {\n        grid-template-columns: 1fr;\n    }\n\n    .custom-image {\n        display: none;\n    }\n\n    .custom-content {\n        align-items: flex-start;\n        text-align: left;\n        width: 100%;\n    }\n\n    .custom-feature {\n        flex-direction: row;\n        align-items: center;\n        justify-content: flex-start;\n        text-align: left;\n        width: 100%;\n    }\n\n    .custom-icon {\n        width: 65px;\n        height: 65px;\n    }\n\n    .custom-feature-text h4 {\n        font-size: 16px;\n    }\n\n    .custom-feature-text p {\n        font-size: 14px;\n    }\n\n    .custom-button-container {\n        text-align: center;\n        width: 100%;\n        margin-top: 24px;\n    }\n}\n</style>",
+        "add_side_paddings": true,
+        "section_spacing_top": 48,
+        "section_spacing_bottom": 48
+      }
+    },
+    "faq_wVkKGi": {
+      "type": "faq",
+      "blocks": {
+        "question_xjdbLn": {
+          "type": "question",
+          "settings": {
+            "title": "Frequently asked question",
+            "heading_size": "caption2",
+            "icon": "none",
+            "icon_size": 24,
+            "text": "<p>Brief and clear answer</p>",
+            "page": "",
+            "body_size": "body3",
+            "image_width": 100
+          }
+        },
+        "question_dwyPDp": {
+          "type": "question",
+          "settings": {
+            "title": "Frequently asked question",
+            "heading_size": "caption2",
+            "icon": "none",
+            "icon_size": 24,
+            "text": "<p>Brief and clear answer</p>",
+            "page": "",
+            "body_size": "body3",
+            "image_width": 100
+          }
+        },
+        "question_VW88mg": {
+          "type": "question",
+          "settings": {
+            "title": "Frequently asked question",
+            "heading_size": "caption2",
+            "icon": "none",
+            "icon_size": 24,
+            "text": "<p>Brief and clear answer</p>",
+            "page": "",
+            "body_size": "body3",
+            "image_width": 100
+          }
+        }
+      },
+      "block_order": [
+        "question_xjdbLn",
+        "question_dwyPDp",
+        "question_VW88mg"
+      ],
+      "custom_css": [],
+      "settings": {
+        "color_scheme": "default",
+        "enable_background_around_container": false,
+        "color_tabs": "content_tabs_separately",
+        "container_size": "medium",
+        "section_layout": "bottom-tabs",
+        "expand_first_tab": true,
+        "title": "Frequently Asked Questions",
+        "heading_size": "h3",
+        "text": "Answers to most common questions about products, orders, shipments, and payments.",
+        "body_size": "body3",
+        "content_alignment": "center",
+        "btn_text": "View All",
+        "btn_url": "",
+        "btn_style": "solid",
+        "add_side_paddings": true,
+        "section_spacing_top": 40,
+        "section_spacing_bottom": 40
+      }
+    },
+    "newsletter_9AqaGT": {
+      "type": "newsletter",
+      "blocks": {
+        "title_L9JzRN": {
+          "type": "title",
+          "settings": {
+            "title": "Let's Keep In Touch",
+            "heading_size": "h4"
+          }
+        },
+        "text_ttQakB": {
+          "type": "text",
+          "settings": {
+            "text": "Invite customers to subscribe for early sale access, new in, promotions, and more.",
+            "body_size": "body3"
+          }
+        },
+        "subscribe_EKzHFN": {
+          "type": "subscribe",
+          "settings": {
+            "input_style": "solid",
+            "show_signup_checkbox": false,
+            "signup_checkbox_text": "I agree to the consent rules"
+          }
+        }
+      },
+      "block_order": [
+        "title_L9JzRN",
+        "text_ttQakB",
+        "subscribe_EKzHFN"
+      ],
+      "settings": {
+        "color_scheme": "custom-2",
+        "enable_background_around_container": false,
+        "container_size": "full-screen",
+        "desktop_ratio": 0.1,
+        "mobile_ratio": 0.2,
+        "desktop_overlay_opacity": 0,
+        "mobile_overlay_opacity": 0,
+        "desktop_content_position": "align-items: center;justify-content:center;",
+        "desktop_content_align": "center",
+        "content_max_width": 704,
+        "content_spacing": 16,
+        "mobile_content_position": "align-items:center;justify-content:center;",
+        "mobile_content_align": "center",
+        "desktop_content_background": "solid",
+        "mobile_content_background": "solid",
+        "disable_lazy_loading": false,
+        "add_side_paddings": true,
+        "section_spacing_top": 0,
+        "section_spacing_bottom": 10
+      }
+    }
+  },
+  "order": [
+    "image_banner_NDr8NT",
+    "8878505b-0411-4b21-a1ce-7936ab3f37fe",
+    "featured_collection_EQXYJP",
+    "412725f2-05f4-4ccc-923b-c9d7af83b3a4",
+    "custom_liquid_MPwmrD",
+    "73d14667-7990-4c4e-b25e-4bcc5aa291bb",
+    "dd10bcbe-6b5f-450d-ade6-fd728dbc9b00",
+    "custom_liquid_6hP6y8",
+    "faq_wVkKGi",
+    "newsletter_9AqaGT"
+  ]
+}
