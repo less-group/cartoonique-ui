@@ -12,7 +12,7 @@
     "image_banner_rLgWE8": {
       "type": "image-banner",
       "settings": {
-        "color_scheme": "default",
+        "color_scheme": "secondary",
         "enable_background_around_container": false,
         "container_size": "full-screen",
         "desktop_ratio": 0.4,
@@ -26,10 +26,10 @@
         "heading_size": "h2",
         "text": "",
         "body_size": "body3",
-        "desktop_content_position": "align-items:center;justify-content:center;",
-        "desktop_content_align": "center",
+        "desktop_content_position": "align-items:flex-end;justify-content:flex-start;",
+        "desktop_content_align": "left",
         "content_max_width": 528,
-        "content_spacing": 116,
+        "content_spacing": 100,
         "mobile_content_position": "align-items:flex-end;justify-content:center;",
         "mobile_content_align": "center",
         "desktop_content_background": "none",
