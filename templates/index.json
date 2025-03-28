@@ -48,56 +48,17 @@
         "section_spacing_bottom": 20
       }
     },
-    "8878505b-0411-4b21-a1ce-7936ab3f37fe": {
-      "type": "scrolling-text",
-      "blocks": {
-        "template--16205923156144__8878505b-0411-4b21-a1ce-7936ab3f37fe-announcement-1": {
-          "type": "announcement",
-          "settings": {
-            "announcement_text": "FREE DELIVERY",
-            "font_family": "body",
-            "font_style": "solid",
-            "font_size": 14,
-            "letter_spacing": 0,
-            "spacing_between_messages": 70,
-            "top_and_bottom_spacing": 8,
-            "link": "",
-            "icon": "star-solid",
-            "icon_size": 24,
-            "scrolling_direction": "right_to_left",
-            "scrolling_speed": 30,
-            "background_color": "#ffffff",
-            "background_color_gradient": "",
-            "text_color": "#000000",
-            "text_color_gradient": ""
-          }
-        }
-      },
-      "block_order": [
-        "template--16205923156144__8878505b-0411-4b21-a1ce-7936ab3f37fe-announcement-1"
-      ],
-      "disabled": true,
-      "settings": {
-        "color_scheme": "custom-2",
-        "container_size": "full-screen",
-        "section_layout": "parallel",
-        "inclination_degree": 0,
-        "crossing_point_position": 0,
-        "overlay_opacity": 0,
-        "add_side_paddings": false,
-        "section_spacing_top": 16,
-        "section_spacing_bottom": 16
-      }
-    },
     "featured_collection_EQXYJP": {
       "type": "featured-collection",
       "custom_css": [
-        ".product-card,.collection-card {box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06); border-radius: 12px; background-color: #fff; overflow: hidden; margin: 20px; position: relative; transition: box-shadow 0.3s ease;}",
-        ".product-card:hover,.collection-card:hover {box-shadow: 0 12px 5px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08); transform: none !important;}",
-        ".product-card__image,.collection-card__image {transform: none !important;}"
+        ".product-card {box-shadow: 0 6px 4px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06); border-radius: 12px; margin: 12px;}",
+        ".product-card__details-inner {padding: 0 12px;}",
+        ".product-card__inner.shape--portrait {border-radius: 12px 12px 0 0;}",
+        ".product-card {transition: transform 0.2s ease;}",
+        ".product-card:hover {transform: scale(1.02);}"
       ],
       "settings": {
-        "color_scheme": "custom-3",
+        "color_scheme": "default",
         "container_size": "page-width",
         "desktop_layout": "carousel",
         "mobile_layout": "carousel",
@@ -106,7 +67,10 @@
         "alignment": "left",
         "collection": "",
         "featured_products": [
-          "test"
+          "test",
+          "couples-pixar-photo",
+          "pet-and-owner-portrait",
+          "pixar-couples-canvas"
         ],
         "img_ratio": "portrait",
         "product_card_align": "left",
@@ -133,7 +97,7 @@
       "settings": {
         "color_scheme": "default",
         "container_size": "page-width",
-        "layout": "right",
+        "layout": "left",
         "desktop_image_ratio": 0.6,
         "mobile_image_ratio": 1,
         "drag": 50,
@@ -169,7 +133,7 @@
       "settings": {
         "color_scheme": "default",
         "container_size": "page-width",
-        "custom_liquid": "<div class=\"custom-split-section\">\n    <div class=\"custom-split-container\">\n        <div class=\"custom-image\">\n            <img src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/image.png?v=1741515671\n\" alt=\"Feature image\">\n        </div>\n        <div class=\"custom-content\">\n            <h2 class=\"custom-headline\">How It Works?</h2>\n\n            <div class=\"custom-feature\">\n                <img class=\"custom-icon\" src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/1.png?v=1741521198\" alt=\"Icon 1\">\n                <div class=\"custom-feature-text\">\n                    <h4>Personalised Just for You</h4>\n                    <p>Each print shows the exact moon phase from your special date.</p>\n                </div>\n            </div>\n\n            <div class=\"custom-feature\">\n                <img class=\"custom-icon\"\nsrc=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/2.png?v=1741521198\" alt=\"Icon 2\">\n                <div class=\"custom-feature-text\">\n                    <h4>Made in the UK</h4>\n                    <p>High-quality printing with free UK delivery included.</p>\n                </div>\n            </div>\n\n            <div class=\"custom-feature\">\n                <img class=\"custom-icon\" src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/3.png?v=1741521198\" alt=\"Icon 3\">\n                <div class=\"custom-feature-text\">\n                    <h4>Thoughtful Gift</h4>\n                    <p>A unique way to capture the moments that matter most.</p>\n                </div>\n            </div>\n        </div>\n    </div>\n</div>\n\n<style>\n.custom-split-section {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    padding: 40px 0;\n    background-color: #fff;\n}\n\n.custom-split-container {\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 24px;\n    max-width: 1200px;\n    width: 100%;\n}\n\n/* Rounded image container */\n.custom-image {\n    width: 100%;\n    max-width: 500px; /* Optional - Adjust max size */\n    height: 100%;\n    aspect-ratio: 16 / 9; /* Keeps image proportions */\n    border-radius: 22px;\n    overflow: hidden;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    background-color: #f5f5f5;\n}\n\n/* Ensuring the image stays within the container */\n.custom-image img {\n    width: 100%;\n    height: 100%;\n    object-fit: cover;\n    border-radius: 22px;\n    display: block;\n}\n\n/* Content styling */\n.custom-content {\n    display: flex;\n    flex-direction: column;\n    justify-content: center;\n    align-items: flex-start;\n    gap: 16px;\n}\n\n.custom-headline {\n    font-size: 28px;\n    font-weight: bold;\n    text-align: center;\n    width: 100%;\n    margin-bottom: 16px;\n}\n\n/* Feature items */\n.custom-feature {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    text-align: left;\n    width: 100%;\n}\n\n/* Higher resolution icons */\n.custom-icon {\n    width: 65px;\n    height: 65px;\n    object-fit: contain;\n    image-rendering: crisp-edges;\n    image-rendering: -webkit-optimize-contrast;\n}\n\n.custom-feature-text h4 {\n    font-size: 18px;\n    margin: 0;\n    font-weight: bold;\n}\n\n.custom-feature-text p {\n    font-size: 14px;\n    margin: 4px 0 0;\n}\n\n@media (max-width: 768px) {\n    .custom-split-container {\n        grid-template-columns: 1fr;\n    }\n\n    .custom-image {\n        display: none;\n    }\n\n    .custom-content {\n        align-items: flex-start;\n        text-align: left;\n        width: 100%;\n    }\n\n    .custom-feature {\n        flex-direction: row;\n        align-items: center;\n        justify-content: flex-start;\n        text-align: left;\n        width: 100%;\n    }\n\n    .custom-icon {\n        width: 65px;\n        height: 65px;\n    }\n\n    .custom-feature-text h4 {\n        font-size: 16px;\n    }\n\n    .custom-feature-text p {\n        font-size: 14px;\n    }\n}\n</style>",
+        "custom_liquid": "<div class=\"custom-split-section\">\n  <div class=\"custom-split-container\">\n    <div class=\"custom-image\">\n      <img src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/image.png?v=1741515671\" alt=\"Feature image\">\n    </div>\n\n    <div class=\"custom-content\">\n      <h2 class=\"custom-headline\">How It Works?</h2>\n\n      <div class=\"custom-feature\">\n        <img class=\"custom-icon\" src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/1.png?v=1741521198\" alt=\"Icon 1\">\n        <div class=\"custom-feature-text\">\n          <h4>Upload Your Image</h4>\n          <p>Each print shows the exact moon phase from your special date.</p>\n        </div>\n      </div>\n\n      <div class=\"custom-feature\">\n        <img class=\"custom-icon\" src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/2.png?v=1741521198\" alt=\"Icon 2\">\n        <div class=\"custom-feature-text\">\n          <h4>Personalise How You Like</h4>\n          <p>High-quality printing with free UK delivery included.</p>\n        </div>\n      </div>\n\n      <div class=\"custom-feature\">\n        <img class=\"custom-icon\" src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/3.png?v=1741521198\" alt=\"Icon 3\">\n        <div class=\"custom-feature-text\">\n          <h4>We Generate The Design</h4>\n          <p>A unique way to capture the moments that matter most.</p>\n        </div>\n      </div>\n\n      <div class=\"custom-button-container\">\n        <a href=\"/collections/all\" class=\"custom-button\">SHOP NOW</a>\n      </div>\n    </div>\n  </div>\n</div>\n\n<style>\n.custom-split-section {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  padding: 40px 0;\n  background-color: #fff;\n}\n\n.custom-split-container {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 24px;\n  max-width: 1200px;\n  width: 100%;\n}\n\n/* Rounded image container */\n.custom-image {\n  width: 100%;\n  max-width: 500px;\n  height: 100%;\n  aspect-ratio: 16 / 9;\n  border-radius: 22px;\n  overflow: hidden;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  background-color: #f5f5f5;\n}\n\n.custom-image img {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n  border-radius: 22px;\n  display: block;\n}\n\n/* Text content styling */\n.custom-content {\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n  align-items: flex-start;\n  gap: 16px;\n}\n\n.custom-headline {\n  font-size: 28px;\n  font-weight: bold;\n  width: 100%;\n  margin-bottom: 16px;\n}\n\n.custom-feature {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  width: 100%;\n}\n\n.custom-icon {\n  width: 65px;\n  height: 65px;\n  object-fit: contain;\n  image-rendering: crisp-edges;\n  image-rendering: -webkit-optimize-contrast;\n}\n\n.custom-feature-text h4 {\n  font-size: 18px;\n  margin: 0;\n  font-weight: bold;\n}\n\n.custom-feature-text p {\n  font-size: 14px;\n  margin: 4px 0 0;\n}\n\n/* Button under text */\n.custom-button-container {\n  margin-top: 16px;\n  width: 100%;\n  display: center;\n  justify-content: flex-start;\n}\n\n.custom-button {\n  display: inline-block;\n  padding: 12px 32px;\n  font-size: 16px;\n  font-weight: bold;\n  border-radius: 18px;\n  background-color: #53BDF2;\n  color: #000;\n  text-decoration: none;\n  transition: background-color 0.3s ease;\n}\n\n.custom-button:hover {\n  background-color: #D8ECFC;\n}\n\n/* Responsive */\n@media (max-width: 768px) {\n  .custom-split-container {\n    grid-template-columns: 1fr;\n  }\n\n  .custom-image {\n    display: none;\n  }\n\n  .custom-content {\n    align-items: flex-start;\n    width: 100%;\n  }\n\n  .custom-feature {\n    flex-direction: row;\n    align-items: center;\n    justify-content: flex-start;\n  }\n\n  .custom-feature-text h4 {\n    font-size: 16px;\n  }\n\n  .custom-feature-text p {\n    font-size: 14px;\n  }\n\n  .custom-button-container {\n    justify-content: center;\n    text-align: center;\n    width: 100%;\n  }\n}\n</style>",
         "add_side_paddings": true,
         "section_spacing_top": 20,
         "section_spacing_bottom": 20
@@ -497,7 +461,6 @@
   },
   "order": [
     "image_banner_NDr8NT",
-    "8878505b-0411-4b21-a1ce-7936ab3f37fe",
     "featured_collection_EQXYJP",
     "412725f2-05f4-4ccc-923b-c9d7af83b3a4",
     "custom_liquid_MPwmrD",
