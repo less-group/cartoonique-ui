@@ -93,8 +93,55 @@
         "section_spacing_bottom": 32
       }
     },
+    "images_with_text_rrRm97": {
+      "type": "images-with-text",
+      "blocks": {
+        "image_PYz9Y3": {
+          "type": "image",
+          "settings": {
+            "image": "shopify://shop_images/image_copy.png"
+          }
+        },
+        "image_CDzQjy": {
+          "type": "image",
+          "settings": {
+            "image": "shopify://shop_images/image.png"
+          }
+        }
+      },
+      "block_order": [
+        "image_PYz9Y3",
+        "image_CDzQjy"
+      ],
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "large",
+        "content_layout": "left",
+        "image_layout": "collage",
+        "img_ratio": 1,
+        "rotate_images": true,
+        "icon": "none",
+        "subheading": "",
+        "heading": "Before & After",
+        "heading_size": "h2",
+        "body": "<p>Share information about your brand with your customers. Describe a product, make announcements or welcome customers to your store.</p>",
+        "body_size": "body3",
+        "content_alignment": "center",
+        "desktop_content_width": 360,
+        "first_button_text": "SHOP NOW",
+        "first_button_link": "",
+        "first_button_style": "solid",
+        "second_button_text": "",
+        "second_button_link": "",
+        "second_button_style": "solid",
+        "add_side_paddings": true,
+        "section_spacing_top": 48,
+        "section_spacing_bottom": 80
+      }
+    },
     "412725f2-05f4-4ccc-923b-c9d7af83b3a4": {
       "type": "before-after-images",
+      "disabled": true,
       "settings": {
         "color_scheme": "default",
         "container_size": "page-width",
@@ -461,57 +508,12 @@
         "section_spacing_top": 0,
         "section_spacing_bottom": 12
       }
-    },
-    "images_with_text_rrRm97": {
-      "type": "images-with-text",
-      "blocks": {
-        "image_PYz9Y3": {
-          "type": "image",
-          "settings": {
-            "image": "shopify://shop_images/image_copy.png"
-          }
-        },
-        "image_CDzQjy": {
-          "type": "image",
-          "settings": {
-            "image": "shopify://shop_images/image.png"
-          }
-        }
-      },
-      "block_order": [
-        "image_PYz9Y3",
-        "image_CDzQjy"
-      ],
-      "settings": {
-        "color_scheme": "default",
-        "container_size": "large",
-        "content_layout": "right",
-        "image_layout": "collage",
-        "img_ratio": 1,
-        "rotate_images": true,
-        "icon": "none",
-        "subheading": "",
-        "heading": "Before & After",
-        "heading_size": "h2",
-        "body": "<p>Share information about your brand with your customers. Describe a product, make announcements or welcome customers to your store.</p>",
-        "body_size": "body3",
-        "content_alignment": "center",
-        "desktop_content_width": 360,
-        "first_button_text": "SHOP NOW",
-        "first_button_link": "",
-        "first_button_style": "solid",
-        "second_button_text": "",
-        "second_button_link": "",
-        "second_button_style": "solid",
-        "add_side_paddings": true,
-        "section_spacing_top": 48,
-        "section_spacing_bottom": 80
-      }
     }
   },
   "order": [
     "image_banner_rLgWE8",
     "featured_collection_EQXYJP",
+    "images_with_text_rrRm97",
     "412725f2-05f4-4ccc-923b-c9d7af83b3a4",
     "custom_liquid_MPwmrD",
     "73d14667-7990-4c4e-b25e-4bcc5aa291bb",
@@ -519,7 +521,6 @@
     "faq_wVkKGi",
     "custom_liquid_YkGgxQ",
     "dd10bcbe-6b5f-450d-ade6-fd728dbc9b00",
-    "newsletter_9AqaGT",
-    "images_with_text_rrRm97"
+    "newsletter_9AqaGT"
   ]
 }
