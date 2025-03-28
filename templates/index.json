@@ -495,7 +495,7 @@
         "heading_size": "h2",
         "body": "<p>Share information about your brand with your customers. Describe a product, make announcements or welcome customers to your store.</p>",
         "body_size": "body3",
-        "content_alignment": "left",
+        "content_alignment": "center",
         "desktop_content_width": 360,
         "first_button_text": "SHOP NOW",
         "first_button_link": "",
