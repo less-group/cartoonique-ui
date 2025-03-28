@@ -145,7 +145,7 @@
       ],
       "custom_css": [
         ".pill--solid.selected {background-color: #d8ecfc !important; color: #000000 !important; border-color: #0000000 !important;}",
-        ".product__info .h1 {margin-bottom: 4px !important;}",
+        ".product__info .h1 {margin-bottom: 0px !important;}",
         ".product__info .block-rating_yCV3gG {margin-top: 0 !important; margin-bottom: 8px !important;}",
         ".product__info .block-price {margin-top: 0 !important; margin-bottom: 8px !important;}",
         ".product-mobile-media {margin-bottom: 2px !important;}",
