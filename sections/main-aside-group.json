@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "type": "aside",
   "name": "Aside Group",
@@ -8,74 +17,22 @@
         "items": {
           "type": "items",
           "settings": {}
-        },
-        "8af29191-dec1-42b5-9036-192e1b749009": {
-          "type": "on_side_cart_related",
-          "settings": {
-            "hide_for_empty_cart": true,
-            "hide_on_mobile": false,
-            "color_scheme": "secondary",
-            "enable_color_background": false,
-            "heading": "You may also like",
-            "heading_size": "h6",
-            "heading_alignment": "left",
-            "heading_alignment_mobile": "left",
-            "recommendations_type": "auto",
-            "featured_collection": "",
-            "featured_products": [],
-            "img_ratio": "inherited",
-            "in_cart_related_layout_desktop": "vertical-cards",
-            "in_cart_related_layout": "carousel-with-horizontal-cards",
-            "content_alignment": "left",
-            "cards_to_show": 10,
-            "desktop_space_between_cards": 12,
-            "mobile_space_between_cards": 12,
-            "cards_color_background": false,
-            "show_arrows_on_hover": true,
-            "autoplay_mode": "disabled",
-            "autoplay_interval": 3
-          }
-        },
-        "726aa933-7826-412d-a292-9f29cba62205": {
-          "type": "in_cart_banner",
-          "settings": {
-            "hide_for_empty_cart": true,
-            "color_scheme": "default",
-            "subheading": "IN-CART",
-            "heading": "Promo banner",
-            "heading_size": "h5",
-            "text": "<p>Tell about upcoming sales, new in, promotions, and more.</p>",
-            "body_size": "body3",
-            "discount_code": "",
-            "content_align": "center",
-            "btn_text": "",
-            "btn_url": "",
-            "btn_style": "solid",
-            "color_background": "",
-            "color_background_gradient": "linear-gradient(133deg, rgba(240, 255, 46, 1), rgba(196, 255, 38, 1) 100%)",
-            "color_text": "",
-            "color_button_background": "",
-            "color_button_background_gradient": "",
-            "color_button_label": ""
-          }
         }
       },
       "block_order": [
-        "items",
-        "8af29191-dec1-42b5-9036-192e1b749009",
-        "726aa933-7826-412d-a292-9f29cba62205"
+        "items"
       ],
       "settings": {
         "color_scheme": "default",
-        "img_ratio": "default",
-        "show_cart_note": true,
+        "img_ratio": "portrait",
+        "show_cart_note": false,
         "show_taxes_and_shipping_costs": true,
         "show_currency_code": true,
         "show_dynamic_buttons": false,
         "empty_cart_button_url": "/",
         "empty_cart_recommendations_text": "<p>If you don't know where to start, try these amazing collections.</p>",
         "empty_cart_recommendations_collection_list": [],
-        "empty_cart_recommendations_show_collection_images": true
+        "empty_cart_recommendations_show_collection_images": false
       }
     },
     "search-sidebar": {
@@ -90,5 +47,8 @@
       }
     }
   },
-  "order": ["cart-drawer", "search-sidebar"]
+  "order": [
+    "cart-drawer",
+    "search-sidebar"
+  ]
 }
