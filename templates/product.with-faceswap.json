@@ -149,7 +149,8 @@
         ".product__info .block-rating_yCV3gG {margin-top: 0 !important; margin-bottom: 8px !important;}",
         ".product__info .block-price {margin-top: 0 !important; margin-bottom: 8px !important;}",
         ".product-mobile-media {margin-bottom: 2px !important;}",
-        ".product__info .product-general-info-block:first-child {margin-top: 0 !important; padding-top: 0 !important;}"
+        ".product__info .product-general-info-block:first-child {margin-top: 0 !important; padding-top: 0 !important;}",
+        ".shopify-section--product::after {content: ''; display: none;}"
       ],
       "settings": {
         "color_scheme": "default",

@@ -1,4 +1,5 @@
 {{ 'face-swap-file-input-wrapper.out.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'result-popup-manager.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'face-swap-file-input-wrapper.min.js' | asset_url }}" defer="defer"></script>
 
 {% assign color_index = null %}
@@ -22,6 +23,8 @@
 {% endcapture %}
 
 <script>
+  window.ASSET_BASE_URL = '{{ 'assets/' | asset_url }}';
+  
   window.selectedProductVariants = [
     {% for variant in product.variants %}
       {% capture product_selected_color %}

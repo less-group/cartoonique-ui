@@ -167,7 +167,27 @@ class FaceSwapFileInputWrapper extends HTMLElement {
       this.processedPrintImageUrl = processedPrintImageUrl;
 
       this.appendHelpText(window.faceSwapConfig?.ui?.messages?.success || 'Face swap was successful.');
-      this.appendResult(watermarkedImageUrlToShow);
+      
+      // Check if ResultPopupManager is available
+      if (window.resultPopupManager) {
+        console.log('Using ResultPopupManager to display the result');
+        // Use ResultPopupManager to display the transformed image
+        window.resultPopupManager.showResultPopup(watermarkedImageUrlToShow || processedImageUrl);
+      } else {
+        console.log('ResultPopupManager not available, falling back to standard display');
+        // Fallback to traditional method
+        this.appendResult(watermarkedImageUrlToShow);
+        
+        // Try to dynamically load ResultPopupManager if not available
+        this.loadResultPopupManager().then(() => {
+          if (window.resultPopupManager) {
+            window.resultPopupManager.showResultPopup(watermarkedImageUrlToShow || processedImageUrl);
+          }
+        }).catch(err => {
+          console.warn('Could not load ResultPopupManager:', err);
+        });
+      }
+      
       console.log('Face swap completed successfully');
 
     } catch (error) {
@@ -262,6 +282,36 @@ class FaceSwapFileInputWrapper extends HTMLElement {
       img.style.maxWidth = '100%';
       this.resultsContainer.appendChild(img);
     }
+  }
+
+  /**
+   * Dynamically loads the ResultPopupManager if not already loaded
+   */
+  async loadResultPopupManager() {
+    if (window.resultPopupManager) {
+      return Promise.resolve(window.resultPopupManager);
+    }
+    
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = window.ASSET_BASE_URL 
+        ? `${window.ASSET_BASE_URL}result-popup-manager.js` 
+        : 'result-popup-manager.js';
+      
+      script.onload = () => {
+        // Initialize ResultPopupManager if it's not already initialized
+        if (!window.resultPopupManager && typeof ResultPopupManager === 'function') {
+          new ResultPopupManager();
+        }
+        resolve(window.resultPopupManager);
+      };
+      
+      script.onerror = (error) => {
+        reject(error);
+      };
+      
+      document.head.appendChild(script);
+    });
   }
 }
 
