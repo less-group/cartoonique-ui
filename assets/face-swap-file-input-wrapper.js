@@ -103,76 +103,100 @@ class FaceSwapFileInputWrapper extends HTMLElement {
     }
 
     try {
-      // Try to use ImageEditorManager if available
-      if (window.imageEditorManager) {
-        console.log('Using ImageEditorManager for image editing before face swap');
-        
-        this.showLoader();
-        this.appendHelpText('Preparing your image...');
-        
-        try {
-          // Process the image with ImageEditorManager
-          const editorResult = await window.imageEditorManager.processImage(file, {
-            enableTextOverlay: true
-          });
-          
-          console.log('Image editing complete:', editorResult);
-          
-          // Use the cropped image for face swap processing
-          const processedFile = await this.dataURLtoFile(
-            editorResult.croppedImageDataUrl, 
-            file.name.replace(/\.[^/.]+$/, '') + '_edited.jpg'
-          );
-          
-          // Continue with face swap using the processed file
-          await this.processFaceSwap(processedFile);
-        } catch (error) {
-          console.error('Error in image editing:', error);
-          // Fall back to regular processing if editing fails
-          await this.processFaceSwap(file);
-        }
+      console.log('Creating API client...');
+      // Create API client with mock mode from global setting
+      const apiClient = new window.UnifiedApiClient({
+        baseUrl: window.faceSwapApiUrl || window.faceSwapConfig?.api?.development?.baseUrl,
+        mockMode: window.MOCK_API_MODE
+      });
+
+      console.log('API client created:', apiClient);
+      this.isFaceSwapping = true;
+      this.showLoader();
+      this.appendHelpText(window.faceSwapConfig?.ui?.messages?.loading || 'Downloading may take 1-2 minutes.');
+
+      // Generate a unique job ID with fallback if FaceSwapUtils is not available
+      try {
+        this.currentJobId = window.FaceSwapUtils ? window.FaceSwapUtils.generateUniqueId() : 
+          (Date.now().toString(36) + Math.random().toString(36).substring(2));
+        console.log('Generated job ID:', this.currentJobId);
+      } catch (error) {
+        console.error('Error generating job ID:', error);
+        // Fallback to a simple unique ID
+        this.currentJobId = Date.now().toString(36) + Math.random().toString(36).substring(2);
+        console.log('Using fallback job ID:', this.currentJobId);
+      }
+
+      // Log parameters
+      console.log('Image transformation parameters:', {
+        sourceImage: file.name
+      });
+
+      // Get watermark configuration
+      const watermarkConfig = window.watermarkImage || {
+        url: 'https://cdn.shopify.com/s/files/1/0626/3416/4430/files/letzteshemd-watermark.png',
+        width: 200,
+        height: 200,
+        spaceBetweenWatermarks: 100
+      };
+
+      // Call transform API
+      const result = await apiClient.transform({
+        sourceImage: file,
+        watermark: watermarkConfig,
+        signal: this.faceSwapRequestController.signal,
+        jobId: this.currentJobId
+      });
+
+      console.log('Transform result:', result);
+
+      if (!result.success) {
+        throw new Error(result.error || 'Unknown error occurred');
+      }
+
+      const {
+        watermarkedOriginalImageUrl,
+        watermarkedImageUrlToShow,
+        processedImageUrl,
+        processedPrintImageUrl
+      } = result.data;
+
+      this.isFaceSwapping = false;
+      this.watermarkedImageUrl = watermarkedOriginalImageUrl;
+      this.processedImageUrl = processedImageUrl;
+      this.processedPrintImageUrl = processedPrintImageUrl;
+
+      this.appendHelpText(window.faceSwapConfig?.ui?.messages?.success || 'Face swap was successful.');
+      
+      // Check if ResultPopupManager is available
+      if (window.resultPopupManager) {
+        console.log('Using ResultPopupManager to display the result');
+        // Use ResultPopupManager to display the transformed image
+        window.resultPopupManager.showResultPopup(watermarkedImageUrlToShow || processedImageUrl);
       } else {
-        console.log('ImageEditorManager not available, trying to load it');
+        console.log('ResultPopupManager not available, falling back to standard display');
+        // Fallback to traditional method
+        this.appendResult(watermarkedImageUrlToShow);
         
-        // Try to load ImageEditorManager dynamically
-        this.loadImageEditorManager().then(async () => {
-          if (window.imageEditorManager) {
-            console.log('ImageEditorManager loaded, using for image editing');
-            
-            this.showLoader();
-            this.appendHelpText('Preparing your image...');
-            
-            try {
-              // Process the image with ImageEditorManager
-              const editorResult = await window.imageEditorManager.processImage(file, {
-                enableTextOverlay: true
-              });
-              
-              // Use the cropped image for face swap processing
-              const processedFile = await this.dataURLtoFile(
-                editorResult.croppedImageDataUrl, 
-                file.name.replace(/\.[^/.]+$/, '') + '_edited.jpg'
-              );
-              
-              // Continue with face swap using the processed file
-              await this.processFaceSwap(processedFile);
-            } catch (error) {
-              console.error('Error in image editing:', error);
-              // Fall back to regular processing if editing fails
-              await this.processFaceSwap(file);
-            }
-          } else {
-            // Fall back to regular processing if loading fails
-            await this.processFaceSwap(file);
+        // Try to dynamically load ResultPopupManager if not available
+        this.loadResultPopupManager().then(() => {
+          if (window.resultPopupManager) {
+            window.resultPopupManager.showResultPopup(watermarkedImageUrlToShow || processedImageUrl);
           }
-        }).catch(error => {
-          console.error('Failed to load ImageEditorManager:', error);
-          // Fall back to regular processing if loading fails
-          this.processFaceSwap(file);
+        }).catch(err => {
+          console.warn('Could not load ResultPopupManager:', err);
         });
       }
+      
+      console.log('Face swap completed successfully');
+
     } catch (error) {
       console.error('Face swap error:', error);
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      
+      this.isFaceSwapping = false;
       this.hideLoader();
       
       // Determine error message based on error type
@@ -185,146 +209,11 @@ class FaceSwapFileInputWrapper extends HTMLElement {
       }
       
       this.appendHelpText(errorMessage, true);
-      
+    } finally {
+      this.hideLoader();
       if (this.fileInput) this.fileInput.value = '';
       this.currentJobId = null;
     }
-  }
-  
-  /**
-   * Load the ImageEditorManager dynamically
-   */
-  async loadImageEditorManager() {
-    if (window.imageEditorManager) {
-      return Promise.resolve(window.imageEditorManager);
-    }
-    
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = window.ASSET_BASE_URL 
-        ? `${window.ASSET_BASE_URL}image-editor-manager.js` 
-        : 'image-editor-manager.js';
-      
-      script.onload = () => {
-        // Initialize if not automatically initialized
-        if (!window.imageEditorManager && typeof ImageEditorManager === 'function') {
-          new ImageEditorManager();
-        }
-        resolve(window.imageEditorManager);
-      };
-      
-      script.onerror = (error) => {
-        reject(error);
-      };
-      
-      document.head.appendChild(script);
-    });
-  }
-  
-  /**
-   * Convert a data URL to a File object
-   */
-  async dataURLtoFile(dataUrl, filename) {
-    const res = await fetch(dataUrl);
-    const blob = await res.blob();
-    return new File([blob], filename, { type: blob.type });
-  }
-  
-  /**
-   * Process face swap with the uploaded file
-   */
-  async processFaceSwap(file) {
-    console.log('Creating API client...');
-    // Create API client with mock mode from global setting
-    const apiClient = new window.UnifiedApiClient({
-      baseUrl: window.faceSwapApiUrl || window.faceSwapConfig?.api?.development?.baseUrl,
-      mockMode: window.MOCK_API_MODE
-    });
-
-    console.log('API client created:', apiClient);
-    this.isFaceSwapping = true;
-    this.showLoader();
-    this.appendHelpText(window.faceSwapConfig?.ui?.messages?.loading || 'Downloading may take 1-2 minutes.');
-
-    // Generate a unique job ID with fallback if FaceSwapUtils is not available
-    try {
-      this.currentJobId = window.FaceSwapUtils ? window.FaceSwapUtils.generateUniqueId() : 
-        (Date.now().toString(36) + Math.random().toString(36).substring(2));
-      console.log('Generated job ID:', this.currentJobId);
-    } catch (error) {
-      console.error('Error generating job ID:', error);
-      // Fallback to a simple unique ID
-      this.currentJobId = Date.now().toString(36) + Math.random().toString(36).substring(2);
-      console.log('Using fallback job ID:', this.currentJobId);
-    }
-
-    // Log parameters
-    console.log('Image transformation parameters:', {
-      sourceImage: file.name
-    });
-
-    // Get watermark configuration
-    const watermarkConfig = window.watermarkImage || {
-      url: 'https://cdn.shopify.com/s/files/1/0626/3416/4430/files/letzteshemd-watermark.png',
-      width: 200,
-      height: 200,
-      spaceBetweenWatermarks: 100
-    };
-
-    // Call transform API
-    const result = await apiClient.transform({
-      sourceImage: file,
-      watermark: watermarkConfig,
-      signal: this.faceSwapRequestController.signal,
-      jobId: this.currentJobId
-    });
-
-    console.log('Transform result:', result);
-
-    if (!result.success) {
-      throw new Error(result.error || 'Unknown error occurred');
-    }
-
-    const {
-      watermarkedOriginalImageUrl,
-      watermarkedImageUrlToShow,
-      processedImageUrl,
-      processedPrintImageUrl
-    } = result.data;
-
-    this.isFaceSwapping = false;
-    this.watermarkedImageUrl = watermarkedOriginalImageUrl;
-    this.processedImageUrl = processedImageUrl;
-    this.processedPrintImageUrl = processedPrintImageUrl;
-
-    this.appendHelpText(window.faceSwapConfig?.ui?.messages?.success || 'Face swap was successful.');
-    
-    // Check if ResultPopupManager is available
-    if (window.resultPopupManager) {
-      console.log('Using ResultPopupManager to display the result');
-      // Use ResultPopupManager to display the transformed image
-      window.resultPopupManager.showResultPopup(watermarkedImageUrlToShow || processedImageUrl);
-    } else {
-      console.log('ResultPopupManager not available, falling back to standard display');
-      // Fallback to traditional method
-      this.appendResult(watermarkedImageUrlToShow);
-      
-      // Try to dynamically load ResultPopupManager if not available
-      this.loadResultPopupManager().then(() => {
-        if (window.resultPopupManager) {
-          window.resultPopupManager.showResultPopup(watermarkedImageUrlToShow || processedImageUrl);
-        }
-      }).catch(err => {
-        console.warn('Could not load ResultPopupManager:', err);
-      });
-    }
-    
-    console.log('Face swap completed successfully');
-    
-    // Hide loader when complete
-    this.hideLoader();
-    if (this.fileInput) this.fileInput.value = '';
-    this.currentJobId = null;
   }
 
   abortFaceSwap() {
