@@ -1227,7 +1227,7 @@ class ImageProcessingManager {
         console.log('ResultPopupManager loaded dynamically');
         if (window.resultPopupManager) {
           window.resultPopupManager.showResultPopup(imageUrl);
-        } else {
+            } else {
           // Initialize it if not automatically initialized
           const ResultPopupManager = window.ResultPopupManager;
           if (ResultPopupManager) {
@@ -1242,7 +1242,7 @@ class ImageProcessingManager {
       script.onerror = (error) => {
         console.error('Failed to load ResultPopupManager:', error);
       };
-      
+        
       document.head.appendChild(script);
     }
   }
@@ -4039,7 +4039,7 @@ class ImageProcessingManager {
   redirectToCheckout(size) {
     if (window.resultPopupManager) {
       window.resultPopupManager.redirectToCheckout(size);
-    } else {
+      } else {
       console.error('ResultPopupManager not found for checkout redirection');
       
       // Fallback to direct cart URL as last resort
@@ -4666,6 +4666,166 @@ class ImageProcessingManager {
       return false;
     }
   };
+
+  /**
+   * Handle file selection from the file input
+   * @param {Event} event - The file input change event
+   */
+  handleFileSelect(event) {
+    console.log('File selected event:', event);
+    
+    // Get the selected file
+    const file = event.target.files[0];
+    
+    if (!file) {
+      console.log('No file selected');
+      return;
+    }
+    
+    console.log('Selected file:', file.name, file.type, file.size);
+    
+    // Store the file for later use
+    this.originalFile = file;
+    
+    // Convert to data URL for use in UI
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      this.originalImageDataUrl = e.target.result;
+      console.log('File converted to data URL, length:', this.originalImageDataUrl.length);
+      
+      // Reset processing state
+      this.fileLoaded = true;
+      this.transformationStarted = false;
+      this.transformationComplete = false;
+      this.finalProcessingComplete = false;
+      
+      // Reset crop and text processing flags
+      this.cropComplete = false;
+      this.textProcessingComplete = false;
+      
+      // We need to show the image immediately in a loading state
+      // while the user is doing cropping and text editing
+      this.startLoading(this.originalImageDataUrl);
+      
+      // Use ImageEditorManager to handle cropping and text overlay
+      try {
+        if (window.imageEditorManager) {
+          console.log('Using ImageEditorManager for image editing');
+          const editorResult = await window.imageEditorManager.processImage(file, {
+            enableTextOverlay: true
+          });
+          
+          // Store the results
+          this.croppedImageDataUrl = editorResult.croppedImageDataUrl;
+          this.cropCoordinates = editorResult.cropCoordinates;
+          this.textFields = editorResult.textData;
+          
+          // Indicate that cropping and text processing are complete
+          this.cropComplete = true;
+          this.textProcessingComplete = true;
+          
+          // Proceed with sending the cropped image to the API
+          this.sendImageToApi();
+        } else {
+          console.log('ImageEditorManager not available, loading dynamically');
+          
+          // Try to load the ImageEditorManager dynamically
+          this.loadImageEditorManager().then(async () => {
+            if (window.imageEditorManager) {
+              const editorResult = await window.imageEditorManager.processImage(file, {
+                enableTextOverlay: true
+              });
+              
+              // Store the results
+              this.croppedImageDataUrl = editorResult.croppedImageDataUrl;
+              this.cropCoordinates = editorResult.cropCoordinates;
+              this.textFields = editorResult.textData;
+              
+              // Indicate that cropping and text processing are complete
+              this.cropComplete = true;
+              this.textProcessingComplete = true;
+              
+              // Proceed with sending the cropped image to the API
+              this.sendImageToApi();
+            } else {
+              // Fall back to showing the image cropper directly
+              this.showImageCropper();
+            }
+          }).catch(error => {
+            console.error('Failed to load ImageEditorManager:', error);
+            // Fall back to showing the image cropper directly
+            this.showImageCropper();
+          });
+        }
+      } catch (error) {
+        console.error('Error in image editing process:', error);
+        // Fall back to showing the image cropper directly
+        this.showImageCropper();
+      }
+    };
+    
+    reader.readAsDataURL(file);
+  }
+  
+  /**
+   * Load the ImageEditorManager dynamically if not already loaded
+   * @returns {Promise<void>}
+   */
+  loadImageEditorManager() {
+    if (window.imageEditorManager) {
+      return Promise.resolve(window.imageEditorManager);
+    }
+    
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = window.ASSET_BASE_URL 
+        ? `${window.ASSET_BASE_URL}image-editor-manager.js` 
+        : 'image-editor-manager.js';
+      
+      script.onload = () => {
+        // Initialize if not automatically initialized
+        if (!window.imageEditorManager && typeof ImageEditorManager === 'function') {
+          new ImageEditorManager();
+        }
+        resolve(window.imageEditorManager);
+      };
+      
+      script.onerror = (error) => {
+        reject(error);
+      };
+      
+      document.head.appendChild(script);
+    });
+  }
+
+  /**
+   * Apply the final processing to the stylized image
+   * after it has been received from the API
+   * @param {string} stylizedImageUrl - URL of the stylized image from the API
+   * @returns {Promise<string>} - URL of the final processed image
+   */
+  async applyFinalProcessing(stylizedImageUrl) {
+    if (!stylizedImageUrl) {
+      console.error('No stylized image URL provided for final processing');
+      return null;
+    }
+    
+    try {
+      console.log('Applying final processing to stylized image:', stylizedImageUrl);
+      
+      // If text fields are available and the ImageEditorManager is available, use it to apply text overlay
+      if (this.textFields && window.imageEditorManager) {
+        console.log('Using ImageEditorManager to apply text overlay to the stylized image');
+        return await window.imageEditorManager.applyTextOverlay(stylizedImageUrl, this.textFields);
+      }
+      
+      // Otherwise, just return the stylized image as is
+      return stylizedImageUrl;
+    } catch (error) {
+      console.error('Error in final processing:', error);
+      return stylizedImageUrl;
+    }
+  }
 }
 
 // Initialize static instance property
