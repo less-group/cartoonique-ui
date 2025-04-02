@@ -1,12 +1,12 @@
 {
-  "name": "letzteshemd-ui",
+  "name": "cartoonique-ui",
   "version": "1.0.0",
   "scripts": {
     "start": "run-p -sr shopify:serve gulp:watch",
-    "shopify:serve": "shopify theme dev -s letzteshemd --theme-editor-sync --live-reload hot-reload",
-    "shopify:pull": "shopify theme pull -s letzteshemd",
-    "deploy": "run-s gulp:production && shopify theme push -s letzteshemd",
-    "deploy:new": "run-s gulp:production && shopify theme push --unpublished -s letzteshemd",
+    "shopify:serve": "shopify theme dev -s nnuse0-av --theme-editor-sync --live-reload hot-reload",
+    "shopify:pull": "shopify theme pull -s nnuse0-av",
+    "deploy": "run-s gulp:production && shopify theme push -s nnuse0-av",
+    "deploy:new": "run-s gulp:production && shopify theme push --unpublished -s nnuse0-av",
     "gulp:watch": "gulp",
     "gulp:production": "gulp production"
   },
