@@ -454,7 +454,7 @@ class ImageProcessingManager {
       }
 
       // Show the image cropper immediately after upload
-      // this.showImageCropper();
+      this.showImageCropper();
     };
     reader.onerror = (error) => {
       console.error("Error reading file:", error);
