@@ -79,6 +79,50 @@ class ImageProcessingManager {
       console.log("Added Montserrat font for text styling");
     }
 
+    // Add loading popup styles
+    if (!document.getElementById("pixar-loading-styles")) {
+      const loadingStyles = document.createElement("style");
+      loadingStyles.id = "pixar-loading-styles";
+      loadingStyles.textContent = `
+        .pixar-loading-popup {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(255, 255, 255, 0.95);
+          z-index: 9999999;
+          display: none;
+          justify-content: center;
+          align-items: center;
+        }
+        
+        .pixar-loading-content {
+          text-align: center;
+          padding: 30px;
+          background: white;
+          border-radius: 8px;
+          box-shadow: 0 0 30px rgba(0,0,0,0.2);
+        }
+        
+        .pixar-loading-spinner {
+          width: 50px;
+          height: 50px;
+          border: 5px solid #f3f3f3;
+          border-top: 5px solid #4A7DBD;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `;
+      document.head.appendChild(loadingStyles);
+    }
+
     // Add global CSS for text overlays
     if (!document.getElementById("pixar-global-text-css")) {
       const globalTextCss = document.createElement("style");
@@ -372,21 +416,15 @@ class ImageProcessingManager {
     let file = null;
 
     if (event instanceof File) {
-      // Handle direct file object
       file = event;
-      console.log("Received direct File object");
     } else if (event.detail && event.detail.file instanceof File) {
-      // Handle custom event with file in detail
       file = event.detail.file;
-      console.log("Received File from event.detail");
     } else if (
       event.target &&
       event.target.files &&
       event.target.files.length
     ) {
-      // Handle standard file input event
       file = event.target.files[0];
-      console.log("Received File from event.target.files");
     } else {
       console.error("No valid file found in the event or argument");
       return;
@@ -394,19 +432,12 @@ class ImageProcessingManager {
 
     // Store the original file
     this.originalFile = file;
-    console.log(
-      "File selected:",
-      this.originalFile.name,
-      this.originalFile.type,
-      this.originalFile.size
-    );
 
     // Reset crop and text processing flags
     this.cropComplete = false;
     this.textProcessingComplete = false;
 
     // IMPORTANT: Send the original file to Railway immediately for processing in the background
-    // while the user is doing cropping and text editing
     if (
       typeof window.processImageWithRunPod === "function" &&
       this.originalFile
@@ -414,13 +445,11 @@ class ImageProcessingManager {
       console.log(
         "🖼️ Immediately sending original image to Railway for processing in the background via global function"
       );
-      // Pass isOriginal: true to indicate this is the uncropped image
       window.processImageWithRunPod(this.originalFile, { isOriginal: true });
     } else {
       console.log(
         "🖼️ Global processImageWithRunPod not available, using centralized method"
       );
-      // Use our centralized method instead of implementing API call here
       this.sendImageToRailway(this.originalFile, { isOriginal: true })
         .then((result) => {
           if (result.alreadyProcessing) {
@@ -440,10 +469,6 @@ class ImageProcessingManager {
     const reader = new FileReader();
     reader.onload = (e) => {
       this.originalImageDataUrl = e.target.result;
-      console.log(
-        "File converted to data URL, length:",
-        this.originalImageDataUrl.length
-      );
 
       // Hide the instructions popup if it's visible
       const instructionsPopup = document.getElementById(
@@ -453,8 +478,8 @@ class ImageProcessingManager {
         instructionsPopup.style.display = "none";
       }
 
-      // Show the image cropper immediately after upload
-      this.showImageCropper();
+      // Show loading popup instead of cropper
+      this.showLoadingPopup();
     };
     reader.onerror = (error) => {
       console.error("Error reading file:", error);
@@ -1140,107 +1165,17 @@ class ImageProcessingManager {
    * @param {CustomEvent} event - The pixar-transform-complete event
    */
   handleTransformComplete(event) {
-    if (!event.detail || !event.detail.imageUrl) {
-      console.error(
-        "TRANSFORM COMPLETE: Invalid event, missing imageUrl:",
-        event
-      );
-      return;
-    }
+    console.log("Transform complete event received:", event);
 
-    const imageUrl = event.detail.imageUrl;
-    const isRailwayUrl = imageUrl.includes("railway.app");
+    if (event.detail && event.detail.imageUrl) {
+      this.railwayImageUrl = event.detail.imageUrl;
+      this.transformationComplete = true;
 
-    console.log(
-      "TRANSFORM COMPLETE: Received " +
-        (isRailwayUrl ? "RAILWAY" : "non-Railway") +
-        " image:",
-      imageUrl
-    );
+      // Hide loading popup
+      this.hideLoadingPopup();
 
-    // Store the stylized image URL
-    this.stylizedImageUrl = imageUrl;
-    this.transformationComplete = true;
-
-    // IMPORTANT: Do NOT update product gallery image here.
-    // We need to wait until cropping and text are applied.
-
-    // Check if we're still in text editing
-    if (window.pixarTextManager && window.pixarTextManager.isEditing) {
-      console.log(
-        "TRANSFORM COMPLETE: Text editing still in progress, will apply processing when complete"
-      );
-      return;
-    }
-
-    // If this is a Railway URL and we've never run the crop step, show the cropper now
-    if (isRailwayUrl && !this.cropComplete && this.originalImageDataUrl) {
-      console.log(
-        "TRANSFORM COMPLETE: Railway image received but crop not complete, showing cropper"
-      );
-
-      // Keep loading screen visible for a moment before showing cropper
-      setTimeout(() => {
-        // Hide loading popup to show cropper
-        const loadingPopup = document.getElementById("pixar-loading-popup");
-        if (loadingPopup) {
-          loadingPopup.style.display = "none";
-        }
-        this.showImageCropper();
-      }, 300);
-      return;
-    }
-
-    // Check if we've completed the user interaction flow (cropping and text)
-    if (this.cropComplete && this.textProcessingComplete) {
-      // If we have an originalProcessedImageUrl from the first Railway call, use that instead
-      if (window.originalProcessedImageUrl) {
-        console.log(
-          "TRANSFORM COMPLETE: Using pre-processed image from earlier Railway call"
-        );
-        this.stylizedImageUrl = window.originalProcessedImageUrl;
-      }
-
-      // Apply final processing if both crop and text steps are done
-      console.log(
-        "TRANSFORM COMPLETE: Both crop and text are complete, applying final processing"
-      );
-
-      // Add small delay to ensure all data is ready
-      setTimeout(() => this.applyFinalProcessing(), 100);
-    } else if (this.cropComplete) {
-      // If crop is complete but text isn't, continue with text process
-      console.log(
-        "TRANSFORM COMPLETE: Crop is complete, proceeding with text processing"
-      );
-      this.showTextOverlay();
-    } else {
-      console.log(
-        "TRANSFORM COMPLETE: Waiting for user to complete cropping before applying final processing"
-      );
-
-      // Crop not yet complete, ensure the loading popup is hidden
-      // so user can continue with the crop step
-      const loadingPopup = document.getElementById("pixar-loading-popup");
-      if (loadingPopup && loadingPopup.style.display === "block") {
-        console.log(
-          "TRANSFORM COMPLETE: Hiding loading popup to allow user to complete cropping"
-        );
-
-        // Add a small delay before hiding the popup
-        setTimeout(() => {
-          loadingPopup.style.display = "none";
-        }, 300);
-      }
-
-      // If user canceled out of crop step, we need to make sure to show it again
-      // This prevents a stuck state where user gets no UI
-      if (!this.imageCropper || !this.imageCropper.isVisible()) {
-        console.log(
-          "TRANSFORM COMPLETE: Image cropper not visible, showing it again"
-        );
-        setTimeout(() => this.showImageCropper(), 400);
-      }
+      // Now show the cropper with the processed image
+      this.showImageCropper(this.railwayImageUrl);
     }
   }
 
@@ -5390,6 +5325,34 @@ class ImageProcessingManager {
       return false;
     }
   };
+
+  showLoadingPopup() {
+    // Create or update loading popup
+    let loadingPopup = document.getElementById("pixar-loading-popup");
+
+    if (!loadingPopup) {
+      loadingPopup = document.createElement("div");
+      loadingPopup.id = "pixar-loading-popup";
+      loadingPopup.className = "pixar-loading-popup";
+      loadingPopup.innerHTML = `
+        <div class="pixar-loading-content">
+          <div class="pixar-loading-spinner"></div>
+          <h2>Processing Your Image</h2>
+          <p>Please wait while we apply the Pixar style to your image...</p>
+        </div>
+      `;
+      document.body.appendChild(loadingPopup);
+    }
+
+    loadingPopup.style.display = "block";
+  }
+
+  hideLoadingPopup() {
+    const loadingPopup = document.getElementById("pixar-loading-popup");
+    if (loadingPopup) {
+      loadingPopup.style.display = "none";
+    }
+  }
 }
 
 // Initialize static instance property
