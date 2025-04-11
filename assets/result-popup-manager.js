@@ -1,6 +1,6 @@
 /**
  * Result Popup Manager
- * 
+ *
  * This module manages the final result popup that displays the processed image
  * and lets users select a size before adding to cart.
  */
@@ -10,85 +10,91 @@ class ResultPopupManager {
     // State variables
     this.resultPopupShown = false;
     this.resultImageUrl = null;
-    this.selectedSize = 'S'; // Default selected size
+    this.selectedSize = "S"; // Default selected size
+
+    this.selectedSizewatermark = false;
     
     // Size aspect ratios
     this.sizeAspectRatios = {
-      'S': 20/30, // 20x30"
-      'M': 30/40, // 30x40"
-      'L': 50/70  // 50x70"
+      S: 20 / 30, // 20x30"
+      M: 30 / 40, // 30x40"
+      L: 50 / 70, // 50x70"
     };
-    
+
     // Variant IDs for each size
     this.variantIds = {
-      'S': '54215893451100',  // Shopify variant ID for size S
-      'M': '54215893483868',  // Shopify variant ID for size M
-      'L': '54215893516636'   // Shopify variant ID for size L
+      S: "54224438722908", // Shopify variant ID for size S
+      M: "54215893451100", // Shopify variant ID for size M
+      L: "54215893483868", // Shopify variant ID for size L
     };
-    
+
     // Detect template type - pixar or face-swap
     this.templateType = this.detectTemplateType();
     console.log(`Detected template type: ${this.templateType}`);
-    
+
     // Make this instance globally available
     window.resultPopupManager = this;
-    
-    console.log('Result Popup Manager initialized');
+
+    console.log("Result Popup Manager initialized");
   }
-  
+
   /**
    * Detect whether we're on a pixar or face-swap template page
    */
   detectTemplateType() {
-    if (document.body.classList.contains('template-product--with-faceswap')) {
-      return 'face-swap';
+    if (document.body.classList.contains("template-product--with-faceswap")) {
+      return "face-swap";
     }
-    
+
     // Look for face-swap elements in the DOM
-    if (document.querySelector('face-swap-file-input-wrapper')) {
-      return 'face-swap';
+    if (document.querySelector("face-swap-file-input-wrapper")) {
+      return "face-swap";
     }
-    
+
     // Look for pixar transform elements
-    if (document.querySelector('pixar-transform-file-input')) {
-      return 'pixar';
+    if (document.querySelector("pixar-transform-file-input")) {
+      return "pixar";
     }
-    
+
     // Check URL parameters and template values in page metadata
-    if (window.location.search.includes('faceswap') || 
-        document.querySelector('meta[property="og:template"]')?.content?.includes('faceswap')) {
-      return 'face-swap';
+    if (
+      window.location.search.includes("faceswap") ||
+      document
+        .querySelector('meta[property="og:template"]')
+        ?.content?.includes("faceswap")
+    ) {
+      return "face-swap";
     }
-    
+
     // Default to pixar template
-    return 'pixar';
+    return "pixar";
   }
-  
+
   /**
    * Show the result popup with the processed image
    */
   showResultPopup(imageUrl) {
-    console.log('RESULT POPUP: Showing result popup with image:', imageUrl);
-    
+    console.log("RESULT POPUP: Showing result popup with image:", imageUrl);
+
     // Prevent showing multiple times
     if (this.resultPopupShown) {
-      console.log('RESULT POPUP: Already shown, not showing again');
+      console.log("RESULT POPUP: Already shown, not showing again");
       return;
     }
-    
+
     this.resultPopupShown = true;
-    
+
     // Store the original image URL for aspect ratio adjustments
     this.resultImageUrl = imageUrl;
-    
+
     // Check if popup already exists
-    let resultPopup = document.getElementById('pixar-result-popup');
-    
+    let resultPopup = document.getElementById("pixar-result-popup");
+
     // Create the popup if it doesn't exist
     if (!resultPopup) {
       // Create the standard popup
-      resultPopup = document.createElement('div');
-      resultPopup.id = 'pixar-result-popup';
+      resultPopup = document.createElement("div");
+      resultPopup.id = "pixar-result-popup";
       resultPopup.style.cssText = `
         position: fixed;
         top: 0;
@@ -102,7 +108,7 @@ class ResultPopupManager {
         padding: 20px;
         box-sizing: border-box;
       `;
-      
+
       // Add content to the result popup
       resultPopup.innerHTML = `
         <div style="position: relative; max-width: 600px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; height: calc(100vh - 40px); max-height: 800px;">
@@ -144,6 +150,7 @@ class ResultPopupManager {
               <div style="text-align: center; margin-top: 5px;">
                 <a href="#" style="color: #4A7DBD; text-decoration: underline; font-size: 12px;">Size guide</a>
               </div>
+              
             </div>
             
             <div style="text-align: center; margin-top: 10px; margin-bottom: 10px;">
@@ -152,79 +159,81 @@ class ResultPopupManager {
           </div>
         </div>
       `;
-      
+
       // Add the popup to the document body
       document.body.appendChild(resultPopup);
-      
+
       // Add event listeners for size buttons first
-      const sizeOptions = resultPopup.querySelectorAll('[data-size]');
-      sizeOptions.forEach(option => {
+      const sizeOptions = resultPopup.querySelectorAll("[data-size]");
+      sizeOptions.forEach((option) => {
         // Add hover effect for size options
-        option.addEventListener('mouseenter', () => {
-          if (option.getAttribute('data-size') !== this.selectedSize) {
-            option.style.backgroundColor = '#f8f8f8';
-            option.style.transform = 'translateY(-2px)';
+        option.addEventListener("mouseenter", () => {
+          if (option.getAttribute("data-size") !== this.selectedSize) {
+            option.style.backgroundColor = "#f8f8f8";
+            option.style.transform = "translateY(-2px)";
           }
         });
-        
-        option.addEventListener('mouseleave', () => {
-          if (option.getAttribute('data-size') !== this.selectedSize) {
-            option.style.backgroundColor = '';
-            option.style.transform = 'translateY(0)';
+
+        option.addEventListener("mouseleave", () => {
+          if (option.getAttribute("data-size") !== this.selectedSize) {
+            option.style.backgroundColor = "";
+            option.style.transform = "translateY(0)";
           }
         });
-        
-        option.addEventListener('click', () => {
+
+        option.addEventListener("click", () => {
           // Get the selected size
-          const size = option.getAttribute('data-size');
-          
+          const size = option.getAttribute("data-size");
+
           // If same size is clicked, do nothing
           if (this.selectedSize === size) return;
-          
+
           // Store previous size for transition
           const previousSize = this.selectedSize;
           this.selectedSize = size;
-          
+
           // Remove highlight from all options
-          sizeOptions.forEach(opt => {
-            opt.style.backgroundColor = '';
-            opt.style.transform = 'translateY(0)';
-            opt.style.boxShadow = 'none';
+          sizeOptions.forEach((opt) => {
+            opt.style.backgroundColor = "";
+            opt.style.transform = "translateY(0)";
+            opt.style.boxShadow = "none";
           });
-          
+
           // Highlight selected option
-          option.style.backgroundColor = '#f0f5fb';
-          option.style.transform = 'translateY(-2px)';
-          option.style.boxShadow = '0 4px 8px rgba(0,0,0,0.08)';
-          
+          option.style.backgroundColor = "#f0f5fb";
+          option.style.transform = "translateY(-2px)";
+          option.style.boxShadow = "0 4px 8px rgba(0,0,0,0.08)";
+
           // Apply the appropriate aspect ratio to the image with animation
           this.applyAspectRatioToResultImage(size, previousSize);
         });
       });
-      
+
       // Add event listener for the continue button
-      const continueButton = document.getElementById('pixar-result-continue');
+      const continueButton = document.getElementById("pixar-result-continue");
       if (continueButton) {
         // Add click event listener
-        continueButton.addEventListener('click', (event) => {
+        continueButton.addEventListener("click", (event) => {
           // Prevent default action
           event.preventDefault();
-          
+
           // Show loading animation immediately when clicked
           const button = event.currentTarget;
           const originalButtonText = button.textContent;
-          button.textContent = 'Adding to cart...';
+          button.textContent = "Adding to cart...";
           button.disabled = true;
-          button.classList.add('loading');
-          
+          button.classList.add("loading");
+
           // Update the text shown on the popup to indicate cart redirection
-          const imageContainer = document.getElementById('pixar-result-image-container');
+          const imageContainer = document.getElementById(
+            "pixar-result-image-container"
+          );
           if (imageContainer) {
             // Create status message if it doesn't exist
-            let statusMessage = document.getElementById('pixar-cart-status');
+            let statusMessage = document.getElementById("pixar-cart-status");
             if (!statusMessage) {
-              statusMessage = document.createElement('div');
-              statusMessage.id = 'pixar-cart-status';
+              statusMessage = document.createElement("div");
+              statusMessage.id = "pixar-cart-status";
               statusMessage.style.cssText = `
                 position: absolute;
                 bottom: 10px;
@@ -240,13 +249,14 @@ class ResultPopupManager {
               `;
               imageContainer.appendChild(statusMessage);
             }
-            statusMessage.textContent = 'Adding to cart... You will be redirected shortly';
+            statusMessage.textContent =
+              "Adding to cart... You will be redirected shortly";
           }
-          
+
           // Add loading spinner style if not already present
-          if (!document.querySelector('#pixar-loading-spinner-style')) {
-            const style = document.createElement('style');
-            style.id = 'pixar-loading-spinner-style';
+          if (!document.querySelector("#pixar-loading-spinner-style")) {
+            const style = document.createElement("style");
+            style.id = "pixar-loading-spinner-style";
             style.textContent = `
               .pixar-continue-button.loading,
               #pixar-result-continue.loading {
@@ -284,169 +294,191 @@ class ResultPopupManager {
               }
             `;
             document.head.appendChild(style);
-            
+
             // Cache the original background color for pulse animation
             const computedStyle = window.getComputedStyle(button);
             const originalBg = computedStyle.backgroundColor;
-            document.documentElement.style.setProperty('--original-bg', originalBg);
-            document.documentElement.style.setProperty('--pulse-bg', this.adjustColor(originalBg, -20));
+            document.documentElement.style.setProperty(
+              "--original-bg",
+              originalBg
+            );
+            document.documentElement.style.setProperty(
+              "--pulse-bg",
+              this.adjustColor(originalBg, -20)
+            );
           }
-          
+
           // Disable size buttons during the transition
-          const popup = document.getElementById('pixar-result-popup');
-          const sizeButtons = popup.querySelectorAll('[data-size]');
-          sizeButtons.forEach(btn => {
-            btn.style.pointerEvents = 'none';
-            btn.style.opacity = '0.7';
+          const popup = document.getElementById("pixar-result-popup");
+          const sizeButtons = popup.querySelectorAll("[data-size]");
+          sizeButtons.forEach((btn) => {
+            btn.style.pointerEvents = "none";
+            btn.style.opacity = "0.7";
           });
-          
+
           // Update message to indicate cart redirection is happening
-          console.log(`Continue clicked with size ${this.selectedSize || 'S'} selected, redirecting to checkout`);
-          
+          console.log(
+            `Continue clicked with size ${
+              this.selectedSize || "S"
+            } selected, redirecting to checkout`
+          );
+
           // Flag to indicate we're in the process of redirecting to cart
-          localStorage.setItem('cartoonique_redirecting_to_cart', 'true');
-          localStorage.setItem('cartoonique_preload_cart_images', 'true');
-          
+          localStorage.setItem("cartoonique_redirecting_to_cart", "true");
+          localStorage.setItem("cartoonique_preload_cart_images", "true");
+
           // Redirect to checkout with the selected size
-          this.redirectToCheckout(this.selectedSize || 'S');
+          this.redirectToCheckout(this.selectedSize || "S");
         });
-        
+
         // Add hover effect for continue button
-        continueButton.addEventListener('mouseenter', () => {
-          if (!continueButton.classList.contains('loading')) {
-            continueButton.style.backgroundColor = '#3a6dad';
+        continueButton.addEventListener("mouseenter", () => {
+          if (!continueButton.classList.contains("loading")) {
+            continueButton.style.backgroundColor = "#3a6dad";
           }
         });
-        
-        continueButton.addEventListener('mouseleave', () => {
-          if (!continueButton.classList.contains('loading')) {
-            continueButton.style.backgroundColor = '#4a7dbd';
+
+        continueButton.addEventListener("mouseleave", () => {
+          if (!continueButton.classList.contains("loading")) {
+            continueButton.style.backgroundColor = "#4a7dbd";
           }
         });
       }
-      
+
       // Set the image source
-      const resultImage = document.getElementById('pixar-result-image');
+      const resultImage = document.getElementById("pixar-result-image");
       if (resultImage) {
         resultImage.src = imageUrl;
-        
+
         // When the image is loaded, apply the default aspect ratio (Size S)
         resultImage.onload = () => {
           this.applyAspectRatioToResultImage(this.selectedSize);
         };
       }
-      
+
       // Display the popup
-      resultPopup.style.display = 'block';
-      document.body.style.overflow = 'hidden';
-      
+      resultPopup.style.display = "block";
+      document.body.style.overflow = "hidden";
+
       // Adjust for mobile view if needed
       this.adjustPopupForMobile();
-      
+
       // If we're on a face-swap template, also update the product gallery with the image
-      if (this.templateType === 'face-swap') {
+      if (this.templateType === "face-swap") {
         this.updateProductGalleryForFaceSwap(imageUrl);
       }
     }
   }
-  
+
   /**
    * Update the product gallery image for face-swap template
    */
   updateProductGalleryForFaceSwap(imageUrl) {
     if (!imageUrl) return;
-    
-    console.log('Updating product gallery for face-swap template with image:', imageUrl);
-    
+
+    console.log(
+      "Updating product gallery for face-swap template with image:",
+      imageUrl
+    );
+
     // Find all relevant image elements that need updating
     const imagesToUpdate = [
       // Main product image
-      document.querySelector('.product__media-item.is-active img'),
-      document.querySelector('.product-gallery__media.is-selected img'),
-      document.querySelector('.product-gallery__media.snap-center img'),
-      document.querySelector('.product-gallery__media img'),
-      document.querySelector('.product-gallery img'),
-      document.querySelector('.product__media img'),
-      
+      document.querySelector(".product__media-item.is-active img"),
+      document.querySelector(".product-gallery__media.is-selected img"),
+      document.querySelector(".product-gallery__media.snap-center img"),
+      document.querySelector(".product-gallery__media img"),
+      document.querySelector(".product-gallery img"),
+      document.querySelector(".product__media img"),
+
       // Thumbnails
-      ...Array.from(document.querySelectorAll('.product-gallery__thumbnail img')),
+      ...Array.from(
+        document.querySelectorAll(".product-gallery__thumbnail img")
+      ),
     ].filter(Boolean); // Remove null/undefined entries
-    
+
     // Update each image found
     if (imagesToUpdate.length > 0) {
-      imagesToUpdate.forEach(img => {
+      imagesToUpdate.forEach((img) => {
         // Save original src for potential restoration
         if (!img.dataset.originalSrc) {
           img.dataset.originalSrc = img.src;
         }
-        
+
         // Update the image src
         img.src = imageUrl;
-        
+
         // Try to update srcset if it exists
         if (img.srcset) {
           img.srcset = imageUrl;
         }
       });
-      
-      console.log(`Updated ${imagesToUpdate.length} product images with transformed design`);
+
+      console.log(
+        `Updated ${imagesToUpdate.length} product images with transformed design`
+      );
     } else {
-      console.warn('Could not find any product images to update');
-      
+      console.warn("Could not find any product images to update");
+
       // Fallback approach - query all images and look for ones that might be product-related
-      const allImages = document.querySelectorAll('img');
+      const allImages = document.querySelectorAll("img");
       let updatedCount = 0;
-      
-      allImages.forEach(img => {
-        const src = img.src || '';
+
+      allImages.forEach((img) => {
+        const src = img.src || "";
         // Only update images that appear to be product-related
-        if ((src.includes('product') || src.includes('files/')) && 
-            !img.closest('#pixar-result-image-container') && 
-            !img.closest('[data-result-wrapper]')) {
-          
+        if (
+          (src.includes("product") || src.includes("files/")) &&
+          !img.closest("#pixar-result-image-container") &&
+          !img.closest("[data-result-wrapper]")
+        ) {
           // Save original src for potential restoration
           if (!img.dataset.originalSrc) {
             img.dataset.originalSrc = img.src;
           }
-          
+
           // Update the image src
           img.src = imageUrl;
           updatedCount++;
         }
       });
-      
+
       if (updatedCount > 0) {
-        console.log(`Fallback approach: Updated ${updatedCount} potential product images`);
+        console.log(
+          `Fallback approach: Updated ${updatedCount} potential product images`
+        );
       }
     }
-    
+
     // Hide any result wrappers to prevent duplicate images
-    const resultWrappers = document.querySelectorAll('[data-result-wrapper], .result-wrapper');
-    resultWrappers.forEach(wrapper => {
-      wrapper.style.display = 'none';
+    const resultWrappers = document.querySelectorAll(
+      "[data-result-wrapper], .result-wrapper"
+    );
+    resultWrappers.forEach((wrapper) => {
+      wrapper.style.display = "none";
     });
   }
-  
+
   /**
    * Adjust popup layout for mobile devices
    */
   adjustPopupForMobile() {
     const isMobile = window.innerWidth < 768;
-    
+
     if (isMobile) {
-      const popup = document.getElementById('pixar-result-popup');
+      const popup = document.getElementById("pixar-result-popup");
       if (popup) {
-        const popupContent = popup.querySelector('div');
+        const popupContent = popup.querySelector("div");
         if (popupContent) {
-          popupContent.style.margin = '0 auto';
-          popupContent.style.maxWidth = '100%';
-          popupContent.style.borderRadius = '0';
-          popupContent.style.height = '100%';
+          popupContent.style.margin = "0 auto";
+          popupContent.style.maxWidth = "100%";
+          popupContent.style.borderRadius = "0";
+          popupContent.style.height = "100%";
         }
       }
     }
   }
-  
+
   /**
    * Apply the appropriate aspect ratio to the result image
    */
@@ -454,30 +486,30 @@ class ResultPopupManager {
     // Get the aspect ratio for the selected size
     const aspectRatio = this.sizeAspectRatios[size];
     if (!aspectRatio) return;
-    
+
     console.log(`Applying aspect ratio ${aspectRatio} for size ${size}`);
-    
+
     // Get the image element and container
-    const image = document.getElementById('pixar-result-image');
-    const container = document.getElementById('pixar-result-image-container');
-    const shadow = document.getElementById('pixar-image-shadow');
+    const image = document.getElementById("pixar-result-image");
+    const container = document.getElementById("pixar-result-image-container");
+    const shadow = document.getElementById("pixar-image-shadow");
     if (!image || !container) return;
 
     // Set container's aspect ratio while maintaining flexibility
-    container.style.position = 'relative';
-    container.style.display = 'flex';
-    container.style.alignItems = 'center';
-    container.style.justifyContent = 'center';
-    container.style.background = 'transparent';
-    
+    container.style.position = "relative";
+    container.style.display = "flex";
+    container.style.alignItems = "center";
+    container.style.justifyContent = "center";
+    container.style.background = "transparent";
+
     // Create canvas to maintain aspect ratio
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    img.crossOrigin = "anonymous";
     img.onload = () => {
       // Determine the canvas dimensions based on the desired aspect ratio
       let canvasWidth, canvasHeight;
-      
+
       // Calculate canvas dimensions
       if (img.width / img.height > aspectRatio) {
         // Image is wider than target ratio, crop width
@@ -488,78 +520,154 @@ class ResultPopupManager {
         canvasWidth = img.width;
         canvasHeight = img.width / aspectRatio;
       }
-      
+
       // Set canvas size
       canvas.width = canvasWidth;
       canvas.height = canvasHeight;
-      
+
       // Draw the image onto the canvas with the center crop
-      const ctx = canvas.getContext('2d');
-      
+      const ctx = canvas.getContext("2d");
+
       // Fill with transparent background
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      
+
       const offsetX = (img.width - canvasWidth) / 2;
       const offsetY = (img.height - canvasHeight) / 2;
-      
+
       // Draw the portion of the image that fits the aspect ratio
       ctx.drawImage(
         img,
-        offsetX, offsetY, canvasWidth, canvasHeight,  // Source rectangle
-        0, 0, canvasWidth, canvasHeight              // Destination rectangle
+        offsetX,
+        offsetY,
+        canvasWidth,
+        canvasHeight, // Source rectangle
+        0,
+        0,
+        canvasWidth,
+        canvasHeight // Destination rectangle
       );
-      
+
       // Replace the image src with the canvas data
-      image.src = canvas.toDataURL('image/png');
-      
+      image.src = window.imageProcessingManager.processwaterimgbase64 =
+        canvas.toDataURL("image/png");
+
+      // resize the canvas to 200px
+      const maxWidth = 500;
+      const scaleFactor = maxWidth / canvasWidth;
+      const newWidth = maxWidth;
+      const newHeight = canvasHeight * scaleFactor;
+
+      // Create a new canvas for resizing
+      const resizedCanvas = document.createElement("canvas");
+      resizedCanvas.width = newWidth;
+      resizedCanvas.height = newHeight;
+
+      const ctxre = resizedCanvas.getContext("2d");
+      ctxre.drawImage(canvas, 0, 0, newWidth, newHeight);
+
+      this.resizedCanvas64 = resizedCanvas.toDataURL("image/png");
+      //draw non watermarked image now
+
+      if (window.imageProcessingManager.nonWatermarkedCanvas) {
+        this.selectedSizewatermark = size;
+
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        ctx.drawImage(
+          window.imageProcessingManager.nonWatermarkedCanvas,
+          offsetX,
+          offsetY,
+          canvasWidth,
+          canvasHeight, // Source rectangle
+          0,
+          0,
+          canvasWidth,
+          canvasHeight // Destination rectangle
+        );
+        window.imageProcessingManager.processnonwaterimgbase64 =
+          canvas.toDataURL("image/png");
+        console.log(
+          "SD : window.imageProcessingManager.processnonwaterimgbase64 -> "
+        );
+        console.log(window.imageProcessingManager.processnonwaterimgbase64);
+
+        // console.log(" SD - nonwatermarkedimg -> ");
+        // const nonwatermarkedimg = document.getElementById("nonwatermarkedimg");
+        // if (nonwatermarkedimg) {
+        //   // nonwatermarkedimg.href = window.imageProcessingManager.processnonwaterimgbase64;
+        //   nonwatermarkedimg.href = this.resizedCanvas64;
+        //   nonwatermarkedimg.style.pointerEvents = "";
+        //   nonwatermarkedimg.style.opacity = "1";
+        // }
+      } else {
+        console.log("applyonce ");
+        this.selectedSizewatermark = "applyonce";
+      }
+
+      const continueButton = document.getElementById("pixar-result-continue");
+      if (continueButton) {
+        continueButton.disabled =
+          window.imageProcessingManager?.processnonwaterimgstatus == "processed"
+            ? false
+            : true;
+        continueButton.style.setProperty(
+          "cursor",
+          window.imageProcessingManager?.processnonwaterimgstatus == "processed"
+            ? "pointer"
+            : "not-allowed",
+          "important"
+        );
+      }
+
       // Adjust shadow to match image dimensions once loaded
       image.onload = () => {
         this.adjustShadowToImage(image, shadow);
       };
-      
+
       // Adjust container to maintain the aspect ratio without affecting layout
-      image.style.maxWidth = '100%';
-      image.style.maxHeight = '100%';
-      image.style.objectFit = 'contain';
-      image.style.borderRadius = '8px';
+      image.style.maxWidth = "100%";
+      image.style.maxHeight = "100%";
+      image.style.objectFit = "contain";
+      image.style.borderRadius = "8px";
     };
-    
+
     img.src = this.resultImageUrl || image.src;
   }
-  
+
   /**
    * Adjust the shadow to match the image dimensions
    */
   adjustShadowToImage(image, shadow) {
     if (!image || !shadow) return;
-    
+
     // We need to wait for the image to be fully rendered to get its displayed dimensions
     setTimeout(() => {
       // Get the actual displayed dimensions of the image
       const rect = image.getBoundingClientRect();
       const displayedWidth = rect.width;
       const displayedHeight = rect.height;
-      
+
       // Adjust the shadow to match the image size with a slight offset
       shadow.style.width = `${displayedWidth}px`;
       shadow.style.height = `${displayedHeight}px`;
-      shadow.style.top = '10px';
-      shadow.style.left = '50%';
-      shadow.style.transform = 'translateX(-50%)';
-      shadow.style.borderRadius = '8px';
+      shadow.style.top = "10px";
+      shadow.style.left = "50%";
+      shadow.style.transform = "translateX(-50%)";
+      shadow.style.borderRadius = "8px";
     }, 50); // Small delay to ensure image is rendered
   }
-  
+
   /**
    * Adjust a color's brightness
    */
   adjustColor(color, amount) {
     // Handle different color formats
     let r, g, b;
-    
-    if (color.startsWith('rgb')) {
+
+    if (color.startsWith("rgb")) {
       // Parse RGB format
-      const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/);
+      const rgbMatch = color.match(
+        /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/
+      );
       if (rgbMatch) {
         r = parseInt(rgbMatch[1]);
         g = parseInt(rgbMatch[2]);
@@ -567,7 +675,7 @@ class ResultPopupManager {
       } else {
         return color; // Can't parse, return original
       }
-    } else if (color.startsWith('#')) {
+    } else if (color.startsWith("#")) {
       // Parse hex format
       const hex = color.substring(1);
       r = parseInt(hex.substr(0, 2), 16);
@@ -576,196 +684,263 @@ class ResultPopupManager {
     } else {
       return color; // Unsupported format, return original
     }
-    
+
     // Adjust brightness
     r = Math.max(0, Math.min(255, r + amount));
     g = Math.max(0, Math.min(255, g + amount));
     b = Math.max(0, Math.min(255, b + amount));
-    
+
     return `rgb(${r}, ${g}, ${b})`;
   }
-  
+
   /**
    * Redirect to checkout with the selected size
    */
-  redirectToCheckout(size) {
-    console.log('Adding to cart with size:', size);
-    
+  async redirectToCheckout(size) {
+    console.log("Adding to cart with size:", size);
+
     // Get the variant ID for the selected size
     const variantId = this.variantIds[size];
-    
+
     if (!variantId) {
-      console.error('Invalid size selected:', size);
+      console.error("Invalid size selected:", size);
       return;
     }
-    
+
     // Get the processed image URL
     let processedImageUrl = this.resultImageUrl;
-    console.log('Found image from resultImageUrl:', processedImageUrl ? 'yes' : 'no');
-    
+    console.log(
+      "Found image from resultImageUrl:",
+      processedImageUrl ? "yes" : "no"
+    );
+
     // If not found, try to get it from the DOM
     if (!processedImageUrl) {
-      const resultImage = document.getElementById('pixar-result-image');
+      const resultImage = document.getElementById("pixar-result-image");
       if (resultImage && resultImage.src) {
         processedImageUrl = resultImage.src;
       }
     }
-    
+
     if (!processedImageUrl) {
-      console.error('No processed image found - will attempt to continue anyway');
-      processedImageUrl = '';
+      console.error(
+        "No processed image found - will attempt to continue anyway"
+      );
+      processedImageUrl = "";
     }
-    
+
     // Store the image safely
-    this.storeImageSafely(variantId, processedImageUrl);
-    
-    // Direct redirect function without an iframe
-    const redirectToCart = () => {
-      console.log('Executing immediate redirect to cart...');
+    // this.storeImageSafely(variantId, processedImageUrl);
+
+    // Direct redirect function without an iframe sd 22 save img
+    const redirectToCart = async () => {
       
+      console.log("Executing immediate redirect to cart...");
+
       try {
-        // Make sure we have the image in window memory
-        if (!window.cartoonique_memory_images) {
-          window.cartoonique_memory_images = {};
+        let response = await fetch("/cart.js"); // Replace with actual API endpoint
+        if (!response.ok) {
+          throw new Error("Failed to fetch cart data");
         }
-        
-        // Store the image in memory
-        if (processedImageUrl) {
-          window.cartoonique_memory_images[variantId] = processedImageUrl;
+        let cartData = await response.json();
+
+        console.log("cartData -> ");
+        console.log(cartData);
+
+        let storedImages =
+          JSON.parse(localStorage.getItem("cartooniqueImages")) || {};
+
+        console.log("storedImages");
+        console.log(storedImages);
+
+        let updatedImages = {}; // New object for cleaned-up images
+
+        // Assign the first cart item's image to currentBase64
+        if (cartData?.items?.length > 0) {
+          updatedImages[cartData.items[0].key] = this.resizedCanvas64;
+
+          // Iterate over the cart and assign images from localStorage if available
+          cartData.items.forEach((item) => {
+            if (storedImages?.[item.key]) {
+              updatedImages[item.key] = storedImages[item.key] || ""; // Keep blank if missing
+            }
+          });
+
+          // Save the updated object to localStorage
         }
-        
-        // Create navigation data with the actual image
-        const navigationData = {
-          timestamp: Date.now(),
-          imageUrl: processedImageUrl,
-          variantId: variantId,
-          size: size
-        };
-        
-        localStorage.setItem('cartoonique_navigating_to_cart', 'true');
-        localStorage.setItem('cartoonique_cart_navigation_time', Date.now().toString());
-        
-        // Store navigation data directly
-        try {
-          localStorage.setItem('cartoonique_navigation_data', JSON.stringify(navigationData));
-        } catch(e) {
-          console.warn('Unable to store navigation data:', e);
-        }
-        
-        // Try to use sessionStorage with a unique key for direct URL parameter passing
-        try {
-          // Create a unique blob key
-          const blobKey = 'cartoonique_blob_' + Date.now();
-          // Store the image data with this key
-          sessionStorage.setItem(blobKey, processedImageUrl);
-          // Use URL parameters to pass both the variant ID and the blob key
-          window.location.href = `/cart?variant_id=${variantId}&blob_key=${blobKey}&t=${Date.now()}`;
-          return;
-        } catch(e) {
-          console.warn('Failed to use sessionStorage for image passing:', e);
-        }
+
+        localStorage.setItem(
+          "cartooniqueImages",
+          JSON.stringify(updatedImages)
+        );
       } catch (e) {
-        console.error('Error setting navigation flags:', e);
+        console.error("Error updating localstorage :", e);
       }
-      
+
       // Fallback: The original navigation method if the above fails
-      window.location.href = '/cart?nocache=' + Date.now();
+      window.location.href = "/cart?nocache=" + Date.now();
     };
-    
+    let cartproperties = {};
+    // if(window.imageProcessingManager?.processwaterimgbase64){
+    //   cartproperties.watermarkimg = 'window.imageProcessingManager.processwaterimgbase64';
+    // }
+
+    if (window.imageProcessingManager?.processnonwaterimgbase64) {
+      // cartproperties.nonwatermarkimg = 'window.imageProcessingManager.processnonwaterimgbase64';
+
+      // upload to S3 function
+      async function uploadImageToS3(base64Image, fileName) {
+        const apiUrl =
+          "https://letzteshemd-faceswap-api-production.up.railway.app/upload";
+
+        try {
+          const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name: fileName,
+              base64Image: base64Image,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(result.error || "Failed to upload image");
+          }
+
+          console.log("Image uploaded successfully:", result.url);
+          return result.url; // Returns the S3 URL of the uploaded image
+        } catch (error) {
+          console.error("Error uploading image:", error.message);
+          return null;
+        }
+      }
+
+      const nonwaterimgBase64 =
+        window.imageProcessingManager.processnonwaterimgbase64;
+      const fileName = "cartoonique_" + variantId + "_" + Date.now();
+
+      // call image upload to S3 function sd 11
+      try {
+        console.log("call uploadImageToS3");
+        const imageUrl = await uploadImageToS3(nonwaterimgBase64, fileName);
+        console.log("Uploaded image URL: 11 ", imageUrl);
+        if (imageUrl) {
+          console.log("Uploaded image URL: 22", imageUrl);
+          cartproperties["_nonwatermarkimg"] = imageUrl;
+        }
+      } catch (error) {
+        console.error("Image upload failed:", error);
+      }
+    }
+
     // Simple cart addition data
     const formDataSimple = {
-      'items': [{
-        'id': variantId,
-        'quantity': 1
-      }]
+      items: [
+        {
+          id: variantId,
+          quantity: 1,
+          properties: cartproperties,
+        },
+      ],
     };
-    
+
     // Add to cart via API
-    fetch('/cart/add.js', {
-      method: 'POST',
+    fetch("/cart/add.js", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        "Content-Type": "application/json",
+        Accept: "application/json",
       },
-      body: JSON.stringify(formDataSimple)
+      body: JSON.stringify(formDataSimple),
     })
-    .then(response => {
-      if (!response.ok) {
-        console.error('Cart addition error with status:', response.status);
-        return response.text().then(text => {
-          console.error('Error response:', text);
-          throw new Error('Network response was not ok: ' + response.statusText);
-        });
-      }
-      return response.json();
-    })
-    .then(data => {
-      console.log('Successfully added to cart:', data);
-      redirectToCart();
-    })
-    .catch(error => {
-      console.error('Error adding to cart:', error);
-      
-      // Reset the button state on error
-      const continueButton = document.getElementById('pixar-result-continue');
-      if (continueButton) {
-        continueButton.textContent = 'Continue';
-        continueButton.disabled = false;
-        continueButton.classList.remove('loading');
-      }
-      
-      // Re-enable size buttons
-      const sizeButtons = document.querySelectorAll('[data-size]');
-      if (sizeButtons) {
-        sizeButtons.forEach(button => {
-          button.disabled = false;
-        });
-      }
-      
-      // Try with a direct form submission as last resort
-      const form = document.createElement('form');
-      form.method = 'post';
-      form.action = '/cart/add';
-      
-      const idInput = document.createElement('input');
-      idInput.type = 'hidden';
-      idInput.name = 'id';
-      idInput.value = variantId;
-      
-      const quantityInput = document.createElement('input');
-      quantityInput.type = 'hidden';
-      quantityInput.name = 'quantity';
-      quantityInput.value = '1';
-      
-      form.appendChild(idInput);
-      form.appendChild(quantityInput);
-      document.body.appendChild(form);
-      
-      // Show a message before submitting
-      const errorMessage = document.createElement('div');
-      errorMessage.className = 'pixar-error-message';
-      errorMessage.style.color = 'orange';
-      errorMessage.style.margin = '10px 0';
-      errorMessage.style.textAlign = 'center';
-      errorMessage.innerHTML = `
+      .then((response) => {
+        if (!response.ok) {
+          console.error("Cart addition error with status:", response.status);
+          return response.text().then((text) => {
+            console.error("Error response:", text);
+            throw new Error(
+              "Network response was not ok: " + response.statusText
+            );
+          });
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Successfully added to cart:", data);
+        redirectToCart();
+      })
+      .catch((error) => {
+        console.error("Error adding to cart:", error);
+
+        // Reset the button state on error
+        const continueButton = document.getElementById("pixar-result-continue");
+        if (continueButton) {
+          continueButton.textContent = "Continue";
+          continueButton.disabled =
+            window.imageProcessingManager?.processnonwaterimgstatus ==
+            "processed"
+              ? false
+              : true;
+          continueButton.classList.remove("loading");
+        }
+
+        // Re-enable size buttons
+        const sizeButtons = document.querySelectorAll("[data-size]");
+        if (sizeButtons) {
+          sizeButtons.forEach((button) => {
+            button.disabled = false;
+          });
+        }
+
+        // Try with a direct form submission as last resort
+        const form = document.createElement("form");
+        form.method = "post";
+        form.action = "/cart/add";
+
+        const idInput = document.createElement("input");
+        idInput.type = "hidden";
+        idInput.name = "id";
+        idInput.value = variantId;
+
+        const quantityInput = document.createElement("input");
+        quantityInput.type = "hidden";
+        quantityInput.name = "quantity";
+        quantityInput.value = "1";
+
+        form.appendChild(idInput);
+        form.appendChild(quantityInput);
+        document.body.appendChild(form);
+
+        // Show a message before submitting
+        const errorMessage = document.createElement("div");
+        errorMessage.className = "pixar-error-message";
+        errorMessage.style.color = "orange";
+        errorMessage.style.margin = "10px 0";
+        errorMessage.style.textAlign = "center";
+        errorMessage.innerHTML = `
         Trying alternate method to add to cart...
       `;
-      
-      // Find an appropriate place to show the error
-      const popup = document.getElementById('pixar-result-popup');
-      const messageContainer = popup && popup.querySelector('.pixar-result-buttons') || 
-                            popup && popup.querySelector('.pixar-result-controls');
-      if (messageContainer) {
-        messageContainer.appendChild(errorMessage);
-      }
-      
-      // Submit the form after a short delay
-      setTimeout(() => {
-        form.submit();
-      }, 1000);
-    });
+
+        // Find an appropriate place to show the error
+        const popup = document.getElementById("pixar-result-popup");
+        const messageContainer =
+          (popup && popup.querySelector(".pixar-result-buttons")) ||
+          (popup && popup.querySelector(".pixar-result-controls"));
+        if (messageContainer) {
+          messageContainer.appendChild(errorMessage);
+        }
+
+        // Submit the form after a short delay
+        setTimeout(() => {
+          form.submit();
+        }, 1000);
+      });
   }
-  
+
   /**
    * Store the image safely to prevent quota errors
    */
@@ -776,40 +951,48 @@ class ResultPopupManager {
         window.cartoonique_memory_images = {};
       }
       window.cartoonique_memory_images[variantId] = imageUrl;
-      console.log('Stored image in window memory for variant', variantId);
-      
+      console.log("Stored image in window memory for variant", variantId);
+
       // Try to store a reference in localStorage
       try {
-        const cartImages = JSON.parse(localStorage.getItem('cartoonique_cart_images') || '{}');
+        const cartImages = JSON.parse(
+          localStorage.getItem("cartoonique_cart_images") || "{}"
+        );
         // Store just a reference to the memory image
-        cartImages[variantId] = 'MEMORY_IMAGE:' + variantId;
-        localStorage.setItem('cartoonique_cart_images', JSON.stringify(cartImages));
-        
+        cartImages[variantId] = "MEMORY_IMAGE:" + variantId;
+        localStorage.setItem(
+          "cartoonique_cart_images",
+          JSON.stringify(cartImages)
+        );
+
         // Also store navigation data for immediate use
         const navigationData = {
           timestamp: Date.now(),
           imageUrl: imageUrl,
-          variantId: variantId
+          variantId: variantId,
         };
-        localStorage.setItem('cartoonique_navigation_data', JSON.stringify(navigationData));
+        localStorage.setItem(
+          "cartoonique_navigation_data",
+          JSON.stringify(navigationData)
+        );
       } catch (e) {
-        console.warn('Could not store image reference in localStorage:', e);
+        console.warn("Could not store image reference in localStorage:", e);
       }
-      
+
       return true;
     } catch (error) {
-      console.error('Storage error:', error);
+      console.error("Storage error:", error);
       return false;
     }
   }
 }
 
 // Initialize the ResultPopupManager when the script loads
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   new ResultPopupManager();
 });
 
 // Export for direct use
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = ResultPopupManager;
-} 
+}
