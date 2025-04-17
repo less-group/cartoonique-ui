@@ -9,19 +9,9 @@
  */
 {
   "sections": {
-    "page": {
-      "type": "page",
-      "settings": {
-        "color_scheme": "default",
-        "container_size": "xsmall",
-        "show_heading": true,
-        "add_side_paddings": true,
-        "section_spacing_top": 96,
-        "section_spacing_bottom": 96
-      }
-    },
     "image_banner_eQW4iQ": {
       "type": "image-banner",
+      "disabled": true,
       "name": "t:sections.image_banner.name",
       "settings": {
         "color_scheme": "white",
@@ -54,6 +44,17 @@
         "add_side_paddings": true,
         "section_spacing_top": 0,
         "section_spacing_bottom": 0
+      }
+    },
+    "page": {
+      "type": "page",
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "xsmall",
+        "show_heading": false,
+        "add_side_paddings": true,
+        "section_spacing_top": 96,
+        "section_spacing_bottom": 96
       }
     }
   },
