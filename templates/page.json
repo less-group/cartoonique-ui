@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "page": {
@@ -5,13 +14,51 @@
       "settings": {
         "color_scheme": "default",
         "container_size": "xsmall",
+        "show_heading": true,
+        "add_side_paddings": true,
         "section_spacing_top": 96,
-        "section_spacing_bottom": 96,
-        "show_heading": true
+        "section_spacing_bottom": 96
+      }
+    },
+    "image_banner_eQW4iQ": {
+      "type": "image-banner",
+      "name": "t:sections.image_banner.name",
+      "settings": {
+        "color_scheme": "white",
+        "enable_background_around_container": false,
+        "container_size": "full-screen",
+        "desktop_ratio": 0.4,
+        "mobile_ratio": 1.6,
+        "desktop_overlay_opacity": 20,
+        "mobile_overlay_opacity": 20,
+        "caption": "IMAGE BANNER",
+        "title": "Image with text",
+        "heading_size": "h2",
+        "text": "<p>Fill in the text to tell customers by what your products are inspired.</p>",
+        "body_size": "body3",
+        "desktop_content_position": "align-items:center;justify-content:center;",
+        "desktop_content_align": "center",
+        "content_max_width": 528,
+        "content_spacing": 116,
+        "mobile_content_position": "align-items:center;justify-content:center;",
+        "mobile_content_align": "center",
+        "desktop_content_background": "none",
+        "mobile_content_background": "none",
+        "btn_text": "Button label",
+        "btn_url": "",
+        "btn_style": "solid",
+        "extra_btn_text": "Button label",
+        "extra_btn_url": "",
+        "extra_btn_style": "solid",
+        "disable_lazy_loading": false,
+        "add_side_paddings": true,
+        "section_spacing_top": 0,
+        "section_spacing_bottom": 0
       }
     }
   },
   "order": [
+    "image_banner_eQW4iQ",
     "page"
   ]
 }
