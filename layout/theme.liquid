@@ -23,6 +23,15 @@
       {%- unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless -%}
     </title>
 
+    <style>
+    @font-face {
+      font-family: 'VersinaExtraBoldItalic';
+      src: url("https://cdn.shopify.com/s/files/1/0896/3434/1212/files/versina-extrabold-italic.ttf?v=1744798566") format('truetype');
+      font-weight: 900;
+      font-style: italic;
+    }
+    </style>
+    
     {% render 'css-variables' %}
     {{ 'bundle.js' | asset_url | preload_tag: as: 'script' }}
     {{ 'bundle.css' | asset_url | stylesheet_tag: preload: true }}

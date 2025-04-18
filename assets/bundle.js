@@ -19668,22 +19668,22 @@ class ProductForm extends base_component_1.BaseComponent {
     handleFormSubmit = async (event) => {
         event.preventDefault();
         const config = this.getQueryConfig();
-        this.setDisable(true);
-        this.setLoading(true);
-        await this.cartApi
-            .add(config)
-            .then(state => {
-            this.setDisable(false);
-            this.setLoading(false);
-            const parsedState = JSON.parse(state);
-            if (parsedState.description) {
-                this.showError(parsedState);
-                return;
-            }
-            this.lastParsedState = parsedState;
-            this.updateCartItems((0, dom_1.parseHTML)(JSON.parse(state).sections[this.cartId]));
-        })
-            .catch(() => console.log('Error in product form component'));
+        // this.setDisable(true);
+        // this.setLoading(true);
+        // await this.cartApi
+        //     .add(config)
+        //     .then(state => {
+        //     this.setDisable(false);
+        //     this.setLoading(false);
+        //     const parsedState = JSON.parse(state);
+        //     if (parsedState.description) {
+        //         this.showError(parsedState);
+        //         return;
+        //     }
+        //     this.lastParsedState = parsedState;
+        //     this.updateCartItems((0, dom_1.parseHTML)(JSON.parse(state).sections[this.cartId]));
+        // })
+        //     .catch(() => console.log('Error in product form component'));
     };
     updateCartItems(html) {
         const cartDrawer = (0, utils_1.$el)(CART_DRAWER_SELECTOR);
