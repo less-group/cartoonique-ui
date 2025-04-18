@@ -1214,6 +1214,47 @@
 
 {% render 'save-section-data-in-global-scope', section: section %}
 
+
+<script>
+    function updatecartimagestocartoonique() {
+
+    function handleCartUpdate() {
+      setTimeout(() => {
+        updatecartimagestocartoonique();
+      }, 2000);
+    }
+
+    // Listen for quantity change
+    document.querySelectorAll(".cart-item-quantity__input").forEach(input => {
+        input.addEventListener("change", handleCartUpdate);
+    });
+
+    // Listen for remove button click
+    document.querySelectorAll(".cart-item__remove-button-icon").forEach(button => {
+        button.addEventListener("click", handleCartUpdate);
+    });
+
+    document.querySelectorAll(".product-form__btn").forEach(button => {
+        button.addEventListener("click", handleCartUpdate);
+    });
+      
+     try {
+      let storedImages = JSON.parse(localStorage.getItem("cartooniqueImages")) || {};
+      Object.keys(storedImages).forEach((key) => {
+        let imageElement = document.querySelector(`.cart-item[data-cartkey="${key}"] .cart-item__image-wrapper img.cart-item__image`);
+        if (imageElement) {
+            imageElement.src = storedImages[key]; // Update image source
+            imageElement.dataset.srcset = storedImages[key]; // Update image source
+            imageElement.srcset = storedImages[key];
+        } 
+        });
+    } catch(err){
+     console.error("error updating the cart images", err); 
+    }
+  }
+  document.addEventListener('DOMContentLoaded', updatecartimagestocartoonique);
+</script>
+
 {% schema %}
 {
   "name": "t:sections.cart_drawer.name",
