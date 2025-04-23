@@ -557,17 +557,17 @@ class PixarTextOverlay extends HTMLElement {
     const dialogFooter = document.createElement("div");
     dialogFooter.className = "dialog-footer";
 
-    const cancelButton = document.createElement("button");
-    cancelButton.className = "btn btn-cancel";
-    cancelButton.textContent = "Cancel";
-    cancelButton.addEventListener("click", () => this.closeDialog(false));
+    // const cancelButton = document.createElement("button");
+    // cancelButton.className = "btn btn-cancel";
+    // cancelButton.textContent = "Cancel";
+    // cancelButton.addEventListener("click", () => this.closeDialog(false));
 
     const submitButton = document.createElement("button");
     submitButton.className = "btn btn-submit";
     submitButton.textContent = "Apply";
     submitButton.addEventListener("click", () => this.closeDialog(true));
 
-    dialogFooter.appendChild(cancelButton);
+    // dialogFooter.appendChild(cancelButton);
     dialogFooter.appendChild(submitButton);
 
     // Assemble the dialog
@@ -598,25 +598,27 @@ class PixarTextOverlay extends HTMLElement {
    */
   async renderTextOnCanvas(canvas, imageUrl, names) {
     return new Promise((resolve, reject) => {
-      const ctx = canvas.getContext('2d');
-      
+      const ctx = canvas.getContext("2d");
+
       // Use cached image if available and URL matches
       const useCache = this.cachedImage && this.cachedImage.src === imageUrl;
-      
+
       const renderWithImage = (img) => {
         // Set canvas dimensions to match the image
         // Check if we need to use 50x70 aspect ratio based on crop selection
         const imageManager = window.imageProcessingManager;
-        const is5070Selected = imageManager && imageManager.currentCropRatio && 
-                              Math.abs(imageManager.currentCropRatio - 5/7) < 0.01;
-        
+        const is5070Selected =
+          imageManager &&
+          imageManager.currentCropRatio &&
+          Math.abs(imageManager.currentCropRatio - 5 / 7) < 0.01;
+
         // Determine the target aspect ratio based on user's crop choice
-        const targetRatio = is5070Selected ? 5/7 : 3/4; // Either 50x70 or 30x40 aspect ratio
+        const targetRatio = is5070Selected ? 5 / 7 : 3 / 4; // Either 50x70 or 30x40 aspect ratio
 
         // Calculate dimensions that maintain aspect ratio
         let canvasWidth, canvasHeight;
         const imgRatio = img.width / img.height;
-        
+
         if (imgRatio > targetRatio) {
           // Image is wider than target ratio
           canvasHeight = img.height;
@@ -626,154 +628,165 @@ class PixarTextOverlay extends HTMLElement {
           canvasWidth = img.width;
           canvasHeight = canvasWidth / targetRatio;
         }
-        
+
         // Set canvas dimensions
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
-        
+
         // Draw the original image centered in the canvas
         const offsetX = (img.width - canvasWidth) / 2;
         const offsetY = (img.height - canvasHeight) / 2;
-        
+
         // Clear the canvas
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-        
+
         // Draw the image, centered if needed
-        ctx.drawImage(img, offsetX, offsetY, canvasWidth, canvasHeight, 0, 0, canvasWidth, canvasHeight);
-    
-    // updated code    
-    let width =  canvasWidth;
-    let height =  canvasHeight;
-        
-    const name1 = names.name1 || "His";
-    const name2 = names.name2 || "Her";
-    const subtitle = names.subtitle || "your subtitle here";
+        ctx.drawImage(
+          img,
+          offsetX,
+          offsetY,
+          canvasWidth,
+          canvasHeight,
+          0,
+          0,
+          canvasWidth,
+          canvasHeight
+        );
 
-    let displayText = name1 && name2 ? `${name1.toUpperCase()}\u200A&\u200A${name2.toUpperCase()}` :
-     (name1 || name2 || "").toUpperCase();
-    let fontSize = Math.max(Math.floor(width / 5), 60);
-    ctx.textAlign = 'center';
-    ctx.textBaseline = "bottom"; 
-    ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
-    let line1measure = ctx.measureText(displayText);
-    let textWidth = line1measure.width;
-    const maxWidth = width * 0.90;
-   
-    console.log("fontSize : "+fontSize);
-    
-    // Reduce font size until text fits if needed
-    if (textWidth > maxWidth) {
-      const ratio = maxWidth / textWidth;
-      fontSize = Math.floor(fontSize * ratio);
-      
-      ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
-      line1measure = ctx.measureText(displayText);
-      console.log("fontSize updated : "+fontSize);
-    }
+        // updated code
+        let width = canvasWidth;
+        let height = canvasHeight;
 
+        const name1 = names.name1 || "His";
+        const name2 = names.name2 || "Her";
+        const subtitle = names.subtitle || "your subtitle here";
 
-    // Add subtitle if provided
-    const x = width / 2;
-    
-    let subtitleY = height * 0.975;
+        let displayText =
+          name1 && name2
+            ? `${name1.toUpperCase()}\u200A&\u200A${name2.toUpperCase()}`
+            : (name1 || name2 || "").toUpperCase();
+        let fontSize = Math.max(Math.floor(width / 5), 60);
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
+        ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
+        let line1measure = ctx.measureText(displayText);
+        let textWidth = line1measure.width;
+        const maxWidth = width * 0.9;
 
-    let line2measure = null;
+        console.log("fontSize : " + fontSize);
 
-    // Calculate subtitle font size as a proportion of the main text size
-    let subtitleFontSize = Math.max(Math.floor(fontSize * 0.40), 25);
-    
-    console.log("subtitleFontSize : "+subtitleFontSize);
-    
-    // Configure subtitle style - use italic for a more movie subtitle appearance
-    ctx.font = `italic ${subtitleFontSize}px VersinaExtraBoldItalic, Montserrat, Arial, sans-serif`;
-    
-    if (subtitle) {
+        // Reduce font size until text fits if needed
+        if (textWidth > maxWidth) {
+          const ratio = maxWidth / textWidth;
+          fontSize = Math.floor(fontSize * ratio);
 
-      ctx.fillStyle = 'white'; // White text
-      
-      // Add shadow for readability
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
-      ctx.shadowBlur = 4;
-      ctx.shadowOffsetX = 1;
-      ctx.shadowOffsetY = 1;
-      
-      
-      // Check if subtitle needs to be wrapped
-      const maxSubtitleWidth = width * 0.9; // Use 90% of canvas width for subtitle
-      line2measure = ctx.measureText(subtitle);
-      let subtitleWidth = line2measure.width;
-      
+          ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
+          line1measure = ctx.measureText(displayText);
+          console.log("fontSize updated : " + fontSize);
+        }
 
-      if (subtitleWidth > maxSubtitleWidth) {
+        // Add subtitle if provided
+        const x = width / 2;
 
-        const ratio = maxSubtitleWidth / subtitleWidth;
-        subtitleFontSize = Math.floor(subtitleFontSize * ratio);
-        
+        let subtitleY = height * 0.975;
+
+        let line2measure = null;
+
+        // Calculate subtitle font size as a proportion of the main text size
+        let subtitleFontSize = Math.max(Math.floor(fontSize * 0.4), 25);
+
+        console.log("subtitleFontSize : " + subtitleFontSize);
+
+        // Configure subtitle style - use italic for a more movie subtitle appearance
         ctx.font = `italic ${subtitleFontSize}px VersinaExtraBoldItalic, Montserrat, Arial, sans-serif`;
-        line2measure = ctx.measureText(subtitle);
-        console.log("subtitleFontSize updated : "+subtitleFontSize);
-      }
 
-      // Draw the subtitle as a single line
-      ctx.fillText(subtitle, x, subtitleY);  // pointy2
-      console.log("subtitleY : "+subtitleY);
-    } else {
-      line2measure = ctx.measureText('your subtitle here');
-    }
+        if (subtitle) {
+          ctx.fillStyle = "white"; // White text
 
-    const y = (subtitleY - line2measure.actualBoundingBoxAscent) - (height * 0.025) - line1measure.actualBoundingBoxDescent;
-    console.log("point y : "+y);
-    
-    // Set the same font on the main text
-    ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
-    
-    // Multiple shadow passes for a professional look
-    // First pass: outer shadow
-    ctx.fillStyle = 'white';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-    ctx.shadowBlur = fontSize * 0.07;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = fontSize * 0.03;
-    ctx.fillText(displayText, x, y);
-    
-    // Second pass: deeper shadow for 3D effect
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-    ctx.shadowBlur = fontSize * 0.12;
-    ctx.shadowOffsetY = fontSize * 0.05;
-    ctx.fillText(displayText, x, y);
-    
-    // Third pass: add subtle white glow
-    ctx.shadowColor = 'rgba(255, 255, 255, 0.2)';
-    ctx.shadowBlur = fontSize * 0.04;
-    ctx.shadowOffsetY = 0;
-    ctx.fillText(displayText, x, y);
-        
+          // Add shadow for readability
+          ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+          ctx.shadowBlur = 4;
+          ctx.shadowOffsetX = 1;
+          ctx.shadowOffsetY = 1;
+
+          // Check if subtitle needs to be wrapped
+          const maxSubtitleWidth = width * 0.9; // Use 90% of canvas width for subtitle
+          line2measure = ctx.measureText(subtitle);
+          let subtitleWidth = line2measure.width;
+
+          if (subtitleWidth > maxSubtitleWidth) {
+            const ratio = maxSubtitleWidth / subtitleWidth;
+            subtitleFontSize = Math.floor(subtitleFontSize * ratio);
+
+            ctx.font = `italic ${subtitleFontSize}px VersinaExtraBoldItalic, Montserrat, Arial, sans-serif`;
+            line2measure = ctx.measureText(subtitle);
+            console.log("subtitleFontSize updated : " + subtitleFontSize);
+          }
+
+          // Draw the subtitle as a single line
+          ctx.fillText(subtitle, x, subtitleY); // pointy2
+          console.log("subtitleY : " + subtitleY);
+        } else {
+          line2measure = ctx.measureText("your subtitle here");
+        }
+
+        const y =
+          subtitleY -
+          line2measure.actualBoundingBoxAscent -
+          height * 0.025 -
+          line1measure.actualBoundingBoxDescent;
+        console.log("point y : " + y);
+
+        // Set the same font on the main text
+        ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
+
+        // Multiple shadow passes for a professional look
+        // First pass: outer shadow
+        ctx.fillStyle = "white";
+        ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+        ctx.shadowBlur = fontSize * 0.07;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = fontSize * 0.03;
+        ctx.fillText(displayText, x, y);
+
+        // Second pass: deeper shadow for 3D effect
+        ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
+        ctx.shadowBlur = fontSize * 0.12;
+        ctx.shadowOffsetY = fontSize * 0.05;
+        ctx.fillText(displayText, x, y);
+
+        // Third pass: add subtle white glow
+        ctx.shadowColor = "rgba(255, 255, 255, 0.2)";
+        ctx.shadowBlur = fontSize * 0.04;
+        ctx.shadowOffsetY = 0;
+        ctx.fillText(displayText, x, y);
+
         resolve(canvas);
       };
-      
+
       // If we have a cached image, use it immediately
       if (useCache) {
         renderWithImage(this.cachedImage);
         return;
       }
-      
+
       // Create an image element to load the source image
       const img = new Image();
-      img.crossOrigin = 'anonymous'; // Handle CORS if needed
-      
+      img.crossOrigin = "anonymous"; // Handle CORS if needed
+
       // Set up the image load handler
       img.onload = () => {
         // Cache the loaded image
         this.cachedImage = img;
         renderWithImage(img);
       };
-      
+
       // Handle image loading errors
       img.onerror = (err) => {
-        console.error('Error loading image for rendering:', err);
-        reject(new Error('Failed to load image for rendering'));
+        console.error("Error loading image for rendering:", err);
+        reject(new Error("Failed to load image for rendering"));
       };
-      
+
       // Load the image
       img.src = imageUrl;
     });
@@ -784,22 +797,37 @@ class PixarTextOverlay extends HTMLElement {
    */
   async updatePreview() {
     try {
-
       function toTitleCase(str) {
-        const exceptions = ['a', 'an', 'and', 'is', 'the', 'of', 'in', 'on', 'at', 'to', 'for', 'but', 'or', 'nor', 'with'];
-        
+        const exceptions = [
+          "a",
+          "an",
+          "and",
+          "is",
+          "the",
+          "of",
+          "in",
+          "on",
+          "at",
+          "to",
+          "for",
+          "but",
+          "or",
+          "nor",
+          "with",
+        ];
+
         return str
           .toLowerCase()
-          .split(' ')
+          .split(" ")
           .map((word, index) => {
             if (!exceptions.includes(word)) {
               return word.charAt(0).toUpperCase() + word.slice(1);
             }
             return word;
           })
-          .join(' ');
+          .join(" ");
       }
-      
+
       // Get current values from inputs
       const name1 = this.nameInput1.value.trim();
       const name2 = this.nameInput2.value.trim();
@@ -951,7 +979,7 @@ class PixarTextOverlay extends HTMLElement {
 
       return;
     }
-    
+
     // Resolve the promise
     if (this.resolveDialogPromise) {
       const names = completed
@@ -1017,3 +1045,4 @@ if (!customElements.get("pixar-text-overlay")) {
   customElements.define("pixar-text-overlay", PixarTextOverlay);
   console.log("PixarTextOverlay registered");
 }
+

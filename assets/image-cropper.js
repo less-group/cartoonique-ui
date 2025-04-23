@@ -80,8 +80,8 @@ class ImageCropper {
       </div>
       
       <div class="image-cropper-actions">
-        <button id="image-cropper-cancel" class="image-cropper-button image-cropper-cancel">Cancel</button>
-        <button id="image-cropper-apply" class="image-cropper-button image-cropper-apply">Apply</button>
+        <button id="image-cropper-cancel" class="image-cropper-button image-cropper-cancel">Go Back</button>
+        <button id="image-cropper-apply" class="image-cropper-button image-cropper-apply">Continue</button>
       </div>
     `;
 
@@ -241,6 +241,12 @@ class ImageCropper {
       
       .image-cropper-cancel:hover {
         background-color: #e8e8e8;
+      }
+            
+      @media (max-width: 769px) {
+        .image-cropper-actions {
+          flex-direction: column-reverse;
+        }
       }
     `;
 
@@ -1014,3 +1020,4 @@ class ImageCropper {
 
 // Make available globally
 window.ImageCropper = ImageCropper;
+

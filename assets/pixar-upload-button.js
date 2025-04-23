@@ -17,6 +17,28 @@
       return;
     }
 
+    // Add custom styles to document
+    const styleElement = document.createElement("style");
+    styleElement.id = "upload-popup-styles";
+    styleElement.textContent = `
+      #mobile-image {
+        display: none;
+      }            
+      @media (max-width: 650px) {
+        #pixar-instructions-popup {
+          padding: 0 20px !important;
+        }
+        #examples-container {
+          display: none;
+        }
+        #mobile-image {
+          display: block;
+        }
+      }
+    `;
+
+    document.head.appendChild(styleElement);
+
     console.log("⭐ Instructions popup not found, creating it from template");
 
     // Create the instructions popup
@@ -42,8 +64,12 @@
         <button id="pixar-close-button" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 30px; cursor: pointer; padding: 5px; color: #555;">&times;</button>
         
         <h2 style="text-align: center; font-size: 28px; margin-bottom: 20px; font-weight: bold;">UPLOAD A PHOTO FOR YOUR PIXAR PORTRAIT</h2>
+
+        <div id="mobile-image">
+            <img  src="https://cdn.shopify.com/s/files/1/0896/3434/1212/files/mobileguideline.png?v=1745400537" alt="Mobile Example" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
         
-        <div style="margin-bottom: 30px;">
+        <div id="examples-container" style="margin-bottom: 30px;">
           <!-- Good and Bad photo sections -->
           <div style="margin-bottom: 30px;">
             <h3 style="color: #FF4444; text-align: center; font-size: 24px; margin-bottom: 15px; font-weight: bold;">BAD PHOTO EXAMPLES</h3>
@@ -172,6 +198,10 @@
           ? pixarComponent.querySelector('input[type="file"]') ||
             (pixarComponent.fileInput ? pixarComponent.fileInput : null)
           : document.querySelector('input[type="file"]');
+
+        if (!window.imageProcessingManager.isRailwayUrlNeeded) {
+          window.imageProcessingManager.isRailwayUrlNeeded = true;
+        }
 
         if (fileInput) {
           console.log("⭐ Upload button clicked, triggering file input");

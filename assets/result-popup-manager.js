@@ -82,6 +82,29 @@ class ResultPopupManager {
       return;
     }
 
+    // Add custom styles to document
+    const styleElement = document.createElement("style");
+    styleElement.id = "final-popup-styles";
+    styleElement.textContent = `
+            
+      @media (max-width: 769px) {
+        #pixar-result-image-container {
+            max-height: fit-content;
+            height: fit-content;
+        }
+        #pixar-image-shadow {
+            height: fit-content !important;
+        }
+      }
+      @media (max-width: 450px) {
+        #final-popup {
+            max-height: 700px !important;
+        }
+      }
+    `;
+
+    document.head.appendChild(styleElement);
+
     this.resultPopupShown = true;
 
     // Store the original image URL for aspect ratio adjustments
@@ -111,7 +134,7 @@ class ResultPopupManager {
 
       // Add content to the result popup
       resultPopup.innerHTML = `
-        <div style="position: relative; max-width: 600px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; height: calc(100vh - 40px); max-height: 800px;">
+        <div id="final-popup" style="position: relative; max-width: 600px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; height: calc(100vh - 40px); max-height: 800px;">
           
           <h4 style="text-align: center; font-size: 16px; margin-top: 10px; margin-bottom: 5px; color: #000000; font-weight: bold; text-transform: uppercase;">Choose the size</h4>
           <button id="close-final-image" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 30px; padding: 5px; color: #555;">×</button>
@@ -205,7 +228,7 @@ class ResultPopupManager {
           this.applyAspectRatioToResultImage(size, previousSize);
         });
       });
-      
+
       const closeButton = document.getElementById("close-final-image");
       if (closeButton) {
         closeButton.addEventListener("click", (event) => {
@@ -554,7 +577,6 @@ class ResultPopupManager {
    * Apply the appropriate aspect ratio to the result image
    */
   applyAspectRatioToResultImage(size, previousSize) {
-    
     // Get the aspect ratio for the selected size
     const aspectRatio = this.sizeAspectRatios[size];
     if (!aspectRatio) return;
@@ -576,156 +598,183 @@ class ResultPopupManager {
 
     // Create canvas to maintain aspect ratio
     const canvas = document.createElement("canvas");
+
+    // const container = document.getElementById('pixar-result-image-container');
+
+    // if (canvas && container) {
+    //   container.appendChild(canvas);
+    // }
+
     const ctx = canvas.getContext("2d");
 
     if (!window.imageProcessingManager.processwaterimg) {
-    	return false;
+      return false;
     }
 
     let img = window.imageProcessingManager.processwaterimg;
 
+    let srcX, srcY, srcW, srcH, canvasWidth, canvasHeight;
 
-      let srcX, srcY, srcW, srcH, canvasWidth, canvasHeight;
+    console.log("this.cropCoordinates : ");
+    console.log(window.imageProcessingManager.cropCoordinates);
 
-		if (!this.cropCoordinates) {
-		  // Use the full image
-		  srcX = 0;
-		  srcY = 0;
-		  srcW = img.width;
-		  srcH = img.height;
-		} else {
-		  // Use the crop coordinates
-		  srcX = this.croppedImageX;
-		  srcY = this.croppedImageY;
-		  srcW = this.croppedImageWidth;
-		  srcH = this.croppedImageHeight;
-		}
+    if (!window.imageProcessingManager.cropCoordinates) {
+      // Use the full image
+      srcX = 0;
+      srcY = 0;
+      srcW = img.width;
+      srcH = img.height;
+    } else {
+      // Use the crop coordinates
+      srcX = window.imageProcessingManager.croppedImageX;
+      srcY = window.imageProcessingManager.croppedImageY;
+      srcW = window.imageProcessingManager.croppedImageWidth;
+      srcH = window.imageProcessingManager.croppedImageHeight;
+    }
 
-		// Adjust to maintain aspect ratio
-		let adjustedX = srcX;
-		let adjustedY = srcY;
-		let adjustedW = srcW;
-		let adjustedH = srcH;
-		const currentAspect = srcW / srcH;
+    // Adjust to maintain aspect ratio
+    let adjustedX = srcX;
+    let adjustedY = srcY;
+    let adjustedW = srcW;
+    let adjustedH = srcH;
+    const currentAspect = srcW / srcH;
 
-		if (currentAspect > aspectRatio) {
-		  // Too wide – reduce width
-		  const newW = srcH * aspectRatio;
-		  adjustedX += (srcW - newW) / 2;
-		  adjustedW = newW;
-		} else if (currentAspect < aspectRatio) {
-		  // Too tall – reduce height
-		  const newH = srcW / aspectRatio;
-		  adjustedY += (srcH - newH) / 2;
-		  adjustedH = newH;
-		}
+    if (currentAspect > aspectRatio) {
+      // Too wide – reduce width
+      const newW = srcH * aspectRatio;
+      adjustedX += (srcW - newW) / 2;
+      adjustedW = newW;
+    } else if (currentAspect < aspectRatio) {
+      // Too tall – reduce height
+      const newH = srcW / aspectRatio;
+      adjustedY += (srcH - newH) / 2;
+      adjustedH = newH;
+    }
 
-		// Set canvas to match adjusted crop area
-		canvasWidth = canvas.width = adjustedW;
-		canvasHeight = canvas.height = adjustedH;
+    // Set canvas to match adjusted crop area
+    canvasWidth = canvas.width = adjustedW;
+    canvasHeight = canvas.height = adjustedH;
 
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-		// Draw the image (full or cropped), aspect-ratio-adjusted
-		ctx.drawImage(
-		  img,
-		  adjustedX,
-		  adjustedY,
-		  adjustedW,
-		  adjustedH,
-		  0,
-		  0,
-		  canvas.width,
-		  canvas.height
-		);
+    // Draw the image (full or cropped), aspect-ratio-adjusted
 
-        if (window.imageProcessingManager.textInfo) {
-            window.imageProcessingManager.drawTextOnCanvas(ctx, canvas.width, canvas.height);
-        }
-        
-      // Replace the image src with the canvas data
-      image.src = window.imageProcessingManager.processwaterimgbase64 =
+    console.log(
+      adjustedX,
+      adjustedY,
+      adjustedW,
+      adjustedH,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    ctx.drawImage(
+      img,
+      adjustedX,
+      adjustedY,
+      adjustedW,
+      adjustedH,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    if (window.imageProcessingManager.textInfo) {
+      window.imageProcessingManager.drawTextOnCanvas(
+        ctx,
+        canvas.width,
+        canvas.height
+      );
+    }
+
+    // Replace the image src with the canvas data
+    image.src = window.imageProcessingManager.processwaterimgbase64 =
+      canvas.toDataURL("image/png");
+
+    // resize the canvas to 200px
+    const maxWidth = 200;
+    const scaleFactor = maxWidth / canvasWidth;
+    const newWidth = maxWidth;
+    const newHeight = canvasHeight * scaleFactor;
+
+    // Create a new canvas for resizing
+    const resizedCanvas = document.createElement("canvas");
+    resizedCanvas.width = newWidth;
+    resizedCanvas.height = newHeight;
+
+    const ctxre = resizedCanvas.getContext("2d");
+    ctxre.drawImage(canvas, 0, 0, newWidth, newHeight);
+
+    this.resizedCanvas64 = resizedCanvas.toDataURL("image/png");
+
+    //draw non watermarked image now
+    if (window.imageProcessingManager.processnonwaterimg) {
+      this.selectedSizewatermark = size;
+
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+      ctx.drawImage(
+        window.imageProcessingManager.processnonwaterimg,
+        adjustedX,
+        adjustedY,
+        adjustedW,
+        adjustedH,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      if (window.imageProcessingManager.textInfo) {
+        window.imageProcessingManager.drawTextOnCanvas(
+          ctx,
+          canvas.width,
+          canvas.height
+        );
+      }
+
+      window.imageProcessingManager.processnonwaterimgbase64 =
         canvas.toDataURL("image/png");
+      console.log(
+        "SD : window.imageProcessingManager.processnonwaterimgbase64 -> "
+      );
+      console.log(window.imageProcessingManager.processnonwaterimgbase64);
+    } else {
+      console.log("applyonce ");
+      this.selectedSizewatermark = "applyonce";
+    }
 
-      // resize the canvas to 200px
-      const maxWidth = 200;
-      const scaleFactor = maxWidth / canvasWidth;
-      const newWidth = maxWidth;
-      const newHeight = canvasHeight * scaleFactor;
+    console.log("window.imageProcessingManager?.processnonwaterimgstatus : ");
+    console.log(window.imageProcessingManager?.processnonwaterimgstatus);
 
-      // Create a new canvas for resizing
-      const resizedCanvas = document.createElement("canvas");
-      resizedCanvas.width = newWidth;
-      resizedCanvas.height = newHeight;
+    const continueButton = document.getElementById("pixar-result-continue");
+    if (continueButton) {
+      continueButton.disabled =
+        window.imageProcessingManager?.processnonwaterimgstatus == "processed"
+          ? false
+          : true;
+      continueButton.style.setProperty(
+        "cursor",
+        window.imageProcessingManager?.processnonwaterimgstatus == "processed"
+          ? "pointer"
+          : "not-allowed",
+        "important"
+      );
+    }
 
-      const ctxre = resizedCanvas.getContext("2d");
-      ctxre.drawImage(canvas, 0, 0, newWidth, newHeight);
+    // Adjust shadow to match image dimensions once loaded
+    image.onload = () => {
+      this.adjustShadowToImage(image, shadow);
+    };
 
-      this.resizedCanvas64 = resizedCanvas.toDataURL("image/png");
-
-
-      //draw non watermarked image now
-      if (window.imageProcessingManager.processnonwaterimg) {
-        this.selectedSizewatermark = size;
-
-        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-
-        ctx.drawImage(
-		  window.imageProcessingManager.processnonwaterimg,
-		  adjustedX,
-		  adjustedY,
-		  adjustedW,
-		  adjustedH,
-		  0,
-		  0,
-		  canvas.width,
-		  canvas.height
-		);
-
-        if (window.imageProcessingManager.textInfo) {
-            window.imageProcessingManager.drawTextOnCanvas(ctx, canvas.width, canvas.height);
-        }
-        
-        window.imageProcessingManager.processnonwaterimgbase64 =
-          canvas.toDataURL("image/png");
-        console.log(
-          "SD : window.imageProcessingManager.processnonwaterimgbase64 -> "
-        );
-        console.log(window.imageProcessingManager.processnonwaterimgbase64);
-
-      } else {
-        console.log("applyonce ");
-        this.selectedSizewatermark = "applyonce";
-      }
-
-      console.log("window.imageProcessingManager?.processnonwaterimgstatus : ");
-      console.log(window.imageProcessingManager?.processnonwaterimgstatus);
-    
-      const continueButton = document.getElementById("pixar-result-continue");
-      if (continueButton) {
-        continueButton.disabled =
-          window.imageProcessingManager?.processnonwaterimgstatus == "processed"
-            ? false
-            : true;
-        continueButton.style.setProperty(
-          "cursor",
-          window.imageProcessingManager?.processnonwaterimgstatus == "processed"
-            ? "pointer"
-            : "not-allowed",
-          "important"
-        );
-      }
-
-      // Adjust shadow to match image dimensions once loaded
-      image.onload = () => {
-        this.adjustShadowToImage(image, shadow);
-      };
-
-      // Adjust container to maintain the aspect ratio without affecting layout
-      image.style.maxWidth = "100%";
-      image.style.maxHeight = "100%";
-      image.style.objectFit = "contain";
-      image.style.borderRadius = "8px";
+    // Adjust container to maintain the aspect ratio without affecting layout
+    image.style.maxWidth = "100%";
+    image.style.maxHeight = "100%";
+    image.style.objectFit = "contain";
+    image.style.borderRadius = "8px";
   }
 
   /**
@@ -1090,3 +1139,4 @@ document.addEventListener("DOMContentLoaded", () => {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = ResultPopupManager;
 }
+

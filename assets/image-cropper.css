@@ -25,7 +25,7 @@
   padding: 30px;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 0 30px rgba(0,0,0,0.2);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
   box-sizing: border-box;
 }
 
@@ -74,7 +74,7 @@
 .crop-image {
   display: block;
   cursor: move;
-  object-fit: none !important; /* Prevents image distortion */
+  object-fit: cover !important; /* Prevents image distortion */
   max-width: none !important; /* Remove max-width constraint */
   max-height: none !important; /* Remove max-height constraint */
   transform-origin: 0 0; /* Ensure transforms apply from top-left corner */
@@ -102,7 +102,7 @@
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  border: 4px solid #00C2FF;
+  border: 4px solid #00c2ff;
   box-shadow: 0 0 0 9999px rgba(255, 255, 255, 0.75);
   pointer-events: none; /* Allows interaction with the image beneath */
 }
@@ -111,7 +111,7 @@
   position: absolute;
   width: 20px;
   height: 20px;
-  background-color: #00C2FF;
+  background-color: #00c2ff;
   border-radius: 0;
   pointer-events: auto; /* Ensure handles are interactive */
   z-index: 100;
@@ -189,64 +189,64 @@
   .image-cropper-container {
     padding: 10px;
   }
-  
+
   .image-cropper-content {
     padding: 15px;
     width: 100%;
     max-width: 100%;
     border-radius: 4px;
   }
-  
+
   .image-cropper-title {
     font-size: 20px;
     margin-bottom: 15px;
   }
-  
+
   .image-cropper-subtitle {
     font-size: 14px;
     margin-bottom: 20px;
   }
-  
+
   .image-cropper-area {
     max-width: 100%; /* Ensure the cropper doesn't overflow the screen */
     max-height: 60vh; /* Limit height on mobile */
     margin-bottom: 20px;
   }
-  
+
   .image-cropper-actions {
     flex-direction: column;
     gap: 10px;
     margin-top: 20px;
   }
-  
+
   .image-cropper-button {
     width: 100%;
     margin-bottom: 0;
     padding: 10px 20px;
     font-size: 16px;
   }
-  
+
   /* Make handles larger on touch devices for easier manipulation */
   .crop-handle {
     width: 30px;
     height: 30px;
   }
-  
+
   .crop-handle.nw {
     top: -15px;
     left: -15px;
   }
-  
+
   .crop-handle.ne {
     top: -15px;
     right: -15px;
   }
-  
+
   .crop-handle.se {
     bottom: -15px;
     right: -15px;
   }
-  
+
   .crop-handle.sw {
     bottom: -15px;
     left: -15px;
@@ -258,21 +258,21 @@
   .image-cropper-container {
     padding: 5px;
   }
-  
+
   .image-cropper-content {
     padding: 10px;
   }
-  
+
   .image-cropper-title {
     font-size: 18px;
     margin-bottom: 10px;
   }
-  
+
   .image-cropper-subtitle {
     font-size: 12px;
     margin-bottom: 15px;
   }
-  
+
   .image-cropper-area {
     max-height: 50vh;
   }
@@ -328,4 +328,5 @@
   cursor: ne-resize;
   background-color: #4a7dbd;
   border-radius: 50%;
-} 
+}
+

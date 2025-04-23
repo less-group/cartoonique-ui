@@ -38,7 +38,7 @@ class ImageProcessingManager {
 
     this.processwaterimg = null;
     this.processnonwaterimg = null;
-    
+
     // User customization state
     this.userSelectedStyle = "pixarStyle";
     this.userSelectedFormat = "portrait";
@@ -604,7 +604,7 @@ class ImageProcessingManager {
       this.showTextOverlay();
       // const prevPopUp = document.getElementById("image-cropper-container");
       // prevPopUp.style.display = "none";
-      
+
       // If we already received the result from Railway, process it now
       if (this.transformationComplete && this.textProcessingComplete) {
         console.log(
@@ -621,61 +621,119 @@ class ImageProcessingManager {
   handleCropCancelled() {
     console.log("Crop cancelled");
 
-    // Use the original image without cropping
-    this.croppedImageDataUrl = this.originalImageDataUrl;
+    const imageCrop = document.getElementById("crop-image");
+    imageCrop.src = "";
 
-    // Mark crop as complete
-    this.cropComplete = true;
-
-    // Set default crop to center of the image (for proper aspect ratio)
-    // This ensures we still maintain the proper aspect ratio even when cropping is cancelled
-    const tempImg = new Image();
-    tempImg.onload = () => {
-      const width = tempImg.width;
-      const height = tempImg.height;
-
-      // Get the current aspect ratio from the cropper
-      const targetRatio = this.imageCropper
-        ? this.imageCropper.options.aspectRatio
-        : 3 / 4; // Default to 30x40 if cropper not available
-      console.log(`Using aspect ratio: ${targetRatio} for default crop`);
-
-      let cropWidth, cropHeight;
-      if (width / height > targetRatio) {
-        // Image is wider than target ratio
-        cropHeight = height;
-        cropWidth = cropHeight * targetRatio;
-      } else {
-        // Image is taller than target ratio
-        cropWidth = width;
-        cropHeight = cropWidth / targetRatio;
+    const uploadContainer = document.getElementById(
+      "direct-pixar-loader-container"
+    );
+    if (uploadContainer) {
+      const uploadButton = uploadContainer.querySelector("button");
+      if (uploadButton) {
+        uploadButton.textContent = "TRANSFORM YOUR PHOTO";
+        uploadButton.style.backgroundColor = "#4a7dbd";
       }
+    }
 
-      // Center the crop
-      const cropX = (width - cropWidth) / 2;
-      const cropY = (height - cropHeight) / 2;
+    const fileInput = pixarComponent
+      ? pixarComponent.querySelector('input[type="file"]') ||
+        (pixarComponent.fileInput ? pixarComponent.fileInput : null)
+      : document.querySelector('input[type="file"]');
+    if (fileInput) {
+      fileInput.value = ""; // This resets the file input
+    }
 
-      // Store the crop coordinates
-      this.cropCoordinates = {
-        x: cropX,
-        y: cropY,
-        width: cropWidth,
-        height: cropHeight,
-      };
+    this.isRailwayUrlNeeded = false;
 
-      console.log("Default crop coordinates applied:", this.cropCoordinates);
+    this.originalImageDataUrl = null;
+    this.croppedImageDataUrl = null;
+    this.transformationComplete = false;
+    this.stylizedImageUrl = null;
+    this.stylizednonImageUrl = null;
 
-      // Show the existing text overlay functionality
-      this.showTextOverlay();
+    window.railwayJobsStatus = {};
+    window.railwayJobsEventDispatched = {};
+    window.railwayApiCallsInProgress = {};
+    window.imageProcessingManager.jobId = null;
+    window.imageProcessingManager.fileIdentifier = null;
 
-      // If we already received the result from Railway, process it now
-      if (this.transformationComplete && this.textProcessingComplete) {
-        this.applyFinalProcessing();
-      }
-    };
+    const imageCropperContainer = document.getElementById(
+      "image-cropper-container"
+    );
+    // Hide the cropper
+    imageCropperContainer.style.display = "block";
+    document.body.style.overflow = "";
 
-    // Set source to trigger onload
-    tempImg.src = this.originalImageDataUrl;
+    // Show instructions popup
+    const popup = document.getElementById("pixar-instructions-popup");
+    if (popup) {
+      popup.style.display = "block";
+      document.body.style.overflow = "hidden";
+    } else {
+      checkForInstructionsPopup();
+      // After creating, show it
+      document.getElementById("pixar-instructions-popup").style.display =
+        "block";
+      document.body.style.overflow = "hidden";
+    }
+
+    return;
+
+    // // Use the original image without cropping
+    // this.croppedImageDataUrl = this.originalImageDataUrl;
+
+    // // Mark crop as complete
+    // this.cropComplete = true;
+
+    // // Set default crop to center of the image (for proper aspect ratio)
+    // // This ensures we still maintain the proper aspect ratio even when cropping is cancelled
+    // const tempImg = new Image();
+    // tempImg.onload = () => {
+    //   const width = tempImg.width;
+    //   const height = tempImg.height;
+
+    //   // Get the current aspect ratio from the cropper
+    //   const targetRatio = this.imageCropper
+    //     ? this.imageCropper.options.aspectRatio
+    //     : 3 / 4; // Default to 30x40 if cropper not available
+    //   console.log(`Using aspect ratio: ${targetRatio} for default crop`);
+
+    //   let cropWidth, cropHeight;
+    //   if (width / height > targetRatio) {
+    //     // Image is wider than target ratio
+    //     cropHeight = height;
+    //     cropWidth = cropHeight * targetRatio;
+    //   } else {
+    //     // Image is taller than target ratio
+    //     cropWidth = width;
+    //     cropHeight = cropWidth / targetRatio;
+    //   }
+
+    //   // Center the crop
+    //   const cropX = (width - cropWidth) / 2;
+    //   const cropY = (height - cropHeight) / 2;
+
+    //   // Store the crop coordinates
+    //   this.cropCoordinates = {
+    //     x: cropX,
+    //     y: cropY,
+    //     width: cropWidth,
+    //     height: cropHeight,
+    //   };
+
+    //   console.log("Default crop coordinates applied:", this.cropCoordinates);
+
+    //   // Show the existing text overlay functionality
+    //   this.showTextOverlay();
+
+    //   // If we already received the result from Railway, process it now
+    //   if (this.transformationComplete && this.textProcessingComplete) {
+    //     this.applyFinalProcessing();
+    //   }
+    // };
+
+    // // Set source to trigger onload
+    // tempImg.src = this.originalImageDataUrl;
   }
 
   /**
@@ -702,14 +760,13 @@ class ImageProcessingManager {
       prevPopUp.style.display = "none";
     }
 
-
     // Look for the existing text overlay functionality
     if (window.pixarTextManager || window.PixarTextManager) {
       // Access the text manager, create it if needed
       let textManager = window.pixarTextManager;
       // if (!textManager && window.PixarTextManager) {
-        console.log("Creating new PixarTextManager instance");
-        textManager = window.pixarTextManager = new window.PixarTextManager();
+      console.log("Creating new PixarTextManager instance");
+      textManager = window.pixarTextManager = new window.PixarTextManager();
       // }
 
       if (textManager) {
@@ -1350,9 +1407,9 @@ class ImageProcessingManager {
         // alert("imageUrl 1202" + imageUrl);
         img.onload = () => {
           // Get cropped image from DOM
-          
+
           this.processnonwaterimg = img;
-          
+
           if (!this.cropCoordinates || !this.originalImageWidth) {
             console.log(
               "🖼️ No crop coordinates available, returning full image"
@@ -1444,17 +1501,13 @@ class ImageProcessingManager {
           );
           this.processnonwaterimgstatus = "processed";
 
-          const continueButton = document.getElementById("pixar-result-continue");
-          if (continueButton) {
-          continueButton.disabled = false;
-          continueButton.style.setProperty(
-          "cursor",
-          "pointer",
-          "important"
+          const continueButton = document.getElementById(
+            "pixar-result-continue"
           );
-        }
-
-          
+          if (continueButton) {
+            continueButton.disabled = false;
+            continueButton.style.setProperty("cursor", "pointer", "important");
+          }
         } catch (error) {
           console.error("❌ Error processing non-watermarked image:", error);
           this.processnonwaterimgstatus = "error";
@@ -2679,8 +2732,9 @@ class ImageProcessingManager {
         let additionalImagesUpdated = 0;
         const mainImageSrc = mainImage.getAttribute("data-original-src") || "";
         if (mainImageSrc) {
+          const escapedSrc = CSS.escape(mainImageSrc);
           const similarImages = document.querySelectorAll(
-            `img[data-original-src="${mainImageSrc}"]`
+            `img[data-original-src="${escapedSrc}"]`
           );
           similarImages.forEach((img) => {
             // Update only if not the main image we already updated
@@ -3011,7 +3065,7 @@ class ImageProcessingManager {
       );
 
       this.processwaterimg = img;
-      
+
       // Calculate crop dimensions
       this.originalImageWidth = img.width;
       this.originalImageHeight = img.height;
@@ -3960,7 +4014,7 @@ class ImageProcessingManager {
       file.lastModified || Date.now()
     }`;
     this.fileIdentifier = fileIdentifier;
-    
+
     // Initialize tracking for API calls if not already done
     if (!window.railwayApiCallsInProgress) {
       window.railwayApiCallsInProgress = {};
@@ -4099,114 +4153,113 @@ class ImageProcessingManager {
    * @param {number} height - Canvas height
    */
   drawTextOnCanvas(ctx, width, height) {
-
     console.log("this.textInfo");
     console.log(this.textInfo);
-    
+
     const name1 = this.textInfo.name1 || this.textInfo.text || "";
     const name2 = this.textInfo.name2 || this.textInfo.text2 || "";
     const subtitle = this.textInfo.subtitle || "";
 
-    let displayText = name1 && name2 ? `${name1.toUpperCase()}\u200A&\u200A${name2.toUpperCase()}` :
-     (name1 || name2 || "").toUpperCase();
-     
+    let displayText =
+      name1 && name2
+        ? `${name1.toUpperCase()}\u200A&\u200A${name2.toUpperCase()}`
+        : (name1 || name2 || "").toUpperCase();
+
     let fontSize = Math.max(Math.floor(width / 5), 60);
-    ctx.textAlign = 'center';
-    ctx.textBaseline = "bottom"; 
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
     ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
     let line1measure = ctx.measureText(displayText);
     let textWidth = line1measure.width;
-    const maxWidth = width * 0.90;
-   
-    console.log("fontSize ipm : "+fontSize);
-    
+    const maxWidth = width * 0.9;
+
+    console.log("fontSize ipm : " + fontSize);
+
     // Reduce font size until text fits if needed
     if (textWidth > maxWidth) {
       const ratio = maxWidth / textWidth;
       fontSize = Math.floor(fontSize * ratio);
-      
+
       ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
       line1measure = ctx.measureText(displayText);
-      console.log("fontSize updated ipm : "+fontSize);
+      console.log("fontSize updated ipm : " + fontSize);
     }
-
 
     // Add subtitle if provided
     const x = width / 2;
-    
+
     let subtitleY = height * 0.975;
 
     let line2measure = null;
 
     // Calculate subtitle font size as a proportion of the main text size
-    let subtitleFontSize = Math.max(Math.floor(fontSize * 0.40), 25);
-    
-    console.log("subtitleFontSize ipm : "+subtitleFontSize);
-    
+    let subtitleFontSize = Math.max(Math.floor(fontSize * 0.4), 25);
+
+    console.log("subtitleFontSize ipm : " + subtitleFontSize);
+
     // Configure subtitle style - use italic for a more movie subtitle appearance
     ctx.font = `italic ${subtitleFontSize}px VersinaExtraBoldItalic, Montserrat, Arial, sans-serif`;
-    
-    if (subtitle) {
 
-      ctx.fillStyle = 'white'; // White text
-      
+    if (subtitle) {
+      ctx.fillStyle = "white"; // White text
+
       // Add shadow for readability
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+      ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
       ctx.shadowBlur = 4;
       ctx.shadowOffsetX = 1;
       ctx.shadowOffsetY = 1;
-      
-      
+
       // Check if subtitle needs to be wrapped
       const maxSubtitleWidth = width * 0.9; // Use 90% of canvas width for subtitle
       line2measure = ctx.measureText(subtitle);
       let subtitleWidth = line2measure.width;
-      
 
       if (subtitleWidth > maxSubtitleWidth) {
-
         const ratio = maxSubtitleWidth / subtitleWidth;
         subtitleFontSize = Math.floor(subtitleFontSize * ratio);
-        
+
         ctx.font = `italic ${subtitleFontSize}px VersinaExtraBoldItalic, Montserrat, Arial, sans-serif`;
         line2measure = ctx.measureText(subtitle);
-        console.log("subtitleFontSize updated ipm : "+subtitleFontSize);
+        console.log("subtitleFontSize updated ipm : " + subtitleFontSize);
       }
 
       // Draw the subtitle as a single line
-      ctx.fillText(subtitle, x, subtitleY);  // pointy2
-      console.log("subtitleY : "+subtitleY);
+      ctx.fillText(subtitle, x, subtitleY); // pointy2
+      console.log("subtitleY : " + subtitleY);
     } else {
-      line2measure = ctx.measureText('your subtitle here');
+      line2measure = ctx.measureText("your subtitle here");
     }
 
-    const y = (subtitleY - line2measure.actualBoundingBoxAscent) - (height * 0.025) - line1measure.actualBoundingBoxDescent;
-    console.log("point y : "+y);
-    
+    const y =
+      subtitleY -
+      line2measure.actualBoundingBoxAscent -
+      height * 0.025 -
+      line1measure.actualBoundingBoxDescent;
+    console.log("point y : " + y);
+
     // Set the same font on the main text
     ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
-    
+
     // Multiple shadow passes for a professional look
     // First pass: outer shadow
-    ctx.fillStyle = 'white';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillStyle = "white";
+    ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
     ctx.shadowBlur = fontSize * 0.07;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = fontSize * 0.03;
     ctx.fillText(displayText, x, y);
-    
+
     // Second pass: deeper shadow for 3D effect
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+    ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
     ctx.shadowBlur = fontSize * 0.12;
     ctx.shadowOffsetY = fontSize * 0.05;
     ctx.fillText(displayText, x, y);
-    
+
     // Third pass: add subtle white glow
-    ctx.shadowColor = 'rgba(255, 255, 255, 0.2)';
+    ctx.shadowColor = "rgba(255, 255, 255, 0.2)";
     ctx.shadowBlur = fontSize * 0.04;
     ctx.shadowOffsetY = 0;
     ctx.fillText(displayText, x, y);
-  
   }
 
   /**
@@ -5561,3 +5614,4 @@ if (originalHandleCropComplete) {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = ImageProcessingManager;
 }
+
