@@ -192,4 +192,3 @@ if (typeof window.PixarTextManager === "undefined") {
 } else {
   console.log("PixarTextManager already defined");
 }
-

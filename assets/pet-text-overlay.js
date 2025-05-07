@@ -5,7 +5,7 @@
  * and view a live preview of the text overlay.
  */
 
-class PixarTextOverlay extends HTMLElement {
+class PetTextOverlay extends HTMLElement {
   constructor() {
     super();
 
@@ -22,8 +22,6 @@ class PixarTextOverlay extends HTMLElement {
       imageUrl: "",
       defaultNames: {
         name1: "",
-        name2: "",
-        subtitle: "",
       },
     };
 
@@ -34,16 +32,16 @@ class PixarTextOverlay extends HTMLElement {
     this.currentAspectRatio =
       window.imageProcessingManager?.currentCropRatio || 3 / 4;
 
-    console.log("PixarTextOverlay constructed");
+    console.log("PetTextOverlay constructed");
   }
 
   connectedCallback() {
-    console.log("PixarTextOverlay connected");
+    console.log("PetTextOverlay connected");
     this.render();
   }
 
   disconnectedCallback() {
-    console.log("PixarTextOverlay disconnected");
+    console.log("PetTextOverlay disconnected");
     this.cleanup();
   }
 
@@ -210,22 +208,9 @@ class PixarTextOverlay extends HTMLElement {
         margin-bottom: 20px;
       }
       
-      .subtitle-container {
-        margin-bottom: 20px;
-      }
-      
-      .subtitle-label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: 600;
-        font-size: 14px;
-        color: #000000;
-        font-family: 'Montserrat', sans-serif;
-      }
-      
       .dialog-footer {
         display: flex;
-        justify-content: flex-end;
+        justify-content: center;
         gap: 12px;
         margin-top: 20px;
         padding-top: 20px;
@@ -251,16 +236,45 @@ class PixarTextOverlay extends HTMLElement {
       .btn-cancel:hover {
         background-color: #E2E8F0;
       }
+
+      .btn-revert {
+        background-color: #838383;
+        color: white;
+        padding: 12px 25px;
+        font-size: 16px;
+        font-weight: bold;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        margin: 0 10px;
+        text-transform: uppercase;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.2s ease-in-out;
+        font-family: inherit;
+      }
+      
+      .btn-revert:hover {
+        background-color: #636363;
+      }
       
       .btn-submit {
-        background-color: #4A7DBD;
+        background-color: rgb(74, 125, 189);
         color: white;
-        box-shadow: 0 4px 6px rgba(74, 125, 189, 0.2);
+        padding: 12px 25px;
+        font-size: 16px;
+        font-weight: bold;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer !important;
+        margin: 0px 10px;
+        text-transform: uppercase;
+        box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 8px;
+        transition: background-color 0.2s ease-in-out;
+        font-family: inherit;
       }
       
       .btn-submit:hover {
-        background-color: #3A6AA6;
-        box-shadow: 0 4px 10px rgba(74, 125, 189, 0.3);
+        background-color: #3a6dad;
       }
     `;
 
@@ -314,13 +328,13 @@ class PixarTextOverlay extends HTMLElement {
     // add label
     const nameInput1Label = document.createElement("label");
     nameInput1Label.className = "subtitle-label";
-    nameInput1Label.textContent = "Person One";
+    nameInput1Label.textContent = "Pet Name";
     nameInput1Label.htmlFor = "nameInput1";
 
     const nameInput1 = document.createElement("input");
     nameInput1.type = "text";
     nameInput1.id = "nameInput1";
-    nameInput1.placeholder = "Enter his name";
+    nameInput1.placeholder = "Enter pet name";
     nameInput1.maxLength = 15; // Add a hard character limit
 
     // character limit of 15
@@ -386,172 +400,11 @@ class PixarTextOverlay extends HTMLElement {
     inputWrapper1.appendChild(nameInput1CharCounter);
     inputWrapper1.appendChild(nameInput1warningMessage);
 
-    // Second input
-    const inputWrapper2 = document.createElement("div");
-    inputWrapper2.style.flex = "1";
-
-    // add label
-    const nameInput2Label = document.createElement("label");
-    nameInput2Label.className = "subtitle-label";
-    nameInput2Label.textContent = "Person Two";
-    nameInput2Label.htmlFor = "nameInput2";
-
-    const nameInput2 = document.createElement("input");
-    nameInput2.type = "text";
-    nameInput2.id = "nameInput2";
-    nameInput2.placeholder = "Enter her name";
-    nameInput2.maxLength = 15; // Add a hard character limit
-
-    // character limit of 15
-    // Create character counter element
-    const nameInput2CharCounter = document.createElement("div");
-    nameInput2CharCounter.className = "nameInput2-char-counter";
-    nameInput2CharCounter.style.fontSize = "12px";
-    nameInput2CharCounter.style.color = "#666";
-    nameInput2CharCounter.style.marginTop = "5px";
-    nameInput2CharCounter.style.display = "none";
-
-    // Create warning message
-    const nameInput2warningMessage = document.createElement("div");
-    nameInput2warningMessage.className = "nameInput2-warning";
-    nameInput2warningMessage.style.fontSize = "12px";
-    nameInput2warningMessage.style.color = "#e74c3c";
-    nameInput2warningMessage.style.marginTop = "5px";
-    nameInput2warningMessage.style.display = "none";
-    nameInput2warningMessage.textContent = "Person Two Name may be truncated";
-    // character limit of 15
-
-    // Use more efficient immediate input handling with RAF for smoother rendering
-    nameInput2.addEventListener("input", () => {
-      const maxChars = 15;
-      const text = nameInput2.value;
-
-      // Update character counter
-      if (text.length > maxChars * 0.7) {
-        nameInput2CharCounter.style.display = "block";
-        nameInput2CharCounter.textContent = `${text.length}/${maxChars} characters`;
-
-        // Change color based on length
-        if (text.length > maxChars) {
-          nameInput2CharCounter.style.color = "#e74c3c"; // Red for over limit
-          nameInput2CharCounter.style.borderColor = "#e74c3c";
-          nameInput2warningMessage.style.display = "block";
-        } else if (text.length > maxChars * 0.9) {
-          nameInput2CharCounter.style.color = "#e67e22"; // Orange for close to limit
-          nameInput2.style.borderColor = "#e67e22";
-          nameInput2warningMessage.style.display = "block";
-        } else {
-          nameInput2CharCounter.style.color = "#666"; // Default gray
-          nameInput2.style.borderColor = "";
-          nameInput2warningMessage.style.display = "none";
-        }
-      } else {
-        nameInput2CharCounter.style.display = "none";
-        nameInput2warningMessage.style.display = "none";
-        nameInput2.style.borderColor = "";
-      }
-
-      if (!this._updatePending) {
-        this._updatePending = true;
-        requestAnimationFrame(() => {
-          this.updatePreview();
-          this._updatePending = false;
-        });
-      }
-    });
-
-    inputWrapper2.appendChild(nameInput2Label);
-    inputWrapper2.appendChild(nameInput2);
-    inputWrapper2.appendChild(nameInput2CharCounter);
-    inputWrapper2.appendChild(nameInput2warningMessage);
-
     // Add inputs to container
     inputsContainer.appendChild(inputWrapper1);
-    inputsContainer.appendChild(inputWrapper2);
 
     // Add inputs after preview
     dialogContent.appendChild(inputsContainer);
-
-    // Add subtitle input
-    const subtitleContainer = document.createElement("div");
-    subtitleContainer.className = "subtitle-container";
-
-    const subtitleLabel = document.createElement("label");
-    subtitleLabel.className = "subtitle-label";
-    subtitleLabel.textContent = "Subtitle";
-    subtitleLabel.htmlFor = "subtitle-input";
-
-    const subtitleInput = document.createElement("input");
-    subtitleInput.type = "text";
-    subtitleInput.id = "subtitle-input";
-    subtitleInput.placeholder = "based on a true story - your text here";
-    subtitleInput.maxLength = 35; // Add a hard character limit
-
-    // Create character counter element
-    const subtitleCharCounter = document.createElement("div");
-    subtitleCharCounter.className = "subtitle-char-counter";
-    subtitleCharCounter.style.fontSize = "12px";
-    subtitleCharCounter.style.color = "#666";
-    subtitleCharCounter.style.marginTop = "5px";
-    subtitleCharCounter.style.display = "none";
-
-    // Create warning message
-    const warningMessage = document.createElement("div");
-    warningMessage.className = "subtitle-warning";
-    warningMessage.style.fontSize = "12px";
-    warningMessage.style.color = "#e74c3c";
-    warningMessage.style.marginTop = "5px";
-    warningMessage.style.display = "none";
-    warningMessage.textContent =
-      "Subtitle may be truncated or wrapped on the final image";
-
-    // Use more efficient immediate input handling with RAF for smoother rendering
-    subtitleInput.addEventListener("input", () => {
-      const maxChars = 35;
-      const text = subtitleInput.value;
-
-      // Update character counter
-      if (text.length > maxChars * 0.7) {
-        subtitleCharCounter.style.display = "block";
-        subtitleCharCounter.textContent = `${text.length}/${maxChars} characters`;
-
-        // Change color based on length
-        if (text.length > maxChars) {
-          subtitleCharCounter.style.color = "#e74c3c"; // Red for over limit
-          subtitleInput.style.borderColor = "#e74c3c";
-          warningMessage.style.display = "block";
-        } else if (text.length > maxChars * 0.9) {
-          subtitleCharCounter.style.color = "#e67e22"; // Orange for close to limit
-          subtitleInput.style.borderColor = "#e67e22";
-          warningMessage.style.display = "block";
-        } else {
-          subtitleCharCounter.style.color = "#666"; // Default gray
-          subtitleInput.style.borderColor = "";
-          warningMessage.style.display = "none";
-        }
-      } else {
-        subtitleCharCounter.style.display = "none";
-        warningMessage.style.display = "none";
-        subtitleInput.style.borderColor = "";
-      }
-
-      // Update preview
-      if (!this._updatePending) {
-        this._updatePending = true;
-        requestAnimationFrame(() => {
-          this.updatePreview();
-          this._updatePending = false;
-        });
-      }
-    });
-
-    subtitleContainer.appendChild(subtitleLabel);
-    subtitleContainer.appendChild(subtitleInput);
-    subtitleContainer.appendChild(subtitleCharCounter);
-    subtitleContainer.appendChild(warningMessage);
-
-    // Add subtitle container after name inputs
-    dialogContent.appendChild(subtitleContainer);
 
     // Dialog footer
     const dialogFooter = document.createElement("div");
@@ -562,12 +415,18 @@ class PixarTextOverlay extends HTMLElement {
     // cancelButton.textContent = "Cancel";
     // cancelButton.addEventListener("click", () => this.closeDialog(false));
 
+    const revertButton = document.createElement("button");
+    revertButton.className = "btn btn-revert";
+    revertButton.textContent = "Go Back";
+    revertButton.addEventListener("click", () => this.handleTextCancelled());
+
     const submitButton = document.createElement("button");
     submitButton.className = "btn btn-submit";
-    submitButton.textContent = "Apply";
+    submitButton.textContent = "Continue";
     submitButton.addEventListener("click", () => this.closeDialog(true));
 
     // dialogFooter.appendChild(cancelButton);
+    dialogFooter.appendChild(revertButton);
     dialogFooter.appendChild(submitButton);
 
     // Assemble the dialog
@@ -583,8 +442,8 @@ class PixarTextOverlay extends HTMLElement {
     // Store references
     this.dialogOverlay = dialogOverlay;
     this.nameInput1 = nameInput1;
-    this.nameInput2 = nameInput2;
-    this.subtitleInput = subtitleInput;
+    this.nameInput1CharCounter = nameInput1CharCounter;
+    this.nameInput1warningMessage = nameInput1warningMessage;
     this.previewImage = previewImage;
     this.previewContainer = previewContainer;
   }
@@ -657,21 +516,16 @@ class PixarTextOverlay extends HTMLElement {
         let width = canvasWidth;
         let height = canvasHeight;
 
-        const name1 = names.name1?.toUpperCase() || "HIS";
-        const name2 = names.name2?.toUpperCase() || "HER";
-        const subtitle = names.subtitle || "your subtitle here";
+        const name1 = names.name1?.toUpperCase() || " LEO";
 
-        let displayText =
-          name1 && name2
-            ? `${name1} & ${name2}`
-            : (name1 || name2 || "");
+        let displayText = name1 ? `${name1}` : "";
         let fontSize = Math.max(Math.floor(width / 5), 60);
         ctx.textAlign = "center";
         ctx.textBaseline = "bottom";
         ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
         let line1measure = ctx.measureText(displayText);
         let textWidth = line1measure.width;
-        const maxWidth = width * 0.9;
+        const maxWidth = width * 0.85;
 
         console.log("fontSize : " + fontSize);
 
@@ -688,150 +542,9 @@ class PixarTextOverlay extends HTMLElement {
         // Add subtitle if provided
         const x = width / 2;
 
-        let subtitleY = height * 0.975;
-
-        let line2measure = null;
-
-        // Calculate subtitle font size as a proportion of the main text size
-        let subtitleFontSize = Math.max(Math.floor(fontSize * 0.4), 25);
-
-        console.log("subtitleFontSize : " + subtitleFontSize);
-
-        // Configure subtitle style - use italic for a more movie subtitle appearance
-        ctx.font = `italic ${subtitleFontSize}px VersinaExtraBoldItalic, Montserrat, Arial, sans-serif`;
-
-        if (subtitle) {
-          ctx.fillStyle = "white"; // White text
-
-          // Add shadow for readability
-          ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
-          ctx.shadowBlur = 4;
-          ctx.shadowOffsetX = 1;
-          ctx.shadowOffsetY = 1;
-
-          // Check if subtitle needs to be wrapped
-          const maxSubtitleWidth = width * 0.9; // Use 90% of canvas width for subtitle
-          line2measure = ctx.measureText(subtitle);
-          let subtitleWidth = line2measure.width;
-
-          if (subtitleWidth > maxSubtitleWidth) {
-            const ratio = maxSubtitleWidth / subtitleWidth;
-            subtitleFontSize = Math.floor(subtitleFontSize * ratio);
-
-            ctx.font = `italic ${subtitleFontSize}px VersinaExtraBoldItalic, Montserrat, Arial, sans-serif`;
-            line2measure = ctx.measureText(subtitle);
-            console.log("subtitleFontSize updated : " + subtitleFontSize);
-          }
-
-          // Draw the subtitle as a single line
-          ctx.fillText(subtitle, x, subtitleY); // pointy2
-          console.log("subtitleY : " + subtitleY);
-        } else {
-          line2measure = ctx.measureText("your subtitle here");
-        }
-
-        const y =
-          subtitleY -
-          line2measure.actualBoundingBoxAscent -
-          height * 0.025 -
-          line1measure.actualBoundingBoxDescent;
+        const y = height * 0.2 - line1measure.actualBoundingBoxDescent;
         console.log("point y : " + y);
 
-      if (name1 && name2) {
-      const amp = "&";
-        
-      ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
-      const name1Width = ctx.measureText(name1).width;
-      const name2Width = ctx.measureText(name2).width;
-      
-      ctx.font = `900 ${fontSize * 1.15}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
-      const ampWidth = ctx.measureText(amp).width;
-      
-      // Set back to main font to measure space width
-      ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
-      const spacing = ctx.measureText(" ").width;
-      
-      // ✅ Correctly recalculate textWidth now
-      const textWidth = name1Width + spacing + ampWidth + spacing + name2Width;
-
-      const name1X = x - textWidth / 2 + name1Width / 2;
-      const ampX = name1X + name1Width / 2 + spacing + ampWidth / 2;
-      const name2X = ampX + ampWidth / 2 + spacing + name2Width / 2;
-
-      // Set the same font on the main text
-      ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
-
-      // Multiple shadow passes for a professional look
-      // First pass: outer shadow
-      ctx.fillStyle = "white";
-      ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
-      ctx.shadowBlur = fontSize * 0.07;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = fontSize * 0.03;
-      ctx.fillText(name1, name1X, y);
-
-      // Second pass: deeper shadow for 3D effect
-      ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
-      ctx.shadowBlur = fontSize * 0.12;
-      ctx.shadowOffsetY = fontSize * 0.05;
-      ctx.fillText(name1, name1X, y);
-
-      // Third pass: add subtle white glow
-      ctx.shadowColor = "rgba(255, 255, 255, 0.2)";
-      ctx.shadowBlur = fontSize * 0.04;
-      ctx.shadowOffsetY = 0;
-      ctx.fillText(name1, name1X, y);
-
-      // Set the same font on the main text
-      ctx.font = `900 ${
-        fontSize * 1.15
-      }px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
-
-      ctx.fillStyle = "white";
-      ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
-      ctx.shadowBlur = fontSize * 0.07;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = fontSize * 0.03;
-      ctx.fillText(amp, ampX, y);
-
-      // Second pass: deeper shadow for 3D effect
-      ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
-      ctx.shadowBlur = fontSize * 0.12;
-      ctx.shadowOffsetY = fontSize * 0.05;
-      ctx.fillText(amp, ampX, y);
-
-      // Third pass: add subtle white glow
-      ctx.shadowColor = "rgba(255, 255, 255, 0.2)";
-      ctx.shadowBlur = fontSize * 0.04;
-      ctx.shadowOffsetY = 0;
-      ctx.fillText(amp, ampX, y);
-
-      // Set the same font on the main text
-      ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
-
-      // Multiple shadow passes for a professional look
-      // First pass: outer shadow
-      ctx.fillStyle = "white";
-      ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
-      ctx.shadowBlur = fontSize * 0.07;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = fontSize * 0.03;
-      ctx.fillText(name2, name2X, y);
-
-      // Second pass: deeper shadow for 3D effect
-      ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
-      ctx.shadowBlur = fontSize * 0.12;
-      ctx.shadowOffsetY = fontSize * 0.05;
-      ctx.fillText(name2, name2X, y);
-
-      // Third pass: add subtle white glow
-      ctx.shadowColor = "rgba(255, 255, 255, 0.2)";
-      ctx.shadowBlur = fontSize * 0.04;
-      ctx.shadowOffsetY = 0;
-      ctx.fillText(name2, name2X, y);
-              
-    } else {
-        
         // Set the same font on the main text
         ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
 
@@ -855,7 +568,7 @@ class PixarTextOverlay extends HTMLElement {
         ctx.shadowBlur = fontSize * 0.04;
         ctx.shadowOffsetY = 0;
         ctx.fillText(displayText, x, y);
-        }
+
         resolve(canvas);
       };
 
@@ -925,14 +638,10 @@ class PixarTextOverlay extends HTMLElement {
 
       // Get current values from inputs
       const name1 = this.nameInput1.value.trim();
-      const name2 = this.nameInput2.value.trim();
-      const subtitle = this.subtitleInput.value.trim();
 
       // Store values
       this.currentNames = {
         name1,
-        name2,
-        subtitle,
       };
 
       // Create canvas for rendering
@@ -968,8 +677,14 @@ class PixarTextOverlay extends HTMLElement {
 
     // Set initial values
     this.nameInput1.value = this.options.defaultNames.name1 || "";
-    this.nameInput2.value = this.options.defaultNames.name2 || "";
-    this.subtitleInput.value = this.options.defaultNames.subtitle || "";
+
+    // Load image for preview
+    if (this.options.imageUrl) {
+      // Update the preview
+      await this.updatePreview();
+    }
+
+    window.imageProcessingManager.hideLoadingPopup();
 
     // Show dialog with animation
     this.classList.add("active");
@@ -981,37 +696,80 @@ class PixarTextOverlay extends HTMLElement {
     // Determine if we need to adjust preview aspect ratio based on crop selection
     // Check if the image processing manager has selected a 50x70 crop
     const imageManager = window.imageProcessingManager;
-    const is5070Selected =
-      imageManager &&
-      imageManager.currentCropRatio &&
-      Math.abs(imageManager.currentCropRatio - 5 / 7) < 0.01;
-
-    // Make sure previewContainer exists before trying to set its style
-    if (this.previewContainer) {
-      if (is5070Selected) {
-        console.log("Using 50x70 aspect ratio for preview container");
-        // Set the preview container aspect ratio to match 50x70
-        this.previewContainer.style.aspectRatio = "5/7";
-      } else {
-        console.log("Using default 30x40 aspect ratio for preview container");
-        // Ensure we use the default 30x40 aspect ratio
-        this.previewContainer.style.aspectRatio = "3/4";
-      }
-    } else {
-      console.error("Preview container not found in showDialog");
-    }
-
-    // Load image for preview
-    if (this.options.imageUrl) {
-      // Update the preview
-      await this.updatePreview();
-    }
 
     // Return promise that will be resolved when dialog is closed
     return new Promise((resolve, reject) => {
       this.resolveDialogPromise = resolve;
       this.rejectDialogPromise = reject;
     });
+  }
+
+  /**
+   * Handle when a text is cancelled
+   */
+  handleTextCancelled() {
+    console.log("text cancelled");
+
+    // Hide dialog
+    this.classList.remove("active");
+    this.dialogOverlay.style.display = "none";
+
+    // Restore scrolling
+    document.body.style.overflow = "";
+
+    this.isDialogOpen = false;
+    this.previewImage.src = "";
+    this.nameInput1.value = "";
+    this.nameInput1.style.borderColor = "";
+    this.nameInput1CharCounter.style.display = "none";
+    this.nameInput1warningMessage.style.display = "none";
+
+    const uploadContainer = document.getElementById(
+      "direct-pixar-loader-container"
+    );
+    if (uploadContainer) {
+      const uploadButton = uploadContainer.querySelector("button");
+      if (uploadButton) {
+        uploadButton.textContent = "TRANSFORM YOUR PHOTO";
+        uploadButton.style.backgroundColor = "#4a7dbd";
+      }
+    }
+
+    const fileInput = pixarComponent
+      ? pixarComponent.querySelector('input[type="file"]') ||
+        (pixarComponent.fileInput ? pixarComponent.fileInput : null)
+      : document.querySelector('input[type="file"]');
+    if (fileInput) {
+      fileInput.value = ""; // This resets the file input
+    }
+
+    window.imageProcessingManager.isRailwayUrlNeeded = false;
+
+    window.imageProcessingManager.originalImageDataUrl = null;
+    window.imageProcessingManager.croppedImageDataUrl = null;
+    window.imageProcessingManager.transformationComplete = false;
+    window.imageProcessingManager.stylizedImageUrl = null;
+    window.imageProcessingManager.stylizednonImageUrl = null;
+
+    window.railwayJobsStatus = {};
+    window.railwayJobsEventDispatched = {};
+    window.railwayApiCallsInProgress = {};
+    window.imageProcessingManager.jobId = null;
+    window.imageProcessingManager.fileIdentifier = null;
+
+    // Show instructions popup
+    const popup = document.getElementById("pixar-instructions-popup");
+    if (popup) {
+      popup.style.display = "block";
+      document.body.style.overflow = "hidden";
+    } else {
+      // After creating, show it
+      document.getElementById("pixar-instructions-popup").style.display =
+        "block";
+      document.body.style.overflow = "hidden";
+    }
+
+    return;
   }
 
   /**
@@ -1034,8 +792,6 @@ class PixarTextOverlay extends HTMLElement {
       this.isDialogOpen = false;
       this.previewImage.src = "";
       this.nameInput1.value = "";
-      this.nameInput2.value = "";
-      this.subtitleInput.value = "";
 
       if (
         window.railwayJobsStatus[window.imageProcessingManager.jobId] ==
@@ -1072,6 +828,9 @@ class PixarTextOverlay extends HTMLElement {
       window.imageProcessingManager.stylizedImageUrl = null;
       window.imageProcessingManager.stylizednonImageUrl = null;
 
+      this.nameInput1.style.borderColor = "";
+      this.nameInput1CharCounter.style.display = "none";
+      this.nameInput1warningMessage.style.display = "none";
       return;
     }
 
@@ -1080,8 +839,6 @@ class PixarTextOverlay extends HTMLElement {
       const names = completed
         ? {
             name1: this.nameInput1.value.trim(),
-            name2: this.nameInput2.value.trim(),
-            subtitle: this.subtitleInput.value.trim(), // Include subtitle in returned names
           }
         : this.options.defaultNames;
 
@@ -1094,10 +851,17 @@ class PixarTextOverlay extends HTMLElement {
       this.rejectDialogPromise = null;
     }
 
+    // Update progress bar to 95%
+    const progressBar = document.getElementById("pixar-progress-bar");
+    if (progressBar) {
+      progressBar.style.width = "15%";
+    }
+
+    this.nameInput1.style.borderColor = "";
+    this.nameInput1CharCounter.style.display = "none";
+    this.nameInput1warningMessage.style.display = "none";
     this.previewImage.src = "";
     this.nameInput1.value = "";
-    this.nameInput2.value = "";
-    this.subtitleInput.value = "";
     this.isDialogOpen = false;
   }
 
@@ -1112,7 +876,6 @@ class PixarTextOverlay extends HTMLElement {
     // Get the names from options or current values
     const names = options.names || {
       name1: this.nameInput1?.value || "",
-      name2: this.nameInput2?.value || "",
     };
 
     // Always render text - we'll use placeholders if fields are empty
@@ -1136,7 +899,7 @@ class PixarTextOverlay extends HTMLElement {
 }
 
 // Register the custom element
-if (!customElements.get("pixar-text-overlay")) {
-  customElements.define("pixar-text-overlay", PixarTextOverlay);
-  console.log("PixarTextOverlay registered");
+if (!customElements.get("pet-text-overlay")) {
+  customElements.define("pet-text-overlay", PetTextOverlay);
+  console.log("PetTextOverlay registered");
 }

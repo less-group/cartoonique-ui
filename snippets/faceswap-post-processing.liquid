@@ -1,0 +1,230 @@
+{% comment %}
+  Snippet: faceswap-post-processing.liquid
+  
+  This snippet adds post-processing functionality to face-swap products.
+  It ensures the image is properly processed by the Railway API before adding to cart.
+  
+  Usage:
+  {% render 'faceswap-post-processing' %}
+{% endcomment %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const logPrefix = '🔄 [Face-Swap Post-Processing]';
+    const log = (message, level = 'log') => {
+      if (level === 'error') {
+        console.error(`${logPrefix} ${message}`);
+      } else if (level === 'warn') {
+        console.warn(`${logPrefix} ${message}`);
+      } else {
+        console.log(`${logPrefix} ${message}`);
+      }
+    };
+    
+    // Check if we have face-swap elements on the page
+    const faceSwapWrapper = document.querySelector('face-swap-file-input-wrapper');
+    if (!faceSwapWrapper) {
+      log('No face-swap wrapper found, skipping post-processing setup');
+      return;
+    }
+    
+    log('Setting up face-swap post-processing');
+    
+    // Helper function to extract job ID from URL
+    const extractJobIdFromUrl = (url) => {
+      if (!url) return null;
+      
+      // Primary pattern: Extract jobId from URL if it includes '/result/'
+      if (url.includes('/result/')) {
+        const urlParts = url.split('/');
+        const resultIndex = urlParts.indexOf('result');
+        if (resultIndex !== -1 && resultIndex < urlParts.length - 1) {
+          return urlParts[resultIndex + 1];
+        }
+      }
+      
+      // Fallback 1: Check for jobId as URL parameter
+      try {
+        const urlObj = new URL(url);
+        const jobId = urlObj.searchParams.get('jobId');
+        if (jobId) return jobId;
+      } catch (e) {
+        // URL parsing failed, continue with other extraction methods
+      }
+      
+      // Fallback 2: Look for UUID-like pattern in the URL
+      const uuidPattern = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+      const match = url.match(uuidPattern);
+      if (match) return match[0];
+      
+      return null;
+    };
+    
+    // Function to intercept add to cart actions
+    const setupAddToCartInterception = () => {
+      // Find all add to cart buttons for face-swap
+      const addToCartButtons = document.querySelectorAll('button[name="add"]');
+      log(`Found ${addToCartButtons.length} add-to-cart buttons`);
+      
+      addToCartButtons.forEach(button => {
+        if (button.dataset.faceswapIntercepted) {
+          return; // Skip if already set up
+        }
+        
+        const originalClickHandler = button.onclick;
+        
+        button.onclick = function(event) {
+          // Only intercept if we have a processed image
+          if (faceSwapWrapper && faceSwapWrapper.processedImageUrl) {
+            log('Found processed image, intercepting add to cart');
+            
+            // Check if post-processing API is already processing
+            if (window.imagePostProcessingAPI && window.imagePostProcessingAPI.isProcessing) {
+              log('Post-processing already in progress, allowing original handler to continue');
+            } else {
+              event.preventDefault();
+              
+              log('Initiating post-processing before add to cart');
+              
+              // Create and dispatch the event
+              const continueEvent = new CustomEvent('faceswap-continue-clicked', {
+                detail: {
+                  processedImageUrl: faceSwapWrapper.processedImageUrl,
+                  jobId: extractJobIdFromUrl(faceSwapWrapper.processedImageUrl),
+                  timestamp: Date.now(),
+                  source: 'faceswap-post-processing'
+                },
+                bubbles: true,
+                cancelable: false
+              });
+              
+              document.dispatchEvent(continueEvent);
+              
+              // Add visual feedback if possible
+              if (button.classList) {
+                button.classList.add('processing');
+                
+                // Add processing style if not already present
+                if (!document.getElementById('face-swap-processing-style')) {
+                  const style = document.createElement('style');
+                  style.id = 'face-swap-processing-style';
+                  style.textContent = `
+                    .processing {
+                      position: relative;
+                      pointer-events: none;
+                      opacity: 0.8;
+                    }
+                    .processing::after {
+                      content: '';
+                      position: absolute;
+                      top: 50%;
+                      left: 50%;
+                      width: 20px;
+                      height: 20px;
+                      margin: -10px 0 0 -10px;
+                      border-radius: 50%;
+                      border: 2px solid rgba(255,255,255,0.3);
+                      border-top-color: white;
+                      animation: face-swap-spinner 0.6s linear infinite;
+                    }
+                    @keyframes face-swap-spinner {
+                      to {transform: rotate(360deg);}
+                    }
+                  `;
+                  document.head.appendChild(style);
+                }
+              }
+              
+              // Call original handler after a short delay
+              setTimeout(() => {
+                if (button.classList) {
+                  button.classList.remove('processing');
+                }
+                
+                log('Continuing with original handler after post-processing initiated');
+                
+                if (typeof originalClickHandler === 'function') {
+                  originalClickHandler.call(this, event);
+                } else {
+                  // If no original handler, submit the form
+                  const form = button.closest('form');
+                  if (form) {
+                    form.submit();
+                  }
+                }
+              }, 200);
+              
+              return false;
+            }
+          }
+          
+          // If no processed image or already processing, just call the original handler
+          if (typeof originalClickHandler === 'function') {
+            return originalClickHandler.call(this, event);
+          }
+        };
+        
+        // Mark as intercepted
+        button.dataset.faceswapIntercepted = 'true';
+        log(`Intercepted add-to-cart button: ${button.textContent?.trim() || 'unnamed button'}`);
+      });
+    };
+    
+    // Set up initial interception
+    setupAddToCartInterception();
+    
+    // Watch for dynamically added buttons
+    const observer = new MutationObserver((mutations) => {
+      let shouldSetup = false;
+      
+      mutations.forEach((mutation) => {
+        if (mutation.addedNodes.length) {
+          // Look for add-to-cart buttons or their containers
+          Array.from(mutation.addedNodes).forEach(node => {
+            if (node.nodeType === 1 && (
+              node.matches('button[name="add"]') ||
+              node.querySelector('button[name="add"]')
+            )) {
+              shouldSetup = true;
+            }
+          });
+        }
+      });
+      
+      if (shouldSetup) {
+        setupAddToCartInterception();
+      }
+    });
+    
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    // Listen for post-processing complete event
+    document.addEventListener('post-processing-complete', function(event) {
+      log(`Post-processing complete received: Job ID=${event.detail.jobId}, Size=${event.detail.size}`);
+      
+      // Could add visual feedback here if needed
+      const addToCartButtons = document.querySelectorAll('button[name="add"]');
+      addToCartButtons.forEach(button => {
+        if (button.classList) {
+          button.classList.remove('processing');
+        }
+      });
+    });
+    
+    // Listen for post-processing error event
+    document.addEventListener('post-processing-error', function(event) {
+      log(`Post-processing error received: Job ID=${event.detail.jobId}, Error=${event.detail.error}`, 'warn');
+      
+      // Reset any UI state
+      const addToCartButtons = document.querySelectorAll('button[name="add"]');
+      addToCartButtons.forEach(button => {
+        if (button.classList) {
+          button.classList.remove('processing');
+        }
+      });
+    });
+    
+    // Check again after a short delay to catch buttons added by JavaScript
+    setTimeout(setupAddToCartInterception, 1000);
+  });
+</script> 

@@ -605,7 +605,7 @@ class ImageCropper {
     // STEP 1: Define maximum allowed dimensions
     // Set reasonable max dimensions for the container
     const maxContainerWidth = Math.min(
-      this.cropArea.parentElement.offsetWidth,
+      this.cropArea.parentElement.offsetWidth - 60,
       1024
     );
     const maxContainerHeight = Math.min(window.innerHeight * 0.7, 800); // 70% of viewport height, max 800px
@@ -615,6 +615,8 @@ class ImageCropper {
       "x",
       maxContainerHeight
     );
+
+    console.log("this.cropArea.parentElement.offsetWidth : ", this.cropArea.parentElement.offsetWidth , "window.innerHeight : ", window.innerHeight);
 
     // STEP 2: Calculate the scaled image dimensions based on aspect ratio
     let scaledImgWidth, scaledImgHeight;
@@ -1020,4 +1022,3 @@ class ImageCropper {
 
 // Make available globally
 window.ImageCropper = ImageCropper;
-
