@@ -131,7 +131,7 @@
         </div>
 
         <p style="text-align: center; font-size: 18px; margin-bottom: 30px; font-weight: bold;">
-          Please make sure to upload a clear, close-up photo of one person without glasses.
+          Please make sure to upload a clear, close-up photo of one person without glasses .
         </p>
 
         <div id="pixar-upload-buttons" style="text-align: center;">
@@ -170,7 +170,7 @@
         
         <p id="pixar-progress-text" style="text-align: center; margin: 20px 0; color: #000000; font-size: 18px; font-weight: 500;">Preparing your image...</p>
         
-        <p style="text-align: center; margin-top: 15px; color: #000000; font-size: 15px;">Usually takes 2 to 3 minutes.</p>
+        <p id="time-alert" style="text-align: center; margin-top: 15px; color: #000000; font-size: 15px;">Usually takes 2 to 3 minutes.</p>
       </div>
     `;
 
@@ -584,6 +584,11 @@
       window.imageProcessingManager.transformationComplete = false;
       window.imageProcessingManager.stylizedImageUrl = null;
       window.imageProcessingManager.stylizednonImageUrl = null;
+      window.resultPopupManager.selectedSizewatermark == "applyonce";
+      window.imageProcessingManager.processnonwaterimgstatus = false;
+      window.imageProcessingManager.finalImageUrl = null;
+      window.imageProcessingManager.finalProcessingComplete = false;
+      window.imageProcessingManager.isProcessing = false;
 
       // Update progress bar to 95%
       const progressBar = document.getElementById("pixar-progress-bar");
@@ -944,11 +949,13 @@
     document.addEventListener("pixar-transform-complete", function (event) {
       console.log("⭐ Transform complete event received", event);
 
-      // Hide loading popup
-      const loadingPopup = document.getElementById("pixar-loading-popup");
-      if (loadingPopup) {
-        loadingPopup.style.display = "none";
-        document.body.style.overflow = "";
+      if (!window?.isPetTemplate) {
+        // Hide loading popup
+        const loadingPopup = document.getElementById("pixar-loading-popup");
+        if (loadingPopup) {
+          loadingPopup.style.display = "none";
+          document.body.style.overflow = "";
+        }
       }
 
       // Update upload button text
@@ -1038,3 +1045,4 @@
     init();
   }
 })();
+

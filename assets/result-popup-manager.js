@@ -21,12 +21,21 @@ class ResultPopupManager {
       L: 50 / 70, // 50x70"
     };
 
-    // Variant IDs for each size
-    this.variantIds = {
-      S: "54224438722908", // Shopify variant ID for size S
-      M: "54215893451100", // Shopify variant ID for size M
-      L: "54215893483868", // Shopify variant ID for size L
-    };
+    if (location.href.includes("pet-pixar-portrait")) {
+      // Variant IDs for each size
+      this.variantIds = {
+        S: "54386981110108", // Shopify variant ID for size S
+        M: "54386981142876", // Shopify variant ID for size M
+        L: "54386981175644", // Shopify variant ID for size L
+      };
+    } else {
+      // Variant IDs for each size
+      this.variantIds = {
+        S: "54224438722908", // Shopify variant ID for size S
+        M: "54215893451100", // Shopify variant ID for size M
+        L: "54215893483868", // Shopify variant ID for size L
+      };
+    }
 
     // Detect template type - pixar or face-swap
     this.templateType = this.detectTemplateType();
@@ -86,7 +95,9 @@ class ResultPopupManager {
     const styleElement = document.createElement("style");
     styleElement.id = "final-popup-styles";
     styleElement.textContent = `
-            
+      #pixar-result-revert:hover {
+          background-color: #636363 !important;
+      }
       @media (max-width: 769px) {
         #pixar-result-image-container {
             max-height: fit-content;
@@ -150,21 +161,21 @@ class ResultPopupManager {
             <div style="margin-bottom: 15px;">
               <div style="display: flex; justify-content: space-between; margin: 0 auto; max-width: 90%;">
                 <!-- Size S -->
-                <div data-size="S" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer; background-color: #f0f5fb; transition: all 0.2s ease-in-out;">
+                <div data-size="S" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer; background-color: #f0f5fb;">
                   <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">S</div>
                   <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$85</div>
                   <div style="font-size: 12px; color: #000000; margin-top: 3px;">20x30"</div>
                 </div>
                 
                 <!-- Size M -->
-                <div data-size="M" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer; transition: all 0.2s ease-in-out;">
+                <div data-size="M" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer;">
                   <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">M</div>
                   <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$130</div>
                   <div style="font-size: 12px; color: #000000; margin-top: 3px;">30x40"</div>
                 </div>
                 
                 <!-- Size L -->
-                <div data-size="L" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer; transition: all 0.2s ease-in-out;">
+                <div data-size="L" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer;">
                   <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">L</div>
                   <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$190</div>
                   <div style="font-size: 12px; color: #000000; margin-top: 3px;">50x70"</div>
@@ -174,6 +185,11 @@ class ResultPopupManager {
             </div>
             
             <div style="text-align: center; margin-top: 10px; margin-bottom: 10px;">
+            ${
+              window?.isPetTemplate
+                ? '<button id="pixar-result-revert" style="background-color: #838383; color: white; padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 0 10px; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: background-color 0.2s ease-in-out;">GO BACK</button>'
+                : ""
+            }
               <button id="pixar-result-continue" style="background-color: #4A7DBD; color: white; padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 0 10px; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: background-color 0.2s ease-in-out;">CONTINUE</button>
             </div>
           </div>
@@ -190,14 +206,12 @@ class ResultPopupManager {
         option.addEventListener("mouseenter", () => {
           if (option.getAttribute("data-size") !== this.selectedSize) {
             option.style.backgroundColor = "#f8f8f8";
-            option.style.transform = "translateY(-2px)";
           }
         });
 
         option.addEventListener("mouseleave", () => {
           if (option.getAttribute("data-size") !== this.selectedSize) {
             option.style.backgroundColor = "";
-            option.style.transform = "translateY(0)";
           }
         });
 
@@ -215,13 +229,11 @@ class ResultPopupManager {
           // Remove highlight from all options
           sizeOptions.forEach((opt) => {
             opt.style.backgroundColor = "";
-            opt.style.transform = "translateY(0)";
             opt.style.boxShadow = "none";
           });
 
           // Highlight selected option
           option.style.backgroundColor = "#f0f5fb";
-          option.style.transform = "translateY(-2px)";
           option.style.boxShadow = "0 4px 8px rgba(0,0,0,0.08)";
 
           // Apply the appropriate aspect ratio to the image with animation
@@ -298,6 +310,58 @@ class ResultPopupManager {
           window.imageProcessingManager.transformationComplete = false;
           window.imageProcessingManager.stylizedImageUrl = null;
           window.imageProcessingManager.stylizednonImageUrl = null;
+
+          this.resultPopupShown = false;
+        });
+      }
+
+      // Add event listener for the continue button
+      const revertButton = document.getElementById("pixar-result-revert");
+      if (revertButton) {
+        revertButton.addEventListener("click", (event) => {
+          event.preventDefault();
+          document.body.removeAttribute("style");
+          const ParentDivMainImage = document.querySelector(
+            ".pixar-image-container"
+          );
+
+          if (ParentDivMainImage) {
+            ParentDivMainImage.removeAttribute("style");
+            ParentDivMainImage.classList.remove("pixar-image-container");
+          }
+
+          const mainImage = document.querySelector(".pixar-transformed-image");
+          if (mainImage) {
+            const srcObj = JSON.parse(mainImage.dataset.originalSrc);
+            const attributeObj = JSON.parse(
+              mainImage.dataset.originalAttributes
+            );
+            const stylesObj = JSON.parse(mainImage.dataset.originalStyles);
+
+            mainImage.setAttribute("width", attributeObj.width); // or any value you want
+            mainImage.setAttribute("height", attributeObj.height);
+
+            // Set appropriate styling to ensure correct aspect ratio display
+            mainImage.style.objectFit = stylesObj.objectFit;
+            mainImage.style.objectPosition = stylesObj.objectPosition;
+            mainImage.style.width = stylesObj.width;
+            mainImage.style.height = stylesObj.height;
+            mainImage.style.aspectRatio = stylesObj.aspectRatio;
+            mainImage.style.maxWidth = stylesObj.maxWidth;
+            mainImage.style.minWidth = stylesObj.minWidth;
+            mainImage.style.minHeight = stylesObj.minHeight;
+            mainImage.style.maxHeight = stylesObj.maxHeight;
+
+            // Update the image source
+            mainImage.setAttribute("src", srcObj.src);
+            mainImage.setAttribute("srcset", srcObj.srcset);
+            mainImage.classList.remove("pixar-transformed-image");
+          }
+
+          window.imageProcessingManager.showImageCropper();
+          const pixarResultPopup =
+            document.getElementById("pixar-result-popup");
+          pixarResultPopup.remove();
 
           this.resultPopupShown = false;
         });

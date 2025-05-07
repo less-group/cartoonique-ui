@@ -463,8 +463,17 @@ class ImageProcessingManager {
         instructionsPopup.style.display = "none";
       }
 
-      // Show the image cropper immediately after upload
-      this.showImageCropper();
+      if (window?.isPetTemplate) {
+        this.cropComplete = true;
+        // Show loading popup while processing the final image
+        const loadingPopup = document.getElementById("pixar-loading-popup");
+        if (loadingPopup) {
+          loadingPopup.style.display = "block";
+        }
+      } else {
+        // Show the image cropper immediately after upload
+        this.showImageCropper();
+      }
     };
     reader.onerror = (error) => {
       console.error("Error reading file:", error);
@@ -477,6 +486,97 @@ class ImageProcessingManager {
    */
   showImageCropper() {
     console.log("Showing image cropper");
+
+    if (window?.isPetTemplate) {
+      // Access the text manager, create it if needed
+      let textManager = window.pixarTextManager;
+      // if (!textManager && window.PixarTextManager) {
+      console.log("Creating new PixarTextManager instance");
+      textManager = window.pixarTextManager = new window.PixarTextManager();
+      // }
+
+      // Convert data URL to Blob/File for text manager
+      const blob = this.dataURLToBlob(this.croppedImageDataUrl);
+      const file = new File([blob], "cropped-image.png", {
+        type: "image/png",
+      });
+
+      this.cropComplete = true;
+
+      // Show the text dialog with cropped image
+      textManager.showTextDialog(file).then((completed) => {
+        textManager.isEditing = false;
+
+        if (completed) {
+          // Only save if there are names provided (allow using just one name)
+          if (textManager.names.name1 || textManager.names.name2) {
+            // Capture more detailed text information
+            const textPosition = textManager.textPosition || "bottom";
+            const fontSize = textManager.fontSize || "32px";
+            const fontFamily = textManager.fontFamily || "Arial, sans-serif";
+            const color = textManager.textColor || "#FFFFFF";
+            const positionPercentage =
+              textManager.positionPercentage ||
+              (textPosition === "top"
+                ? 10
+                : textPosition === "bottom"
+                ? 90
+                : 50);
+
+            // Calculate the dimensions of the cropped image to store relative positioning
+            const croppedImg = new Image();
+            croppedImg.src = this.croppedImageDataUrl;
+            const croppedWidth = croppedImg.width;
+            const croppedHeight = croppedImg.height;
+
+            // Text was added - save more detailed positioning data
+            this.textFields = {
+              text: textManager.names.name1 || "",
+              text2: textManager.names.name2 || "",
+              subtitle: textManager.names.subtitle || "",
+              position: textPosition,
+              positionPercentage: positionPercentage,
+              fontSize: fontSize,
+              fontFamily: fontFamily,
+              color: color,
+              // Store coordinates relative to the cropped image to maintain position
+              relativeCoordinates: {
+                x: croppedWidth / 2, // Center horizontally
+                y:
+                  textPosition === "top"
+                    ? croppedHeight * 0.1
+                    : textPosition === "bottom"
+                    ? croppedHeight * 0.9
+                    : croppedHeight / 2,
+                // Store the cropped image dimensions for scaling
+                croppedImageWidth: croppedWidth,
+                croppedImageHeight: croppedHeight,
+              },
+            };
+          } else {
+            console.log("TEXT OVERLAY: No text provided.");
+            // Clear any existing text fields
+            this.textFields = null;
+          }
+
+          // Mark text processing as complete
+          this.textProcessingComplete = true;
+
+          // Check if the transformation completed while editing text
+          if (this.transformationComplete) {
+            this.applyFinalProcessing();
+          } else {
+            // Show loading until transform completes
+            const loadingPopup = document.getElementById("pixar-loading-popup");
+            if (loadingPopup) {
+              loadingPopup.style.display = "block";
+            }
+          }
+        }
+      });
+
+      return;
+    }
 
     // Note: We don't hide the loading popup here immediately anymore
     // Let the calling methods handle hiding the popup with the appropriate timing
@@ -1288,7 +1388,26 @@ class ImageProcessingManager {
       console.log(
         "TRANSFORM COMPLETE: Crop is complete, proceeding with text processing"
       );
-      this.showTextOverlay();
+      if (window?.isPetTemplate) {
+        this.croppedImageDataUrl = event?.detail?.resultImageUrl;
+        this.showImageCropper();
+        // Show loading popup while processing the final image
+        const loadingPopup = document.getElementById("pixar-loading-popup");
+        if (loadingPopup && loadingPopup.style.display === "block") {
+          // Update progress text
+          const progressText = document.getElementById("pixar-progress-text");
+          if (progressText) {
+            progressText.textContent = "Apply your personal touch...";
+          }
+          // Update progress bar to 95%
+          const progressBar = document.getElementById("pixar-progress-bar");
+          if (progressBar) {
+            progressBar.style.width = "95%";
+          }
+        }
+      } else {
+        this.showTextOverlay();
+      }
     } else {
       console.log(
         "TRANSFORM COMPLETE: Waiting for user to complete cropping before applying final processing"
@@ -1500,13 +1619,18 @@ class ImageProcessingManager {
             this.finalNonWatermarkedImageUrl
           );
           this.processnonwaterimgstatus = "processed";
-
-          const continueButton = document.getElementById(
-            "pixar-result-continue"
-          );
-          if (continueButton) {
-            continueButton.disabled = false;
-            continueButton.style.setProperty("cursor", "pointer", "important");
+          if (!window?.isPetTemplate) {
+            const continueButton = document.getElementById(
+              "pixar-result-continue"
+            );
+            if (continueButton) {
+              continueButton.disabled = false;
+              continueButton.style.setProperty(
+                "cursor",
+                "pointer",
+                "important"
+              );
+            }
           }
         } catch (error) {
           console.error("❌ Error processing non-watermarked image:", error);
@@ -1744,6 +1868,14 @@ class ImageProcessingManager {
       const progressBar = document.getElementById("pixar-progress-bar");
       if (progressBar) {
         progressBar.style.width = "95%";
+      }
+
+      if (window?.isPetTemplate) {
+        // Update progress bar to 95%
+        const timeBar = document.getElementById("time-alert");
+        if (timeBar && this.transformationComplete) {
+          timeBar.style.display = "none";
+        }
       }
     }
 
@@ -3071,7 +3203,7 @@ class ImageProcessingManager {
       this.originalImageHeight = img.height;
 
       // Get the cropped area from our crop coordinates
-      if (this.cropCoordinates) {
+      if (this.cropCoordinates && !window?.isPetTemplate) {
         const crop = this.cropCoordinates;
 
         // Calculate scaling factor if original images sizes don't match
@@ -3827,9 +3959,12 @@ class ImageProcessingManager {
       console.log(`🖼️ Job ${jobId} already processed, skipping poll`);
       return;
     }
-
+    let endpoint = "status";
+    if (window?.isPetTemplate) {
+      endpoint = "statuspet";
+    }
     fetch(
-      `https://letzteshemd-faceswap-api-production.up.railway.app/status/${jobId}`,
+      `https://letzteshemd-faceswap-api-production.up.railway.app/${endpoint}/${jobId}`,
       {
         method: "GET",
       }
@@ -3881,7 +4016,13 @@ class ImageProcessingManager {
 
               // Trigger the transform complete event
               const customEvent = new CustomEvent("pixar-transform-complete", {
-                detail: { imageUrl: imageUrl, timestamp: Date.now() },
+                detail: window?.isPetTemplate
+                  ? {
+                      imageUrl: imageUrl,
+                      resultImageUrl: data?.resultImageUrl,
+                      timestamp: Date.now(),
+                    }
+                  : { imageUrl: imageUrl, timestamp: Date.now() },
               });
               document.dispatchEvent(customEvent);
             }
@@ -4058,12 +4199,16 @@ class ImageProcessingManager {
             spaceBetweenWatermarks: 100,
           },
         };
+        let endpoint = "transform";
+        if (window?.isPetTemplate) {
+          endpoint = "transformpet";
+        }
 
         console.log(`🖼️ Sending image ${file.name} to Railway API`);
 
         // Call the Railway transform endpoint
         fetch(
-          "https://letzteshemd-faceswap-api-production.up.railway.app/transform",
+          `https://letzteshemd-faceswap-api-production.up.railway.app/${endpoint}`,
           {
             method: "POST",
             headers: {
@@ -4156,14 +4301,18 @@ class ImageProcessingManager {
     console.log("this.textInfo");
     console.log(this.textInfo);
 
-    const name1 = this.textInfo.name1 || this.textInfo.text || "";
-    const name2 = this.textInfo.name2 || this.textInfo.text2 || "";
+    const name1 =
+      this.textInfo.name1?.toUpperCase() ||
+      this.textInfo.text?.toUpperCase() ||
+      "";
+    const name2 =
+      this.textInfo.name2?.toUpperCase() ||
+      this.textInfo.text2?.toUpperCase() ||
+      "";
     const subtitle = this.textInfo.subtitle || "";
 
     let displayText =
-      name1 && name2
-        ? `${name1.toUpperCase()}\u200A&\u200A${name2.toUpperCase()}`
-        : (name1 || name2 || "").toUpperCase();
+      name1 && name2 ? `${name1} & ${name2}` : name1 || name2 || "";
 
     let fontSize = Math.max(Math.floor(width / 5), 60);
     ctx.textAlign = "center";
@@ -4230,36 +4379,137 @@ class ImageProcessingManager {
       line2measure = ctx.measureText("your subtitle here");
     }
 
-    const y =
+    let y =
       subtitleY -
       line2measure.actualBoundingBoxAscent -
       height * 0.025 -
       line1measure.actualBoundingBoxDescent;
     console.log("point y : " + y);
 
-    // Set the same font on the main text
-    ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
+    if (name1 && name2) {
+      const amp = "&";
 
-    // Multiple shadow passes for a professional look
-    // First pass: outer shadow
-    ctx.fillStyle = "white";
-    ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
-    ctx.shadowBlur = fontSize * 0.07;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = fontSize * 0.03;
-    ctx.fillText(displayText, x, y);
+      ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
+      const name1Width = ctx.measureText(name1).width;
+      const name2Width = ctx.measureText(name2).width;
 
-    // Second pass: deeper shadow for 3D effect
-    ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
-    ctx.shadowBlur = fontSize * 0.12;
-    ctx.shadowOffsetY = fontSize * 0.05;
-    ctx.fillText(displayText, x, y);
+      ctx.font = `900 ${
+        fontSize * 1.15
+      }px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
+      const ampWidth = ctx.measureText(amp).width;
 
-    // Third pass: add subtle white glow
-    ctx.shadowColor = "rgba(255, 255, 255, 0.2)";
-    ctx.shadowBlur = fontSize * 0.04;
-    ctx.shadowOffsetY = 0;
-    ctx.fillText(displayText, x, y);
+      // Set back to main font to measure space width
+      ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
+      const spacing = ctx.measureText(" ").width;
+
+      // ✅ Correctly recalculate textWidth now
+      const textWidth = name1Width + spacing + ampWidth + spacing + name2Width;
+
+      const name1X = x - textWidth / 2 + name1Width / 2;
+      const ampX = name1X + name1Width / 2 + spacing + ampWidth / 2;
+      const name2X = ampX + ampWidth / 2 + spacing + name2Width / 2;
+
+      // Set the same font on the main text
+      ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
+
+      // Multiple shadow passes for a professional look
+      // First pass: outer shadow
+      ctx.fillStyle = "white";
+      ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+      ctx.shadowBlur = fontSize * 0.07;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = fontSize * 0.03;
+      ctx.fillText(name1, name1X, y);
+
+      // Second pass: deeper shadow for 3D effect
+      ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
+      ctx.shadowBlur = fontSize * 0.12;
+      ctx.shadowOffsetY = fontSize * 0.05;
+      ctx.fillText(name1, name1X, y);
+
+      // Third pass: add subtle white glow
+      ctx.shadowColor = "rgba(255, 255, 255, 0.2)";
+      ctx.shadowBlur = fontSize * 0.04;
+      ctx.shadowOffsetY = 0;
+      ctx.fillText(name1, name1X, y);
+
+      // Set the same font on the main text
+      ctx.font = `900 ${
+        fontSize * 1.15
+      }px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
+
+      ctx.fillStyle = "white";
+      ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+      ctx.shadowBlur = fontSize * 0.07;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = fontSize * 0.03;
+      ctx.fillText(amp, ampX, y);
+
+      // Second pass: deeper shadow for 3D effect
+      ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
+      ctx.shadowBlur = fontSize * 0.12;
+      ctx.shadowOffsetY = fontSize * 0.05;
+      ctx.fillText(amp, ampX, y);
+
+      // Third pass: add subtle white glow
+      ctx.shadowColor = "rgba(255, 255, 255, 0.2)";
+      ctx.shadowBlur = fontSize * 0.04;
+      ctx.shadowOffsetY = 0;
+      ctx.fillText(amp, ampX, y);
+
+      // Set the same font on the main text
+      ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
+
+      // Multiple shadow passes for a professional look
+      // First pass: outer shadow
+      ctx.fillStyle = "white";
+      ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+      ctx.shadowBlur = fontSize * 0.07;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = fontSize * 0.03;
+      ctx.fillText(name2, name2X, y);
+
+      // Second pass: deeper shadow for 3D effect
+      ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
+      ctx.shadowBlur = fontSize * 0.12;
+      ctx.shadowOffsetY = fontSize * 0.05;
+      ctx.fillText(name2, name2X, y);
+
+      // Third pass: add subtle white glow
+      ctx.shadowColor = "rgba(255, 255, 255, 0.2)";
+      ctx.shadowBlur = fontSize * 0.04;
+      ctx.shadowOffsetY = 0;
+      ctx.fillText(name2, name2X, y);
+    } else {
+      if (window?.isPetTemplate) {
+        y = height * 0.2 - line1measure.actualBoundingBoxDescent;
+        console.log("point y : " + y);
+      }
+
+      // Set the same font on the main text
+      ctx.font = `900 ${fontSize}px Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif`;
+
+      // Multiple shadow passes for a professional look
+      // First pass: outer shadow
+      ctx.fillStyle = "white";
+      ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+      ctx.shadowBlur = fontSize * 0.07;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = fontSize * 0.03;
+      ctx.fillText(displayText, x, y);
+
+      // Second pass: deeper shadow for 3D effect
+      ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
+      ctx.shadowBlur = fontSize * 0.12;
+      ctx.shadowOffsetY = fontSize * 0.05;
+      ctx.fillText(displayText, x, y);
+
+      // Third pass: add subtle white glow
+      ctx.shadowColor = "rgba(255, 255, 255, 0.2)";
+      ctx.shadowBlur = fontSize * 0.04;
+      ctx.shadowOffsetY = 0;
+      ctx.fillText(displayText, x, y);
+    }
   }
 
   /**
