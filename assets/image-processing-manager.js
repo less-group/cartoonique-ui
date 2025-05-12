@@ -4188,17 +4188,47 @@ class ImageProcessingManager {
       reader.onload = (e) => {
         const imageBase64 = e.target.result;
 
-        // Create payload
+        // Create payload - image
+        // const payload = {
+        //   image: imageBase64,
+        //   style: "pixar",
+        //   watermark: {
+        //     url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/watermark.png",
+        //     width: 200,
+        //     height: 100,
+        //     spaceBetweenWatermarks: 100,
+        //   },
+        // };
+
+        // Create payload - image cartoonique
         const payload = {
           image: imageBase64,
           style: "pixar",
           watermark: {
-            url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/watermark.png",
+            url: "https://cdn.shopify.com/s/files/1/0896/3434/1212/files/watermarklogo.png",
             width: 200,
-            height: 100,
+            height: 200,
             spaceBetweenWatermarks: 100,
           },
         };
+        
+        
+
+        // text payload
+        // const payload = {
+        //   image: imageBase64,
+        //   style: "pixar",
+        //   watermark: {
+        //     text: "Your Watermark Text", // <-- Replace this with your desired watermark
+        //     fontSize: 24,
+        //     color: "#FFFFFF",            // Hex color code for the watermark text
+        //     opacity: 0.5,                // 0 (transparent) to 1 (opaque)
+        //     position: "bottom-right",   // Options might include 'top-left', 'top-right', etc.
+        //     rotation: 0,                // Optional: angle in degrees
+        //     spaceBetweenWatermarks: 100
+        //   },
+        // };
+        
         let endpoint = "transform";
         if (window?.isPetTemplate) {
           endpoint = "transformpet";

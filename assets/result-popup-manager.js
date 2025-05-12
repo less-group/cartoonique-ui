@@ -147,16 +147,17 @@ class ResultPopupManager {
       resultPopup.innerHTML = `
         <div id="final-popup" style="position: relative; max-width: 600px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; height: calc(100vh - 40px); max-height: 800px;">
           
-          <h4 style="text-align: center; font-size: 16px; margin-top: 10px; margin-bottom: 5px; color: #000000; font-weight: bold; text-transform: uppercase;">Choose the size</h4>
+          <h4 style="text-align: center; font-size: 16px; margin-top: 10px; margin-bottom: 5px; color: #000000; font-weight: bold; text-transform: uppercase;">Your preview</h4>
           <button id="close-final-image" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 30px; padding: 5px; color: #555;">×</button>
           <div id="pixar-result-image-container" style="flex: 1; min-height: 0; margin: 0 auto; width: 100%; max-width: 400px; position: relative; display: flex; align-items: center; justify-content: center; padding: 10px;">
             <div id="pixar-image-shadow" style="position: absolute; top: 15px; left: 15px; right: 15px; bottom: 5px; border-radius: 8px; background: #f5f5f5; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 0;"></div>
             <img id="pixar-result-image" src="" alt="Processed image" style="position: relative; z-index: 1; max-width: 100%; max-height: 100%; display: block; object-fit: contain; transition: all 0.3s ease-in-out; border-radius: 8px; background: white;">
             <div id="pixar-result-image-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; z-index: 2;"></div>
           </div>
-          
+
+          <div class="chosesize" style="width: 90%;margin: 0 auto;padding-top: 10px;">Choose size</div>
           <!-- Fixed position controls container -->
-          <div style="flex-shrink: 0; margin-top: 15px;">
+          <div style="flex-shrink: 0; margin-top: 5px;">
             <!-- Size selection menu -->
             <div style="margin-bottom: 15px;">
               <div style="display: flex; justify-content: space-between; margin: 0 auto; max-width: 90%;">
