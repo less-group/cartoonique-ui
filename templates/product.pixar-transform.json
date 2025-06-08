@@ -69,12 +69,6 @@
             "checkout_btn_style": "outline"
           }
         },
-        "pixar_transform_block": {
-          "type": "liquid",
-          "settings": {
-            "liquid": "{% render 'pixar-transform-file-input' %}"
-          }
-        },
         "collapsible_row_Mgp6qD": {
           "type": "collapsible_row",
           "settings": {
@@ -125,7 +119,6 @@
         "d3d427d0-4e7d-4f81-9057-c64f65a4f183",
         "quantity_selector",
         "buy_buttons",
-        "pixar_transform_block",
         "collapsible_row_Mgp6qD",
         "collapsible_row_Kq99fL",
         "collapsible_row_jMxXFX"

@@ -46,6 +46,15 @@
           when 'variant_picker'
             render 'product-variant-picker-block', product: product, section: section, block: block, sectionId: sectionId
           when 'buy_buttons'
+            comment
+              Add pixar transform component right before buy_buttons for cartoonique products
+              This ensures it appears in the same visual position but outside the form structure
+            endcomment
+            if product.tags contains 'cartoonique' or product.tags contains 'pixar-transform'
+              echo '<div class="pixar-transform-wrapper" style="margin-bottom: 20px;">'
+              render 'pixar-transform-file-input', product: product, section_id: section.id, customer: customer
+              echo '</div>'
+            endif
             render 'product-form-block', product: product, section: section, block: block, sectionId: sectionId
           when 'button'
             render 'product-button-block', product: product, section: section, block: block, sectionId: sectionId
