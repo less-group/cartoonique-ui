@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "page": {
@@ -6,9 +15,10 @@
       "settings": {
         "color_scheme": "default",
         "container_size": "large",
+        "show_heading": true,
+        "add_side_paddings": true,
         "section_spacing_top": 96,
-        "section_spacing_bottom": 96,
-        "show_heading": true
+        "section_spacing_bottom": 96
       }
     },
     "questions": {
@@ -17,17 +27,22 @@
         "category1": {
           "type": "category",
           "settings": {
-            "title": "Category",
-            "icon": "none"
+            "title": "Orders & Personalisation",
+            "category_heading_size": "h6",
+            "icon": "none",
+            "icon_size": 24
           }
         },
         "question1": {
           "type": "question",
           "settings": {
             "title": "Frequently asked question",
+            "heading_size": "caption2",
             "icon": "none",
-            "text": "<p>Brief and clear answer<\/p>",
+            "icon_size": 24,
+            "text": "<p>Brief and clear answer</p>",
             "page": "",
+            "body_size": "body3",
             "image_width": 100
           }
         },
@@ -35,9 +50,12 @@
           "type": "question",
           "settings": {
             "title": "Frequently asked question",
+            "heading_size": "caption2",
             "icon": "none",
-            "text": "<p>Brief and clear answer<\/p>",
+            "icon_size": 24,
+            "text": "<p>Brief and clear answer</p>",
             "page": "",
+            "body_size": "body3",
             "image_width": 100
           }
         },
@@ -45,26 +63,34 @@
           "type": "question",
           "settings": {
             "title": "Frequently asked question",
+            "heading_size": "caption2",
             "icon": "none",
-            "text": "<p>Brief and clear answer<\/p>",
+            "icon_size": 24,
+            "text": "<p>Brief and clear answer</p>",
             "page": "",
+            "body_size": "body3",
             "image_width": 100
           }
         },
         "category2": {
           "type": "category",
           "settings": {
-            "title": "Category",
-            "icon": "none"
+            "title": "Shipping & Delivery",
+            "category_heading_size": "h6",
+            "icon": "none",
+            "icon_size": 24
           }
         },
         "question4": {
           "type": "question",
           "settings": {
             "title": "Frequently asked question",
+            "heading_size": "caption2",
             "icon": "none",
-            "text": "<p>Brief and clear answer<\/p>",
+            "icon_size": 24,
+            "text": "<p>Brief and clear answer</p>",
             "page": "",
+            "body_size": "body3",
             "image_width": 50
           }
         },
@@ -72,9 +98,12 @@
           "type": "question",
           "settings": {
             "title": "Frequently asked question",
+            "heading_size": "caption2",
             "icon": "none",
-            "text": "<p>Brief and clear answer<\/p>",
+            "icon_size": 24,
+            "text": "<p>Brief and clear answer</p>",
             "page": "",
+            "body_size": "body3",
             "image_width": 100
           }
         },
@@ -82,9 +111,12 @@
           "type": "question",
           "settings": {
             "title": "Frequently asked question",
+            "heading_size": "caption2",
             "icon": "none",
-            "text": "<p>Brief and clear answer<\/p>",
+            "icon_size": 24,
+            "text": "<p>Brief and clear answer</p>",
             "page": "",
+            "body_size": "body3",
             "image_width": 100
           }
         },
@@ -92,26 +124,34 @@
           "type": "question",
           "settings": {
             "title": "Frequently asked question",
+            "heading_size": "caption2",
             "icon": "none",
-            "text": "<p>Brief and clear answer<\/p>",
+            "icon_size": 24,
+            "text": "<p>Brief and clear answer</p>",
             "page": "",
+            "body_size": "body3",
             "image_width": 100
           }
         },
         "category3": {
           "type": "category",
           "settings": {
-            "title": "Category",
-            "icon": "none"
+            "title": "Returns & Issues",
+            "category_heading_size": "h6",
+            "icon": "none",
+            "icon_size": 24
           }
         },
         "question8": {
           "type": "question",
           "settings": {
             "title": "Frequently asked question",
+            "heading_size": "caption2",
             "icon": "none",
-            "text": "<p>Brief and clear answer<\/p>",
+            "icon_size": 24,
+            "text": "<p>Brief and clear answer</p>",
             "page": "",
+            "body_size": "body3",
             "image_width": 100
           }
         },
@@ -119,10 +159,31 @@
           "type": "question",
           "settings": {
             "title": "Frequently asked question",
+            "heading_size": "caption2",
             "icon": "none",
-            "text": "<p>Brief and clear answer<\/p>",
+            "icon_size": 24,
+            "text": "<p>Brief and clear answer</p>",
             "page": "",
+            "body_size": "body3",
             "image_width": 100
+          }
+        },
+        "category_3hWHkM": {
+          "type": "category",
+          "settings": {
+            "title": "Products & Design",
+            "category_heading_size": "h6",
+            "icon": "none",
+            "icon_size": 24
+          }
+        },
+        "category_LQmRiR": {
+          "type": "category",
+          "settings": {
+            "title": "Contact & Support",
+            "category_heading_size": "h6",
+            "icon": "none",
+            "icon_size": 24
           }
         }
       },
@@ -138,21 +199,28 @@
         "question7",
         "category3",
         "question8",
-        "question9"
+        "question9",
+        "category_3hWHkM",
+        "category_LQmRiR"
       ],
       "settings": {
-        "color_scheme": "default",
-        "container_size": "xsmall",
-        "section_spacing_top": 96,
-        "section_spacing_bottom": 96,
+        "color_scheme": "primary",
+        "enable_background_around_container": false,
+        "color_tabs": "categories_only",
+        "container_size": "page-width",
         "section_layout": "bottom-tabs",
-        "title": "FAQ",
-        "text": "Answers to most common questions about products, orders, shipments, and payments.",
-        "heading_size": "h5",
+        "expand_first_tab": true,
+        "title": "Frequently Asked Questions",
+        "heading_size": "h1",
+        "text": "",
         "body_size": "body3",
+        "content_alignment": "left",
         "btn_text": "",
         "btn_url": "",
-        "btn_style": "solid"
+        "btn_style": "solid",
+        "add_side_paddings": true,
+        "section_spacing_top": 0,
+        "section_spacing_bottom": 20
       }
     }
   },
