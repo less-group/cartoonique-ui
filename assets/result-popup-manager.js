@@ -1029,7 +1029,7 @@ class ResultPopupManager {
 
       const nonwaterimgBase64 =
         window.imageProcessingManager.processnonwaterimgbase64;
-      const fileName = "cartoonique_" + variantId + "_" + Date.now();
+      const fileName = variantId + "_" + Date.now();
 
       // call image upload to S3 function sd 11
       try {
