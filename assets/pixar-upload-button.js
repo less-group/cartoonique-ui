@@ -566,6 +566,7 @@
           button.style.width = styles.width;
           button.style.lineHeight = styles.lineHeight;
           button.style.fontWeight = styles.fontWeight;
+          addToCartBtn.remove();
         }
       } catch (e) {
         console.log("⭐ Error matching button styles:", e);
@@ -662,6 +663,7 @@
       );
       // Get the parent of the add to cart button
       targetContainer =
+        addToCartButton.closest('product-form') ||
         addToCartButton.closest('form[action*="/cart/add"]') ||
         addToCartButton.closest(".product-form__buttons") ||
         addToCartButton.closest(".cart-functions") ||
@@ -678,7 +680,10 @@
             );
           } else {
             // If not, just prepend to the target container
-            targetContainer.prepend(container);
+            // targetContainer.prepend(container);
+            targetContainer.parentNode.insertBefore(container, targetContainer);
+
+            
             console.log(
               "⭐ Upload button container added to the beginning of target container"
             );

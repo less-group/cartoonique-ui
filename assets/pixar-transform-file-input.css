@@ -471,3 +471,7 @@ body.popup-open {
   opacity: 0 !important;
   pointer-events: none !important;
 } 
+
+.product__info form[action='/cart/add'] button {
+  opacity: 0;
+}
