@@ -4211,6 +4211,12 @@ class ImageProcessingManager {
             spaceBetweenWatermarks: 100,
           },
         };
+
+        // Add background color for pet templates
+        if (window?.isPetTemplate && window?.petBackgroundColor) {
+          payload.backgroundColor = window.petBackgroundColor;
+          console.log("🖼️ Adding background color to payload:", window.petBackgroundColor);
+        }
         
         
 

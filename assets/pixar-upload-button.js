@@ -8,6 +8,9 @@
 (function () {
   console.log("⭐ Pixar Upload Button Handler initializing...");
 
+  // Global state for pet background color selection
+  window.petBackgroundColor = 'pink'; // Default to pink
+
   // Function to check for and create instructions popup if needed
   function checkForInstructionsPopup() {
     // Check if popup already exists
@@ -1000,6 +1003,17 @@
     console.log("⭐ Pixar Upload Button Handler ready");
     createUploadButtonContainer();
     checkForInstructionsPopup();
+
+    // Set up event listeners for pet background color selection
+    if (window?.isPetTemplate) {
+      // Use delegation to handle dynamically created elements
+      document.addEventListener('change', function(event) {
+        if (event.target.name === 'petBackgroundColor') {
+          window.petBackgroundColor = event.target.value;
+          console.log("⭐ Pet background color changed to:", event.target.value);
+        }
+      });
+    }
 
     // Set up event listeners for integration with UnifiedApiClient
     document.addEventListener("pixar-transform-complete", function (event) {
