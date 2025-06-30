@@ -1,0 +1,52 @@
+{%- liquid
+  assign level = 'high'
+  assign variant_stock_size = current_variant.inventory_quantity
+
+  if current_variant.available == false
+    assign level = 'zero'
+  elsif variant_stock_size < inventory_threshhold
+    assign level = 'low'
+  endif
+
+  if show_progress_bar
+    assign difference_percent = variant_stock_size | times: 1.00 | divided_by: progress_bar_max_value | times: 100
+    if difference_percent > 100
+      assign difference_percent = 100
+    endif
+  endif
+-%}
+
+<div
+  class='product-stock {% if show_progress_bar %}product-stock--with-progress{% endif %} product-stock--{{ level }} {% if show_inventory_status == 'only_when_inventroy_low' and level == 'high' and current_variant.available %}hidden{% endif %}'
+  data-product-block-item
+  {% if show_progress_bar %}
+    style='--gsc-freeshipping-bar-percent: {{ difference_percent }}%'
+  {% endif %}
+>
+  {% if show_progress_bar == false %}
+    <div class='product-stock__icon-wrapper'>
+      <div class='product-stock__icon'></div>
+    </div>
+  {% endif %}
+
+  <span class='product-stock__label heading-font-family'>
+    {%- if current_variant.available -%}
+      {% if inventory_notice_type == 'counter' %}
+        {{ 'product.store_front.stock.label_with_counter' | t: count: variant_stock_size }}
+      {%- elsif variant_stock_size < inventory_threshhold -%}
+        {{ low_inventory_text }}
+      {%- else -%}
+        {{ high_inventory_text }}
+      {%- endif -%}
+    {%- else -%}
+      {{ 'product.store_front.stock.out_of_stock' | t }}
+    {%- endif -%}
+  </span>
+
+  {% if show_progress_bar %}
+    <div class='free-shipping-bar__progress {% if progress_bar_type == "dashed" %} free-shipping-bar__progress--dashed {% endif %}'>
+      <div class='free-shipping-bar__progress-bar {% if level == 'low' %}free-shipping-bar__progress-bar--low{% endif %}'></div>
+      <div class='free-shipping-bar__progress-bar-dots'></div>
+    </div>
+  {% endif %}
+</div>

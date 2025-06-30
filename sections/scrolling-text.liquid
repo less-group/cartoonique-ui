@@ -1,0 +1,1583 @@
+{% liquid
+  assign enable_content_slide_in = settings.enable_content_slide_in
+  assign enable_image_zoom_out = settings.enable_image_zoom_out
+
+  assign background_image_class = 'scrolling-text__background-image'
+  if enable_image_zoom_out
+    assign background_image_class = background_image_class | append: ' scroll-trigger animate--zoom-out'
+  endif
+%}
+
+{% style %}
+  .section-{{section.id}} {
+      --gsc-section-spacing-top: {{ section.settings.section_spacing_top }}px;
+      --gsc-section-spacing-bottom: {{ section.settings.section_spacing_bottom }}px;
+      --gsc-section-rotation: {{ section.settings.inclination_degree }}deg;
+      --gsc-section-background_img_opacity: {{ section.settings.overlay_opacity | divided_by: 100.000 }};
+
+      {%if section.settings.inclination_degree > 0 %}
+          --gsc-section-rotation-negative: -{{ section.settings.inclination_degree }}deg;
+      {% else %}
+          --gsc-section-rotation-negative: {{ section.settings.inclination_degree | abs }}deg;
+      {% endif %}
+
+      {% if section.settings.section_layout == "crossed" and section.blocks.size > 1 %}
+          --gsc-section-transform-origin: {{ section.settings.crossing_point_position }}%;
+      {% endif %}
+
+      --gsc-section-translate-when-inclined: {{ section.settings.inclination_degree | divided_by: 1.5 }}%;
+  }
+
+  {% for block in section.blocks %}
+    .block-{{ block.id }} {
+        --gsc-section-font-size: {{ block.settings.font_size }}px;
+        --gsc-section-mobile-font-size: {{ block.settings.font_size }}px;
+        --gsc-section-top-and-bottom-spacing: {{ block.settings.top_and_bottom_spacing }}px;
+        --gsc-section-letter-spacing: {{ block.settings.letter_spacing }}px;
+        --gsc-section-icon-size: {{ block.settings.icon_size }}px;
+        --gsc-section-spacing-between-messages: {{ block.settings.spacing_between_messages }}px;
+        --gsc-section-scrolling-direction: {{ block.settings.scrolling_direction }};
+        --gsc-custom-image-ratio: {{ block.settings.custom_image_ratio }};
+
+        {% if block.settings.font_size > 100 %}
+          --gsc-section-mobile-font-size: 100px;
+        {% endif %}
+
+        {% if block.settings.scrolling_speed == 0 %}
+          --gsc-section-scrolling-speed: 0s;
+        {% else %}
+          {% assign second = block.settings.scrolling_speed | divided_by: 101.00 | times: 25 %}
+          {% assign result = 26 | minus: second %}
+
+          {% if block.type == 'announcement' and block.settings.font_style == 'mixed' %}
+            {% assign result = result | times: 2.00 %}
+          {% endif %}
+
+          {% if block.settings.products != blank %}
+            {% assign result = result | times: block.settings.products.count %}
+            {% if block.settings.font_style == 'mixed' %}
+              {% assign result = result | times: 2.00 %}
+            {% endif %}
+          {% endif %}
+
+          {% if block.settings.collections != blank %}
+            {% assign result = result | times: block.settings.collections.count %}
+            {% if block.settings.font_style == 'mixed' %}
+              {% assign result = result | times: 2.00 %}
+            {% endif %}
+          {% endif %}
+
+          --gsc-section-scrolling-speed: {{ result }}s;
+        {% endif %}
+
+        {% if block.settings.background_color_gradient == blank %}
+            --gsc-section-background: {{ block.settings.background_color }};
+          {% else %}
+            --gsc-section-background: {{ block.settings.background_color_gradient }};
+        {% endif %}
+
+        {% if block.settings.text_color_gradient == blank %}
+            --gsc-section-text-color: {{ block.settings.text_color }};
+          {% else %}
+            --gsc-section-text-color: {{ block.settings.text_color_gradient }};
+        {% endif %}
+
+        {% if section.settings.section_layout == "crossed" and section.blocks.size > 1 and forloop.last %}
+            --gsc-section-rotate-degree: var(--gsc-section-rotation-negative);
+          {% else %}
+            --gsc-section-rotate-degree: var(--gsc-section-rotation);
+        {% endif %}
+    }
+  {% endfor %}
+{% endstyle %}
+
+<scrolling-text
+  class='scrolling-text-section section-{{ section.id }} color-{{ section.settings.color_scheme }}'
+  data-section-id='{{ section.id }}'
+>
+  <div class='container container--{{ section.settings.container_size }} scrolling-text__outer-container {% if section.settings.add_side_paddings == true %}container--with-aside-paddings{% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+    {% if enable_content_slide_in %}
+      style='--gsc-animation-order: 1;'
+    {% endif %}
+  >
+    <div
+      class='scrolling-text__inner-container {% if section.settings.inclination_degree != 0 %} scrolling-text__inner-container--with-overflow {% endif %} {% if section.settings.background_image == blank %}scrolling-text__inner-container--without-raduis{% endif %}'
+      data-scrolling-text-container
+    >
+      <div class='scrolling-text__background'>
+        {% if section.settings.background_image != blank %}
+          <img
+            {% render 'image-attributes',
+              image: section.settings.background_image,
+              size: 'medium',
+              class: background_image_class
+            %}
+          >
+          <div class='scrolling-text__background-image-overlay'></div>
+        {% endif %}
+      </div>
+
+      {% if section.settings.section_layout == 'parallel' %}
+        <div class='scrolling-text__inner-container--parallel'>
+      {% endif %}
+
+      {% for block in section.blocks %}
+        {% case block.type %}
+          {% when 'announcement' %}
+            {%- assign gradient_type = block.settings.text_color_gradient -%}
+            {%- assign gradients = block.settings.text_color_gradient | replace: ' ', '' | split: 'rgba' -%}
+            {%- assign gradient_degree = 0 -%}
+            {%- assign icon_class = 'scrolling-text__icon' -%}
+
+            {% if gradient_type contains 'radial' %}
+              {%- assign gradient_degree = block.settings.text_color_gradient
+                | replace: 'radial-gradient(', ''
+                | times: 1
+              -%}
+            {% else %}
+              {%- assign gradient_degree = block.settings.text_color_gradient
+                | replace: 'linear-gradient(', ''
+                | times: 1
+              -%}
+            {% endif %}
+
+            {% capture x1 %}{% if gradient_degree > 230 and gradient_degree < 360 %}1{% else %}0{% endif %}{% endcapture %}
+            {% capture x2 %}{% if gradient_degree > 45 and gradient_degree < 150 or gradient_degree == 360 %}1{% else %}0{% endif %}{% endcapture %}
+            {% capture y1 %}{% if gradient_degree > 0 and gradient_degree < 90 or gradient_degree > 315 and gradient_degree < 360 %}1{% else %}0{% endif %}{% endcapture %}
+            {% capture y2 %}{% if gradient_degree > 90 and gradient_degree < 230 %}1{% else %}0{% endif %}{% endcapture %}
+
+            {% if block.settings.announcement_text != blank %}
+              <scrolling-text-line
+                class='block-{{ block.id }} block-wrapper {% if section.settings.container_size == 'full-screen' %} block-wrapper--full-screen {% endif %} {% if section.settings.section_layout == "crossed" and section.settings.inclination_degree != 0 and section.blocks.size > 1 %} block-wrapper--crossed {% endif %}'
+                {% if block.settings.font_style == 'mixed' %}
+                  with-font-mixed
+                {% endif %}
+                {{ block.shopify_attributes }}
+              >
+                {%- if block.settings.link != blank -%}
+                  <a href='{{ block.settings.link }}' class='scrolling-text__url' aria-label='{{ block.settings.announcement_text }}' data-scrolling-text-anchor></a>
+                {%- endif -%}
+
+                <div
+                  class='scrolling-text scrolling-text--with-{{ block.settings.font_family }}-font'
+                  data-scrolling-text-line
+                >
+                  {%- if block.settings.custom_icon_image != blank -%}
+                    <img
+                      {% render 'image-attributes',
+                        image: block.settings.custom_icon_image,
+                        size: 'small',
+                        class: 'scrolling-text__icon'
+                      %}
+                    >
+                  {%- elsif block.settings.icon != 'none' -%}
+                    <div class='icon-container'>
+                      {% if block.settings.text_color_gradient != blank %}
+                        <svg class='gradient'>
+                          <defs>
+                            {% if gradient_type contains 'radial' %}
+                              <radialGradient id='stripes'>
+                                  {% for gradient in gradients offset: 1 -%}
+                                    {%- assign tags = gradient | replace: '(' | replace: ')', ',' | split: ',' -%}
+                                    <stop stop-color='rgba({{ tags[0] }}, {{ tags[1] }}, {{ tags[2] }}, {{ tags[3] }})' offset='{% if tags[4] %}{{ tags[4] }}{% else %}0%{% endif %}' />
+                                  {%- endfor %}
+                              </radialGradient>
+                            {% else %}
+                              <linearGradient id='stripes' x1='{{ x1 }}' y1='{{ y1 }}' x2='{{ x2 }}' y2='{{ y2 }}'>
+                                  {% for gradient in gradients offset: 1 -%}
+                                    {%- assign tags = gradient | replace: '(' | replace: ')', ',' | split: ',' -%}
+                                    <stop stop-color='rgba({{ tags[0] }}, {{ tags[1] }}, {{ tags[2] }}, {{ tags[3] }})' offset='{% if tags[4] %}{{ tags[4] }}{% else %}0%{% endif %}' />
+                                  {%- endfor %}
+                              </linearGradient>
+                            {% endif %}
+                          </defs>
+                        </svg>
+
+                        {% assign icon_class = icon_class | append: ' scrolling-text__icon--with-gradient' %}
+                      {% endif %}
+
+                      {% render 'icon-pack', icon: block.settings.icon, class: icon_class %}
+                    </div>
+                  {%- endif -%}
+
+                  <p class='scrolling-text__text {% if block.settings.font_style == 'outline' %} scrolling-text__text--font-outline {% endif %} {% if block.settings.text_color_gradient != blank %} scrolling-text__text--color-gradient {% endif %}'>
+                    {{ block.settings.announcement_text }}
+                  </p>
+                </div>
+              </scrolling-text-line>
+            {% endif %}
+          {% when 'announcement-products' %}
+            <scrolling-text-line
+              class='block-{{ block.id }} block-wrapper {% if section.settings.container_size == 'full-screen' %} block-wrapper--full-screen {% endif %} {% if section.settings.section_layout == "crossed" and section.settings.inclination_degree != 0 and section.blocks.size > 1 %} block-wrapper--crossed {% endif %}'
+              {% if block.settings.font_style == 'mixed' and block.settings.products.count < 2 %}
+                with-font-mixed
+              {% endif %}
+              {{ block.shopify_attributes }}
+            >
+              <div class='scrolling-text__item-wrapper' data-scrolling-text-line>
+                {% if block.settings.products != blank %}
+                  {% for product in block.settings.products %}
+                    {%- assign announcement_text = block.settings.announcement_text -%}
+                    {% if block.settings.use_product_names_label == true %}
+                      {%- assign announcement_text = product.title -%}
+                    {% endif %}
+
+                    {% assign font_style = block.settings.font_style %}
+                    {% if block.settings.font_style == 'mixed' and block.settings.products.count > 1 %}
+                      {% capture is_even %}{% cycle false, true %}{% endcapture %}
+                      {% case is_even %}
+                        {% when 'true' %}
+                          {% assign font_style = 'outline' %}
+                        {% when 'false' %}
+                          {% assign font_style = 'solid' %}
+                      {% endcase %}
+                    {% endif %}
+
+                    {% assign image = product.featured_image %}
+                    {% if image == blank %}
+                      {% assign image = product.images | first %}
+                    {% endif %}
+
+                    {% assign image_class = 'scrolling-text__icon' %}
+                    {% if block.settings.enable_custom_image_ratio == true %}
+                      {% assign image_class = image_class | append: ' scrolling-text__icon--with-custom-ratio' %}
+                    {% endif %}
+
+                    <div class='scrolling-text scrolling-text--with-{{ block.settings.font_family }}-font'>
+                      <img {% render 'image-attributes', image: image, size: 'medium', class: image_class %}>
+
+                      <p class='scrolling-text__text {% if font_style == 'outline' %} scrolling-text__text--font-outline {% endif %} {% if block.settings.text_color_gradient != blank %} scrolling-text__text--color-gradient {% endif %}'>
+                        {{ announcement_text }}
+                      </p>
+
+                      <a href='{{ product.url }}' class='scrolling-text__url' aria-label='{{ product.url }}'></a>
+                    </div>
+                  {% endfor %}
+                {% else %}
+                  <div class='scrolling-text scrolling-text--with-{{ block.settings.font_family }}-font'>
+                    <p class='scrolling-text__text {% if block.settings.font_style == 'outline' %} scrolling-text__text--font-outline {% endif %} {% if block.settings.text_color_gradient != blank %} scrolling-text__text--color-gradient {% endif %}'>
+                      {{ block.settings.announcement_text }}
+                    </p>
+                  </div>
+                {% endif %}
+              </div>
+            </scrolling-text-line>
+          {% when 'announcement-collections' %}
+            <scrolling-text-line
+              class='block-{{ block.id }} block-wrapper {% if section.settings.container_size == 'full-screen' %} block-wrapper--full-screen {% endif %} {% if section.settings.section_layout == "crossed" and section.settings.inclination_degree != 0 and section.blocks.size > 1 %} block-wrapper--crossed {% endif %}'
+              {% if block.settings.font_style == 'mixed' and block.settings.collections.count < 2 %}
+                with-font-mixed
+              {% endif %}
+              {{ block.shopify_attributes }}
+            >
+              <div class='scrolling-text__item-wrapper' data-scrolling-text-line>
+                {% if block.settings.collections != blank %}
+                  {% for collection in block.settings.collections %}
+                    {%- assign announcement_text = block.settings.announcement_text -%}
+                    {% if block.settings.use_collection_names_label == true %}
+                      {%- assign announcement_text = collection.title -%}
+                    {% endif %}
+
+                    {% assign font_style = block.settings.font_style %}
+                    {% if block.settings.font_style == 'mixed' and block.settings.products.count > 1 %}
+                      {% capture is_even %}{% cycle false, true %}{% endcapture %}
+                      {% case is_even %}
+                        {% when 'true' %}
+                          {% assign font_style = 'outline' %}
+                        {% when 'false' %}
+                          {% assign font_style = 'solid' %}
+                      {% endcase %}
+                    {% endif %}
+
+                    {% assign image = collection.image %}
+                    {% if image == blank %}
+                      {% assign product_with_featured_image = collection.products | where: 'featured_image' | first %}
+                      {% assign image = product_with_featured_image.featured_image %}
+                    {% endif %}
+
+                    {% assign image_class = 'scrolling-text__icon' %}
+                    {% if block.settings.enable_custom_image_ratio == true %}
+                      {% assign image_class = image_class | append: ' scrolling-text__icon--with-custom-ratio' %}
+                    {% endif %}
+
+                    <div class='scrolling-text scrolling-text--with-{{ block.settings.font_family }}-font'>
+                      <img {% render 'image-attributes', image: image, size: 'medium', class: image_class %}>
+
+                      <p class='scrolling-text__text {% if font_style == 'outline' %} scrolling-text__text--font-outline {% endif %} {% if block.settings.text_color_gradient != blank %} scrolling-text__text--color-gradient {% endif %}'>
+                        {{ announcement_text }}
+                      </p>
+
+                      <a href='{{ collection.url }}' class='scrolling-text__url' aria-label='{{ collection.url }}'></a>
+                    </div>
+                  {% endfor %}
+
+                {% else %}
+                  <div class='scrolling-text scrolling-text--with-{{ block.settings.font_family }}-font'>
+                    <p class='scrolling-text__text {% if block.settings.font_style == 'outline' %} scrolling-text__text--font-outline {% endif %} {% if block.settings.text_color_gradient != blank %} scrolling-text__text--color-gradient {% endif %}'>
+                      {{ block.settings.announcement_text }}
+                    </p>
+                  </div>
+                {% endif %}
+              </div>
+            </scrolling-text-line>
+        {% endcase %}
+      {% endfor %}
+
+      {% if section.settings.section_layout == 'parallel' %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</scrolling-text>
+
+{% schema %}
+{
+  "name": "t:sections.scrolling-text.name",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:sections.general_section_settings.color_scheme_option_default_label"
+        },
+        {
+          "value": "primary",
+          "label": "t:sections.general_section_settings.color_scheme_option_primary_label"
+        },
+        {
+          "value": "secondary",
+          "label": "t:sections.general_section_settings.color_scheme_option_secondary_label"
+        },
+        {
+          "value": "custom-1",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_1_label"
+        },
+        {
+          "value": "custom-2",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_2_label"
+        },
+        {
+          "value": "custom-3",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_3_label"
+        },
+        {
+          "value": "white",
+          "label": "t:sections.general_section_settings.color_scheme_option_white_text_label"
+        },
+        {
+          "value": "black",
+          "label": "t:sections.general_section_settings.color_scheme_option_black_text_label"
+        },
+        {
+          "value": "custom-5",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_5_label"
+        }
+      ],
+      "default": "default",
+      "label": "t:sections.general_section_settings.color_scheme_label",
+      "info": "t:sections.general_section_settings.color_scheme_tip"
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "options": [
+        {
+          "value": "full-screen",
+          "label": "t:sections.general_section_settings.container_size.screen_width_option"
+        },
+        {
+          "value": "page-width",
+          "label": "t:sections.general_section_settings.container_size.page_width_option"
+        },
+        {
+          "value": "large",
+          "label": "t:sections.general_section_settings.container_size.large_width_option"
+        },
+        {
+          "value": "medium",
+          "label": "t:sections.general_section_settings.container_size.medium_width_option"
+        },
+        {
+          "value": "small",
+          "label": "t:sections.general_section_settings.container_size.small_width_option"
+        }
+      ],
+      "default": "full-screen",
+      "label": "t:sections.general_section_settings.container_size.label"
+    },
+    {
+      "type": "select",
+      "id": "section_layout",
+      "label": "t:sections.scrolling-text.section_layout.label",
+      "options": [
+        {
+          "value": "parallel",
+          "label": "t:sections.scrolling-text.section_layout.options.option_1"
+        },
+        {
+          "value": "crossed",
+          "label": "t:sections.scrolling-text.section_layout.options.option_2"
+        }
+      ],
+      "info": "t:sections.scrolling-text.section_layout.info",
+      "default": "parallel"
+    },
+    {
+      "type": "range",
+      "id": "inclination_degree",
+      "min": -10,
+      "max": 10,
+      "step": 1,
+      "default": 0,
+      "unit": "t:sections.scrolling-text.inclination_degree.unit",
+      "label": "t:sections.scrolling-text.inclination_degree.label"
+    },
+    {
+      "type": "range",
+      "id": "crossing_point_position",
+      "min": -100,
+      "max": 100,
+      "step": 2,
+      "default": 0,
+      "unit": "t:sections.scrolling-text.crossing_point_position.unit",
+      "label": "t:sections.scrolling-text.crossing_point_position.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.scrolling-text.background_content"
+    },
+    {
+      "type": "image_picker",
+      "id": "background_image",
+      "label": "t:sections.scrolling-text.background_picker_label"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 0,
+      "unit": "t:sections.scrolling-text.overlay_opacity.unit",
+      "label": "t:sections.scrolling-text.overlay_opacity.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.general_section_settings.paddings.header_title"
+    },
+    {
+      "type": "checkbox",
+      "id": "add_side_paddings",
+      "default": false,
+      "label": "t:sections.general_section_settings.paddings.add_side_paddings.label"
+    },
+    {
+      "type": "range",
+      "id": "section_spacing_top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 48,
+      "unit": "t:sections.general_section_settings.paddings.section_spacing_top.unit",
+      "label": "t:sections.general_section_settings.paddings.section_spacing_top.label"
+    },
+    {
+      "type": "range",
+      "id": "section_spacing_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 48,
+      "unit": "t:sections.general_section_settings.paddings.section_spacing_bottom.unit",
+      "label": "t:sections.general_section_settings.paddings.section_spacing_bottom.label"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "announcement",
+      "name": "t:sections.scrolling-text.blocks.announcement.name",
+      "limit": 2,
+      "settings": [
+        {
+          "type": "text",
+          "id": "announcement_text",
+          "label": "t:sections.scrolling-text.blocks.announcement.announcement_text.label",
+          "default": "Make an announcement"
+        },
+        {
+          "type": "select",
+          "id": "font_family",
+          "label": "t:sections.scrolling-text.blocks.announcement.font_family.label",
+          "options": [
+            {
+              "value": "heading",
+              "label": "t:sections.scrolling-text.blocks.announcement.font_family.options.option_1"
+            },
+            {
+              "value": "body",
+              "label": "t:sections.scrolling-text.blocks.announcement.font_family.options.option_2"
+            }
+          ],
+          "default": "heading"
+        },
+        {
+          "type": "select",
+          "id": "font_style",
+          "label": "t:sections.scrolling-text.blocks.announcement.font_style.label",
+          "options": [
+            {
+              "value": "solid",
+              "label": "t:sections.scrolling-text.blocks.announcement.font_style.options.option_1"
+            },
+            {
+              "value": "outline",
+              "label": "t:sections.scrolling-text.blocks.announcement.font_style.options.option_2"
+            },
+            {
+              "value": "mixed",
+              "label": "t:sections.scrolling-text.blocks.announcement.font_style.options.option_3"
+            }
+          ],
+          "default": "solid"
+        },
+        {
+          "type": "range",
+          "id": "font_size",
+          "min": 14,
+          "max": 200,
+          "step": 2,
+          "default": 24,
+          "unit": "t:sections.scrolling-text.blocks.announcement.font_size.unit",
+          "label": "t:sections.scrolling-text.blocks.announcement.font_size.label"
+        },
+        {
+          "type": "range",
+          "id": "letter_spacing",
+          "min": -2,
+          "max": 8,
+          "step": 0.1,
+          "default": 0,
+          "unit": "t:sections.scrolling-text.blocks.announcement.letter_spacing.unit",
+          "label": "t:sections.scrolling-text.blocks.announcement.letter_spacing.label"
+        },
+        {
+          "type": "range",
+          "id": "spacing_between_messages",
+          "min": 0,
+          "max": 140,
+          "step": 2,
+          "default": 40,
+          "unit": "t:sections.scrolling-text.blocks.announcement.spacing_between_messages.unit",
+          "label": "t:sections.scrolling-text.blocks.announcement.spacing_between_messages.label"
+        },
+        {
+          "type": "range",
+          "id": "top_and_bottom_spacing",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "default": 20,
+          "unit": "t:sections.scrolling-text.blocks.announcement.top_and_bottom_spacing.unit",
+          "label": "t:sections.scrolling-text.blocks.announcement.top_and_bottom_spacing.label"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "t:sections.scrolling-text.blocks.announcement.link.label"
+        },
+        {
+          "type": "select",
+          "id": "icon",
+          "options": [
+            {
+              "value": "none",
+              "label": "t:sections.general_section_settings.icon.none_icon_label"
+            },
+            {
+              "value": "settings",
+              "label": "t:sections.general_section_settings.icon.general_group.settings_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "search",
+              "label": "t:sections.general_section_settings.icon.general_group.search_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "eye",
+              "label": "t:sections.general_section_settings.icon.general_group.eye_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "eye-slash",
+              "label": "t:sections.general_section_settings.icon.general_group.eye_slash_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "user",
+              "label": "t:sections.general_section_settings.icon.general_group.user_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "love-outline",
+              "label": "t:sections.general_section_settings.icon.general_group.love_outline_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "love-solid",
+              "label": "t:sections.general_section_settings.icon.general_group.love_solid_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "like",
+              "label": "t:sections.general_section_settings.icon.general_group.like_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "dislike",
+              "label": "t:sections.general_section_settings.icon.general_group.dislike_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "lamp",
+              "label": "t:sections.general_section_settings.icon.general_group.lamp_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "star-outline",
+              "label": "t:sections.general_section_settings.icon.general_group.star_outline_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "star-solid",
+              "label": "t:sections.general_section_settings.icon.general_group.star_solid_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "trash",
+              "label": "t:sections.general_section_settings.icon.general_group.trash_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "document",
+              "label": "t:sections.general_section_settings.icon.general_group.document_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "copy",
+              "label": "t:sections.general_section_settings.icon.general_group.copy_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "share",
+              "label": "t:sections.general_section_settings.icon.general_group.share_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "plus",
+              "label": "t:sections.general_section_settings.icon.general_group.plus_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "minus",
+              "label": "t:sections.general_section_settings.icon.general_group.minus_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "checkmark",
+              "label": "t:sections.general_section_settings.icon.general_group.checkmark_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "arrow-right",
+              "label": "t:sections.general_section_settings.icon.general_group.arrow_right_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "arrow-left",
+              "label": "t:sections.general_section_settings.icon.general_group.arrow_left_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "undo",
+              "label": "t:sections.general_section_settings.icon.general_group.undo_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "redo",
+              "label": "t:sections.general_section_settings.icon.general_group.redo_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "refresh",
+              "label": "t:sections.general_section_settings.icon.general_group.refresh_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "notification",
+              "label": "t:sections.general_section_settings.icon.general_group.notification_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "clock",
+              "label": "t:sections.general_section_settings.icon.general_group.clock_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "calendar",
+              "label": "t:sections.general_section_settings.icon.general_group.calendar_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "information",
+              "label": "t:sections.general_section_settings.icon.general_group.information_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "bag",
+              "label": "t:sections.general_section_settings.icon.shop_group.bag_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "cart",
+              "label": "t:sections.general_section_settings.icon.shop_group.cart_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "barcode",
+              "label": "t:sections.general_section_settings.icon.shop_group.barcode_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "coupon",
+              "label": "t:sections.general_section_settings.icon.shop_group.coupon_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "gift",
+              "label": "t:sections.general_section_settings.icon.shop_group.gift_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "discount-outline",
+              "label": "t:sections.general_section_settings.icon.shop_group.discount_outline_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "discount-solid",
+              "label": "t:sections.general_section_settings.icon.shop_group.discount_solid_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "medal",
+              "label": "t:sections.general_section_settings.icon.shop_group.medal_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "pen-and-ruler",
+              "label": "t:sections.general_section_settings.icon.shop_group.pen_and_ruler_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "color-swatch",
+              "label": "t:sections.general_section_settings.icon.shop_group.color_swatch_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "car",
+              "label": "t:sections.general_section_settings.icon.shop_group.car_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "cup",
+              "label": "t:sections.general_section_settings.icon.shop_group.cup_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "cake",
+              "label": "t:sections.general_section_settings.icon.shop_group.cake_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "hanger",
+              "label": "t:sections.general_section_settings.icon.shop_group.hanger_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "t-shirt",
+              "label": "t:sections.general_section_settings.icon.shop_group.t_shirt_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "dress",
+              "label": "t:sections.general_section_settings.icon.shop_group.dress_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "jewelry",
+              "label": "t:sections.general_section_settings.icon.shop_group.jewelry_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "furniture",
+              "label": "t:sections.general_section_settings.icon.shop_group.furniture_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "toy",
+              "label": "t:sections.general_section_settings.icon.shop_group.toy_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "shipping-box",
+              "label": "t:sections.general_section_settings.icon.shipping_group.shipping_box_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "address-pin",
+              "label": "t:sections.general_section_settings.icon.shipping_group.address_pin_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "fast-delivery",
+              "label": "t:sections.general_section_settings.icon.shipping_group.fast_delivery_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "delivery-truck",
+              "label": "t:sections.general_section_settings.icon.shipping_group.delivery_truck_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "easy-returns",
+              "label": "t:sections.general_section_settings.icon.shipping_group.easy_returns_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "world",
+              "label": "t:sections.general_section_settings.icon.shipping_group.world_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "plane",
+              "label": "t:sections.general_section_settings.icon.shipping_group.plane_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "search-order",
+              "label": "t:sections.general_section_settings.icon.shipping_group.search_order_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "briefcase",
+              "label": "t:sections.general_section_settings.icon.shipping_group.briefcase_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "store",
+              "label": "t:sections.general_section_settings.icon.shipping_group.store_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "routing",
+              "label": "t:sections.general_section_settings.icon.shipping_group.routing_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+
+            {
+              "value": "credit-card",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.credit_card_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "lock",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.lock_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "shield",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.shield_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "secure-payment",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.secure_payment_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "wallet",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.wallet_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "cash",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.cash_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "receipt",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.receipt_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "tag",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.tag_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "list",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.list_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "scanner",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.scanner_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "phone",
+              "label": "t:sections.general_section_settings.icon.communication_group.phone_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "chat",
+              "label": "t:sections.general_section_settings.icon.communication_group.chat_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "message",
+              "label": "t:sections.general_section_settings.icon.communication_group.message_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "email-outline",
+              "label": "t:sections.general_section_settings.icon.communication_group.email_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "customer-support",
+              "label": "t:sections.general_section_settings.icon.communication_group.customer_support_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "printer-and-fax",
+              "label": "t:sections.general_section_settings.icon.communication_group.printer_and_fax_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "devices",
+              "label": "t:sections.general_section_settings.icon.communication_group.devices_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "mobile",
+              "label": "t:sections.general_section_settings.icon.communication_group.mobile_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "virus",
+              "label": "t:sections.general_section_settings.icon.ecology_group.virus_icon_label",
+              "group": "t:sections.general_section_settings.icon.ecology_group.label"
+            },
+            {
+              "value": "mask",
+              "label": "t:sections.general_section_settings.icon.ecology_group.mask_icon_label",
+              "group": "t:sections.general_section_settings.icon.ecology_group.label"
+            },
+            {
+              "value": "eco",
+              "label": "t:sections.general_section_settings.icon.ecology_group.eco_icon_label",
+              "group": "t:sections.general_section_settings.icon.ecology_group.label"
+            },
+            {
+              "value": "rabbit",
+              "label": "t:sections.general_section_settings.icon.ecology_group.rabbit_icon_label",
+              "group": "t:sections.general_section_settings.icon.ecology_group.label"
+            },
+            {
+              "value": "twitter",
+              "label": "t:sections.general_section_settings.icon.social_group.twitter_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "facebook",
+              "label": "t:sections.general_section_settings.icon.social_group.facebook_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "pinterest",
+              "label": "t:sections.general_section_settings.icon.social_group.pinterest_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "instagram",
+              "label": "t:sections.general_section_settings.icon.social_group.instagram_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "tiktok",
+              "label": "t:sections.general_section_settings.icon.social_group.tiktok_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "tumblr",
+              "label": "t:sections.general_section_settings.icon.social_group.tumblr_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "snapchat",
+              "label": "t:sections.general_section_settings.icon.social_group.snapchat_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "youtube",
+              "label": "t:sections.general_section_settings.icon.social_group.youtube_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "vimeo",
+              "label": "t:sections.general_section_settings.icon.social_group.vimeo_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "linkedin",
+              "label": "t:sections.general_section_settings.icon.social_group.linkedin_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "flickr",
+              "label": "t:sections.general_section_settings.icon.social_group.flickr_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "reddit",
+              "label": "t:sections.general_section_settings.icon.social_group.reddit_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "email-solid",
+              "label": "t:sections.general_section_settings.icon.social_group.email_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "behance",
+              "label": "t:sections.general_section_settings.icon.social_group.behance_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "discord",
+              "label": "t:sections.general_section_settings.icon.social_group.discord_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "dribbble",
+              "label": "t:sections.general_section_settings.icon.social_group.dribbble_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "medium",
+              "label": "t:sections.general_section_settings.icon.social_group.medium_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "twitch",
+              "label": "t:sections.general_section_settings.icon.social_group.twitch_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "whatsapp",
+              "label": "t:sections.general_section_settings.icon.social_group.whatsapp_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "viber",
+              "label": "t:sections.general_section_settings.icon.social_group.viber_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "telegram",
+              "label": "t:sections.general_section_settings.icon.social_group.telegram_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "coffee",
+              "label": "t:sections.general_section_settings.icon.general_group.coffee_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            }
+          ],
+          "default": "star-solid",
+          "label": "t:sections.general_section_settings.icon.label",
+          "info": "t:sections.general_section_settings.icon.info"
+        },
+        {
+          "type": "image_picker",
+          "id": "custom_icon_image",
+          "label": "t:sections.general_section_settings.custom_icon_image.label"
+        },
+        {
+          "type": "range",
+          "id": "icon_size",
+          "min": 24,
+          "max": 200,
+          "step": 2,
+          "default": 40,
+          "unit": "t:sections.scrolling-text.blocks.announcement.icon_size.unit",
+          "label": "t:sections.scrolling-text.blocks.announcement.icon_size.label"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.scrolling-text.blocks.announcement.scrolling_content"
+        },
+        {
+          "type": "select",
+          "id": "scrolling_direction",
+          "label": "t:sections.scrolling-text.blocks.announcement.scrolling_direction.label",
+          "options": [
+            {
+              "value": "right_to_left",
+              "label": "t:sections.scrolling-text.blocks.announcement.scrolling_direction.options.option_1"
+            },
+            {
+              "value": "left_to_right",
+              "label": "t:sections.scrolling-text.blocks.announcement.scrolling_direction.options.option_2"
+            }
+          ],
+          "default": "right_to_left"
+        },
+        {
+          "type": "range",
+          "id": "scrolling_speed",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "default": 30,
+          "label": "t:sections.scrolling-text.blocks.announcement.scrolling_speed.label"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.scrolling-text.blocks.announcement.colors_content"
+        },
+        {
+          "type": "paragraph",
+          "content": "t:sections.scrolling-text.blocks.announcement.colors_paragraph"
+        },
+        {
+          "type": "color",
+          "id": "background_color",
+          "label": "t:sections.scrolling-text.blocks.announcement.background_color_label",
+          "default": "#ffffff"
+        },
+        {
+          "type": "color_background",
+          "id": "background_color_gradient",
+          "label": "t:sections.scrolling-text.blocks.announcement.background_color_gradient_label"
+        },
+        {
+          "type": "color",
+          "id": "text_color",
+          "label": "t:sections.scrolling-text.blocks.announcement.text_color_label",
+          "default": "#000000"
+        },
+        {
+          "type": "color_background",
+          "id": "text_color_gradient",
+          "label": "t:sections.scrolling-text.blocks.announcement.text_color_gradient_label"
+        }
+      ]
+    },
+    {
+      "type": "announcement-products",
+      "name": "t:sections.scrolling-text.blocks.announcement_with_products.name",
+      "limit": 2,
+      "settings": [
+        {
+          "type": "text",
+          "id": "announcement_text",
+          "label": "t:sections.scrolling-text.blocks.announcement.announcement_text.label",
+          "default": "Make an announcement"
+        },
+        {
+          "type": "checkbox",
+          "id": "use_product_names_label",
+          "default": true,
+          "label": "t:sections.scrolling-text.blocks.announcement_with_products.use_product_names_label"
+        },
+        {
+          "type": "select",
+          "id": "font_family",
+          "label": "t:sections.scrolling-text.blocks.announcement.font_family.label",
+          "options": [
+            {
+              "value": "heading",
+              "label": "t:sections.scrolling-text.blocks.announcement.font_family.options.option_1"
+            },
+            {
+              "value": "body",
+              "label": "t:sections.scrolling-text.blocks.announcement.font_family.options.option_2"
+            }
+          ],
+          "default": "heading"
+        },
+        {
+          "type": "select",
+          "id": "font_style",
+          "label": "t:sections.scrolling-text.blocks.announcement.font_style.label",
+          "options": [
+            {
+              "value": "solid",
+              "label": "t:sections.scrolling-text.blocks.announcement.font_style.options.option_1"
+            },
+            {
+              "value": "outline",
+              "label": "t:sections.scrolling-text.blocks.announcement.font_style.options.option_2"
+            },
+            {
+              "value": "mixed",
+              "label": "t:sections.scrolling-text.blocks.announcement.font_style.options.option_3"
+            }
+          ],
+          "default": "solid"
+        },
+        {
+          "type": "range",
+          "id": "font_size",
+          "min": 14,
+          "max": 200,
+          "step": 2,
+          "default": 24,
+          "unit": "t:sections.scrolling-text.blocks.announcement.font_size.unit",
+          "label": "t:sections.scrolling-text.blocks.announcement.font_size.label"
+        },
+        {
+          "type": "range",
+          "id": "letter_spacing",
+          "min": -2,
+          "max": 8,
+          "step": 0.1,
+          "default": 0,
+          "unit": "t:sections.scrolling-text.blocks.announcement.letter_spacing.unit",
+          "label": "t:sections.scrolling-text.blocks.announcement.letter_spacing.label"
+        },
+        {
+          "type": "range",
+          "id": "spacing_between_messages",
+          "min": 0,
+          "max": 140,
+          "step": 2,
+          "default": 40,
+          "unit": "t:sections.scrolling-text.blocks.announcement.spacing_between_messages.unit",
+          "label": "t:sections.scrolling-text.blocks.announcement.spacing_between_messages.label"
+        },
+        {
+          "type": "range",
+          "id": "top_and_bottom_spacing",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "default": 20,
+          "unit": "t:sections.scrolling-text.blocks.announcement.top_and_bottom_spacing.unit",
+          "label": "t:sections.scrolling-text.blocks.announcement.top_and_bottom_spacing.label"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.scrolling-text.blocks.announcement_with_products.products_header_label"
+        },
+        {
+          "type": "product_list",
+          "id": "products",
+          "label": "t:sections.scrolling-text.blocks.announcement_with_products.products_header_label",
+          "limit": 15
+        },
+        {
+          "type": "checkbox",
+          "id": "enable_custom_image_ratio",
+          "default": true,
+          "label": "t:sections.scrolling-text.blocks.announcement_with_products.custom_image_ratio.checkbox_label"
+        },
+        {
+          "type": "range",
+          "id": "custom_image_ratio",
+          "min": 0.2,
+          "max": 2,
+          "step": 0.1,
+          "default": 1,
+          "unit": "t:sections.scrolling-text.blocks.announcement_with_products.custom_image_ratio.unit",
+          "label": "t:sections.scrolling-text.blocks.announcement_with_products.custom_image_ratio.range_label"
+        },
+        {
+          "type": "range",
+          "id": "icon_size",
+          "min": 24,
+          "max": 200,
+          "step": 2,
+          "default": 40,
+          "unit": "t:sections.scrolling-text.blocks.announcement_with_products.image_size.unit",
+          "label": "t:sections.scrolling-text.blocks.announcement_with_products.image_size.label"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.scrolling-text.blocks.announcement.scrolling_content"
+        },
+        {
+          "type": "select",
+          "id": "scrolling_direction",
+          "label": "t:sections.scrolling-text.blocks.announcement.scrolling_direction.label",
+          "options": [
+            {
+              "value": "right_to_left",
+              "label": "t:sections.scrolling-text.blocks.announcement.scrolling_direction.options.option_1"
+            },
+            {
+              "value": "left_to_right",
+              "label": "t:sections.scrolling-text.blocks.announcement.scrolling_direction.options.option_2"
+            }
+          ],
+          "default": "right_to_left"
+        },
+        {
+          "type": "range",
+          "id": "scrolling_speed",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "default": 30,
+          "label": "t:sections.scrolling-text.blocks.announcement.scrolling_speed.label"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.scrolling-text.blocks.announcement.colors_content"
+        },
+        {
+          "type": "paragraph",
+          "content": "t:sections.scrolling-text.blocks.announcement.colors_paragraph"
+        },
+        {
+          "type": "color",
+          "id": "background_color",
+          "label": "t:sections.scrolling-text.blocks.announcement.background_color_label",
+          "default": "#000000"
+        },
+        {
+          "type": "color_background",
+          "id": "background_color_gradient",
+          "label": "t:sections.scrolling-text.blocks.announcement.background_color_gradient_label"
+        },
+        {
+          "type": "color",
+          "id": "text_color",
+          "label": "t:sections.scrolling-text.blocks.announcement.text_color_label",
+          "default": "#ffffff"
+        },
+        {
+          "type": "color_background",
+          "id": "text_color_gradient",
+          "label": "t:sections.scrolling-text.blocks.announcement.text_color_gradient_label"
+        }
+      ]
+    },
+    {
+      "type": "announcement-collections",
+      "name": "t:sections.scrolling-text.blocks.announcement_with_collections.name",
+      "limit": 2,
+      "settings": [
+        {
+          "type": "text",
+          "id": "announcement_text",
+          "label": "t:sections.scrolling-text.blocks.announcement.announcement_text.label",
+          "default": "Make an announcement"
+        },
+        {
+          "type": "checkbox",
+          "id": "use_collection_names_label",
+          "default": true,
+          "label": "t:sections.scrolling-text.blocks.announcement_with_collections.use_collection_names_label"
+        },
+        {
+          "type": "select",
+          "id": "font_family",
+          "label": "t:sections.scrolling-text.blocks.announcement.font_family.label",
+          "options": [
+            {
+              "value": "heading",
+              "label": "t:sections.scrolling-text.blocks.announcement.font_family.options.option_1"
+            },
+            {
+              "value": "body",
+              "label": "t:sections.scrolling-text.blocks.announcement.font_family.options.option_2"
+            }
+          ],
+          "default": "heading"
+        },
+        {
+          "type": "select",
+          "id": "font_style",
+          "label": "t:sections.scrolling-text.blocks.announcement.font_style.label",
+          "options": [
+            {
+              "value": "solid",
+              "label": "t:sections.scrolling-text.blocks.announcement.font_style.options.option_1"
+            },
+            {
+              "value": "outline",
+              "label": "t:sections.scrolling-text.blocks.announcement.font_style.options.option_2"
+            },
+            {
+              "value": "mixed",
+              "label": "t:sections.scrolling-text.blocks.announcement.font_style.options.option_3"
+            }
+          ],
+          "default": "solid"
+        },
+        {
+          "type": "range",
+          "id": "font_size",
+          "min": 14,
+          "max": 200,
+          "step": 2,
+          "default": 24,
+          "unit": "t:sections.scrolling-text.blocks.announcement.font_size.unit",
+          "label": "t:sections.scrolling-text.blocks.announcement.font_size.label"
+        },
+        {
+          "type": "range",
+          "id": "letter_spacing",
+          "min": -2,
+          "max": 8,
+          "step": 0.1,
+          "default": 0,
+          "unit": "t:sections.scrolling-text.blocks.announcement.letter_spacing.unit",
+          "label": "t:sections.scrolling-text.blocks.announcement.letter_spacing.label"
+        },
+        {
+          "type": "range",
+          "id": "spacing_between_messages",
+          "min": 0,
+          "max": 140,
+          "step": 2,
+          "default": 40,
+          "unit": "t:sections.scrolling-text.blocks.announcement.spacing_between_messages.unit",
+          "label": "t:sections.scrolling-text.blocks.announcement.spacing_between_messages.label"
+        },
+        {
+          "type": "range",
+          "id": "top_and_bottom_spacing",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "default": 20,
+          "unit": "t:sections.scrolling-text.blocks.announcement.top_and_bottom_spacing.unit",
+          "label": "t:sections.scrolling-text.blocks.announcement.top_and_bottom_spacing.label"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.scrolling-text.blocks.announcement_with_collections.collections_header_label"
+        },
+        {
+          "type": "collection_list",
+          "id": "collections",
+          "label": "t:sections.scrolling-text.blocks.announcement_with_collections.collections_header_label",
+          "limit": 15
+        },
+        {
+          "type": "checkbox",
+          "id": "enable_custom_image_ratio",
+          "default": true,
+          "label": "t:sections.scrolling-text.blocks.announcement_with_collections.custom_image_ratio.checkbox_label"
+        },
+        {
+          "type": "range",
+          "id": "custom_image_ratio",
+          "min": 0.2,
+          "max": 2,
+          "step": 0.1,
+          "default": 1,
+          "unit": "t:sections.scrolling-text.blocks.announcement_with_collections.custom_image_ratio.unit",
+          "label": "t:sections.scrolling-text.blocks.announcement_with_collections.custom_image_ratio.range_label"
+        },
+        {
+          "type": "range",
+          "id": "icon_size",
+          "min": 24,
+          "max": 200,
+          "step": 2,
+          "default": 40,
+          "unit": "t:sections.scrolling-text.blocks.announcement_with_collections.image_size.unit",
+          "label": "t:sections.scrolling-text.blocks.announcement_with_collections.image_size.label"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.scrolling-text.blocks.announcement.scrolling_content"
+        },
+        {
+          "type": "select",
+          "id": "scrolling_direction",
+          "label": "t:sections.scrolling-text.blocks.announcement.scrolling_direction.label",
+          "options": [
+            {
+              "value": "right_to_left",
+              "label": "t:sections.scrolling-text.blocks.announcement.scrolling_direction.options.option_1"
+            },
+            {
+              "value": "left_to_right",
+              "label": "t:sections.scrolling-text.blocks.announcement.scrolling_direction.options.option_2"
+            }
+          ],
+          "default": "right_to_left"
+        },
+        {
+          "type": "range",
+          "id": "scrolling_speed",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "default": 30,
+          "label": "t:sections.scrolling-text.blocks.announcement.scrolling_speed.label"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.scrolling-text.blocks.announcement.colors_content"
+        },
+        {
+          "type": "paragraph",
+          "content": "t:sections.scrolling-text.blocks.announcement.colors_paragraph"
+        },
+        {
+          "type": "color",
+          "id": "background_color",
+          "label": "t:sections.scrolling-text.blocks.announcement.background_color_label",
+          "default": "#000000"
+        },
+        {
+          "type": "color_background",
+          "id": "background_color_gradient",
+          "label": "t:sections.scrolling-text.blocks.announcement.background_color_gradient_label"
+        },
+        {
+          "type": "color",
+          "id": "text_color",
+          "label": "t:sections.scrolling-text.blocks.announcement.text_color_label",
+          "default": "#ffffff"
+        },
+        {
+          "type": "color_background",
+          "id": "text_color_gradient",
+          "label": "t:sections.scrolling-text.blocks.announcement.text_color_gradient_label"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.scrolling-text.name",
+      "blocks": [
+        {
+          "type": "announcement"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

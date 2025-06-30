@@ -1,0 +1,28 @@
+{
+  "sections": {
+    "collection_list_page": {
+      "type": "collection-list-page",
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "full-screen",
+        "section_spacing_top": 48,
+        "section_spacing_bottom": 48,
+        "title": "Collections list",
+        "heading_size": "h5",
+        "collections_to_show": "all",
+        "collection_list": [],
+        "img_ratio": "portrait",
+        "text_style": "on-image-bottom",
+        "collection_card_content_align": "center",
+        "collection_card_heading_size": "h5",
+        "show_product_count": "caption",
+        "collection_per_page": 33,
+        "desktop_columns": 3,
+        "desktop_space_between_cards": 16,
+        "mobile_space_between_cards": 20,
+        "pagination_type": "load-button-pagination"
+      }
+    }
+  },
+  "order": ["collection_list_page"]
+}

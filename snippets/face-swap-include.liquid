@@ -1,0 +1,11 @@
+{% comment %}
+  Include this in product templates with face-swap functionality
+  This will add the post-processing API integration for face-swap products
+{% endcomment %}
+
+<!-- Face Swap Post-Processing -->
+<script src="{{ 'image-post-processing-api.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'face-swap-bridge.js' | asset_url }}" defer="defer"></script>
+
+<!-- Include post-processing logic -->
+{% render 'faceswap-post-processing' %} 

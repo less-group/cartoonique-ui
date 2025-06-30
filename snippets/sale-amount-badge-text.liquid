@@ -1,0 +1,23 @@
+{%- liquid
+  assign money_per_percent = old_price | divided_by: 100.0
+  assign sale_amount_left = old_price | minus: price
+  assign sale_amount_left_in_percent = sale_amount_left | divided_by: money_per_percent | round
+
+  assign sale_amount_left_money = sale_amount_left | round | money
+-%}
+
+{%- capture text -%}
+  {% case settings.product_sale_amount_badge_variant %}
+    {% when 'variant_1' %}
+      {{ 'general.badges.store_front.product_sale_amount_badge.variant_1_html' | t }}
+    {% when 'variant_2' %}
+      {{ 'general.badges.store_front.product_sale_amount_badge.variant_2_html' | t: amount: sale_amount_left_in_percent }}
+    {% when 'variant_3' %}
+      {{ 'general.badges.store_front.product_sale_amount_badge.variant_3_html' | t: amount: sale_amount_left_in_percent }}
+    {% when 'variant_4' %}
+      {{ 'general.badges.store_front.product_sale_amount_badge.variant_4_html' | t: amount: sale_amount_left_money }}
+    {% when 'variant_5' %}
+      {{ 'general.badges.store_front.product_sale_amount_badge.variant_5_html' | t: amount: sale_amount_left_money }}
+  {% endcase %}
+{%- endcapture -%}
+{{ text }}

@@ -1,0 +1,144 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "collection-hero-banner": {
+      "type": "collection-hero-banner",
+      "disabled": true,
+      "settings": {
+        "color_scheme": "secondary",
+        "enable_background_around_container": false,
+        "container_size": "full-screen",
+        "desktop_ratio": 0.1,
+        "mobile_ratio": 0.2,
+        "show_collection_image": false,
+        "show_breadcrumbs": false,
+        "show_collection_title": true,
+        "show_collection_description": true,
+        "desktop_overlay_opacity": 10,
+        "mobile_overlay_opacity": 10,
+        "heading_size": "h5",
+        "body_size": "body4",
+        "desktop_content_position": "align-items:center;justify-content:center;",
+        "desktop_content_align": "center",
+        "content_max_width": 1304,
+        "content_spacing": 48,
+        "mobile_content_spacing": 20,
+        "mobile_content_position": "align-items:center;",
+        "mobile_content_align": "center",
+        "add_side_paddings": true,
+        "section_spacing_top": 0,
+        "section_spacing_bottom": 0
+      }
+    },
+    "rich_text_WnQfyC": {
+      "type": "rich-text",
+      "blocks": {
+        "heading_BnYn3j": {
+          "type": "heading",
+          "settings": {
+            "title": "Choose Your Cartoon Portrait",
+            "heading_size": "h3"
+          }
+        }
+      },
+      "block_order": [
+        "heading_BnYn3j"
+      ],
+      "settings": {
+        "color_scheme": "default",
+        "enable_background_around_container": false,
+        "container_size": "page-width",
+        "content_align": "left",
+        "add_side_paddings": true,
+        "section_spacing_top": 0,
+        "section_spacing_bottom": 0
+      }
+    },
+    "products": {
+      "type": "products",
+      "custom_css": [
+        ".product-card {box-shadow: 0 6px 4px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06); border-radius: 12px; margin: 12px;}",
+        ".product-card__details-inner {padding: 0 12px;}",
+        ".product-card__inner.shape--portrait {border-radius: 12px 12px 0 0;}",
+        ".product-card {transition: transform 0.2s ease;}",
+        ".product-card:hover {transform: scale(1.02);}"
+      ],
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "full-screen",
+        "enable_sorting": false,
+        "show_product_count": false,
+        "show_column_count_switcher": false,
+        "enable_filtering": false,
+        "filters_position": "left",
+        "filter_style": "closed-embed",
+        "categories_style": "static",
+        "option_style": "checkbox-solid",
+        "show_color_swatches": true,
+        "show_divider": true,
+        "show_result_count": true,
+        "enable_uppercase_title": true,
+        "img_ratio": "portrait",
+        "product_card_align": "left",
+        "product_per_page": 12,
+        "desktop_columns": "4",
+        "desktop_space_between_cards": 12,
+        "mobile_columns": "2",
+        "mobile_space_between_cards": 0,
+        "pagination_type": "load-button-pagination",
+        "add_side_paddings": true,
+        "section_spacing_top": 0,
+        "section_spacing_bottom": 22
+      }
+    },
+    "featured_collection_BCMhcp": {
+      "type": "featured-collection",
+      "disabled": true,
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "page-width",
+        "desktop_layout": "carousel",
+        "mobile_layout": "carousel",
+        "title": "Featured collection",
+        "heading_size": "h5",
+        "alignment": "center",
+        "collection": "",
+        "featured_products": [
+          "test"
+        ],
+        "img_ratio": "default",
+        "product_card_align": "left",
+        "cards_to_show": 16,
+        "desktop_columns": 4,
+        "desktop_space_between_cards": 16,
+        "mobile_space_between_cards": 16,
+        "show_navigation_on_hover": true,
+        "collection_card_position": "after-all-items",
+        "collection_card_content_position": "on-image-bottom",
+        "collection_card_content_align": "left",
+        "collection_card_heading_size": "h6",
+        "collection_card_show_product_count": "caption",
+        "collection_card_overlay_opacity": 15,
+        "autoplay_mode": "disabled",
+        "autoplay_interval": 3,
+        "add_side_paddings": true,
+        "section_spacing_top": 96,
+        "section_spacing_bottom": 48
+      }
+    }
+  },
+  "order": [
+    "collection-hero-banner",
+    "rich_text_WnQfyC",
+    "products",
+    "featured_collection_BCMhcp"
+  ]
+}

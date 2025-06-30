@@ -1,0 +1,121 @@
+{% liquid
+  assign teaser_heading = options.teaser_heading
+
+  assign teaser_background_color = options.teaser_background_color
+  assign teaser_background_gradient = options.teaser_background_gradient
+  if teaser_background_gradient != blank
+    assign teaser_background_color = teaser_background_gradient
+  endif
+  assign teaser_text_color = options.teaser_text_color
+
+  assign teaser_desktop_show = options.teaser_desktop_show
+  assign teaser_desktop_position = options.teaser_desktop_position
+  assign teaser_desktop_show_close = options.teaser_desktop_show_close
+  assign teaser_desktop_position_splited = options.teaser_desktop_position | split: '-' | first
+  assign teaser_desktop_heading_size = options.teaser_desktop_heading_size
+  assign teaser_desktop_side_paddings = options.teaser_desktop_side_paddings
+  assign teaser_desktop_top_bottom_paddings = options.teaser_desktop_top_bottom_paddings
+
+  assign teaser_mobile_show = options.teaser_mobile_show
+  assign teaser_mobile_position = options.teaser_mobile_position
+  assign teaser_mobile_show_close = options.teaser_mobile_show_close
+  assign teaser_mobile_heading_size = options.teaser_mobile_heading_size
+  assign teaser_mobile_side_paddings = options.teaser_mobile_side_paddings
+  assign teaser_mobile_top_bottom_paddings = options.teaser_mobile_top_bottom_paddings
+%}
+
+{% capture mobile_position_styles %}
+  {% case teaser_mobile_position %}
+    {% when 'left' %}
+      top:50vh;left:-50%;transform:rotate(180deg);writing-mode:vertical-rl;padding: var(--gsc-teaser-padding-inline) var(--gsc-teaser-padding-block);
+    {% when 'right' %}
+      top:50vh;right:-50%;transform:rotate(180deg);writing-mode:vertical-rl;padding: var(--gsc-teaser-padding-inline) var(--gsc-teaser-padding-block);
+    {% when 'bottom' %}
+      bottom:-50%;left:50%;right:1%;transform:translateX(-50%);padding: var(--gsc-teaser-padding-block) var(--gsc-teaser-padding-inline);
+  {% endcase %}
+{% endcapture %}
+
+{% capture desktop_position_styles %}
+  {% case teaser_desktop_position %}
+    {% when 'left-center' %}
+      top:50vh;left:-50%;transform:rotate(180deg)translateY(50%);writing-mode:vertical-rl;padding: var(--gsc-teaser-padding-inline) var(--gsc-teaser-padding-block);
+    {% when 'left-bottom' %}
+      bottom:128px;left:-50%;transform:rotate(180deg);writing-mode:vertical-rl;padding: var(--gsc-teaser-padding-inline) var(--gsc-teaser-padding-block);
+    {% when 'right-center' %}
+      top:50vh;right:-50%;transform:rotate(180deg)translateY(50%);writing-mode:vertical-rl;padding: var(--gsc-teaser-padding-inline) var(--gsc-teaser-padding-block);
+    {% when 'right-bottom' %}
+      bottom:128px;right:-50%;transform:rotate(180deg);writing-mode:vertical-rl;padding: var(--gsc-teaser-padding-inline) var(--gsc-teaser-padding-block);
+    {% when 'bottom-left' %}
+      left:40px;bottom:-50%;padding: var(--gsc-teaser-padding-block) var(--gsc-teaser-padding-inline);
+    {% when 'bottom-center' %}
+      bottom:-50%;left:50%;transform:translateX(-50%);padding: var(--gsc-teaser-padding-block) var(--gsc-teaser-padding-inline);
+    {% when 'bottom-right' %}
+      bottom:-50%;padding: var(--gsc-teaser-padding-block) var(--gsc-teaser-padding-inline);
+      {% if teaser_desktop_show_close %}
+        right:78px;
+      {% else %}
+        right:40px;
+      {% endif %}
+  {% endcase %}
+{% endcapture %}
+
+{% capture css %}
+  {% style %}
+    .teaser--block-{{ block.id}} {
+      --gsc-teaser-background-color: {{ teaser_background_color }};
+      --gsc-teaser-close-background-color: rgba({{ options.teaser_background_color.red }}, {{ options.teaser_background_color.green }}, {{ options.teaser_background_color.blue }}, 0.35);
+      --gsc-teaser-text-color: {{ teaser_text_color }};
+    }
+
+    @media {% render 'media-queries', screen: 'only_mobile' %} {
+      .teaser--block-{{ block.id}} {          
+        --gsc-teaser-font-size: {{ teaser_mobile_heading_size }}px;
+        --gsc-teaser-padding-block: {{ teaser_mobile_top_bottom_paddings }}px;
+        --gsc-teaser-padding-inline: {{ teaser_mobile_side_paddings }}px;
+
+        {{mobile_position_styles}}
+      }
+    }
+
+    @media {% render 'media-queries', screen: 'md' %} {
+      .teaser--block-{{ block.id }} {
+        --gsc-teaser-font-size: {{ teaser_desktop_heading_size }}px;
+        --gsc-teaser-padding-block: {{ teaser_desktop_top_bottom_paddings }}px;
+        --gsc-teaser-padding-inline: {{ teaser_desktop_side_paddings }}px;
+        
+        {{desktop_position_styles}}
+      }
+    }
+  {% endstyle %}
+{% endcapture %}
+
+{% render 'inline-css-minifier', css: css %}
+
+<popup-teaser
+  data-target-popup-id='{{ block.id }}'
+  {% if teaser_desktop_show_close != 'none' or teaser_mobile_show_close != 'none' %}
+    data-can-be-closed-on='{% if teaser_desktop_show_close != 'none' %}desktop{% endif %} {% if teaser_mobile_show_close != 'none' %}mobile{% endif %}'
+  {% endif %}
+  class='teaser teaser--block-{{ block.id}}  teaser__mobile-variant-{{teaser_mobile_show}} teaser__mobile-position-{{teaser_mobile_position}} teaser__desktop-variant-{{teaser_desktop_show}} teaser__desktop-position-{{teaser_desktop_position_splited}}'
+  {{ block.shopify_attributes }}  
+  {% if teaser_background_gradient != blank %}
+    data-gradient='{{ teaser_background_gradient }}'
+    data-opacity='0.35'
+  {% endif %}
+>
+  <p class='teaser__title'>{{ teaser_heading }}</p>
+
+  {% if teaser_desktop_show_close != 'none' or teaser_mobile_show_close != 'none' %}
+    <button
+      tabindex='0'
+      type='button'
+      data-popup-teaser-close
+      class='unstyled-button teaser__close-btn teaser__close-btn--mobile-{{teaser_mobile_show_close}}-{{teaser_mobile_position}} teaser__close-btn--desktop-{{teaser_desktop_show_close}}-{{teaser_desktop_position_splited}}'
+    >
+      <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'>
+        <path d="M14.168 5.82813L5.83464 14.1615" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M14.168 14.1641L5.83464 5.83073" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+    </button>
+  {% endif %}
+</popup-teaser>

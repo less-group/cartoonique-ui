@@ -1,0 +1,195 @@
+{%- liquid
+  assign media_type = media.media_type | default: 'image'
+  assign enable_multiply = settings.enable_product_darken_background
+  assign placeholder_class = 'placeholder-image product-media__image'
+
+  if enable_darken_mode
+    assign placeholder_class = placeholder_class | append: ' multiply-mode__target'
+  endif
+
+  assign is_eager_loading = false
+  if index == 0
+    assign is_eager_loading = true
+  endif
+-%}
+
+<div class='product-media__image-wrapper {% if enable_multiply %}multiply-mode{% endif %}'>
+  {%- if media_type == 'image' -%}
+    {%- assign image = media.image -%}
+
+    {%- if enable_image_zoom -%}
+      <product-modal-button
+        data-action='open'
+        data-modal='#ProductModal-{{ product.id }}-{{ sectionId }}'
+        data-media-id='{{ modal_media_id }}'
+      >
+        {%- if image != blank -%}
+          <img
+            {% render 'image-attributes',
+              image: image,
+              is_multiply_target: enable_multiply,
+              class_from_parent: class,
+              class: 'product-media__image',
+              is_eager_loading: is_eager_loading
+            %}
+          >
+        {%- else -%}
+          {{ 'image' | placeholder_svg_tag: placeholder_class }}
+        {%- endif -%}
+      </product-modal-button>
+    {%- else -%}
+      {%- if image != blank -%}
+        <img
+          {% render 'image-attributes',
+            image: image,
+            is_multiply_target: enable_multiply,
+            class_from_parent: class,
+            class: 'product-media__image',
+            is_eager_loading: is_eager_loading
+          %}
+        >
+      {%- else -%}
+        {{ 'image' | placeholder_svg_tag: placeholder_class }}
+      {%- endif -%}
+    {%- endif -%}
+  {%- elsif media_type == 'model' -%}
+    <product-model class='deferred-media'>
+      <div id='Deferred-Poster-Modal-{{ media.id }}' class='deferred-media__poster' type='button'>
+        <div class='deferred-media__button'>
+          {%- render 'icon',
+            icon_name: '3d',
+            class: 'deferred-media__button-icon deferred-media__button-icon--model'
+          -%}
+        </div>
+        {%- if media != blank -%}
+          {%- assign image = media.preview_image -%}
+
+          <img
+            {% render 'image-attributes',
+              image: image,
+              is_multiply_target: enable_multiply,
+              class_from_parent: class,
+              class: 'product-media__image',
+              is_eager_loading: is_eager_loading
+            %}
+          >
+        {%- else -%}
+          {{ 'image' | placeholder_svg_tag: placeholder_class }}
+        {%- endif -%}
+      </div>
+      <template>
+        {%- liquid
+          echo media | media_tag: image_size: '2048x', toggleable: true
+        -%}
+      </template>
+      <div class='deferred-media__xr-button-wrapper'>
+        <button
+          class='btn btn--solid deferred-media__xr-button'
+          type='button'
+          aria-label='{{ 'product.screen_reader.xr_button_label' | t }}'
+          data-shopify-xr
+          data-shopify-model3d-id='{{ media.id }}'
+          data-shopify-title='title'
+          data-shopify-xr-hidden
+        >
+          {%- render 'icon', icon_name: '3d', class: 'deferred-media__xr-button-icon' -%}
+          {{ 'product.store_front.xr_button_label' | t }}
+        </button>
+      </div>
+    </product-model>
+  {%- elsif media_type == 'video' or media_type == 'external_video' -%}
+    <deferred-media
+      class='deferred-media'
+      {% if enable_video_autoplay %}
+        data-autoplay
+      {% endif %}
+      {% if enable_video_controls %}
+        data-enable-controls
+      {% endif %}
+    >
+      <div id='Deferred-Poster-Modal-{{ media.id }}' class='deferred-media__poster' type='button'>
+        <div class='deferred-media__button'>
+          {%- render 'icon',
+            icon_name: 'play',
+            class: 'deferred-media__button-icon deferred-media__button-icon--play',
+            icon_style: 'solid'
+          -%}
+        </div>
+        {%- if media != blank -%}
+          {%- assign image = media.preview_image -%}
+
+          <img
+            {% render 'image-attributes',
+              image: image,
+              is_multiply_target: enable_multiply,
+              class_from_parent: class,
+              class: 'product-media__image'
+            %}
+          >
+        {%- else -%}
+          {{ 'image' | placeholder_svg_tag: placeholder_class }}
+        {%- endif -%}
+      </div>
+      <template>
+        {%- liquid
+          assign video_class = 'deffered-media__video'
+
+          if section.settings.scale_video == true
+            assign video_class = 'deffered-media__video deffered-media__video--with-scale'
+          endif
+        -%}
+
+        {% case media_type %}
+          {% when 'external_video' %}
+            {%- liquid
+              assign prepared_video_url = media.external_id | append: '?'
+
+              if media.host == 'youtube'
+                assign prepared_video_url = prepared_video_url | append: 'enablejsapi=1'
+              endif
+
+              if enable_video_looping
+                assign prepared_video_url = prepared_video_url | append: '&loop=1&playlist=' | append: media.external_id
+              endif
+
+              if enable_video_autoplay
+                assign prepared_video_url = prepared_video_url | append: '&autoplay=1&mute=1&muted=1'
+              endif
+
+              unless enable_video_controls
+                assign prepared_video_url = prepared_video_url | append: '&controls=0'
+              endunless
+
+              assign src = 'https://www.youtube.com/embed/'
+
+              if media.host == 'vimeo'
+                assign src = 'https://player.vimeo.com/video/'
+              endif
+
+              assign src = 'https://www.youtube.com/embed/' | append: prepared_video_url
+            -%}
+
+            <iframe
+              src='{{ src }}'
+              class='video-banner__media'
+              allow='autoplay'
+              allowfullscreen
+              frameborder='0'
+              title='{{ media.alt | escape }}'
+            ></iframe>
+
+          {% when 'video' %}
+            {% render 'video-with-alt',
+              class: video_class,
+              video: media,
+              autoplay: enable_video_autoplay,
+              loop: enable_video_looping,
+              controls: enable_video_controls,
+              muted: true,
+              loading: 'eager'
+            %}
+        {% endcase %}
+      </template>
+    </deferred-media>
+  {%- endif -%}
+</div>

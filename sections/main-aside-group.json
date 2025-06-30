@@ -1,0 +1,54 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "type": "aside",
+  "name": "Aside Group",
+  "sections": {
+    "cart-drawer": {
+      "type": "cart-drawer",
+      "blocks": {
+        "items": {
+          "type": "items",
+          "settings": {}
+        }
+      },
+      "block_order": [
+        "items"
+      ],
+      "settings": {
+        "color_scheme": "default",
+        "img_ratio": "portrait",
+        "show_cart_note": false,
+        "show_taxes_and_shipping_costs": true,
+        "show_currency_code": true,
+        "show_dynamic_buttons": false,
+        "empty_cart_button_url": "/",
+        "empty_cart_recommendations_text": "<p>If you don't know where to start, try these amazing collections.</p>",
+        "empty_cart_recommendations_collection_list": [],
+        "empty_cart_recommendations_show_collection_images": false
+      }
+    },
+    "search-sidebar": {
+      "type": "search-sidebar",
+      "settings": {
+        "color_scheme": "default",
+        "img_ratio": "default",
+        "results_per_category": 10,
+        "enable_extended_search": false,
+        "recommendations_title": "Most searched",
+        "recommendations_queries": "party dress\nblue denim\nhandbag\nshirt"
+      }
+    }
+  },
+  "order": [
+    "cart-drawer",
+    "search-sidebar"
+  ]
+}

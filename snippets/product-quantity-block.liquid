@@ -1,0 +1,50 @@
+{%- liquid
+  assign available = product.selected_or_first_available_variant.available
+-%}
+{%- if product != blank -%}
+  <div
+    class='product-quantity__wrap'
+    id='product-quantity-{{ product.id }}-{{ sectionId }}'
+    {{ block.shopify_attributes }}
+  >
+    <label class='product-quantity__label heading-font-family' for='Quantity-{{ product.id }}-{{ sectionId }}'>
+      {{ 'product.store_front.quantity.label' | t }}
+    </label>
+    <quantity-component
+      class='quantity product-quantity__quantity'
+      data-stock='{% if product.selected_or_first_available_variant.quantity_rule.max != null %}{{ product.selected_or_first_available_variant.quantity_rule.max }}{% else %}9999{% endif %}'
+    >
+      <quantity-btn class='quantity__btn-wrapper' name='minus' data-action='minus' type='button' tabindex='0'>
+        <button class='quantity__btn' type='button'>
+          {%- render 'icon', icon_name: 'minus', class: 'quantity__btn-icon' -%}
+        </button>
+      </quantity-btn>
+      <input
+        class='quantity__input'
+        form='product-form-{{ product.id }}-{{ sectionId }}'
+        id='Quantity-{{ product.id }}-{{ sectionId }}'
+        min='{{ product.selected_or_first_available_variant.quantity_rule.min }}'
+        {% if product.selected_or_first_available_variant.quantity_rule.max != null %}
+          max='{{ product.selected_or_first_available_variant.quantity_rule.max }}'
+        {% else %}
+          max='9999'
+        {% endif %}
+        name='quantity'
+        type='number'
+        value='{{ product.selected_or_first_available_variant.quantity_rule.min }}'
+        data-quantity-input
+      >
+      <quantity-btn
+        class='quantity__btn-wrapper'
+        name='plus'
+        type='button'
+        data-action='plus'
+        tabindex='0'
+      >
+        <button class='quantity__btn' type='button'>
+          {%- render 'icon', icon_name: 'plus', class: 'quantity__btn-icon' -%}
+        </button>
+      </quantity-btn>
+    </quantity-component>
+  </div>
+{%- endif -%}

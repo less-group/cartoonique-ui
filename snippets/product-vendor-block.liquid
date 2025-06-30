@@ -1,0 +1,12 @@
+<div class='product-general-info-block' {{ block.shopify_attributes }}>
+  <a
+    class='unstyled-link product-general-info-block__vendor body-color'
+    href='/collections/all?filter.p.vendor={{ product.vendor | escape }}'
+  >
+    {%- if product != blank -%}
+      {{ product.vendor }}
+    {%- else -%}
+      {{ 'product.store_front.default_vendor' | t }}
+    {%- endif -%}
+  </a>
+</div>

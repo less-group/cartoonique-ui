@@ -1,0 +1,1354 @@
+{%- liquid
+  assign options = section.settings
+
+  assign color_scheme = options.color_scheme
+  assign container_size = options.container_size
+  assign section_spacing_top = options.section_spacing_top
+  assign section_spacing_bottom = options.section_spacing_bottom
+  assign add_side_paddings = options.add_side_paddings
+
+  assign slider_type = options.slider_type
+  assign content_max_width = options.content_max_width
+  assign image_position = options.image_position
+  assign content_alignment = options.content_alignment
+  assign desktop_img_ratio = options.desktop_img_ratio
+  assign mobile_img_ratio = options.mobile_img_ratio
+  assign rotate_images = options.rotate_images
+
+  assign blocks_size = section.blocks.size
+
+  assign enable_content_slide_in = settings.enable_content_slide_in
+  assign enable_image_zoom_out = settings.enable_image_zoom_out
+
+  assign slider_image_class = 'image-slider__image'
+  assign target_image_class = 'shape__target-image'
+  if enable_image_zoom_out
+    assign slider_image_class = slider_image_class | append: ' scroll-trigger animate--zoom-out'
+    assign target_image_class = target_image_class | append: ' scroll-trigger animate--zoom-out'
+  endif
+-%}
+
+{% capture css %}
+    {% style %}
+      .image-slider-section:has(.section-{{section.id}}) {
+        --gsc-overflow: hidden;
+      }
+
+      .section-{{section.id}} {
+        --gsc-img-ratio: {{ mobile_img_ratio | times: 100 }}%;
+        --gsc-img-ratio-with-rotate: {{ mobile_img_ratio }};
+        --gsc-section-spacing-top: {{ section_spacing_top }}px;
+        --gsc-section-spacing-bottom: {{ section_spacing_bottom }}px;
+        --gsc-back-z-index: -{{ blocks_size |  plus: 1 }};        
+
+        --gsc-images-quantity: {{ blocks_size }};        
+      }
+
+      @media {% render 'media-queries', screen: 'md' %} {        
+        {% if slider_type contains 'vertical' %}        
+          .image-slider-section:has(.section-{{section.id}}) {
+            --gsc-overflow: visible;
+          }
+        {% endif %}
+
+        .section-{{section.id}} {
+          --gsc-img-ratio: {{ desktop_img_ratio | times: 100 }}%;
+          --gsc-img-ratio-with-rotate: {{ desktop_img_ratio }};
+          --gsc-content-max-width: {{ content_max_width }}px;
+        }
+      }
+  
+    {% endstyle %}
+{% endcapture %}
+
+{% render 'inline-css-minifier', css: css %}
+
+{% capture arrows %}
+  <div class='image-slider-slideshow__arrows image-slider-slideshow__arrows--with-{{ content_alignment }}-alignment {% if slider_type == 'slideshow' %} image-slider-slideshow__arrows--inside-slideshow {% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+    {% if enable_content_slide_in %}
+      style='--gsc-animation-order: 1;'
+    {% endif %}
+  >
+    <carousel-button
+      class='image-slider-slideshow__arrow'
+      data-direction='prev'
+      tabindex='0'
+    >
+      {% render 'icon', icon_name: 'arrow-slider', class: 'carousel-btn__icon x-flip' %}
+    </carousel-button>
+
+    <carousel-button
+      class='image-slider-slideshow__arrow'
+      data-direction='next'
+      tabindex='0'
+    >
+    {% render 'icon', icon_name: 'arrow-slider', class: 'carousel-btn__icon' %}
+    </carousel-button>
+  </div>
+{% endcapture %}
+
+{% capture progress %}
+  <div class='image-slider__progress-wrapper {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+    {% if enable_content_slide_in %}
+      style='--gsc-animation-order: 1;'
+    {% endif %}
+  >
+    <div class='image-slider__progress-bar-wrapper'>
+      <carousel-progress
+        class='progress-bar progress-bar--with-background'
+        data-target='scroll'
+      >
+        <div class='progress-bar__indicator' data-carousel-progress-indicator></div>
+      </carousel-progress>
+
+      <carousel-dots
+        class='carousel image-slider__progress-bar-dots'
+        data-contain-scroll='keepSnaps'
+        data-align='center'
+        data-in-view-threshhold='1'
+        data-axis='x'
+      >
+        <div class='embla' data-carousel-viewport>
+          <div class='image-slider__progress-bar-dots-container' data-carousel-container>
+            {%- for block in section.blocks -%}
+              <div
+                class='image-slider__progress-bar-dot {% if forloop.index == 1 %}is-primary{% endif %}'
+                tabindex='0'
+                data-dot-index='{{ forloop.index0 }}'
+                data-progress-dot
+                data-carousel-dot
+              >
+                <div class='image-slider__progress-bar-dot-circle-outer'>
+                  <div class='image-slider__progress-bar-dot-circle-inner'></div>
+                </div>
+              </div>
+            {%- endfor -%}
+          </div>
+        </div>
+      </carousel-dots>
+    </div>
+
+    {{ arrows }}
+  </div>
+{% endcapture %}
+
+{% capture carousel_without_image_rotate %}
+  <carousel-component
+      class='card-carousel image-slider-slideshow {% if image_position == 'right' %}image-slider-slideshow--with-image-on-right-side{% endif %} {% if slider_type == 'progress' %}image-slider-slideshow--with-progress{% endif %} {% if rotate_images == true %}image-slider-slideshow--with-rotate{% endif %}'
+      data-section-id='{{ section.id }}'
+      with-stop-on-hover
+      data-align='start'
+      data-axis='x'
+      data-contain-scroll='trimSnaps'
+    >
+      <div class='card-carousel__viewport embla image-slider__image-carousel' data-carousel-viewport>
+        <div class='carousel__container' data-carousel-container>
+          {%- for block in section.blocks -%}
+            {% liquid
+              assign image = block.settings.image
+              assign video = block.settings.video
+              assign button_text = block.settings.button_text
+              assign button_link = block.settings.button_link
+            %}
+
+            <div class='carousel__slide image-slider__slide' block-id="{{ block.id }}" {{ block.shopify_attributes }}>
+              <div class='image-slider__image-wrapper shape shape--nature' data-image-slider-image>
+                {%- if video != blank -%}
+                  {% render 'video-with-alt',
+                    video: video,
+                    class: 'shape__target-image',
+                    autoplay: true,
+                    loop: true,
+                    muted: true,
+                    controls: false,
+                    loading: 'lazy'
+                  %}
+                {%- elsif image != blank -%}
+                  <img
+                    {% render 'image-attributes', image: image, size: 'medium', class: target_image_class, is_eager_loading: true %}
+                  >
+                {% else %}
+                  {{ 'image' | placeholder_svg_tag: 'placeholder-image shape__target-image' }}
+                {%- endif -%}
+
+                {% if button_text == blank and button_link != blank %}
+                  <a
+                    class='image-slider__mock-link'
+                    href='{{ button_link }}'
+                    aria-label='{{ button_text }}'
+                  >
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+          {%- endfor -%}
+        </div>
+      </div>
+
+      <carousel-dots
+        class='carousel image-slider__dots-carousel'
+        data-contain-scroll='keepSnaps'
+        data-align='center'
+        data-in-view-threshhold='1'
+        data-axis='x'
+      >
+        <div
+          class='carousel__viewport embla'
+          data-carousel-viewport
+        >
+          <div
+            class='carousel__container image-slider-slideshow__carousel-container'
+            data-carousel-container
+          >
+            {%- for block in section.blocks -%}
+              {% liquid
+                assign subheading = block.settings.subheading
+                assign heading = block.settings.heading
+                assign body = block.settings.body
+                assign heading_size = block.settings.heading_size
+                assign body_size = block.settings.body_size
+
+                assign button_text = block.settings.button_text
+                assign button_link = block.settings.button_link
+                assign button_style = block.settings.button_style
+              %}
+
+              <div
+                class='carousel__slide image-slider__content-wrapper'
+                tabindex='0'
+                data-dot-index='{{ forloop.index0 }}'
+              >
+                <div class='image-slider__content image-slider__content--with-{{ content_alignment }}-alignment'>
+                  {%- if subheading != blank -%}
+                    <div class='caption body-color {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                      {% if enable_content_slide_in %}
+                        style='--gsc-animation-order: 1;'
+                      {% endif %}
+                    >{{ subheading }}</div>
+                  {%- endif -%}
+
+                  {%- if heading != blank -%}
+                    <h2 class='{{ heading_size }} image-slider__title {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                      {% if enable_content_slide_in %}
+                        style='--gsc-animation-order: 2;'
+                      {% endif %}
+                    >{{ heading }}</h2>
+                  {%- endif -%}
+
+                  {%- if body != blank -%}
+                    <div class='image-slider__text rte {{ body_size }} {% if heading != blank %} body-color {% endif %} body-font-weight-from-global-settings {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                      {% if enable_content_slide_in %}
+                        style='--gsc-animation-order: 3;'
+                      {% endif %}
+                    >
+                      {{ body }}
+                    </div>
+                  {%- endif -%}
+
+                  {%- if button_text != blank -%}
+                    {%- if button_style == 'link' -%}
+                      <a
+                        class='link image-slider__btn {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                        {% if enable_content_slide_in %}
+                          style='--gsc-animation-order: 4;'
+                        {% endif %}
+                        href='{{ button_link }}'
+                        aria-label='{{ button_text }}'
+                      >
+                        <span class="link-parent-for-hover">
+                          <span class='link__text'>{{ button_text }}</span>
+                        </span>
+                        {%- render 'icon', icon_name: 'link-chevron', class: 'link__chevron' -%}
+                      </a>
+                    {%- else -%}
+                      <a
+                        class='btn btn--{{ button_style }} image-slider__btn {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                        {% if enable_content_slide_in %}
+                          style='--gsc-animation-order: 5;'
+                        {% endif %}
+                        href='{{ button_link }}'
+                        aria-label='{{- button_text -}}'
+                      >
+                        {{- button_text -}}
+                      </a>
+                    {%- endif -%}
+                  {%- endif -%}
+
+                  {% if button_text == blank and button_link != blank %}
+                    <a
+                      class='image-slider__mock-link'
+                      href='{{ button_link }}'
+                      aria-label='{{ button_text }}'
+                    >
+                    </a>
+                  {% endif %}
+                </div>
+              </div>
+            {%- endfor -%}
+          </div>
+
+          {% if slider_type != 'progress' and section.blocks.size > 1 %}
+            {{ arrows }}
+          {% endif %}
+
+          {%- if slider_type == 'slideshow' and section.blocks.size > 1 -%}
+            <carousel-dots
+              class='solid-dots-carousel image-slider-slideshow__solid-dots-carousel image-slider-slideshow__solid-dots-carousel--{{content_alignment}} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+              {% if enable_content_slide_in %}
+                style='--gsc-animation-order: 6;'
+              {% endif %}
+              data-contain-scroll='keepSnaps'
+              data-align='center'
+            >
+              <div class='solid-dots-carousel__viewport embla' data-carousel-viewport>
+                <div class='solid-dots-carousel__container' data-carousel-container>
+                  {%- for block in section.blocks -%}
+                    <div
+                      class='solid-dots-carousel__solid-dot {% if forloop.index == 1 %}is-primary{% endif %}'
+                      tabindex='0'
+                      data-carousel-dot
+                      data-progress-dot
+                      data-dot-index='{{ forloop.index0 }}'
+                    >
+                      <div class='solid-dots-carousel__solid-dot-circle'></div>
+                    </div>
+                  {%- endfor -%}
+                </div>
+              </div>
+            </carousel-dots>
+          {%- endif -%}
+        </div>
+      </carousel-dots>
+
+      {% if slider_type == 'slideshow' %}
+        <carousel-button
+          class='carousel-btn image-slider-slideshow__btn image-slider-slideshow__btn--prev'
+          data-direction='prev'
+          tabindex='0'
+        >
+          {%- render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon x-flip' -%}
+        </carousel-button>
+        <carousel-button
+          class='carousel-btn image-slider-slideshow__btn image-slider-slideshow__btn--next'
+          data-direction='next'
+          tabindex='0'
+        >
+          {%- render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon' -%}
+        </carousel-button>        
+      {% endif %}     
+
+      {% if slider_type == 'progress' and section.blocks.size > 1 %}
+        {{progress}}
+      {% endif %}
+    </carousel-component>
+{% endcapture %}
+
+{% capture carousel_with_image_rotate %}
+  <div
+    class='card-carousel image-slider-slideshow image-slider-slideshow--with-rotate {% if image_position == 'right' %}image-slider-slideshow--with-image-on-right-side{% endif %} {% if slider_type == 'progress' %}image-slider-slideshow--with-progress{% endif %}'
+    data-section-id='{{ section.id }}'
+  >
+    {% if slider_type == 'slideshow' %}
+      <div
+        class='carousel-btn image-slider-slideshow__btn image-slider-slideshow__btn--prev'
+        data-direction='prev'
+        tabindex='0'
+      >
+        {%- render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon x-flip' -%}
+      </div>
+      <div
+        class='carousel-btn image-slider-slideshow__btn image-slider-slideshow__btn--next'
+        data-direction='next'
+        tabindex='0'
+      >
+        {%- render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon' -%}
+      </div>
+    {% endif %}
+
+    <div class='image-slider__image-carousel' data-carousel-viewport>
+      {%- for block in section.blocks -%}
+        {% liquid
+          assign image = block.settings.image
+          assign video = block.settings.video
+          assign button_text = block.settings.button_text
+          assign button_link = block.settings.button_link
+        %}
+
+        <div
+          class='image-slider__image-wrapper'
+          data-image-slider-image
+        >
+          {%- if video != blank -%}
+            {% render 'video-with-alt',
+              video: video,
+              class: 'image-slider__image',
+              autoplay: true,
+              loop: true,
+              muted: true,
+              controls: false,
+              loading: 'lazy'
+            %}
+          {%- elsif image != blank -%}
+            <img
+              {% render 'image-attributes', image: image, size: 'medium', class: slider_image_class, is_eager_loading: true %}
+            >
+          {% else %}
+            {{ 'image' | placeholder_svg_tag: 'placeholder-image image-slider__image' }}
+          {%- endif -%}
+
+          {% if button_text == blank and button_link != blank %}
+            <a
+              class='image-slider__mock-link'
+              href='{{ button_link }}'
+              aria-label='{{ button_text }}'
+            >
+            </a>
+          {% endif %}
+        </div>
+      {%- endfor -%}
+    </div>
+
+    <div class='carousel image-slider__dots-carousel'>
+      <div class='image-slider__content-wrapper'>
+        {%- for block in section.blocks -%}
+          {% liquid
+            assign subheading = block.settings.subheading
+            assign heading = block.settings.heading
+            assign body = block.settings.body
+            assign heading_size = block.settings.heading_size
+            assign body_size = block.settings.body_size
+
+            assign button_text = block.settings.button_text
+            assign button_link = block.settings.button_link
+            assign button_style = block.settings.button_style
+          %}
+
+          <div
+            class='image-slider__content image-slider__content--with-{{ content_alignment }}-alignment'
+            data-image-slider-caption
+            {% if forloop.index == 1 %}
+              visible
+            {% endif %}
+          >
+            {%- if subheading != blank -%}
+              <div class='caption body-color {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 1;'
+                {% endif %}
+              >{{ subheading }}</div>
+            {%- endif -%}
+
+            {%- if heading != blank -%}
+              <h2 class='{{ heading_size }} image-slider__title {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 2;'
+                {% endif %}
+              >{{ heading }}</h2>
+            {%- endif -%}
+
+            {%- if body != blank -%}
+              <div class='image-slider__text rte {{ body_size }} {% if heading != blank %} body-color {% endif %} body-font-weight-from-global-settings {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 3;'
+                {% endif %}
+              >
+                {{ body }}
+              </div>
+            {%- endif -%}
+
+            {%- if button_text != blank -%}
+              {%- if button_style == 'link' -%}
+                <a
+                  class='link image-slider__btn {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                  {% if enable_content_slide_in %}
+                    style='--gsc-animation-order: 4;'
+                  {% endif %}
+                  href='{{ button_link }}'
+                  aria-label='{{ button_text }}'
+                >
+                  <span class="link-parent-for-hover">
+                    <span class='link__text'>{{ button_text }}</span>
+                  </span>
+                  {%- render 'icon', icon_name: 'link-chevron', class: 'link__chevron' -%}
+                </a>
+              {%- else -%}
+                <a
+                  class='btn btn--{{ button_style }} image-slider__btn {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                  {% if enable_content_slide_in %}
+                    style='--gsc-animation-order: 5;'
+                  {% endif %}
+                  href='{{ button_link }}'
+                  aria-label='{{- button_text -}}'
+                >
+                  {{- button_text -}}
+                </a>
+              {%- endif -%}
+            {%- endif -%}
+
+            {% if button_text == blank and button_link != blank %}
+              <a
+                class='image-slider__mock-link'
+                href='{{ button_link }}'
+                aria-label='{{ button_text }}'
+              >
+              </a>
+            {% endif %}
+          </div>
+        {%- endfor -%}
+        </div>
+
+        {% if slider_type != 'progress' and section.blocks.size > 1 %}
+          <div class='image-slider-slideshow__arrows image-slider-slideshow__arrows--with-{{ content_alignment }}-alignment {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+            {% if enable_content_slide_in %}
+              style='--gsc-animation-order: 5;'
+            {% endif %}
+          >
+            <div
+              class='image-slider-slideshow__arrow'
+              data-direction='prev'
+              tabindex='0'
+              disabled
+            >
+              {% render 'icon', icon_name: 'arrow-slider', class: 'carousel-btn__icon x-flip' %}
+            </div>
+            <div
+              class='image-slider-slideshow__arrow'
+              data-direction='next'
+              tabindex='0'
+            >
+              {% render 'icon', icon_name: 'arrow-slider', class: 'carousel-btn__icon' %}
+            </div>
+          </div>
+        {% endif %}
+
+        {%- if slider_type == 'slideshow' and section.blocks.size > 1 -%}
+          <div class='solid-dots-carousel image-slider-slideshow__solid-dots-carousel image-slider-slideshow__solid-dots-carousel--{{content_alignment}} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+            {% if enable_content_slide_in %}
+              style='--gsc-animation-order: 5;'
+            {% endif %}
+          >
+            <div class='solid-dots-carousel__container' data-carousel-container>
+              {%- for block in section.blocks -%}
+                <div
+                  class='solid-dots-carousel__solid-dot {% if forloop.index == 1 %}is-primary{% endif %}'
+                  tabindex='0'
+                  data-carousel-dot
+                  data-progress-dot
+                  data-dot-index='{{ forloop.index0 }}'
+                >
+                  <div class='solid-dots-carousel__solid-dot-circle'></div>
+                </div>
+              {%- endfor -%}
+            </div>
+          </div>
+        {%- endif -%}
+    </div>
+
+    {% if slider_type == 'progress' and section.blocks.size > 1 %}
+      <div class='image-slider__progress-wrapper {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: 5;'
+        {% endif %}
+      >
+        <div class='image-slider__progress-bar-wrapper'>
+          <carousel-progress
+            class='progress-bar progress-bar--with-background'
+            data-target='scroll'
+          >
+            <div class='progress-bar__indicator' data-carousel-progress-indicator></div>
+          </carousel-progress>
+
+          <carousel-dots
+            class='carousel image-slider__progress-bar-dots'
+            data-contain-scroll='keepSnaps'
+            data-align='center'
+            data-in-view-threshhold='1'
+            data-axis='x'
+          >
+            <div class='embla' data-carousel-viewport>
+              <div class='image-slider__progress-bar-dots-container' data-carousel-container>
+                {%- for block in section.blocks -%}
+                  <div
+                    class='image-slider__progress-bar-dot {% if forloop.index == 1 %}is-primary{% endif %}'
+                    tabindex='0'
+                    data-dot-index='{{ forloop.index0 }}'
+                    data-progress-dot
+                    data-carousel-dot
+                  >
+                    <div class='image-slider__progress-bar-dot-circle-outer'>
+                      <div class='image-slider__progress-bar-dot-circle-inner'></div>
+                    </div>
+                  </div>
+                {%- endfor -%}
+              </div>
+            </div>
+          </carousel-dots>
+        </div>
+
+        <div class='image-slider-slideshow__arrows'>
+          <carousel-button
+            class='image-slider-slideshow__arrow'
+            data-direction='prev'
+            tabindex='0'
+            disabled
+          >
+            {% render 'icon', icon_name: 'arrow-slider', class: 'carousel-btn__icon x-flip' %}
+          </carousel-button>
+          <carousel-button
+            class='image-slider-slideshow__arrow'
+            data-direction='next'
+            tabindex='0'
+          >
+            {% render 'icon', icon_name: 'arrow-slider', class: 'carousel-btn__icon' %}
+          </carousel-button>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+{% endcapture %}
+
+{% capture vertical_carousel_text %}
+  <div
+    class='card-carousel image-slider-slideshow image-slider-slideshow--with-vertical-scroll image-slider-slideshow--with-vertical-scroll--text {% if image_position == 'right' %}image-slider-slideshow--with-image-on-right-side{% endif %}'
+    data-section-id='{{ section.id }}'
+  >
+    <div class='image-slider__image-carousel' data-carousel-viewport>
+      {%- for block in section.blocks -%}
+        {% liquid
+          assign image = block.settings.image
+          assign video = block.settings.video
+          assign button_text = block.settings.button_text
+          assign button_link = block.settings.button_link
+        %}
+
+        <div
+          class='image-slider__image-wrapper'
+          data-image-slider-image
+          {% if forloop.index == 1 %}
+            visible
+          {% endif %}
+          {% if forloop.index == 2 %}
+            next
+          {% endif %}
+        >
+          {%- if video != blank -%}
+            {% render 'video-with-alt',
+              video: video,
+              class: 'image-slider__image',
+              autoplay: true,
+              loop: true,
+              muted: true,
+              controls: false,
+              loading: 'lazy'
+            %}
+          {%- elsif image != blank -%}
+            <img
+              {% render 'image-attributes', image: image, size: 'medium', class: 'image-slider__image', is_eager_loading: true %}
+            >
+          {% else %}
+            {{ 'image' | placeholder_svg_tag: 'placeholder-image image-slider__image' }}
+          {%- endif -%}
+
+          {% if button_text == blank and button_link != blank %}
+            <a
+              class='image-slider__mock-link'
+              href='{{ button_link }}'
+              aria-label='{{ button_text }}'
+            >
+            </a>
+          {% endif %}
+        </div>
+      {%- endfor -%}
+    </div>
+
+    <div class='carousel image-slider__dots-carousel'>
+      <div class='image-slider__content-wrapper'>
+        {%- for block in section.blocks -%}
+          {% liquid
+            assign subheading = block.settings.subheading
+            assign heading = block.settings.heading
+            assign body = block.settings.body
+            assign heading_size = block.settings.heading_size
+            assign body_size = block.settings.body_size
+
+            assign button_text = block.settings.button_text
+            assign button_link = block.settings.button_link
+            assign button_style = block.settings.button_style
+          %}
+
+          <div
+            class='image-slider__content image-slider__content--with-{{ content_alignment }}-alignment'
+            block-id="{{ block.id }}"
+            {{ block.shopify_attributes }}
+            data-image-slider-caption='{{forloop.index0}}'
+            {% if forloop.index == 1 %}
+              visible
+            {% endif %}
+          >
+            {%- if subheading != blank -%}
+              <div class='caption body-color {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 1;'
+                {% endif %}
+              >{{ subheading }}</div>
+            {%- endif -%}
+
+            {%- if heading != blank -%}
+              <h2 class='{{ heading_size }} image-slider__title {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 2;'
+                {% endif %}
+              >{{ heading }}</h2>
+            {%- endif -%}
+
+            {%- if body != blank -%}
+              <div class='image-slider__text rte {{ body_size }} {% if heading != blank %} body-color {% endif %} body-font-weight-from-global-settings {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 3;'
+                {% endif %}
+              >
+                {{ body }}
+              </div>
+            {%- endif -%}
+
+            {%- if button_text != blank -%}
+              {%- if button_style == 'link' -%}
+                <a
+                  class='link image-slider__btn {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                  {% if enable_content_slide_in %}
+                    style='--gsc-animation-order: 4;'
+                  {% endif %}
+                  href='{{ button_link }}'
+                  aria-label='{{ button_text }}'
+                >
+                  <span class="link-parent-for-hover">
+                    <span class='link__text'>{{ button_text }}</span>
+                  </span>
+                  {%- render 'icon', icon_name: 'link-chevron', class: 'link__chevron' -%}
+                </a>
+              {%- else -%}
+                <a
+                  class='btn btn--{{ button_style }} image-slider__btn'
+                  {% if enable_content_slide_in %}
+                    style='--gsc-animation-order: 5;'
+                  {% endif %}
+                  href='{{ button_link }}'
+                  aria-label='{{- button_text -}}'
+                >
+                  {{- button_text -}}
+                </a>
+              {%- endif -%}
+            {%- endif -%}
+
+            {% if button_text == blank and button_link != blank %}
+              <a
+                class='image-slider__mock-link'
+                href='{{ button_link }}'
+                aria-label='{{ button_text }}'
+              >
+              </a>
+            {% endif %}
+          </div>
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+{% endcapture %}
+
+{% capture vertical_carousel_image %}
+  <div
+    class='card-carousel image-slider-slideshow image-slider-slideshow--with-vertical-scroll image-slider-slideshow--with-vertical-scroll--image {% if image_position == 'right' %}image-slider-slideshow--with-image-on-right-side{% endif %}'
+    data-section-id='{{ section.id }}'
+  >
+    <div class='image-slider__image-carousel' data-carousel-viewport>
+      {%- for block in section.blocks -%}
+        {% liquid
+          assign image = block.settings.image
+          assign video = block.settings.video
+          assign button_text = block.settings.button_text
+          assign button_link = block.settings.button_link
+        %}
+
+        <div
+          class='image-slider__image-wrapper'
+          data-image-slider-image='{{forloop.index0}}'
+          block-id="{{ block.id }}"
+          {{ block.shopify_attributes }}
+          {% if forloop.index == 1 %}
+            visible
+          {% endif %}
+        >
+          {%- if video != blank -%}
+            {% render 'video-with-alt',
+              video: video,
+              class: 'image-slider__image',
+              autoplay: true,
+              loop: true,
+              muted: true,
+              controls: false,
+              loading: 'lazy'
+            %}
+          {%- elsif image != blank -%}
+            <img
+              {% render 'image-attributes', image: image, size: 'medium', class: 'image-slider__image', is_eager_loading: true %}
+            >
+          {% else %}
+            {{ 'image' | placeholder_svg_tag: 'placeholder-image image-slider__image' }}
+          {%- endif -%}
+
+          {% if button_text == blank and button_link != blank %}
+            <a
+              class='image-slider__mock-link'
+              href='{{ button_link }}'
+              aria-label='{{ button_text }}'
+            >
+            </a>
+          {% endif %}
+        </div>
+      {%- endfor -%}
+    </div>
+
+    <div class='carousel image-slider__dots-carousel'>
+      <div class='image-slider__content-wrapper'>
+        {%- for block in section.blocks -%}          
+          {% liquid
+            assign subheading = block.settings.subheading
+            assign heading = block.settings.heading
+            assign body = block.settings.body
+            assign heading_size = block.settings.heading_size
+            assign body_size = block.settings.body_size
+            
+            assign button_text = block.settings.button_text
+            assign button_link = block.settings.button_link
+            assign button_style = block.settings.button_style
+          %}
+          
+          {% if subheading != blank or heading != blank or body != blank or button_text != blank %}
+            <div
+              class='image-slider__content image-slider__content--with-{{ content_alignment }}-alignment'
+              block-id="{{ block.id }}"
+              {{ block.shopify_attributes }}
+              data-image-slider-caption='{{forloop.index0}}'
+              {% if forloop.index == 1 %}
+                visible
+              {% endif %}
+            >
+              {%- if subheading != blank -%}
+                <div class='caption body-color {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 1;'
+                {% endif %}
+                >{{ subheading }}</div>
+              {%- endif -%}
+
+              {%- if heading != blank -%}
+                <h2 class='{{ heading_size }} image-slider__title {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 2;'
+                {% endif %}
+                >{{ heading }}</h2>
+              {%- endif -%}
+
+              {%- if body != blank -%}
+                <div class='image-slider__text rte {{ body_size }} {% if heading != blank %} body-color {% endif %} body-font-weight-from-global-settings {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                  {% if enable_content_slide_in %}
+                    style='--gsc-animation-order: 3;'
+                  {% endif %}
+                >
+                  {{ body }}
+                </div>
+              {%- endif -%}
+
+              {%- if button_text != blank -%}
+                {%- if button_style == 'link' -%}
+                  <a
+                    class='link image-slider__btn {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                    {% if enable_content_slide_in %}
+                      style='--gsc-animation-order: 4;'
+                    {% endif %}
+                    href='{{ button_link }}'
+                    aria-label='{{ button_text }}'
+                  >
+                    <span class="link-parent-for-hover">
+                      <span class='link__text'>{{ button_text }}</span>
+                    </span>
+                    {%- render 'icon', icon_name: 'link-chevron', class: 'link__chevron' -%}
+                  </a>
+                {%- else -%}
+                  <a
+                    class='btn btn--{{ button_style }} image-slider__btn {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                    {% if enable_content_slide_in %}
+                      style='--gsc-animation-order: 4;'
+                    {% endif %}
+                    href='{{ button_link }}'
+                    aria-label='{{- button_text -}}'
+                  >
+                    {{- button_text -}}
+                  </a>
+                {%- endif -%}
+              {%- endif -%}
+
+              {% if button_text == blank and button_link != blank %}
+                <a
+                  class='image-slider__mock-link'
+                  href='{{ button_link }}'
+                  aria-label='{{ button_text }}'
+                >
+                </a>
+              {% endif %}
+            </div>          
+          {% endif %}
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+{% endcapture %}
+
+{% if slider_type contains 'vertical' %}
+  <div class='image-slider--desktop'>
+    <image-slider
+      class='image-slider section-spacing color-{{ color_scheme }} section-{{ section.id }}'
+      {% if slider_type == 'vertical-image' %}
+        with-vertical-scroll-image
+        without-arrows
+      {% endif %}
+      {% if slider_type == 'vertical-text' %}
+        with-vertical-scroll
+        without-arrows
+      {% endif %}
+      {% if rotate_images == true %}
+        with-rotate-images
+      {% endif %}
+    >
+      <div class='container container--{{ container_size }} {% if add_side_paddings == true %}container--with-aside-paddings{% endif %}'>
+        {% case slider_type %}
+          {% when 'vertical-image' %}
+            {{ vertical_carousel_image }}
+          {% when 'vertical-text' %}
+            {{ vertical_carousel_text }}
+        {% endcase %}
+      </div>
+    </image-slider>
+  </div>
+
+  <div class='image-slider--mobile'>
+    <image-slider
+      class='image-slider section-spacing color-{{ color_scheme }} section-{{ section.id }}'
+      {% if rotate_images == true %}
+        with-rotate-images
+      {% endif %}
+      without-arrows
+    >
+      <div class='container container--{{ container_size }} {% if add_side_paddings == true %}container--with-aside-paddings{% endif %}'>
+        {% case rotate_images %}
+          {% when false %}
+            {{ carousel_without_image_rotate }}
+
+          {% when true %}
+            {{ carousel_with_image_rotate }}
+        {% endcase %}
+      </div>
+    </image-slider>
+  </div>
+{% endif %}
+
+{% if slider_type == 'progress' or slider_type == 'slideshow' %}
+  <image-slider
+    class='image-slider section-spacing color-{{ color_scheme }} section-{{ section.id }}'
+    {% if slider_type == 'progress' %}
+      with-progress-bar
+    {% endif %}
+    {% if rotate_images == true %}
+      with-rotate-images
+    {% endif %}
+  >
+    <div class='container container--{{ container_size }} {% if add_side_paddings == true %}container--with-aside-paddings{% endif %}'>
+      {% case rotate_images %}
+        {% when false %}
+          {{ carousel_without_image_rotate }}
+
+        {% when true %}
+          {{ carousel_with_image_rotate }}
+      {% endcase %}
+    </div>
+  </image-slider>
+{% endif %}
+
+{% schema %}
+{
+  "name": "t:sections.image_slider.name",
+  "tag": "section",
+  "class": "image-slider-section",
+  "settings": [
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:sections.general_section_settings.color_scheme_option_default_label"
+        },
+        {
+          "value": "primary",
+          "label": "t:sections.general_section_settings.color_scheme_option_primary_label"
+        },
+        {
+          "value": "secondary",
+          "label": "t:sections.general_section_settings.color_scheme_option_secondary_label"
+        },
+        {
+          "value": "custom-1",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_1_label"
+        },
+        {
+          "value": "custom-2",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_2_label"
+        },
+        {
+          "value": "custom-3",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_3_label"
+        },
+        {
+          "value": "white",
+          "label": "t:sections.general_section_settings.color_scheme_option_white_text_label"
+        },
+        {
+          "value": "black",
+          "label": "t:sections.general_section_settings.color_scheme_option_black_text_label"
+        },
+        {
+          "value": "custom-5",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_5_label"
+        }
+      ],
+      "default": "default",
+      "label": "t:sections.general_section_settings.color_scheme_label",
+      "info": "t:sections.general_section_settings.color_scheme_tip"
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "options": [
+        {
+          "value": "full-screen",
+          "label": "t:sections.general_section_settings.container_size.screen_width_option"
+        },
+        {
+          "value": "page-width",
+          "label": "t:sections.general_section_settings.container_size.page_width_option"
+        },
+        {
+          "value": "large",
+          "label": "t:sections.general_section_settings.container_size.large_width_option"
+        },
+        {
+          "value": "medium",
+          "label": "t:sections.general_section_settings.container_size.medium_width_option"
+        },
+        {
+          "value": "small",
+          "label": "t:sections.general_section_settings.container_size.small_width_option"
+        }
+      ],
+      "default": "large",
+      "label": "t:sections.general_section_settings.container_size.label"
+    },
+    {
+      "type": "select",
+      "id": "slider_type",
+      "options": [
+        {
+          "value": "slideshow",
+          "label": "t:sections.image_slider.slider_type.option_1"
+        },
+        {
+          "value": "progress",
+          "label": "t:sections.image_slider.slider_type.option_2"
+        },
+        {
+          "value": "vertical-image",
+          "label": "t:sections.image_slider.slider_type.option_3"
+        },
+        {
+          "value": "vertical-text",
+          "label": "t:sections.image_slider.slider_type.option_4"
+        }
+      ],
+      "default": "vertical-text",
+      "label": "t:sections.image_slider.slider_type.label"
+    },
+    {
+      "type": "text_alignment",
+      "id": "content_alignment",
+      "default": "left",
+      "label": "t:sections.image_slider.blocks.slide.content_alignment.label"
+    },
+    {
+      "type": "range",
+      "id": "content_max_width",
+      "min": 400,
+      "max": 1200,
+      "step": 8,
+      "default": 528,
+      "unit": "t:sections.image_slider.content_max_width.unit",
+      "label": "t:sections.image_slider.content_max_width.label"
+    },
+    {
+      "type": "select",
+      "id": "image_position",
+      "options": [
+        {
+          "value": "left",
+          "label": "t:sections.image_slider.image_position.left_option_label"
+        },
+        {
+          "value": "right",
+          "label": "t:sections.image_slider.image_position.right_option_label"
+        }
+      ],
+      "default": "left",
+      "label": "t:sections.image_slider.image_position.label"
+    },
+    {
+      "type": "range",
+      "id": "desktop_img_ratio",
+      "min": 0.5,
+      "max": 1.5,
+      "step": 0.1,
+      "default": 1,
+      "unit": "t:sections.image_slider.desktop_img_ratio.unit",
+      "label": "t:sections.image_slider.desktop_img_ratio.label"
+    },
+    {
+      "type": "range",
+      "id": "mobile_img_ratio",
+      "min": 0.5,
+      "max": 1.5,
+      "step": 0.1,
+      "default": 1,
+      "unit": "t:sections.image_slider.mobile_img_ratio.unit",
+      "label": "t:sections.image_slider.mobile_img_ratio.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "rotate_images",
+      "default": false,
+      "label": "t:sections.image_slider.rotate_images.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.general_section_settings.paddings.header_title"
+    },
+    {
+      "type": "checkbox",
+      "id": "add_side_paddings",
+      "default": true,
+      "label": "t:sections.general_section_settings.paddings.add_side_paddings.label"
+    },
+    {
+      "type": "range",
+      "id": "section_spacing_top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 48,
+      "unit": "t:sections.general_section_settings.section_spacing_top.unit",
+      "label": "t:sections.general_section_settings.section_spacing_top.label"
+    },
+    {
+      "type": "range",
+      "id": "section_spacing_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 48,
+      "unit": "t:sections.general_section_settings.section_spacing_bottom.unit",
+      "label": "t:sections.general_section_settings.section_spacing_bottom.label"
+    }
+  ],
+  "blocks": [
+    {
+      "name": "t:sections.image_slider.blocks.slide.name",
+      "type": "slide",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "t:sections.image_slider.blocks.slide.image.label"
+        },
+        {
+          "type": "video",
+          "id": "video",
+          "label": "t:sections.image_slider.blocks.slide.video.label"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.image_slider.blocks.slide.content_settings_header.content"
+        },
+        {
+          "type": "text",
+          "id": "subheading",
+          "default": "IMAGE WITH TEXT",
+          "label": "t:sections.image_slider.blocks.slide.subheading.label"
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "default": "Image slide",
+          "label": "t:sections.image_slider.blocks.slide.heading.label"
+        },
+        {
+          "type": "select",
+          "id": "heading_size",
+          "label": "t:sections.general_section_settings.label_for_heading_size_setting",
+          "options": [
+            {
+              "value": "display1",
+              "label": "t:sections.general_section_settings.display_size_1_option"
+            },
+            {
+              "value": "display2",
+              "label": "t:sections.general_section_settings.display_size_2_option"
+            },
+            {
+              "value": "display3",
+              "label": "t:sections.general_section_settings.display_size_3_option"
+            },
+            {
+              "value": "h1",
+              "label": "t:sections.general_section_settings.heading_size_1_option"
+            },
+            {
+              "value": "h2",
+              "label": "t:sections.general_section_settings.heading_size_2_option"
+            },
+            {
+              "value": "h3",
+              "label": "t:sections.general_section_settings.heading_size_3_option"
+            },
+            {
+              "value": "h4",
+              "label": "t:sections.general_section_settings.heading_size_4_option"
+            },
+            {
+              "value": "h5",
+              "label": "t:sections.general_section_settings.heading_size_5_option"
+            },
+            {
+              "value": "h6",
+              "label": "t:sections.general_section_settings.heading_size_6_option"
+            },
+            {
+              "value": "caption1",
+              "label": "t:sections.general_section_settings.caption_size_1_option"
+            },
+            {
+              "value": "caption2",
+              "label": "t:sections.general_section_settings.caption_size_2_option"
+            },
+            {
+              "value": "caption3",
+              "label": "t:sections.general_section_settings.caption_size_3_option"
+            }
+          ],
+          "default": "h2"
+        },
+        {
+          "type": "richtext",
+          "id": "body",
+          "default": "<p>Share information about your brand with your customers. Describe a product, make announcements or welcome customers to your store.</p>",
+          "label": "t:sections.image_slider.blocks.slide.body.label"
+        },
+        {
+          "type": "select",
+          "id": "body_size",
+          "label": "t:sections.general_section_settings.label_for_body_size_setting",
+          "info": "t:sections.general_section_settings.info_for_body_size_setting",
+          "options": [
+            {
+              "value": "body0",
+              "label": "t:sections.general_section_settings.body_size_0_option"
+            },
+            {
+              "value": "body1",
+              "label": "t:sections.general_section_settings.body_size_1_option"
+            },
+            {
+              "value": "body2",
+              "label": "t:sections.general_section_settings.body_size_2_option"
+            },
+            {
+              "value": "body3",
+              "label": "t:sections.general_section_settings.body_size_3_option"
+            },
+            {
+              "value": "body4",
+              "label": "t:sections.general_section_settings.body_size_4_option"
+            },
+            {
+              "value": "body5",
+              "label": "t:sections.general_section_settings.body_size_5_option"
+            },
+            {
+              "value": "body6",
+              "label": "t:sections.general_section_settings.body_size_6_option"
+            }
+          ],
+          "default": "body3"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.image_slider.blocks.slide.button_settings_header.content"
+        },
+        {
+          "type": "text",
+          "id": "button_text",
+          "default": "See more",
+          "label": "t:sections.image_slider.blocks.slide.button_text.label"
+        },
+        {
+          "type": "url",
+          "id": "button_link",
+          "label": "t:sections.image_slider.blocks.slide.button_link.label"
+        },
+        {
+          "type": "select",
+          "id": "button_style",
+          "options": [
+            {
+              "value": "solid",
+              "label": "t:sections.image_slider.blocks.slide.button_style.solid_option_label"
+            },
+            {
+              "value": "outline",
+              "label": "t:sections.image_slider.blocks.slide.button_style.outline_option_label"
+            },
+            {
+              "value": "link",
+              "label": "t:sections.image_slider.blocks.slide.button_style.link_option_label"
+            }
+          ],
+          "default": "solid",
+          "label": "t:sections.image_slider.blocks.slide.button_style.label"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.image_slider.name",
+      "blocks": [
+        {
+          "type": "slide"
+        },
+        {
+          "type": "slide"
+        },
+        {
+          "type": "slide"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

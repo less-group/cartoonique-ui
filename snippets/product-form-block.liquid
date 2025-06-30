@@ -1,0 +1,276 @@
+{%- liquid
+  assign options = block.settings
+  assign enable_pickup_availability = options.enable_pickup_availability
+  assign show_pickup_availability = false
+  assign selected_variant = product.selected_or_first_available_variant
+  assign available = selected_variant.available
+  assign product_form_id = 'product-form-' | append: product.id | append: '-' | append: sectionId
+  assign pick_up_locations = product.selected_or_first_available_variant.store_availabilities | where: 'pick_up_enabled', true
+  assign pick_up_availabilities = false
+  assign add_to_cart_label = 'product.store_front.add_to_cart' | t
+  assign sold_out_label = 'product.store_front.sold_out' | t
+
+  assign buttons_size = options.buttons_size
+  assign add_to_cart_btn_style = options.add_to_cart_btn_style
+  assign checkout_btn_style = options.checkout_btn_style
+
+  for location in pick_up_locations
+    if location.available == true
+      assign pick_up_availabilities = true
+    endif
+  endfor
+
+  assign enable_gift_card = false
+  if options.enable_gift_card and product.gift_card?
+    assign enable_gift_card = true
+  endif
+
+  assign show_sticky_btn_on_mobile = options.show_sticky_btn_on_mobile
+
+  assign show_dynamic_checkout = false
+  if options.show_dynamic_checkout and enable_gift_card == false
+    assign show_dynamic_checkout = true
+  endif
+
+  if product.template_suffix contains 'pre-order'
+    assign show_dynamic_checkout = false
+    assign add_to_cart_label = 'product.store_front.pre_order' | t
+  endif
+
+  if enable_pickup_availability and pick_up_availabilities == true
+    unless product.template_suffix contains 'pre-order'
+      assign show_pickup_availability = true
+    endunless
+  endif
+
+  
+  assign show_payment_icons = options.show_payment_icons
+-%}
+
+
+{%- if product != blank -%}
+  <div class='' {{ block.shopify_attributes }}>
+    <product-form data-product-id='{{ product.id }}' id='product-form-component-{{ product.id }}-{{ sectionId }}'>
+      {%- form 'product',
+        product,
+        id: product_form_id,
+        class: 'product-form',
+        novalidate: 'novalidate',
+        data-type: 'add-to-cart-form'
+      -%}
+        {% if enable_gift_card %}
+          {% render 'gift-card-recipient-form', product: product, form: form, section: section, block: block %}
+        {% endif %}
+
+        <input
+          type='hidden'
+          name='id'
+          value='{{ selected_variant.id }}'
+          data-product-form-variant
+          id='{{ product_form_id }}-IdInput-{{ form.id }}'
+        >
+        {{ form | payment_terms }}
+        
+        {%- comment -%}Pixar Transform component{%- endcomment -%}
+        {%- if product.tags contains 'cartoonique' or product.tags contains 'pixar-transform' -%}
+          <div class="pixar-transform-wrapper" style="margin-bottom: 20px;">
+            <pixar-transform-file-input 
+              data-section-id="{{ section.id }}" 
+              data-product-id="{{ product.id }}" 
+              data-product-variant-id="{{ selected_variant.id }}" 
+              data-customer-id="{{ customer.id | default: 'guest' }}">
+              <div class="file-input-wrapper">
+                <div class="file-input-wrapper__upload-area">
+                  <label for="file-input-wrapper__input-{{ section.id }}" class="file-input-wrapper__label">
+                    <div class="file-input-wrapper__content">
+                      <div class="file-input-wrapper__icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M17 8L12 3L7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M12 3V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </div>
+                      <div class="file-input-wrapper__text">
+                        <p>Upload your photo</p>
+                        <span>for Pixar-style transformation</span>
+                      </div>
+                    </div>
+                  </label>
+                  <input type="file" id="file-input-wrapper__input-{{ section.id }}" accept="image/*" class="file-input-wrapper__input" />
+                </div>
+                
+                <div data-pixar-popup class="file-input-wrapper__popup" style="display: none;">
+                  <div class="file-input-wrapper__popup-content">
+                    <button data-popup-close class="file-input-wrapper__popup-close-btn">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                    
+                    <div data-popup-content>
+                      <div class="file-input-wrapper__upload-area">
+                        <label for="file-input-wrapper__popup-input-{{ section.id }}">
+                          <div class="file-input-wrapper__content">
+                            <div class="file-input-wrapper__icon">
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M17 8L12 3L7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 3V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                              </svg>
+                            </div>
+                            <div class="file-input-wrapper__text">
+                              <p>Upload your photo</p>
+                              <span>Click or drag and drop</span>
+                            </div>
+                          </div>
+                        </label>
+                        <input type="file" id="file-input-wrapper__popup-input-{{ section.id }}" accept="image/*" class="file-input-wrapper__input" />
+                      </div>
+                    </div>
+                    
+                    <div data-processing-content style="display: none;">
+                      <div class="file-input-wrapper__processing">
+                        <div class="file-input-wrapper__processing-icon">
+                          <svg class="circular-loader" viewBox="25 25 50 50">
+                            <circle class="loader-path" cx="50" cy="50" r="20" fill="none" stroke-width="2" />
+                          </svg>
+                        </div>
+                        <div class="file-input-wrapper__processing-text">
+                          <p>Transforming your photo...</p>
+                          <div class="file-input-wrapper__progress-bar-wrapper">
+                            <div data-progress-bar class="file-input-wrapper__progress-bar"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div data-result-wrapper style="display: none;">
+                      <div class="file-input-wrapper__result">
+                        <div data-result-image-wrapper class="file-input-wrapper__result-image"></div>
+                        <div class="file-input-wrapper__result-text">
+                          <p data-help-result-text>Your photo has been transformed!</p>
+                        </div>
+                        <div class="file-input-wrapper__result-buttons">
+                          <button data-try-again class="file-input-wrapper__result-btn file-input-wrapper__result-btn--secondary">Try Again</button>
+                          <button data-continue class="file-input-wrapper__result-btn file-input-wrapper__result-btn--primary">Continue</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </pixar-transform-file-input>
+          </div>
+        {%- endif -%}
+        
+        <div class='product-form__btns'>
+          {% if template.name == 'product' and sectionId contains '---MainSection' %}
+            <div class='product-form__btn-wrapper'>
+              <button
+                type='submit'
+                name='add'
+                id='product-buy-btn-{{ product.id }}-{{ sectionId }}'
+                class='product-form__btn btn btn--{{buttons_size}} btn--{{add_to_cart_btn_style}}'
+                {% if available == false %}
+                  disabled
+                {% endif %}
+                aria-label='{%- if available -%}{{ add_to_cart_label | strip_html | escape }}{%- else -%}{{ sold_out_label | strip_html | escape }}{%- endif -%}'
+              >
+                <span data-button-text>
+                  {%- if available -%}
+                    {{ add_to_cart_label }}
+                  {%- else -%}
+                    {{ sold_out_label }}
+                  {%- endif -%}
+                </span>
+                <div class='loading-spinner btn__loading-spinner'></div>
+              </button>
+            </div>
+
+            {% if show_sticky_btn_on_mobile %}
+              <product-form-button class='product-form__mobile-sticky-button'>
+                <div
+                  class='product-form__btn-wrapper product-form__btn-wrapper--sticky-mobile-button'
+                >
+                  <button
+                    type='submit'
+                    name='add'
+                    id='sticky-product-buy-btn-{{ product.id }}-{{ sectionId }}'
+                    class='product-form__btn btn btn--{{buttons_size}} btn--{{add_to_cart_btn_style}}'
+                    {% if available == false %}
+                      disabled
+                    {% endif %}
+                    aria-label='{%- if available -%}{{ add_to_cart_label | strip_html | escape }}{%- else -%}{{ sold_out_label | strip_html | escape }}{%- endif -%}'
+                  >
+                    <span data-button-text>
+                      {%- if available -%}
+                        {{ add_to_cart_label }}
+                      {%- else -%}
+                        {{ sold_out_label }}
+                      {%- endif -%}
+                    </span>
+                    <div class='loading-spinner btn__loading-spinner'></div>
+                  </button>
+                </div>
+              </product-form-button>
+            {% endif %}
+
+          {%- else -%}
+            <button
+              type='submit'
+              name='add'
+              id='product-buy-btn-{{ product.id }}-{{ sectionId }}'
+              class='product-form__btn btn btn--{{buttons_size}} btn--{{add_to_cart_btn_style}}'
+              {% if available == false %}
+                disabled
+              {% endif %}
+              aria-label='{%- if available -%}{{ add_to_cart_label | strip_html | escape }}{%- else -%}{{ sold_out_label | strip_html | escape }}{%- endif -%}'
+            >
+              <span data-button-text>
+                {%- if available -%}
+                  {{ add_to_cart_label }}
+                {%- else -%}
+                  {{ sold_out_label }}
+                {%- endif -%}
+              </span>
+              <div class='loading-spinner btn__loading-spinner'></div>
+            </button>
+          {% endif %}
+
+          {%- if show_dynamic_checkout == true -%}
+            <div class='dynamic-checkout-buttons dynamic-checkout-buttons--{{buttons_size}} dynamic-checkout-buttons--{{checkout_btn_style}}'>
+              {{ form | payment_button }}
+            </div>
+          {%- endif -%}
+        </div>
+      {%- endform -%}
+    </product-form>
+
+    {%- if show_payment_icons -%}
+      <div class='product-form__payment-icons-wrapper'>
+        <p class='product-form__payment-icons-label'>
+          {{ 'product.store_front.payment_icon_title' | t }}
+        </p>
+
+        <div class='product-form__payment-icons'>
+          {%- for type in shop.enabled_payment_types -%}
+            <img src='{{ type | payment_type_img_url }}' alt='Payment: {{ type }}' loading='lazy'>
+          {%- endfor -%}
+        </div>
+      </div>
+    {%- endif -%}
+
+    {%- if show_pickup_availability == true -%}
+      <pickup-availability
+        class='pickup-availability body-font-weight-from-global-settings'
+        data-base-url='{{ shop.url }}{{ routes.root_url }}'
+        data-variant-id='{{ selected_variant.id }}'
+        data-has-only-default-variant='{{ product.has_only_default_variant }}'
+        id='product-pickup-availability-{{ product.id }}-{{ sectionId }}'
+      >
+        <pickup-availability-content class='pickup-availability-info'> </pickup-availability-content>
+      </pickup-availability>
+    {%- endif -%}
+  </div>
+{%- endif -%}

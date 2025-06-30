@@ -1,0 +1,95 @@
+{%- liquid
+  assign show_tags = block.settings.show_tags
+  assign selected_tags = block.settings.selected_tags | split: ',' | uniq
+  assign collapse_extra_tags = block.settings.collapse_extra_tags
+
+  if show_tags == 'selected' and selected_tags.size > 0
+    assign tags = selected_tags
+  elsif show_tags == 'all' and article.tags.size > 0
+    assign tags = article.tags
+  endif
+
+  assign enable_content_slide_in = settings.enable_content_slide_in
+-%}
+
+{% if show_tags != 'none' and tags.size > 0 %}
+  <div
+    class='container container--{{ section.settings.container_size }} container--with-aside-paddings {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+    {% if enable_content_slide_in %}
+      style='--gsc-animation-order: {{index}};'
+    {% endif %}
+    {{ block.shopify_attributes }}
+  >
+    {% if collapse_extra_tags %}
+      <div class='article-tags__container'>
+        <collapsed-tags class='article-tags__component'>
+          <div
+            data-visible-tags
+            class='article-tags__tags article-tags__tags--with-collapse'
+          >
+            {%- for item in tags -%}
+              {% assign tag = item | strip %}
+
+              {% if article.tags contains tag %}
+                {% assign blog_slug = article.handle | split: '/' | first %}
+                {% assign tag_slug = tag | replace: ' ', '-' %}
+
+                <div
+                  data-tag
+                  class='article-tags__tag'
+                >
+                  <a href='/blogs/{{blog_slug}}/tagged/{{tag_slug}}' aria-label='{{tag}}'>{{ tag }}</a>
+                </div>
+              {%- endif %}
+            {%- endfor -%}
+            <div class='show-more-container article-tags__extend-button' data-extend-button>
+              <float-element-btn
+                class='article-tags__tag show-more'
+                data-aria-expanded='false'
+                data-float-element-id='article-{{ article.id }}'
+                data-trigger='click'
+                tabindex='0'
+              >
+                <div class='show-more__dot'></div>
+                <div class='show-more__dot'></div>
+                <div class='show-more__dot'></div>
+              </float-element-btn>
+
+              <float-element
+                class='dropdown article-tags__dropdown'
+                aria-hidden='true'
+                id='article-{{ article.id }}'
+                data-placement='bottom-end'
+                data-main-axis-offset='{% if settings.round_level != "0" %} 8{% else %} 0{% endif %}'
+                data-collapsed-tags
+              >
+                <template data-float-element-template='article-{{ article.id }}'>
+                  <div class='article-tags__dropdown-body'></div>
+                </template>
+              </float-element>
+            </div>
+          </div>
+        </collapsed-tags>
+      </div>
+    {% else %}
+      <div class='article-tags__container'>
+        <div class='article-tags__component' visible>
+          <div class='article-tags__tags'>
+            {%- for item in tags -%}
+              {% assign tag = item | strip %}
+
+              {% if article.tags contains tag %}
+                {% assign blog_slug = article.handle | split: '/' | first %}
+                {% assign tag_slug = tag | replace: ' ', '-' %}
+
+                <div class='article-tags__tag'>
+                  <a href='/blogs/{{blog_slug}}/tagged/{{tag_slug}}' aria-label='{{tag}}'>{{ tag }}</a>
+                </div>
+              {% endif %}
+            {%- endfor -%}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+{% endif %}

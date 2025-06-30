@@ -1,0 +1,912 @@
+{%- liquid
+  assign options = section.settings
+  assign add_side_paddings = options.add_side_paddings
+  assign section_spacing_top = options.section_spacing_top
+  assign section_spacing_bottom = options.section_spacing_bottom
+  assign color_scheme = options.color_scheme
+  assign desktop_columns = options.desktop_columns
+  assign img_ratio = options.img_ratio | times: 100
+  assign show_author = options.show_author
+  assign show_date = options.show_date
+  assign show_comment_count = options.show_comment_count
+  assign show_subheading = options.show_subheading
+  assign show_read_more = options.show_read_more
+  assign heading_alignment = options.heading_alignment
+  assign blog = options.blog
+  assign title = options.title
+  assign articles = blog.articles
+  assign desktop_space_between_cards = options.desktop_space_between_cards | times: 0.1
+  assign mobile_space_between_cards = options.mobile_space_between_cards | times: 0.1
+  assign heading_size = options.heading_size
+
+  assign container_size = options.container_size
+
+  assign posts_to_show = options.posts_to_show
+  assign color_post_background = options.color_post_background
+
+  if blog == blank
+    assign placeholder_count = desktop_columns | times: 2
+    assign articles = (1..placeholder_count)
+  endif
+
+  assign show_tags = options.show_tags
+  assign selected_tags = options.selected_tags | split: ',' | uniq
+  assign tags_position = options.tags_position
+  assign collapse_extra_tags = options.collapse_extra_tags
+
+  assign desktop_layout = options.desktop_layout
+  assign mobile_layout = options.mobile_layout
+
+  assign enable_content_slide_in = settings.enable_content_slide_in
+-%}
+
+{% capture css %}
+  {% style %}
+    .section-{{ section.id }} {
+        --gsc-columns: 1;
+        --gsc-space-between-cards: {{mobile_space_between_cards}}rem;
+        --gsc-section-spacing-top: {{ section_spacing_top }}px;
+        --gsc-section-spacing-bottom: {{ section_spacing_bottom }}px;
+        --gsc-img-ratio: {{ img_ratio | plus: 1 }}%;
+    }
+
+    .section-{{section.id}} .article-card, .section-{{section.id}} .articles-slideshow {
+      --gsc-img-ratio: {{ img_ratio }}%;
+    }
+
+    @media {% render 'media-queries', screen: 'md' %} {
+        .section-{{ section.id }}{
+            --gsc-columns: {{desktop_columns}};
+            --gsc-slide-width: {{ 100.00 | divided_by: desktop_columns }}%;
+            --gsc-space-between-cards: {{desktop_space_between_cards}}rem;
+        }
+    }
+  {% endstyle %}
+{% endcapture %}
+
+{% render 'inline-css-minifier', css: css %}
+
+<div class='articles section articles--section section-{{ section.id }} color-{{ color_scheme }}'>
+  <div class='container container--{{ container_size }} section-spacing {% if add_side_paddings == true %}container--with-aside-paddings{% endif %}'>
+    {%- if title != blank -%}
+      <div
+        class='container__header articles__header {% if heading_alignment == 'center' %} articles__header--center-alignment {% endif %} {% if heading_alignment == 'right' %} articles__header--right-alignment {% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: 1;'
+        {% endif %}
+      >
+        <h2 class='articles__title {{ heading_size }}'>
+          {{ title }}
+        </h2>
+      </div>
+    {%- endif -%}
+
+    {% if desktop_layout != 'slideshow' and mobile_layout != 'slideshow' %}
+      <slider-grid
+        class='slider-grid {% if request.design_mode %}is-editor-mode{% endif %}'
+        {% if desktop_layout contains 'grid' %}
+          desktop-disabled
+        {% endif %}
+        {% if mobile_layout contains 'column' %}
+          mobile-disabled
+        {% endif %}
+      >
+        <div
+          slider-grid-track
+          class='slider-grid-track slider-grid__d-{{desktop_layout}} {% if mobile_layout contains 'carousel' %}slider-grid__m-slideshow{% else %}slider-grid__m-{{mobile_layout}}{% endif %}'
+        >
+          {%- for article in articles limit: posts_to_show -%}
+            <div
+              class='slider-grid__slide {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+              {% if enable_content_slide_in %}
+                style='--gsc-animation-order: {{ forloop.index }};'
+              {% endif %}
+              slider-grid-slide
+              {% if mobile_layout == 'carousel' %}
+                index='{{ forloop.index0 }}'
+              {% endif %}
+            >
+              {%- render 'article-card',
+                type: 'full',
+                article: article,
+                img_ratio: 'nature',
+                show_read_more: show_read_more,
+                show_subheading: show_subheading,
+                show_comment_count: show_comment_count,
+                show_date: show_date,
+                show_author: show_author,
+                show_tags: show_tags,
+                selected_tags: selected_tags,
+                tags_position: tags_position,
+                collapse_extra_tags: collapse_extra_tags,
+                layout: 'desktop',
+                color_post_background: color_post_background
+              -%}
+            </div>
+          {%- endfor -%}
+        </div>
+
+        {% if desktop_layout contains 'carousel' and articles.size > desktop_columns %}
+          <div class='card-carousel__position-btn-wrap card-carousel__position-btn-wrap--prev'>
+            <div class='shape shape--nature'>
+              <button
+                type='button'
+                class='carousel-btn card-carousel__carousel-btn card-carousel__carousel-btn--prev'
+                data-direction='prev'
+                tabindex='0'
+                disabled
+              >
+                {% render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon x-flip' %}
+              </button>
+            </div>
+          </div>
+
+          <div class='card-carousel__position-btn-wrap card-carousel__position-btn-wrap--next'>
+            <div class='shape shape--nature'>
+              <button
+                type='button'
+                class='carousel-btn card-carousel__carousel-btn card-carousel__carousel-btn--next'
+                data-direction='next'
+                tabindex='0'
+              >
+                {%- render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon' -%}
+              </button>
+            </div>
+          </div>
+        {% endif %}
+
+        {% if mobile_layout == 'carousel' %}
+          <div
+            class='slider-grid__dots {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+            {% if enable_content_slide_in %}
+              style='--gsc-animation-order: {{ articles.size }};'
+            {% endif %}
+          >
+            {%- for article in articles limit: posts_to_show -%}
+              <div
+                class='solid-dots-carousel__solid-dot {% if forloop.index == 1 %}is-primary{% endif %}'
+                index='{{ forloop.index0 }}'
+                slider-grid-dot
+              >
+                <div class='solid-dots-carousel__solid-dot-circle'></div>
+              </div>
+            {%- endfor -%}
+          </div>
+        {% endif %}
+      </slider-grid>
+    {% endif %}
+
+    {% if desktop_layout == 'slideshow' or mobile_layout == 'slideshow' %}
+      <section class='articles__desktop-content'>
+        {% if desktop_layout != 'slideshow' %}
+          <slider-grid
+            class='slider-grid {% if request.design_mode %}is-editor-mode{% endif %}'
+            {% if desktop_layout contains 'grid' %}
+              desktop-disabled
+            {% endif %}
+            {% if mobile_layout contains 'column' %}
+              mobile-disabled
+            {% endif %}
+          >
+            <div
+              slider-grid-track
+              class='slider-grid-track slider-grid__d-{{desktop_layout}} {% if mobile_layout contains 'carousel' %}slider-grid__m-slideshow{% else %}slider-grid__m-{{mobile_layout}}{% endif %}'
+            >
+              {%- for article in articles limit: posts_to_show -%}
+                <div
+                  class='slider-grid__slide {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                  {% if enable_content_slide_in %}
+                    style='--gsc-animation-order: {{ forloop.index }};'
+                  {% endif %}
+                  slider-grid-slide
+                  {% if mobile_layout == 'carousel' %}
+                    index='{{ forloop.index0 }}'
+                  {% endif %}
+                >
+                  {%- render 'article-card',
+                    type: 'full',
+                    article: article,
+                    img_ratio: 'nature',
+                    show_read_more: show_read_more,
+                    show_subheading: show_subheading,
+                    show_comment_count: show_comment_count,
+                    show_date: show_date,
+                    show_author: show_author,
+                    show_tags: show_tags,
+                    selected_tags: selected_tags,
+                    tags_position: tags_position,
+                    collapse_extra_tags: collapse_extra_tags,
+                    layout: 'desktop',
+                    color_post_background: color_post_background
+                  -%}
+                </div>
+              {%- endfor -%}
+            </div>
+
+            {% if desktop_layout contains 'carousel' and articles.size > desktop_columns %}
+              <div class='card-carousel__position-btn-wrap card-carousel__position-btn-wrap--prev'>
+                <div class='shape shape--nature'>
+                  <button
+                    type='button'
+                    class='carousel-btn card-carousel__carousel-btn card-carousel__carousel-btn--prev'
+                    data-direction='prev'
+                    tabindex='0'
+                    disabled
+                  >
+                    {% render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon x-flip' %}
+                  </button>
+                </div>
+              </div>
+
+              <div class='card-carousel__position-btn-wrap card-carousel__position-btn-wrap--next'>
+                <div class='shape shape--nature'>
+                  <button
+                    type='button'
+                    class='carousel-btn card-carousel__carousel-btn card-carousel__carousel-btn--next'
+                    data-direction='next'
+                    tabindex='0'
+                  >
+                    {%- render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon' -%}
+                  </button>
+                </div>
+              </div>
+            {% endif %}
+          </slider-grid>
+        {% endif %}
+
+        {% if desktop_layout == 'slideshow' %}
+          <carousel-component
+            class='card-carousel articles-slideshow'
+            data-section-id='{{ section.id }}'
+            with-stop-on-hover
+            data-draggable
+            data-align='start'
+            data-axis='x'
+            data-contain-scroll='trimSnaps'
+          >
+            <div class='card-carousel__viewport embla articles-slideshow__image' data-carousel-viewport>
+              <div class='card-carousel__container' data-carousel-container>
+                {%- for article in articles limit: posts_to_show -%}
+                  <div class='card-carousel__slide zoom-parent-for-hover'>
+                    {%- render 'article-card',
+                      type: 'image',
+                      article: article,
+                      img_ratio: 'nature',
+                      show_read_more: show_read_more,
+                      show_subheading: show_subheading,
+                      show_comment_count: show_comment_count,
+                      show_date: show_date,
+                      show_author: show_author,
+                      show_tags: show_tags,
+                      selected_tags: selected_tags,
+                      tags_position: tags_position,
+                      collapse_extra_tags: collapse_extra_tags,
+                      layout: 'desktop',
+                      color_post_background: color_post_background
+                    -%}
+                  </div>
+                {%- endfor -%}
+              </div>
+            </div>
+
+            <carousel-dots
+              class='carousel articles-slideshow__details {% if color_post_background %} articles-slideshow__details--with-background {% endif %}'
+              data-contain-scroll='keepSnaps'
+              data-align='center'
+              data-in-view-threshhold='1'
+              data-axis='x'
+              change-slide-on-scroll='true'
+            >
+              <div
+                class='carousel__viewport embla'
+                data-carousel-viewport
+              >
+                <div
+                  class='carousel__container'
+                  data-carousel-container
+                >
+                  {%- for article in articles limit: posts_to_show -%}
+                    <carousel-dot
+                      class='carousel__slide link-parent-for-hover'
+                      tabindex='0'
+                      data-dot-index='{{ forloop.index0 }}'
+                    >
+                      {%- render 'article-card',
+                        type: 'details',
+                        article: article,
+                        img_ratio: 'nature',
+                        show_read_more: show_read_more,
+                        show_subheading: show_subheading,
+                        show_comment_count: show_comment_count,
+                        show_date: show_date,
+                        show_author: show_author,
+                        show_tags: show_tags,
+                        selected_tags: selected_tags,
+                        tags_position: tags_position,
+                        collapse_extra_tags: collapse_extra_tags,
+                        layout: 'desktop',
+                        color_post_background: color_post_background
+                      -%}
+                    </carousel-dot>
+                  {%- endfor -%}
+                </div>
+              </div>
+
+              {% if articles.size > 1 %}
+                <div
+                  class='articles-slideshow__arrows {% if color_post_background %}articles-slideshow__arrows--on-background{% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                  {% if enable_content_slide_in %}
+                    style='--gsc-animation-order: 6;'
+                  {% endif %}
+                >
+                  <carousel-button
+                    class='carousel-btn'
+                    data-direction='prev'
+                    tabindex='0'
+                  >
+                    {% render 'icon-pack', icon: 'arrow-carousel', class: 'carousel-btn__icon x-flip' %}
+                  </carousel-button>
+
+                  <carousel-button
+                    class='carousel-btn'
+                    data-direction='next'
+                    tabindex='0'
+                  >
+                    {% render 'icon-pack', icon: 'arrow-carousel', class: 'carousel-btn__icon' %}
+                  </carousel-button>
+                </div>
+              {% endif %}
+            </carousel-dots>
+          </carousel-component>
+        {% endif %}
+      </section>
+
+      <section class='articles__mobile-content'>
+        {% if mobile_layout != 'slideshow' %}
+          <slider-grid
+            class='slider-grid {% if request.design_mode %}is-editor-mode{% endif %}'
+            {% if desktop_layout contains 'grid' %}
+              desktop-disabled
+            {% endif %}
+            {% if mobile_layout contains 'column' %}
+              mobile-disabled
+            {% endif %}
+          >
+            <div
+              slider-grid-track
+              class='slider-grid-track slider-grid__d-{{desktop_layout}} {% if mobile_layout contains 'carousel' %}slider-grid__m-slideshow{% else %}slider-grid__m-{{mobile_layout}}{% endif %}'
+            >
+              {%- for article in articles limit: posts_to_show -%}
+                <div
+                  class='slider-grid__slide'
+                  slider-grid-slide
+                  {% if mobile_layout == 'carousel' %}
+                    index='{{ forloop.index0 }}'
+                  {% endif %}
+                >
+                  {%- render 'article-card',
+                    type: 'full',
+                    article: article,
+                    img_ratio: 'nature',
+                    show_read_more: show_read_more,
+                    show_subheading: show_subheading,
+                    show_comment_count: show_comment_count,
+                    show_date: show_date,
+                    show_author: show_author,
+                    show_tags: show_tags,
+                    selected_tags: selected_tags,
+                    tags_position: tags_position,
+                    collapse_extra_tags: collapse_extra_tags,
+                    layout: 'desktop',
+                    color_post_background: color_post_background
+                  -%}
+                </div>
+              {%- endfor -%}
+            </div>
+
+            {% if mobile_layout == 'carousel' %}
+              <div
+                class='slider-grid__dots {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 6;'
+                {% endif %}
+              >
+                {%- for article in articles limit: posts_to_show -%}
+                  <div
+                    class='solid-dots-carousel__solid-dot {% if forloop.index == 1 %}is-primary{% endif %}'
+                    index='{{ forloop.index0 }}'
+                    slider-grid-dot
+                  >
+                    <div class='solid-dots-carousel__solid-dot-circle'></div>
+                  </div>
+                {%- endfor -%}
+              </div>
+            {% endif %}
+          </slider-grid>
+        {% endif %}
+
+        {% if mobile_layout == 'slideshow' %}
+          <carousel-component
+            class='card-carousel articles-slideshow'
+            data-section-id='{{ section.id }}'
+            with-stop-on-hover
+            data-draggable
+            data-align='start'
+            data-axis='x'
+            data-contain-scroll='trimSnaps'
+          >
+            <div class='card-carousel__viewport embla articles-slideshow__image' data-carousel-viewport>
+              <div class='card-carousel__container' data-carousel-container>
+                {%- for article in articles limit: posts_to_show -%}
+                  <div class='card-carousel__slide'>
+                    {%- render 'article-card',
+                      type: 'image',
+                      article: article,
+                      img_ratio: 'nature',
+                      show_read_more: show_read_more,
+                      show_subheading: show_subheading,
+                      show_comment_count: show_comment_count,
+                      show_date: show_date,
+                      show_author: show_author,
+                      show_tags: show_tags,
+                      selected_tags: selected_tags,
+                      tags_position: tags_position,
+                      collapse_extra_tags: collapse_extra_tags,
+                      layout: 'mobile',
+                      color_post_background: color_post_background
+                    -%}
+                  </div>
+                {%- endfor -%}
+              </div>
+            </div>
+
+            <carousel-dots
+              class='carousel articles-slideshow__details {% if color_post_background %} articles-slideshow__details--with-background {% endif %}'
+              data-contain-scroll='keepSnaps'
+              is-draggable
+              data-draggable
+              data-align='center'
+              data-in-view-threshhold='1'
+              data-axis='x'
+              change-slide-on-scroll='true'
+            >
+              <div
+                class='carousel__viewport embla'
+                data-carousel-viewport
+              >
+                <div
+                  class='carousel__container'
+                  data-carousel-container
+                >
+                  {%- for article in articles limit: posts_to_show -%}
+                    <carousel-dot
+                      class='carousel__slide'
+                      tabindex='0'
+                      data-dot-index='{{ forloop.index0 }}'
+                    >
+                      {%- render 'article-card',
+                        type: 'details',
+                        article: article,
+                        img_ratio: 'nature',
+                        show_read_more: show_read_more,
+                        show_subheading: show_subheading,
+                        show_comment_count: show_comment_count,
+                        show_date: show_date,
+                        show_author: show_author,
+                        show_tags: show_tags,
+                        selected_tags: selected_tags,
+                        tags_position: tags_position,
+                        collapse_extra_tags: collapse_extra_tags,
+                        layout: 'mobile',
+                        color_post_background: color_post_background
+                      -%}
+                    </carousel-dot>
+                  {%- endfor -%}
+                </div>
+              </div>
+
+              {% if articles.size > 1 %}
+                <div
+                  class='articles-slideshow__arrows {% if color_post_background %}articles-slideshow__arrows--on-background{% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                  {% if enable_content_slide_in %}
+                    style='--gsc-animation-order: 6;'
+                  {% endif %}
+                >
+                  <carousel-button
+                    class='carousel-btn'
+                    data-direction='prev'
+                    tabindex='0'
+                  >
+                    {% render 'icon-pack', icon: 'arrow-carousel', class: 'carousel-btn__icon x-flip' %}
+                  </carousel-button>
+
+                  <carousel-button
+                    class='carousel-btn'
+                    data-direction='next'
+                    tabindex='0'
+                  >
+                    {% render 'icon-pack', icon: 'arrow-carousel', class: 'carousel-btn__icon' %}
+                  </carousel-button>
+                </div>
+              {% endif %}
+            </carousel-dots>
+          </carousel-component>
+        {% endif %}
+      </section>
+    {% endif %}
+  </div>
+</div>
+
+{% render 'save-section-data-in-global-scope', section: section %}
+
+{% schema %}
+{
+  "name": "t:sections.blog_posts.name",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:sections.general_section_settings.color_scheme_option_default_label"
+        },
+        {
+          "value": "primary",
+          "label": "t:sections.general_section_settings.color_scheme_option_primary_label"
+        },
+        {
+          "value": "secondary",
+          "label": "t:sections.general_section_settings.color_scheme_option_secondary_label"
+        },
+        {
+          "value": "custom-1",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_1_label"
+        },
+        {
+          "value": "custom-2",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_2_label"
+        },
+        {
+          "value": "custom-3",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_3_label"
+        },
+        {
+          "value": "white",
+          "label": "t:sections.general_section_settings.color_scheme_option_white_text_label"
+        },
+        {
+          "value": "black",
+          "label": "t:sections.general_section_settings.color_scheme_option_black_text_label"
+        },
+        {
+          "value": "custom-5",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_5_label"
+        }
+      ],
+      "default": "default",
+      "label": "t:sections.general_section_settings.color_scheme_label",
+      "info": "t:sections.general_section_settings.color_scheme_tip"
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "options": [
+        {
+          "value": "page-width",
+          "label": "t:sections.general_section_settings.container_size.page_width_option"
+        },
+        {
+          "value": "large",
+          "label": "t:sections.general_section_settings.container_size.large_width_option"
+        },
+        {
+          "value": "medium",
+          "label": "t:sections.general_section_settings.container_size.medium_width_option"
+        },
+        {
+          "value": "small",
+          "label": "t:sections.general_section_settings.container_size.small_width_option"
+        }
+      ],
+      "default": "large",
+      "label": "t:sections.general_section_settings.container_size.label"
+    },
+    {
+      "type": "select",
+      "id": "desktop_layout",
+      "options": [
+        {
+          "value": "grid",
+          "label": "t:sections.blog_posts.desktop_layout.options.option_1"
+        },
+        {
+          "value": "carousel",
+          "label": "t:sections.blog_posts.desktop_layout.options.option_2"
+        },
+        {
+          "value": "slideshow",
+          "label": "t:sections.blog_posts.desktop_layout.options.option_3"
+        }
+      ],
+      "default": "slideshow",
+      "label": "t:sections.blog_posts.desktop_layout.label"
+    },
+    {
+      "type": "select",
+      "id": "mobile_layout",
+      "options": [
+        {
+          "value": "carousel",
+          "label": "t:sections.blog_posts.mobile_layout.options.option_1"
+        },
+        {
+          "value": "slideshow",
+          "label": "t:sections.blog_posts.mobile_layout.options.option_2"
+        },
+        {
+          "value": "grid",
+          "label": "t:sections.blog_posts.mobile_layout.options.option_3"
+        }
+      ],
+      "default": "carousel",
+      "label": "t:sections.blog_posts.mobile_layout.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.blog_posts.blog_settings_header"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "default": "Blog posts",
+      "label": "t:sections.blog_posts.title_label"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "label": "t:sections.general_section_settings.label_for_heading_size_setting",
+      "options": [
+        {
+          "value": "display1",
+          "label": "t:sections.general_section_settings.display_size_1_option"
+        },
+        {
+          "value": "display2",
+          "label": "t:sections.general_section_settings.display_size_2_option"
+        },
+        {
+          "value": "display3",
+          "label": "t:sections.general_section_settings.display_size_3_option"
+        },
+        {
+          "value": "h1",
+          "label": "t:sections.general_section_settings.heading_size_1_option"
+        },
+        {
+          "value": "h2",
+          "label": "t:sections.general_section_settings.heading_size_2_option"
+        },
+        {
+          "value": "h3",
+          "label": "t:sections.general_section_settings.heading_size_3_option"
+        },
+        {
+          "value": "h4",
+          "label": "t:sections.general_section_settings.heading_size_4_option"
+        },
+        {
+          "value": "h5",
+          "label": "t:sections.general_section_settings.heading_size_5_option"
+        },
+        {
+          "value": "h6",
+          "label": "t:sections.general_section_settings.heading_size_6_option"
+        },
+        {
+          "value": "caption1",
+          "label": "t:sections.general_section_settings.caption_size_1_option"
+        },
+        {
+          "value": "caption2",
+          "label": "t:sections.general_section_settings.caption_size_2_option"
+        },
+        {
+          "value": "caption3",
+          "label": "t:sections.general_section_settings.caption_size_3_option"
+        }
+      ],
+      "default": "h5"
+    },
+    {
+      "type": "text_alignment",
+      "id": "heading_alignment",
+      "label": "t:sections.general_section_settings.heading_alignment_label",
+      "default": "center"
+    },
+    {
+      "type": "blog",
+      "id": "blog",
+      "label": "t:sections.blog_posts.blog_label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.blog_posts.posts_settings_header"
+    },
+    {
+      "type": "range",
+      "id": "img_ratio",
+      "min": 0.5,
+      "max": 1.5,
+      "step": 0.1,
+      "default": 0.7,
+      "unit": "t:sections.general_section_settings.img_ratio_unit",
+      "label": "t:sections.general_section_settings.img_ratio_label"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_author",
+      "default": true,
+      "label": "t:sections.blog_posts.show_author_label"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_date",
+      "default": true,
+      "label": "t:sections.blog_posts.show_date_label"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_comment_count",
+      "default": true,
+      "label": "t:sections.blog_posts.show_comment_count_label"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_subheading",
+      "default": true,
+      "label": "t:sections.blog_posts.show_subheading_label",
+      "info": "t:sections.blog_posts.show_subheading_info"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_read_more",
+      "default": true,
+      "label": "t:sections.blog_posts.show_read_more_label"
+    },
+    {
+      "type": "checkbox",
+      "id": "color_post_background",
+      "default": true,
+      "label": "t:sections.blog_posts.color_post_background_label"
+    },
+    {
+      "type": "range",
+      "id": "posts_to_show",
+      "min": 1,
+      "max": 20,
+      "step": 1,
+      "default": 6,
+      "label": "t:sections.blog_posts.posts_to_show_label"
+    },
+    {
+      "type": "range",
+      "id": "desktop_columns",
+      "min": 1,
+      "max": 5,
+      "step": 1,
+      "default": 2,
+      "label": "t:sections.blog_posts.desktop_columns_label",
+      "info": "t:sections.blog_posts.desktop_columns_info"
+    },
+    {
+      "type": "range",
+      "id": "desktop_space_between_cards",
+      "min": 0,
+      "max": 32,
+      "step": 1,
+      "default": 16,
+      "unit": "t:sections.blog_posts.desktop_space_between_cards_unit",
+      "label": "t:sections.blog_posts.desktop_space_between_cards_label"
+    },
+    {
+      "type": "range",
+      "id": "mobile_space_between_cards",
+      "min": 0,
+      "max": 32,
+      "step": 1,
+      "default": 16,
+      "unit": "t:sections.blog_posts.mobile_space_between_cards_unit",
+      "label": "t:sections.blog_posts.mobile_space_between_cards_label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.blog_posts.tags_settings.header_title"
+    },
+    {
+      "type": "radio",
+      "id": "show_tags",
+      "label": "t:sections.blog_posts.tags_settings.show_tags.label",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.blog_posts.tags_settings.show_tags.options.option_1"
+        },
+        {
+          "value": "all",
+          "label": "t:sections.blog_posts.tags_settings.show_tags.options.option_2"
+        },
+        {
+          "value": "selected",
+          "label": "t:sections.blog_posts.tags_settings.show_tags.options.option_3"
+        }
+      ],
+      "default": "all"
+    },
+    {
+      "type": "text",
+      "id": "selected_tags",
+      "label": "t:sections.blog_posts.tags_settings.select_tags.label",
+      "info": "t:sections.blog_posts.tags_settings.select_tags.info"
+    },
+    {
+      "type": "select",
+      "id": "tags_position",
+      "label": "t:sections.blog_posts.tags_settings.tags_position.label",
+      "options": [
+        {
+          "value": "on_image",
+          "label": "t:sections.blog_posts.tags_settings.tags_position.options.option_1"
+        },
+        {
+          "value": "under_image",
+          "label": "t:sections.blog_posts.tags_settings.tags_position.options.option_2"
+        }
+      ],
+      "default": "under_image"
+    },
+    {
+      "type": "checkbox",
+      "id": "collapse_extra_tags",
+      "default": false,
+      "label": "t:sections.blog_posts.tags_settings.collapse_extra_tags.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.general_section_settings.paddings.header_title"
+    },
+    {
+      "type": "checkbox",
+      "id": "add_side_paddings",
+      "default": true,
+      "label": "t:sections.general_section_settings.paddings.add_side_paddings.label"
+    },
+    {
+      "type": "range",
+      "id": "section_spacing_top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 48,
+      "unit": "t:sections.general_section_settings.paddings.section_spacing_top.unit",
+      "label": "t:sections.general_section_settings.paddings.section_spacing_top.label"
+    },
+    {
+      "type": "range",
+      "id": "section_spacing_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 48,
+      "unit": "t:sections.general_section_settings.paddings.section_spacing_bottom.unit",
+      "label": "t:sections.general_section_settings.paddings.section_spacing_bottom.label"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.blog_posts.name"
+    }
+  ]
+}
+{% endschema %}

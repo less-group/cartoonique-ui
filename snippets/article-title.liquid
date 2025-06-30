@@ -1,0 +1,41 @@
+{%- liquid
+  assign options = block.settings
+  assign show_author = options.show_author
+  assign show_date = options.show_date
+  assign show_comment_count = options.show_comment_count
+  assign heading_size = options.heading_size
+
+  assign enable_content_slide_in = settings.enable_content_slide_in
+-%}
+
+<div
+  class='container container--{{ section.settings.container_size }} container--with-aside-paddings {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+  {% if enable_content_slide_in %}
+    style='--gsc-animation-order: {{index}};'
+  {% endif %}
+  {{ block.shopify_attributes }}
+>
+  {% if show_author or show_date or show_comment_count %}
+    <div class='article-meta body-color'>
+      {% if show_author and article.author != blank %}
+        <span class='article-meta__item'>{{ article.author }}</span>
+      {% endif %}
+      {% if show_date and article.published_at != blank %}
+        <span class='article-meta__item'>{{ article.published_at | date: format: 'abbreviated_date' }}</span>
+      {% endif %}
+      {% if show_comment_count %}
+        <span class='article-meta__item'>
+          {{- 'blogs.blog_post.store_front.comments' | t: count: article.comments_count -}}
+        </span>
+      {% endif %}
+    </div>
+  {% endif %}
+  <h2 class='article__title {{heading_size}}'>{{ article.title }}</h2>
+
+  {% if block.settings.show_share_link %}
+    <div class='article__heading-share'>
+      {% assign value_to_copy = shop.url | append: article.url %}
+      {% render 'share', value_to_copy: value_to_copy, id: 'MainArticleBlockShare' %}
+    </div>
+  {% endif %}
+</div>

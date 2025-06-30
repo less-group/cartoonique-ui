@@ -1,0 +1,532 @@
+{% liquid
+  assign color_scheme = section.settings.color_scheme
+  assign show_language_selector = section.settings.show_language_selector
+  assign show_currency_selector = section.settings.show_currency_selector
+  assign show_account = section.settings.show_account
+  assign account_mobile_position = section.settings.account_mobile_position
+  assign show_currency_flags = section.settings.show_currency_flags
+%}
+
+<drawer-menu
+  data-section-id='{{ section.id }}'
+  class='drawer-menu color-{{ color_scheme }} container--{{ section.settings.container_size }} {% if section.settings.menu_type == 'drawer' %} drawer-menu--visible-on-desktop {% endif %}'
+  id='DrawerMenu'
+  data-with-overlay
+  data-with-close-on-outside
+  data-with-close-on-escape
+  tabindex='-1'
+  data-overlay-opacity='10'
+  data-overlay-important
+  {% if section.settings.menu_type == 'drawer' %}
+    data-drawer-menu-is-section
+  {% endif %}
+>
+  <template data-sidebar-template='DrawerMenu'>
+    <div class='drawer-menu__body' data-sidebar-body>
+      <drawer-menu-page
+        class='drawer-menu__page'
+        aria-hidden='false'
+        data-page-id='Menu'
+      >
+        <div class='drawer-menu__content' data-drawer-menu-content>
+          {%- if menu.links.size > 0 -%}
+            <div class='drawer-menu__list drawer-menu__list--without-mega-menu'>
+              <div class='drawer-menu__list-inner'>
+                <div class='drawer-menu__list-body'>
+                  {%- for link in menu.links -%}
+                    {%- liquid
+                      assign link_title_downcase = link.title | downcase
+                      assign has_menu = false
+                      assign has_desktop_menu = false
+                      assign has_mobile_menu = false
+                      assign has_simple_link = false
+
+                      for block in section.blocks
+                        assign mega_nav_item_name_downcase = block.settings.mega_nav_item_name | downcase
+                        assign block_visibility = block.settings.block_visibility
+
+                        if mega_nav_item_name_downcase == link_title_downcase
+                          assign has_menu = true
+
+                          if block_visibility == 'desktop'
+                            assign has_desktop_menu = true
+                          endif
+
+                          if block_visibility == 'mobile'
+                            assign has_mobile_menu = true
+                          endif
+                        endif
+                      endfor
+
+                      if has_desktop_menu == true and has_mobile_menu == false
+                        assign has_simple_link = true
+                      endif
+                      if has_desktop_menu == false and has_mobile_menu == true
+                        assign has_simple_link = true
+                      endif
+                    -%}
+                    {%- if link.links.size > 0 or has_menu == true -%}
+                      {% if link.links.size == 0 and has_desktop_menu or has_mobile_menu %}
+                        <drawer-menu-page-link
+                          class='drawer-menu__menu-item {% if has_desktop_menu %}drawer-menu__menu-item--desktop-visible{% endif %} {% if has_mobile_menu %}drawer-menu__menu-item--mobile-visible{% endif %}'
+                          data-page-id='DrawerMenuPage-{{ link.handle }}'
+                          tabindex='0'
+                          menu-title='{{ link.title | strip_html | escape }}'
+                        >
+                          <span>
+                            <span class='drawer-menu__menu-item-label'>
+                              {{ link.title }}
+                            </span>
+                          </span>
+                          {% render 'icon', icon_name: 'chevron', class: 'drawer-menu__chevron', stroke_width: 1.5 %}
+                        </drawer-menu-page-link>
+
+                        {% if has_simple_link %}
+                          <a
+                            class='drawer-menu__menu-item {% if has_desktop_menu %}drawer-menu__menu-item--mobile-visible{% endif %} {% if has_mobile_menu %}drawer-menu__menu-item--desktop-visible{% endif %} {% if link.active %} active{% endif %}'
+                            href='{{ link.url }}'
+                            aria-label='{{ link.title | strip_html | escape }}'
+                            menu-title='{{ link.title | strip_html | escape }}'
+                          >
+                            <span>
+                              <span class='drawer-menu__menu-item-label'>
+                                {{ link.title }}
+                              </span>
+                            </span>
+                          </a>
+                        {% endif %}
+
+                      {%- else -%}
+                        <drawer-menu-page-link
+                          class='drawer-menu__menu-item'
+                          data-page-id='DrawerMenuPage-{{ link.handle }}'
+                          tabindex='0'
+                          menu-title='{{ link.title | strip_html | escape }}'
+                        >
+                          <span>
+                            <span class='drawer-menu__menu-item-label'>
+                              {{ link.title }}
+                            </span>
+                          </span>
+                          {% render 'icon', icon_name: 'chevron', class: 'drawer-menu__chevron', stroke_width: 1.5 %}
+                        </drawer-menu-page-link>
+                      {% endif %}
+
+                    {%- else -%}
+                      <a
+                        class='drawer-menu__menu-item {% if link.active %} active{% endif %}'
+                        href='{{ link.url }}'
+                        aria-label='{{ link.title | strip_html | escape }}'
+                        menu-title='{{ link.title | strip_html | escape }}'
+                      >
+                        <span>
+                          <span class='drawer-menu__menu-item-label'>
+                            {{ link.title }}
+                          </span>
+                        </span>
+                      </a>
+                    {%- endif -%}
+                  {%- endfor -%}
+                </div>
+              </div>
+            </div>
+          {%- endif -%}
+        </div>
+
+        {% if account_mobile_position == 'in_menu'
+          or show_language_selector contains 'mobile'
+          or show_currency_selector contains 'mobile'
+        %}
+          <div class='drawer-menu__settings'>
+            {% if show_account and account_mobile_position == 'in_menu' %}
+              <a
+                class='drawer-menu__account-link unstyled-link'
+                href='{{ routes.account_url }}'
+                tabindex='0'
+                aria-label='{{ 'header.screen_reader.aria_label_for_account_icon' | t }}'
+              >
+                {% if show_icons_as contains 'icons' %}
+                  {% render 'buy-icons-pack',
+                    icon: 'account-icon-with-styles',
+                    class: 'drawer-menu__icon',
+                    icon_style: icon_style,
+                    stroke_width: icon_stroke_width
+                  %}
+                {% endif %}
+
+                {% if customer %}
+                  {{ 'header.store_front.label_for_account_icon' | t }}
+                {% else %}
+                  {{ 'header.store_front.label_for_login_icon' | t }}
+                {% endif %}
+              </a>
+            {% endif %}
+
+            {% if show_language_selector contains 'mobile' or show_currency_selector contains 'mobile' %}
+              <div class='drawer-menu__localization-settings'>
+                {% if show_language_selector contains 'mobile' %}
+                  <div class='localization-dropdown-wrapper {% if show_language_selector != "desktop_and_mobile" %}header-content--{{ show_language_selector }}{% endif %}'>
+                    <dropdown-opener
+                      class='localization-dropdown-toggle drawer-menu__localization-dropdown-toggle'
+                      data-aria-expanded='false'
+                      data-trigger='click'
+                      data-float-element-id='HeaderDrawerLanguageSelector-mobile'
+                    >
+                      {{ localization.language.endonym_name | capitalize }}
+                      {% render 'icon',
+                        icon_name: 'chevron',
+                        class: 'localization-dropdown-toggle__chevron',
+                        stroke_width: 1
+                      %}
+                    </dropdown-opener>
+                    <float-element
+                      class='localization-dropdown drawer-menu__localization-dropdown'
+                      aria-hidden='true'
+                      id='HeaderDrawerLanguageSelector-mobile'
+                      data-placement='top-end'
+                      data-main-axis-offset='2'
+                    >
+                      <template data-float-element-template='HeaderDrawerLanguageSelector-mobile'>
+                        <div class='localization-dropdown__body'>
+                          <localization-selector>
+                            {%- form 'localization', id: 'HeaderDrawerLanguageForm' -%}
+                              {%- for language in localization.available_languages -%}
+                                <button
+                                  class='localization-dropdown__item link-parent-for-hover {% if localization.language == language %} selected{% endif %}'
+                                  data-localization-item
+                                  data-value='{{ language.iso_code }}'
+                                  data-focus-trap-target
+                                  aria-label='{{ language.endonym_name | strip_html | escape }}'
+                                >
+                                  <span class='underline-animation'>{{ language.endonym_name | capitalize }}</span>
+                                </button>
+                              {%- endfor -%}
+                              <input
+                                type='hidden'
+                                name='locale_code'
+                                data-localization-input
+                                value='{{ localization.language.iso_code }}'
+                                id='HeaderDrawerLanguageForm-LocaleCodeInput-{{ form.id }}'
+                              >
+                            {%- endform -%}
+                          </localization-selector>
+                        </div>
+                      </template>
+                    </float-element>
+                  </div>
+                {% endif %}
+
+                {% if show_currency_selector contains 'mobile' %}
+                  <div class='localization-dropdown-wrapper {% if show_currency_selector != "desktop_and_mobile" %}header-content--{{ show_currency_selector }}{% endif %}'>
+                    <dropdown-opener
+                      class='localization-dropdown-toggle drawer-menu__localization-dropdown-toggle'
+                      data-aria-expanded='false'
+                      data-trigger='click'
+                      data-float-element-id='HeaderDrawerCurrencySelector-mobile'
+                    >
+                      {% if show_currency_flags %}
+                        {{
+                          localization.country
+                          | image_url: width: 20
+                          | image_tag: class: 'localization-dropdown-toggle__flag'
+                        }}
+                      {% endif %}
+
+                      {{ localization.country.currency.iso_code }}
+                      {% render 'icon',
+                        icon_name: 'chevron',
+                        class: 'localization-dropdown-toggle__chevron',
+                        stroke_width: 1
+                      %}
+                    </dropdown-opener>
+                    <float-element
+                      class='localization-dropdown drawer-menu__localization-dropdown'
+                      aria-hidden='true'
+                      id='HeaderDrawerCurrencySelector-mobile'
+                      data-placement='top-end'
+                      data-main-axis-offset='2'
+                    >
+                      <template data-float-element-template='HeaderDrawerCurrencySelector-mobile'>
+                        <div class='localization-dropdown__body'>
+                          <localization-selector>
+                            {%- if localization.available_countries.size > 10 %}
+                              <div class='localization-dropdown__search-field'>
+                                <label class='visually-hidden' for='HeaderDrawerCurrencySelector-mobile-Search'>
+                                  {{- 'general.localization_selector.store_front.search_title' | t -}}
+                                </label>
+
+                                <input
+                                  class='input input--{{ settings.input_style }}'
+                                  type='text'
+                                  name='HeaderDrawerCurrencySelector-mobile-Search'
+                                  placeholder='{{- 'general.localization_selector.store_front.search_title' | t -}}'
+                                  id='HeaderDrawerCurrencySelector-mobile-Search'
+                                  data-localization-search-field
+                                >
+
+                                <button
+                                  type='button'
+                                  class='unstyled-button localization-dropdown__search-field-reset-btn hidden'
+                                  aria-label='{{ 'general.search_page.screen_reader.label_for_search_button' | t }}'
+                                  data-search-field-reset-button
+                                >
+                                  {% render 'icon',
+                                    icon_name: 'close',
+                                    class: 'localization-dropdown__search-field-reset-icon',
+                                    stroke_width: 1.5
+                                  %}
+                                </button>
+                              </div>
+                            {% endif %}
+
+                            {%- form 'localization', id: 'HeaderDrawerCurrencyForm' -%}
+                              {%- for country in localization.available_countries -%}
+                                <button
+                                  data-localization-item
+                                  class='localization-dropdown__item link-parent-for-hover {% if localization.country == country %} selected{% endif %}'
+                                  data-value='{{ country.iso_code }}'
+                                  data-country='{{ country.name | strip_html | escape | downcase }}'
+                                  data-focus-trap-target
+                                  aria-label='{{ country.name | strip_html | escape }} {{ country.currency.iso_code | strip_html | escape }}'
+                                >
+                                  {% if show_currency_flags %}
+                                    {{ country | image_url: width: 22 | image_tag }}
+                                  {% endif %}
+
+                                  <span class='underline-animation'>
+                                    {{- country.name }}, {{ country.currency.iso_code -}}
+                                  </span>
+                                </button>
+                              {%- endfor -%}
+                              <input
+                                type='hidden'
+                                name='country_code'
+                                data-localization-input
+                                value='{{ localization.country.iso_code }}'
+                                id='HeaderDrawerCurrencyForm-CountryCodeInput-{{ form.id }}'
+                              >
+                            {%- endform -%}
+                          </localization-selector>
+                        </div>
+                      </template>
+                    </float-element>
+                  </div>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+        {% endif %}
+      </drawer-menu-page>
+      {%- for link in menu.links -%}
+        {%- liquid
+          assign link_title_downcase = link.title | downcase
+          assign has_mega_menu = false
+          assign block_index = ''
+
+          for block in section.blocks
+            assign mega_nav_item_name_downcase = block.settings.mega_nav_item_name | downcase
+            assign block_visibility = block.settings.block_visibility
+
+            if mega_nav_item_name_downcase == link_title_downcase
+              assign block_index = forloop.index0
+              assign has_mega_menu = true
+              break
+            endif
+          endfor
+        -%}
+
+        {%- if link.links.size > 0 or block_index != '' -%}
+          <drawer-menu-page
+            class='drawer-menu__page {% if has_mega_menu %} drawer-menu__page--with-mega-menu {% endif %} '
+            aria-hidden='true'
+            data-page-id='DrawerMenuPage-{{ link.handle }}'
+            data-prev-page-id='Menu'
+            data-mega-menu-id='{{ link_title_downcase }}'
+            {% if link.links.size == 0 %}
+              data-empty-menu
+            {% endif %}
+            {% if block_index != '' %}
+              block-id='{{ section.blocks[block_index].id }}' {{ section.blocks[block_index].shopify_attributes }}
+            {% endif %}
+          >
+            <div class='drawer-menu__list-title drawer-menu__list-title--mobile'>
+              <div class='drawer-menu__list-title-body drawer-menu__list-title-body--with-link'>
+                <drawer-menu-page-link
+                  class='drawer-menu__list-title-chevron-wrapper'
+                  data-page-id='Menu'
+                  tabindex='-1'
+                >
+                  {% render 'icon', icon_name: 'chevron', class: 'drawer-menu__title-chevron x-flip' %}
+                </drawer-menu-page-link>
+                <a
+                  class='drawer-menu__list-title-label unstyled-link link-parent-for-hover'
+                  href='{{ link.url }}'
+                  aria-label='{{ link.title | strip_html | escape }}'
+                  tabindex='-1'
+                  menu-title='{{ link.title | strip_html | escape }}'
+                >
+                  <span>
+                    <span class='underline-animation'>{{ link.title }}</span>
+                  </span>
+                </a>
+              </div>
+            </div>
+
+            <div class='drawer-menu__content' data-drawer-menu-content>
+              <div class='drawer-menu__list {% if has_mega_menu == false %} drawer-menu__list--without-mega-menu {% endif %}'>
+                <div class='drawer-menu__list-inner'>
+                  <div class='drawer-menu__list-title drawer-menu__list-title--desktop'>
+                    <div class='drawer-menu__list-title-body drawer-menu__list-title-body--with-link'>
+                      <drawer-menu-page-link
+                        class='drawer-menu__list-title-chevron-wrapper'
+                        data-page-id='Menu'
+                        tabindex='0'
+                      >
+                        {% render 'icon', icon_name: 'chevron', class: 'drawer-menu__title-chevron x-flip' %}
+                      </drawer-menu-page-link>
+                      <a
+                        class='drawer-menu__list-title-label unstyled-link link-parent-for-hover'
+                        href='{{ link.url }}'
+                        aria-label='{{ link.title | strip_html | escape }}'
+                        menu-title='{{ link.title | strip_html | escape }}'
+                      >
+                        <span>
+                          <span class='underline-animation'>{{ link.title }}</span>
+                        </span>
+                      </a>
+                    </div>
+                  </div>
+                  {%- if link.links.size > 0 -%}
+                    <div class='drawer-menu__list-body'>
+                      {%- for childlink in link.links -%}
+                        {%- if childlink.links.size > 0 -%}
+                          <drawer-menu-page-link
+                            class='drawer-menu__menu-item drawer-menu__menu-item--medium'
+                            data-page-id='DrawerMenuPage-{{ link.handle }}-{{ childlink.handle }}'
+                            tabindex='0'
+                          >
+                            <span>
+                              <span class='drawer-menu__menu-item-label'>{{ childlink.title }}</span>
+                            </span>
+                            {% render 'icon', icon_name: 'chevron', class: 'drawer-menu__chevron', stroke_width: 1.5 %}
+                          </drawer-menu-page-link>
+                        {%- else -%}
+                          <a
+                            class='drawer-menu__menu-item drawer-menu__menu-item--medium {% if childlink.active %} active{% endif %}'
+                            href='{{ childlink.url }}'
+                            aria-label='{{ childlink.title | strip_html | escape }}'
+                          >
+                            <span>
+                              <span class='drawer-menu__menu-item-label'>{{ childlink.title }}</span>
+                            </span>
+                          </a>
+                        {%- endif -%}
+                      {%- endfor -%}
+                    </div>
+                  {%- endif -%}
+                </div>
+              </div>
+              {% if has_mega_menu == true %}
+                <div class='drawer-menu__mega-menu-wrapper'>
+                  {%- liquid
+                    for block in section.blocks
+                      assign mega_nav_item_name_downcase = block.settings.mega_nav_item_name | downcase
+
+                      if link_title_downcase == mega_nav_item_name_downcase
+                        case block.type
+                          when 'menu-1'
+                            render 'header-menu-1', block: block
+                          when 'menu-2'
+                            render 'header-menu-2', block: block
+                          when 'menu-3'
+                            render 'header-menu-3', block: block
+                        endcase
+                      endif
+                    endfor
+                  -%}
+                </div>
+              {% endif %}
+            </div>
+          </drawer-menu-page>
+          {%- for childlink in link.links -%}
+            {%- if childlink.links.size > 0 -%}
+              <drawer-menu-page
+                class='drawer-menu__page {% if has_mega_menu %} drawer-menu__page--with-mega-menu {% endif %}'
+                data-prev-page-id='DrawerMenuPage-{{ link.handle }}'
+                data-mega-menu-id='{{ link_title_downcase }}'
+                aria-hidden='true'
+                data-page-id='DrawerMenuPage-{{ link.handle }}-{{ childlink.handle }}'
+              >
+                <div class='drawer-menu__list-title drawer-menu__list-title--mobile'>
+                  <div class='drawer-menu__list-title-body drawer-menu__list-title-body--with-link'>
+                    <drawer-menu-page-link
+                      class='drawer-menu__list-title-chevron-wrapper'
+                      data-page-id='DrawerMenuPage-{{ link.handle }}'
+                      tabindex='-1'
+                    >
+                      {% render 'icon', icon_name: 'chevron', class: 'drawer-menu__title-chevron x-flip' %}
+                    </drawer-menu-page-link>
+                    <a
+                      class='drawer-menu__list-title-label unstyled-link link-parent-for-hover'
+                      href='{{ childlink.url }}'
+                      aria-label='{{ childlink.title | strip_html | escape }}'
+                      tabindex='-1'
+                      menu-title='{{ childlink.title | strip_html | escape }}'
+                    >
+                      <span>
+                        <span class='underline-animation'>{{ childlink.title }}</span>
+                      </span>
+                    </a>
+                  </div>
+                </div>
+
+                <div class='drawer-menu__content' data-drawer-menu-content>
+                  <div class='drawer-menu__list {% if has_mega_menu == false %} drawer-menu__list--without-mega-menu {% endif %}'>
+                    <div class='drawer-menu__list-inner'>
+                      <div class='drawer-menu__list-title drawer-menu__list-title--desktop'>
+                        <div class='drawer-menu__list-title-body drawer-menu__list-title-body--with-link'>
+                          <drawer-menu-page-link
+                            class='drawer-menu__list-title-chevron-wrapper'
+                            data-page-id='DrawerMenuPage-{{ link.handle }}'
+                            tabindex='0'
+                          >
+                            {% render 'icon', icon_name: 'chevron', class: 'drawer-menu__title-chevron x-flip' %}
+                          </drawer-menu-page-link>
+                          <a
+                            class='drawer-menu__list-title-label unstyled-link link-parent-for-hover'
+                            href='{{ childlink.url }}'
+                            aria-label='{{ childlink.title | strip_html | escape }}'
+                            menu-title='{{ childlink.title | strip_html | escape }}'
+                          >
+                            <span>
+                              <span class='underline-animation'>{{ childlink.title }}</span>
+                            </span>
+                          </a>
+                        </div>
+                      </div>
+                      {%- if childlink.links.size > 0 -%}
+                        <div class='drawer-menu__list-body'>
+                          {%- for grandchildlink in childlink.links -%}
+                            <a
+                              class='drawer-menu__menu-item drawer-menu__menu-item--small {% if grandchildlink.active %} active{% endif %}'
+                              href='{{ grandchildlink.url }}'
+                              aria-label='{{ grandchildlink.title | strip_html | escape }}'
+                            >
+                              <span>
+                                <span class='drawer-menu__menu-item-label'>{{ grandchildlink.title }}</span>
+                              </span>
+                            </a>
+                          {%- endfor -%}
+                        </div>
+                      {%- endif -%}
+                    </div>
+                  </div>
+                </div>
+              </drawer-menu-page>
+            {%- endif -%}
+          {%- endfor -%}
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </template>
+</drawer-menu>

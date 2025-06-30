@@ -1,0 +1,152 @@
+{{ 'face-swap-file-input-wrapper.out.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'result-popup-manager.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'face-swap-file-input-wrapper.min.js' | asset_url }}" defer="defer"></script>
+
+{% assign color_index = null %}
+
+{% for option in product.options_with_values %}
+  {% if option.name == 'Color' %}
+    {% assign color_index = forloop.index0 %}
+  {% endif %}
+{% endfor %}
+
+{% capture current_product_selected_color %}
+  {% if color_index != nil %}
+    {% for variant in product.variants %}
+      {% if variant.id == product.selected_or_first_available_variant.id %}
+        {{ variant.options[color_index] | strip }}
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    {{ nil }}
+  {% endif %}
+{% endcapture %}
+
+<script>
+  window.ASSET_BASE_URL = '{{ 'assets/' | asset_url }}';
+  
+  window.selectedProductVariants = [
+    {% for variant in product.variants %}
+      {% capture product_selected_color %}
+        {% if color_index != nil %}
+          {{ variant.options[color_index] }}
+        {% else %}
+          {{ nil }}
+        {% endif %}
+      {% endcapture %}
+
+      {...{{ variant | json }}, current_color: {{ product_selected_color | strip | json }}},
+    {% endfor %}
+    ];
+
+    const watermarkImage = {{ settings.watermark_image | json }}
+    const [watermarkImageName] = watermarkImage.split('/').at(-1).split('?')
+    const watermarkImageUrl = `https://cdn.shopify.com/s/files/1/0626/3416/4430/files/${watermarkImageName}`
+    const watermarkSize = { width: {{ settings.watermark_image_width | json }} , height: {{ settings.watermark_image_height | json }} }
+    const spaceBetweenWatermarks = {{ settings.space_between_watermarks }}
+
+    const faceswapResultImageType = {{ settings.faceswap_result_image_type | json }}
+
+    const progressBarSettings = {
+      containerBackgroundColor: {{ settings.progressbar_container_background_color | json }},
+      backgroundColor: {{ settings.progressbar_background_color | json }},
+      textColor: {{ settings.progressbar_text_color | json }},
+      speed: {{ settings.progressbar_speed | json }},
+    };
+
+    window.watermarkImage = { url: watermarkImageUrl, ...watermarkSize, spaceBetweenWatermarks }
+    window.faceSwapResultImageType = faceswapResultImageType
+    window.progressBarSettings = progressBarSettings
+</script>
+
+{% assign upload_button_id = 'upload-button-' | append: section_id %}
+{% assign open_popup_button_id = 'popup-open-btn-' | append: section_id %}
+
+{% if customer.id != blank %}
+  {% assign customer_id = 'gid://shopify/Customer/' | append: customer.id %}
+{% endif %}
+
+{% assign shop_cdn_name = 'https://cdn.shopify.com/s/files/1/0626/3416/4430/' %}
+
+{% assign product_variant_id = product.selected_or_first_available_variant.id %}
+{% assign product_image_url = product.selected_or_first_available_variant.image | image_url: 'master' %}
+
+{% assign target_image_url = shop_cdn_name | append: product_image_url %}
+{% assign print_image_url = shop_cdn_name | append: product.metafields.faceswap.print_image.value %}
+
+<face-swap-file-input-wrapper data-section-id="{{ section_id }}" class="file-input-wrapper-{{ section_id }} file-input-wrapper" data-product-variant-id="{{ product_variant_id }}" data-product-id="{{ product.id }}" data-customer-id="{{ customer_id }}" data-target-image-url="{{ target_image_url }}" data-print-image-url="{{ print_image_url }}" data-color="{{ current_product_selected_color | strip | downcase }}">
+  <div data-faceswap-popup class="file-input-wrapper__popup upload-popup">
+    <div class="upload-popup__header">
+      <button type="button" data-close-faceswap-popup class="upload-popup__close-btn">
+        {% render 'icon' with 'close', width: 32, height: 32 %}
+      </button>
+    </div>
+
+    <div class="upload-popup__body">
+      <div data-upload-body-inner class="upload-popup__body-inner">
+        <div data-popup-progress-bar-wrapper class="upload-popup__progress-container disabled">
+          <div class="upload-popup__progress-bar" data-progress-bar></div>
+        </div>
+
+        <div data-popup-content class="upload-popup__content">
+          <div data-image-wrapper class="upload-popup__image-wrapper">
+            <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/Good_Photo_3.png?v=1729159427" alt="Guidelines Image Upload">
+          </div>
+
+          <p class="upload-popup__description">Bitte lade unbedingt ein klares, nah aufgenommenes Foto hoch.</p>
+
+          <div class="upload-popup__generate-preview">
+            <div class="upload-popup__buttons">
+              {%- render 'button', id: upload_button_id, content: 'Bild hochladen', type: 'button', size: 'xl', disabled: false, secondary: false, subdued: false -%}
+            </div>
+
+            <input hidden accept="image/*" type="file" id="file-input-wrapper__input-{{ section_id }}" name="inputFile-{{ section_id }}">
+          </div>
+        </div>
+
+        <div data-help-popup-text id="upload-popup__help-text" class="upload-popup__help-text"></div>
+      </div>
+    </div>
+  </div>
+
+  {%- render 'button', id: open_popup_button_id, class: 'file-input-wrapper__popup-open-btn w-full', content: 'Bild hochladen', type: 'button', size: 'xl', disabled: false, subdued: false -%}
+
+  <div data-result-wrapper class="file-input-wrapper__result result-wrapper">
+    <div data-help-result-text class="result-wrapper__help-text"></div>
+    <div data-result-image-wrapper class="result-wrapper__image-wrapper"></div>
+  </div>
+</face-swap-file-input-wrapper>
+
+<style>
+  /* Additional styles to ensure a clean full-screen popup */
+  .upload-popup {
+    background-color: white;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    z-index: 1000000; /* Extremely high z-index to overcome any other elements */
+  }
+  
+  .upload-popup.open {
+    transform: translateX(0) !important;
+  }
+  
+  .upload-popup__header {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    z-index: 1000001;
+  }
+  
+  .upload-popup__body {
+    padding-top: 60px;
+  }
+  
+  /* Force-hide any overlay */
+  .file-input-wrapper__overlay,
+  [class*="overlay"] {
+    background-color: transparent !important;
+    opacity: 0 !important;
+    display: none !important;
+  }
+</style>

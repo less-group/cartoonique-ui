@@ -1,0 +1,56 @@
+{%- liquid
+  assign options = block.settings
+  assign text = options.text
+  assign url = options.url
+  assign btn_style = options.btn_style
+  assign custom_icon_image = options.custom_icon_image
+  assign icon = options.icon
+-%}
+
+{%- if text != blank -%}
+  <div class='product-button-block block-{{ block.id }}' {{ block.shopify_attributes }}>
+    {%- if btn_style == 'link' -%}
+      <a
+        class='product-button-block__text'
+        {% if url != blank %}
+          href='{{ url }}'
+        {% endif %}
+        aria-label='{{ text | strip_html | escape }}'
+      >
+        {%- if custom_icon_image != blank -%}
+          <img
+            {% render 'image-attributes',
+              image: custom_icon_image,
+              size: 'small',
+              class: 'product-button-block__icon'
+            %}
+          >
+        {%- elsif icon != 'none' -%}
+          {% render 'icon-pack', icon: icon, class: 'product-button-block__icon' %}
+        {%- endif -%}
+        {{ text }}
+      </a>
+    {%- else -%}
+      <a
+        class='btn btn--lg btn--{{ btn_style }} {% if btn_style == 'outline' %} btn--outline-with-particular-text-color{% endif %} product-button-block__btn'
+        {% if url != blank %}
+          href='{{ url }}'
+        {% endif %}
+        aria-label='{{ text | strip_html | escape }}'
+      >
+        {%- if custom_icon_image != blank -%}
+          <img
+            {% render 'image-attributes',
+              image: custom_icon_image,
+              size: 'small',
+              class: 'product-button-block__icon'
+            %}
+          >
+        {%- elsif icon != 'none' -%}
+          {% render 'icon-pack', icon: icon, class: 'product-button-block__icon' %}
+        {%- endif -%}
+        {{- text -}}
+      </a>
+    {%- endif -%}
+  </div>
+{%- endif -%}

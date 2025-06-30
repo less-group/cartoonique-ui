@@ -1,0 +1,418 @@
+{% comment %}
+  Aurora Theme - Pixar Face Transform Integration
+  
+  This snippet handles the integration of the Pixar face transformation feature 
+  with the Aurora theme's Add to Cart flow.
+{% endcomment %}
+
+{% assign product_has_transform = product.template_suffix contains 'with-faceswap' %}
+
+<div id="pixar-aurora-integration" style="margin: 10px 0;">
+  <style>
+    /* Ensure component visibility */
+    pixar-transform-file-input, 
+    face-swap-file-input-wrapper,
+    .file-input-wrapper, 
+    .file-input-wrapper__popup-open-btn {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    
+    /* Make popup fully visible and properly styled */
+    .file-input-wrapper__popup {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      background-color: rgba(0, 0, 0, 0.7) !important;
+      z-index: 9999 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+    }
+    
+    /* Style the popup content */
+    .file-input-wrapper__popup-content {
+      background-color: white !important;
+      padding: 20px !important;
+      border-radius: 8px !important;
+      max-width: 90% !important;
+      width: 500px !important;
+      max-height: 90% !important;
+      overflow-y: auto !important;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+    }
+    
+    /* Hide component area but keep it accessible */
+    #pixar-component-area {
+      min-height: 50px;
+      overflow: visible;
+      position: relative;
+      opacity: 0.001;
+    }
+    
+    /* Style for the dedicated upload button */
+    #pixar-upload-button {
+      display: block;
+      width: 100%;
+      margin-bottom: 15px;
+      padding: 15px 25px;
+      font-size: 16px;
+      font-weight: bold;
+      background-color: #4a7dbd;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    /* Debug panel styling */
+    #pixar-debug-panel {
+      display: none;
+      margin: 10px 0;
+      padding: 10px;
+      border: 1px dashed #ccc;
+      font-size: 12px;
+    }
+  </style>
+
+  <!-- Explicitly render component with proper visibility -->
+  <div id="pixar-component-area">
+    {% if settings.enable_pixar_transform %}
+      {% render 'pixar-transform-file-input', product: product, section_id: section.id, customer: customer %}
+    {% else %}
+      {% render 'face-swap-file-input', product: product, section_id: section.id, customer: customer %}
+    {% endif %}
+    
+    <div id="pixar-debug-panel">
+      <h4>Pixar Debug Info</h4>
+      <div id="pixar-debug-content"></div>
+      <div>
+        <p>Template: {{ product.template_suffix }}</p>
+        <p>Section ID: {{ section.id }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dedicated upload button for Aurora theme -->
+  <button type="button" id="pixar-upload-button">
+    📸 UPLOAD YOUR PHOTO
+  </button>
+
+  <script>
+    // Aurora theme - Pixar integration script
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Aurora Pixar integration script loaded for template: {{ product.template_suffix }}');
+      console.log('Section ID: {{ section.id }}');
+      
+      // Debug helper
+      const debug = {
+        enabled: true,
+        panel: document.getElementById('pixar-debug-panel'),
+        content: document.getElementById('pixar-debug-content'),
+        
+        log: function(message) {
+          if (!this.enabled) return;
+          console.log('🔄 AURORA PIXAR:', message);
+          
+          if (this.content) {
+            const item = document.createElement('div');
+            item.textContent = message;
+            this.content.appendChild(item);
+          }
+        },
+        
+        show: function() {
+          if (this.panel) this.panel.style.display = 'block';
+        }
+      };
+      
+      // Show debug panel during development
+      if (debug.enabled) {
+        debug.show();
+      }
+      
+      // State tracking
+      window.pixarTransformComplete = false;
+      
+      // Find components and form
+      const productForm = document.querySelector('form[action="/cart/add"]');
+      const addToCartButton = productForm ? productForm.querySelector('button[type="submit"]') : null;
+      const uploadButton = document.getElementById('pixar-upload-button');
+      
+      debug.log('Initial setup - Form found: ' + !!productForm + ', Button found: ' + !!addToCartButton);
+      
+      // Function to find Pixar component
+      function findPixarComponent() {
+        // First check global reference
+        if (window.pixarComponent) {
+          debug.log('Found component via global reference');
+          return window.pixarComponent;
+        }
+        
+        // Check in DOM
+        const components = [
+          document.querySelector('pixar-transform-file-input'),
+          document.querySelector('face-swap-file-input-wrapper')
+        ];
+        
+        for (const component of components) {
+          if (component) {
+            debug.log('Found component in DOM: ' + component.tagName);
+            window.pixarComponent = component;
+            window.pixarComponentReady = true;
+            return component;
+          }
+        }
+        
+        debug.log('No component found. Adding the component programmatically...');
+        
+        // If component not found, try to create one directly
+        try {
+          const componentArea = document.getElementById('pixar-component-area');
+          if (componentArea) {
+            const newComponent = document.createElement('pixar-transform-file-input');
+            newComponent.setAttribute('data-section-id', '{{ section.id }}');
+            newComponent.setAttribute('data-product-id', '{{ product.id }}');
+            newComponent.setAttribute('data-product-variant-id', '{{ product.selected_or_first_available_variant.id }}');
+            newComponent.setAttribute('class', 'file-input-wrapper-{{ section.id }} file-input-wrapper');
+            componentArea.appendChild(newComponent);
+            debug.log('Created new component programmatically');
+            window.pixarComponent = newComponent;
+            window.pixarComponentReady = true;
+            return newComponent;
+          }
+        } catch (error) {
+          debug.log('Error creating component: ' + error.message);
+        }
+        
+        return null;
+      }
+      
+      // Function to trigger file selection
+      function triggerImageUpload() {
+        debug.log('Triggering image upload');
+        
+        // Find component
+        const component = findPixarComponent();
+        if (!component) {
+          debug.log('ERROR: Could not find Pixar component');
+          return;
+        }
+        
+        // Check if component has native popup method and use it
+        if (typeof component.openPopup === 'function') {
+          debug.log('Using component\'s native openPopup method');
+          component.openPopup();
+          return;
+        }
+        
+        // If no openPopup method, try to find popup element and show it
+        const popup = document.querySelector('.file-input-wrapper__popup');
+        if (popup) {
+          debug.log('Found popup element, showing it');
+          popup.style.display = 'flex';
+          popup.style.visibility = 'visible';
+          popup.style.opacity = '1';
+          return;
+        }
+        
+        // Try to find file input
+        const fileInput = component.querySelector('input[type="file"]');
+        if (fileInput) {
+          debug.log('No popup method found, clicking file input directly');
+          fileInput.click();
+        } else {
+          debug.log('ERROR: Could not find file input in component');
+          
+          // Create a temporary file input as fallback
+          const tempInput = document.createElement('input');
+          tempInput.type = 'file';
+          tempInput.accept = 'image/*';
+          tempInput.style.display = 'none';
+          document.body.appendChild(tempInput);
+          
+          // Set up the change handler
+          tempInput.addEventListener('change', function(e) {
+            if (this.files && this.files.length > 0) {
+              const file = this.files[0];
+              debug.log('File selected: ' + file.name);
+              
+              // Try to use the image processing manager directly
+              if (window.imageProcessingManager && typeof window.imageProcessingManager.handleFileSelected === 'function') {
+                debug.log('Passing file to ImageProcessingManager');
+                window.imageProcessingManager.handleFileSelected({ target: { files: [file] } });
+                window.pixarTransformComplete = true;
+                updateButtonState();
+              }
+            }
+          });
+          
+          // Trigger click
+          tempInput.click();
+        }
+      }
+      
+      // Function to update upload button state
+      function updateButtonState() {
+        if (window.pixarTransformComplete) {
+          if (uploadButton) {
+            uploadButton.textContent = '✅ IMAGE UPLOADED - READY TO ADD TO CART';
+            uploadButton.style.backgroundColor = '#4CAF50';
+          }
+        }
+      }
+      
+      // Set up upload button click
+      if (uploadButton) {
+        uploadButton.addEventListener('click', function() {
+          debug.log('Upload button clicked');
+          triggerImageUpload();
+        });
+      }
+      
+      // Listen for successful transform
+      document.addEventListener('pixar-transform-complete', function(event) {
+        debug.log('Transform complete event received');
+        window.pixarTransformComplete = true;
+        updateButtonState();
+        debug.log('Transform complete, ready for cart submission');
+      });
+      
+      // Set up form submission interception
+      if (productForm) {
+        productForm.addEventListener('submit', function(event) {
+          debug.log('Form submit intercepted');
+          
+          if (!window.pixarTransformComplete) {
+            debug.log('Transform not complete, preventing submission');
+            event.preventDefault();
+            triggerImageUpload();
+            return false;
+          } else {
+            debug.log('Transform complete, allowing submission');
+          }
+        }, true); // Use capturing phase
+        
+        debug.log('Form submit interception set up');
+      }
+      
+      // Also intercept Add to Cart button click directly
+      if (addToCartButton) {
+        addToCartButton.addEventListener('click', function(event) {
+          debug.log('Add to Cart button clicked');
+          
+          if (!window.pixarTransformComplete) {
+            debug.log('Transform not complete, preventing click');
+            event.preventDefault();
+            event.stopPropagation();
+            
+            triggerImageUpload();
+            return false;
+          } else {
+            debug.log('Transform complete, allowing click');
+          }
+        }, true); // Use capturing phase
+        
+        debug.log('Add to Cart button interception set up');
+      }
+      
+      // Additional safety - monitor document for clicks on elements that might add to cart
+      document.addEventListener('click', function(event) {
+        // Check if the clicked element is a button inside the product form
+        if (event.target.tagName === 'BUTTON' && 
+            productForm && productForm.contains(event.target) &&
+            !window.pixarTransformComplete) {
+          
+          // Check if this looks like an add to cart button
+          const buttonText = event.target.textContent.toLowerCase();
+          if (buttonText.includes('add to cart') || 
+              buttonText.includes('add') || 
+              event.target.type === 'submit') {
+            
+            debug.log('Intercepted potential Add to Cart button click');
+            event.preventDefault();
+            event.stopPropagation();
+            
+            triggerImageUpload();
+            return false;
+          }
+        }
+      }, true); // Use capturing phase
+      
+      // Create force visibility function
+      function forceComponentVisibility() {
+        const components = document.querySelectorAll('pixar-transform-file-input, face-swap-file-input-wrapper');
+        debug.log('Forcing visibility for ' + components.length + ' components');
+        
+        components.forEach(function(component) {
+          component.style.display = 'block';
+          component.style.visibility = 'visible';
+          component.style.opacity = '1';
+          debug.log('Forced visibility for: ' + component.tagName);
+        });
+        
+        // Also ensure popup visibility
+        const popups = document.querySelectorAll('.file-input-wrapper__popup');
+        if (popups.length > 0) {
+          debug.log('Found ' + popups.length + ' popups, ensuring visibility when needed');
+        }
+        
+        // Also check for file inputs
+        const fileInputs = document.querySelectorAll('input[type="file"]');
+        debug.log('Found ' + fileInputs.length + ' file inputs');
+      }
+      
+      // Function to debug component status
+      function debugComponentStatus() {
+        debug.log('------------- COMPONENT STATUS CHECK -------------');
+        debug.log('Global pixarComponent: ' + !!window.pixarComponent);
+        debug.log('Global pixarComponentReady: ' + !!window.pixarComponentReady);
+        debug.log('Transform complete: ' + window.pixarTransformComplete);
+        
+        const component = findPixarComponent();
+        debug.log('Component found: ' + !!component);
+        
+        if (component) {
+          debug.log('Component tag: ' + component.tagName);
+          debug.log('Component has openPopup method: ' + (typeof component.openPopup === 'function'));
+          debug.log('Component visible: ' + (component.offsetHeight > 0));
+        }
+        
+        const popups = document.querySelectorAll('.file-input-wrapper__popup');
+        debug.log('Popups on page: ' + popups.length);
+        
+        const fileInputs = document.querySelectorAll('input[type="file"]');
+        debug.log('File inputs on page: ' + fileInputs.length);
+        
+        debug.log('--------------------------------------------------');
+      }
+      
+      // Run component check and force visibility
+      setTimeout(forceComponentVisibility, 500);
+      setTimeout(debugComponentStatus, 1000);
+      
+      // Final initialization
+      debug.log('Aurora Pixar integration initialized for ' + window.location.pathname);
+      
+      // Add a debug button for direct testing
+      const debugButton = document.createElement('button');
+      debugButton.textContent = 'Debug Pixar Component';
+      debugButton.style.margin = '10px 0';
+      debugButton.style.padding = '5px 10px';
+      debugButton.addEventListener('click', function() {
+        debugComponentStatus();
+        forceComponentVisibility();
+      });
+      
+      const debugPanel = document.getElementById('pixar-debug-panel');
+      if (debugPanel) {
+        debugPanel.appendChild(debugButton);
+      }
+    });
+  </script>
+</div> 

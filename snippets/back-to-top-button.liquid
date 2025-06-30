@@ -1,0 +1,9 @@
+<back-to-top-button>
+  <button
+    class='back-to-top-button back-to-top-button--{{ settings.back_to_top_button_position }}-position unstyled-button'
+    data-back-to-top-button
+    aria-label='{{ 'general.back_to_top_button.screen_reader.aria_label' | t }}'
+  >
+    {% render 'icon', icon_name: 'back-to-top-icon', class: 'back-to-top-button__icon' %}
+  </button>
+</back-to-top-button>

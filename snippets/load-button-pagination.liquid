@@ -1,0 +1,32 @@
+<pagination-component
+  class='load-button-pagination {{ class }} {% if settings.enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+  {% if settings.enable_content_slide_in %}
+    style='--gsc-animation-order: 1;'
+  {% endif %}
+  data-target='{{ target }}'
+  data-container-id='{{ container_id }}'
+>
+  {%- if paginate.next -%}
+    {%- liquid
+      assign current_visible_product_count = current_size | times: paginate.current_page
+      assign items_on_percent = paginate.items | divided_by: 100.0
+      assign loaded_items = paginate.page_size | times: paginate.current_page
+      assign progress_percent = loaded_items | divided_by: items_on_percent
+    -%}
+    <div class='load-button-pagination__count'>
+      {{
+        'general.load_button_pagination.store_front.results_label'
+        | t: current_count: current_visible_product_count, count: all_count
+      }}
+    </div>
+    <div class='load-button-pagination__progress' style='--gsc-pagination-progress: {{ progress_percent }}%'></div>
+    <pagination-load-button
+      class='btn btn--outline load-button-pagination__btn'
+      tabindex='0'
+      data-url='{{ paginate.next.url }}'
+    >
+      <span>{{ 'general.load_button_pagination.store_front.button_label' | t }}</span>
+      <div class='loading-spinner btn__loading-spinner'></div>
+    </pagination-load-button>
+  {%- endif -%}
+</pagination-component>

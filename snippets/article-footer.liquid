@@ -1,0 +1,84 @@
+{%- liquid
+  assign options = block.settings
+  assign show_author = options.show_author
+  assign show_date = options.show_date
+  assign show_share = options.show_share
+  assign show_next_and_previous_posts = options.show_next_and_previous_posts
+  assign show_comment_count = options.show_comment_count
+
+  assign enable_content_slide_in = settings.enable_content_slide_in
+-%}
+
+{% if show_author or show_date or show_share or show_next_and_previous_posts or show_comment_count %}
+  <div
+    class='container container--{{ section.settings.container_size }} container--with-aside-paddings {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+    {% if enable_content_slide_in %}
+      style='--gsc-animation-order: {{index}};'
+    {% endif %}
+    {{ block.shopify_attributes }}
+  >
+    {% if show_author or show_date or show_share or show_comment_count %}
+      <div class='article-footer-panel'>
+        <div class='article-meta body-color article-footer-panel__article-meta'>
+          {% if show_author and article.author != blank %}
+            <span class='article-meta__item'>{{ article.author }}</span>
+          {% endif %}
+          {% if show_date and article.published_at != blank %}
+            <span class='article-meta__item'>{{ article.published_at | date: format: 'abbreviated_date' }}</span>
+          {% endif %}
+          {% if show_comment_count %}
+            <span class='article-meta__item'>
+              {{- 'blog_post.store_front.comments_count' | t: count: article.comments_count -}}
+            </span>
+          {% endif %}
+        </div>
+        {% if show_share %}
+          {% assign value_to_copy = shop.url | append: article.url %}
+          {% render 'share',
+            value_to_copy: value_to_copy,
+            id: 'MainArticleFooterShare',
+            btn_class: 'article-footer-panel__share-btn'
+          %}
+        {% endif %}
+      </div>
+    {% endif %}
+    {% if show_next_and_previous_posts %}
+      <div class='article-footer-posts'>
+        {% if blog.previous_article %}
+          <div class='article-footer-posts_post article-footer-posts_post--prev'>
+            <a
+              class='link link--reverse article-footer-posts__post-link'
+              {% if blog.previous_article.url != blank %}
+                href='{{ blog.previous_article.url }}'
+              {% endif %}
+              aria-label='{{ 'blog_post.screen_reader.prev_post_link' | t }}'
+            >
+              {% render 'icon', icon_name: 'link-chevron', class: 'link__chevron x-flip' %}
+              <span class='link-parent-for-hover'>
+                <span class='link__text'>{{ 'blog_post.store_front.prev_post_link' | t }}</span>
+              </span>
+            </a>
+            <div class='article-footer-posts__post-title body-color'>{{ blog.previous_article.title }}</div>
+          </div>
+        {% endif %}
+        {% if blog.next_article %}
+          <div class='article-footer-posts_post article-footer-posts_post--next'>
+            <a
+              class='link article-footer-posts__post-link'
+              {% if blog.next_article.url != blank %}
+                href='{{ blog.next_article.url }}'
+              {% endif %}
+              aria-label='{{ 'blog_post.screen_reader.next_post_link' | t }}'
+            >
+              <span class='link-parent-for-hover'>
+                <span class='link__text'>{{ 'blog_post.store_front.next_post_link' | t }}</span>
+              </span>
+              {% render 'icon', icon_name: 'link-chevron', class: 'link__chevron' %}
+            </a>
+            <div class='article-footer-posts__post-title body-color'>{{ blog.next_article.title }}</div>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+{% endif %}

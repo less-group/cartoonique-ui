@@ -1,0 +1,45 @@
+{% layout none %}
+
+<!doctype html>
+<html lang='{{ request.locale.iso_code }}'>
+  <head>
+    <script src='{{ 'vendor/qrcode.js' | shopify_asset_url }}' defer></script>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width,initial-scale=1'>
+    <meta name='theme-color' content='{{ settings.default_color_scheme }}'>
+    <meta name='description' content='{{ 'general.gift_page.screen_reader.subtext' | t }}'>
+    <link rel='canonical' href='{{ canonical_url }}'>
+    <link rel='preconnect' href='https://cdn.shopify.com' crossorigin>
+    <link rel='preconnect' href='https://fonts.shopifycdn.com' crossorigin>
+    {%- unless settings.body_font_family.system? -%}
+      <link rel='prefetch' as='font' href='{{ settings.body_font_family | font_url }}' type='font/woff2' crossorigin>
+    {%- endunless -%}
+    {%- unless settings.heading_font_family.system? -%}
+      <link rel='prefetch' as='font' href='{{ settings.heading_font_family | font_url }}' type='font/woff2' crossorigin>
+    {%- endunless -%}
+    {%- if settings.favicon != blank -%}
+      <link rel='icon' type='image/png' href='{{ settings.favicon | image_url: width: '32', height: '32' }}'>
+    {%- endif -%}
+
+    {%- assign formatted_initial_value = gift_card.initial_value | money_without_trailing_zeros | strip_html -%}
+
+    <title>{{ 'general.gift_page.store_front.title' | t: value: formatted_initial_value, shop: shop.name }}</title>
+
+    {% render 'fonts' %}
+    {% render 'css-variables' %}
+
+    {{ 'bundle.js' | asset_url | preload_tag: as: 'script' }}
+    {{ 'bundle.css' | asset_url | stylesheet_tag: preload: true }}
+
+    {{ content_for_header }}
+  </head>
+
+  <body class='color-{{ settings.default_color_scheme }} round-level-{{ settings.round_level }} {% if settings.round_level != "0" %} round-style {% endif %}'>
+    <main>
+      {% section 'gift-card-page' %}
+    </main>
+
+    <script src='{{ 'bundle.js' | asset_url }}' defer='defer'></script>
+  </body>
+</html>

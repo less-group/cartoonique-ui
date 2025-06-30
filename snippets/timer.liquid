@@ -1,0 +1,100 @@
+{% liquid
+  assign timerId = timerId
+  assign options = block.settings
+  assign color_scheme = options.color_scheme
+  assign background_type = options.background_type
+  assign background_style = options.background_style
+  assign enable_separators = options.enable_separators
+  assign captitalize_unit_labels = options.captitalize_unit_labels
+  assign hide_on_complete = options.hide_on_complete
+  assign mode = options.mode
+  assign evergreen_unit = options.evergreen_unit
+  assign evergreen_value = options.evergreen_value
+  assign evergreen_on_complete = options.evergreen_on_complete
+  assign year = options.year
+  assign month = options.month
+  assign day = options.day
+  assign hour = options.hour
+  assign minute = options.minute
+  assign desktop_width = options.timer_desktop_width
+%}
+
+{% if ensure_width %}
+  {% capture css %}
+    {% style %}
+        .block-{{ block.id }} {
+          --gsc-timer-width: 100%;
+        }
+
+        @media {% render 'media-queries', screen: 'md' %} {
+          .block-{{ block.id }} {
+            --gsc-timer-width: {{ desktop_width }}%;
+          }
+        }
+    {% endstyle %}
+  {% endcapture %}
+  {% render 'inline-css-minifier', css: css %}
+{% endif %}
+
+<countdown-timer
+  class='timer__container hidden'
+  id='{{timer_id}}'
+  data-block-id='{{block.id}}'
+  data-section-id='{{section_id}}'
+  data-mode='{{mode}}'
+  data-year='{{year}}'
+  data-month='{{month}}'
+  data-day='{{day}}'
+  data-hour='{{hour}}'
+  data-minute='{{minute}}'
+  data-evergreen-unit='{{evergreen_unit}}'
+  data-evergreen-value='{{evergreen_value}}'
+  data-evergreen-on-complete='{{evergreen_on_complete}}'
+  data-hide-on-complete='{{hide_on_complete}}'
+  {{ attrs }}
+>
+  <svg
+    class='timer__svg'
+    height='100%'
+    viewBox='0 0 500 {% if enable_separators %}108{% else %}118{% endif %}'
+    preserveAspectRatio='xMinYMin meet'
+  >
+    <foreignObject width="99.9%" height="100%" xmlns="http://www.w3.org/1999/xhtml">
+      <div class='timer__wrapper timer--with-background-{{background_type}} timer--with-background-{{background_type}}-and-{{background_style}} color-{{color_scheme}} {% if enable_separators %} timer--with-colon {% endif %}'>
+        <div class='timer__unit'>
+          <div class='timer__unit-value' data-timer-days>00</div>
+            <div class='timer__unit-label {% if captitalize_unit_labels %} timer--capitalize {% endif %}' data-timer-days-label>
+              {{ 'countdown_timer.store_front.days' | t }}
+            </div>
+        </div>
+        {% if enable_separators %}
+          <div class="timer__separator"></div>
+        {% endif %}
+        <div class='timer__unit'>
+          <div class='timer__unit-value' data-timer-hours>00</div>
+            <div class='timer__unit-label {% if captitalize_unit_labels %} timer--capitalize {% endif %}' data-timer-hours-label>
+              {{ 'countdown_timer.store_front.hours' | t }}
+            </div>
+        </div>
+        {% if enable_separators %}
+          <div class="timer__separator"></div>
+        {% endif %}
+        <div class='timer__unit'>
+          <div class='timer__unit-value' data-timer-minutes>00</div>
+            <div class='timer__unit-label {% if captitalize_unit_labels %} timer--capitalize {% endif %}' data-timer-minutes-label>
+              {{ 'countdown_timer.store_front.minutes' | t }}
+            </div>
+        </div>
+        {% if enable_separators %}
+          <div class="timer__separator"></div>
+        {% endif %}
+        <div class='timer__unit'>
+          <div class='timer__unit-value' data-timer-seconds>00</div>
+            <div class='timer__unit-label {% if captitalize_unit_labels %} timer--capitalize {% endif %}' data-timer-seconds-label>
+              {{ 'countdown_timer.store_front.seconds' | t }}
+            </div>
+        </div>
+      </div>
+    </foreignObject>
+  </svg>
+</countdown-timer>

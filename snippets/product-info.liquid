@@ -1,0 +1,70 @@
+<product-info
+  class='product__info-wrapper {% if settings.enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+  {% if settings.enable_content_slide_in %}
+    style='--gsc-animation-order: 2;'
+    data-remove-animation-class
+  {% endif %}
+  id='ProductInfoWrapper-{{ product.id }}-{{ sectionId }}'
+  {%- if block_layout contains 'column' -%}
+    data-with-scrolltrack
+  {%- endif -%}
+>
+  <div class='product__info'>
+    {%- liquid
+      for block in section.blocks
+        case block.type
+          when '@app'
+            render 'product-app-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'breadcrumbs'
+            render 'product-breadcrumbs-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'vendor'
+            render 'product-vendor-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'title'
+            render 'product-title-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'sku'
+            render 'product-sku-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'divider'
+            render 'product-divider-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'inventory_status'
+            render 'product-stock-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'price'
+            render 'product-price-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'description'
+            render 'product-description-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'custom_liquid'
+            render 'product-liquid-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'collapsible_row'
+            render 'product-content-tab-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'quantity_selector'
+            render 'product-quantity-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'information_tag'
+            render 'product-information-tag-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'product_drawer_with_tabs'
+            render 'product-drawer-with-tabs', product: product, section: section, block: block, sectionId: sectionId
+          when 'share'
+            render 'product-share-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'variant_picker'
+            render 'product-variant-picker-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'buy_buttons'
+            render 'product-form-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'button'
+            render 'product-button-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'complementary_products'
+            render 'product-related-products-block', product: product, section: section, block: block, sectionId: sectionId, is_complementary: true
+          when 'related_products'
+            render 'product-related-products-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'rating'
+            render 'product-rating-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'badges'
+            render 'product-badges-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'countdown'
+            render 'product-timer-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'siblings'
+            render 'product-siblings-block', product: product, section: section, block: block, sectionId: sectionId
+          when 'promo_banner'
+            render 'in-cart-banner', section: section, block: block, class: 'product-promo-banner'
+        endcase
+      endfor
+    -%}
+  </div>
+</product-info>
