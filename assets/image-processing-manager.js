@@ -455,21 +455,20 @@ class ImageProcessingManager {
         this.originalImageDataUrl.length
       );
 
-      // Hide the instructions popup if it's visible
-      const instructionsPopup = document.getElementById(
-        "pixar-instructions-popup"
-      );
-      if (instructionsPopup) {
-        instructionsPopup.style.display = "none";
+      // Hide the instructions popup if it's visible (but NOT for pet templates)
+      if (!window?.isPetTemplate) {
+        const instructionsPopup = document.getElementById(
+          "pixar-instructions-popup"
+        );
+        if (instructionsPopup) {
+          instructionsPopup.style.display = "none";
+        }
       }
 
       if (window?.isPetTemplate) {
         this.cropComplete = true;
-        // Show loading popup while processing the final image
-        const loadingPopup = document.getElementById("pixar-loading-popup");
-        if (loadingPopup) {
-          loadingPopup.style.display = "block";
-        }
+        // Don't show loading popup immediately - show preview first
+        this.showPetImagePreview();
       } else {
         // Show the image cropper immediately after upload
         this.showImageCropper();
@@ -1289,6 +1288,162 @@ class ImageProcessingManager {
     }
 
     console.log("Subtitle field functionality added to text manager");
+  }
+
+  /**
+   * Show pet image preview with color selection and generate button
+   * Called after image is uploaded but before processing starts
+   */
+  showPetImagePreview() {
+    console.log("🐕 Showing pet image preview with color selection");
+    
+    // Find the instructions popup
+    const instructionsPopup = document.getElementById("pixar-instructions-popup");
+    if (!instructionsPopup) {
+      console.error("Instructions popup not found");
+      return;
+    }
+
+    // Find the popup content container
+    const popupContent = instructionsPopup.querySelector("div > div");
+    if (!popupContent) {
+      console.error("Popup content container not found");
+      return;
+    }
+
+    // Create image preview container
+    const imagePreviewContainer = document.createElement("div");
+    imagePreviewContainer.id = "pet-image-preview-container";
+    imagePreviewContainer.style.cssText = `
+      text-align: center;
+      margin: 20px 0;
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      border: 2px solid #e9ecef;
+    `;
+
+    // Create image preview
+    const imagePreview = document.createElement("img");
+    imagePreview.id = "pet-image-preview";
+    imagePreview.src = this.originalImageDataUrl;
+    imagePreview.alt = "Your uploaded pet image";
+    imagePreview.style.cssText = `
+      max-width: 200px;
+      max-height: 200px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      margin-bottom: 15px;
+    `;
+
+    // Create preview title
+    const previewTitle = document.createElement("h3");
+    previewTitle.textContent = "Your Uploaded Image";
+    previewTitle.style.cssText = `
+      margin: 0 0 15px 0;
+      font-size: 18px;
+      color: #333;
+    `;
+
+    // Add elements to preview container
+    imagePreviewContainer.appendChild(previewTitle);
+    imagePreviewContainer.appendChild(imagePreview);
+
+    // Find the upload button and replace it with generate button
+    const uploadButton = instructionsPopup.querySelector("#pixar-upload-button");
+    if (uploadButton) {
+      uploadButton.textContent = "GENERATE IMAGE";
+      uploadButton.id = "pixar-generate-button";
+      uploadButton.style.backgroundColor = "#28a745"; // Green color
+      uploadButton.onclick = null; // Remove old click handler
+      
+      // Add new click handler for generate button
+      uploadButton.addEventListener("click", () => {
+        this.handlePetGenerateClick();
+      });
+    }
+
+    // Insert image preview after the instructions but before the color selector
+    const colorSelector = instructionsPopup.querySelector("#pet-background-color-selector");
+    if (colorSelector) {
+      colorSelector.parentNode.insertBefore(imagePreviewContainer, colorSelector);
+    } else {
+      // Fallback: insert before the upload button
+      const buttonContainer = instructionsPopup.querySelector("#pixar-upload-buttons");
+      if (buttonContainer) {
+        buttonContainer.parentNode.insertBefore(imagePreviewContainer, buttonContainer);
+      }
+    }
+
+    // Update the main title text
+    const mainTitle = instructionsPopup.querySelector("h2");
+    if (mainTitle) {
+      mainTitle.textContent = "CHOOSE YOUR BACKGROUND COLOR";
+    }
+
+    // Update instructions text
+    const instructionsText = instructionsPopup.querySelector("p");
+    if (instructionsText) {
+      instructionsText.textContent = "Your image looks great! Now choose a background color and click generate.";
+    }
+
+    // Hide the example images section since we now show the actual uploaded image
+    const examplesContainer = instructionsPopup.querySelector("#examples-container");
+    if (examplesContainer) {
+      examplesContainer.style.display = "none";
+    }
+
+    console.log("🐕 Pet image preview updated successfully");
+  }
+
+  /**
+   * Handle when the generate button is clicked for pet templates
+   */
+  handlePetGenerateClick() {
+    console.log("🐕 Generate button clicked for pet template");
+    
+    // Validate that a color is selected
+    const selectedColor = document.querySelector('input[name="petBackgroundColor"]:checked');
+    if (!selectedColor) {
+      alert("Please select a background color before generating your image.");
+      return;
+    }
+
+    // Update the global color state
+    window.petBackgroundColor = selectedColor.value;
+    console.log("🐕 Selected background color:", window.petBackgroundColor);
+
+    // Hide the instructions popup
+    const instructionsPopup = document.getElementById("pixar-instructions-popup");
+    if (instructionsPopup) {
+      instructionsPopup.style.display = "none";
+    }
+
+    // Show loading popup
+    const loadingPopup = document.getElementById("pixar-loading-popup");
+    if (loadingPopup) {
+      loadingPopup.style.display = "block";
+      document.body.style.overflow = "hidden";
+    }
+
+    // Start the image processing
+    console.log("🐕 Starting pet image processing with background color:", window.petBackgroundColor);
+    
+    // Send the image to Railway for processing
+    this.sendImageToRailway(this.originalFile).then(() => {
+      console.log("🐕 Pet image processing started successfully");
+    }).catch((error) => {
+      console.error("🐕 Error starting pet image processing:", error);
+      
+      // Hide loading popup on error
+      if (loadingPopup) {
+        loadingPopup.style.display = "none";
+        document.body.style.overflow = "";
+      }
+      
+      // Show error message
+      alert("There was an error processing your image. Please try again.");
+    });
   }
 
   /**
@@ -4211,7 +4366,7 @@ class ImageProcessingManager {
             spaceBetweenWatermarks: 100,
           },
         };
-
+        
         // Add background color for pet templates
         if (window?.isPetTemplate && window?.petBackgroundColor) {
           payload.backgroundColor = window.petBackgroundColor;
