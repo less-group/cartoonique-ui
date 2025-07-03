@@ -138,6 +138,30 @@ console.log('API Payload:', payload);
 5. Verify color selector is visible and usable
 6. Test touch interactions
 
+### Test 5: Image Replacement Functionality
+1. Navigate to pet product page
+2. Click "Upload Photo" and select a dog image
+3. Verify image preview appears with title "Your Uploaded Image"
+4. Check helper text: "Click on the image to upload a different one"
+5. Hover over image - should show "Click to Change Image" overlay
+6. Click on the image - should trigger file selection dialog
+7. Select a different dog image
+8. Verify image preview updates with new image
+9. Test with invalid file (non-image) - should show error message
+10. Test with oversized file (>10MB) - should show size error
+11. Verify state is reset after replacement (console check)
+
+### Test 6: Image Replacement Error Handling
+```javascript
+// Test invalid file type
+const textFile = new File(['test'], 'test.txt', { type: 'text/plain' });
+// Should show: "Please select a valid image file."
+
+// Test oversized file
+const largeFile = new File(['x'.repeat(11*1024*1024)], 'large.jpg', { type: 'image/jpeg' });
+// Should show: "File size is too large. Please select an image smaller than 10MB."
+```
+
 ## 🐛 Debugging Guide
 
 ### Common Issues & Solutions
@@ -165,6 +189,21 @@ console.log('Current color:', window.petBackgroundColor);
 console.log('Is pet template:', window.isPetTemplate);
 ```
 
+#### Image Replacement Not Working
+```javascript
+// Debug image replacement:
+console.log('Image wrapper exists:', !!document.querySelector('#pet-image-wrapper'));
+console.log('Image preview exists:', !!document.querySelector('#pet-image-preview'));
+console.log('Replacement input exists:', !!document.querySelector('#pet-image-replacement-input'));
+console.log('Image overlay exists:', !!document.querySelector('#pet-image-overlay'));
+
+// Check event listeners
+const wrapper = document.querySelector('#pet-image-wrapper');
+if (wrapper) {
+  console.log('Wrapper has click listener:', wrapper.onclick !== null);
+}
+```
+
 ### Console Commands for Testing
 ```javascript
 // Force set pet template mode
@@ -182,6 +221,16 @@ document.dispatchEvent(event);
 // Run specific test phases
 window.petBackgroundColorTests.PetBackgroundColorTests.testUIComponents();
 window.petBackgroundColorTests.PetBackgroundColorTests.testStateManagement();
+
+// Test image replacement functionality
+window.petBackgroundColorTests.PetBackgroundColorTests.testImageReplacement();
+window.petBackgroundColorTests.PetBackgroundColorTests.testImageReplacementErrorHandling();
+
+// Manually trigger image replacement
+const imageWrapper = document.querySelector('#pet-image-wrapper');
+if (imageWrapper) {
+  imageWrapper.click(); // Should open file dialog
+}
 ```
 
 ## 🔍 Shopify-Specific Testing
@@ -252,6 +301,15 @@ Overall Status: PASS (16/16 tests - 100%)
 3. Uploads image via mobile camera
 4. Completes purchase on mobile
 
+### Scenario 4: Image Replacement Workflow
+1. User uploads initial pet image
+2. Selects blue background color
+3. Clicks on image preview to replace it
+4. Selects a different pet image
+5. Verifies new image appears in preview
+6. Confirms background color selection is preserved
+7. Clicks "Generate Image" successfully
+
 ## 📈 Performance Benchmarks
 - Color selector rendering: < 100ms
 - State change response: < 50ms  
@@ -268,6 +326,10 @@ Overall Status: PASS (16/16 tests - 100%)
 - [ ] Performance benchmarks achieved
 - [ ] Error handling validated
 - [ ] Production API integration tested
+- [ ] Image replacement functionality tested
+- [ ] Hover effects working on all devices
+- [ ] File validation error messages displaying
+- [ ] State reset working after image replacement
 
 ---
 

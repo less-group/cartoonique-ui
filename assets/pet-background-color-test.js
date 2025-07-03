@@ -488,3 +488,268 @@
   };
 
 })(); 
+
+/**
+ * Test image replacement functionality
+ */
+function testImageReplacement() {
+  console.log("🧪 Testing image replacement functionality...");
+  
+  try {
+    // 1. Setup initial state
+    setupTestEnvironment();
+    
+    // 2. Upload initial image
+    const initialFile = createTestImageFile("initial-dog.jpg");
+    const fileInput = document.querySelector('#pixar-file-input');
+    if (!fileInput) {
+      throw new Error("File input not found");
+    }
+    
+    // Simulate file selection
+    Object.defineProperty(fileInput, 'files', {
+      value: [initialFile],
+      writable: false
+    });
+    
+    // Trigger file selection
+    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    
+    // Wait for image processing
+    setTimeout(() => {
+      try {
+        // 3. Verify image preview is created
+        const imagePreview = document.getElementById('pet-image-preview');
+        const imageWrapper = document.getElementById('pet-image-wrapper');
+        const imageOverlay = document.getElementById('pet-image-overlay');
+        const replacementInput = document.getElementById('pet-image-replacement-input');
+        const helperText = document.querySelector('p:contains("Click on the image to upload a different one")');
+        
+        if (!imagePreview || !imageWrapper || !imageOverlay || !replacementInput) {
+          throw new Error("Image replacement elements not found");
+        }
+        
+        // 4. Test hover effects
+        console.log("🧪 Testing hover effects...");
+        
+        // Simulate mouse enter
+        const mouseEnterEvent = new MouseEvent('mouseenter', { bubbles: true });
+        imageWrapper.dispatchEvent(mouseEnterEvent);
+        
+        // Check overlay visibility
+        const overlayOpacity = window.getComputedStyle(imageOverlay).opacity;
+        if (overlayOpacity !== '1') {
+          throw new Error("Overlay should be visible on hover");
+        }
+        
+        // Check image scale
+        const imageTransform = window.getComputedStyle(imagePreview).transform;
+        if (!imageTransform.includes('scale(1.05)')) {
+          console.warn("Image scale effect may not be working correctly");
+        }
+        
+        // Simulate mouse leave
+        const mouseLeaveEvent = new MouseEvent('mouseleave', { bubbles: true });
+        imageWrapper.dispatchEvent(mouseLeaveEvent);
+        
+        // Check overlay is hidden
+        setTimeout(() => {
+          const overlayOpacityAfter = window.getComputedStyle(imageOverlay).opacity;
+          if (overlayOpacityAfter !== '0') {
+            throw new Error("Overlay should be hidden after mouse leave");
+          }
+          
+          // 5. Test image replacement
+          console.log("🧪 Testing image replacement...");
+          
+          // Create replacement image
+          const replacementFile = createTestImageFile("replacement-dog.jpg");
+          
+          // Store original image src
+          const originalSrc = imagePreview.src;
+          
+          // Simulate click on image wrapper
+          const clickEvent = new MouseEvent('click', { bubbles: true });
+          imageWrapper.dispatchEvent(clickEvent);
+          
+          // Verify file input was triggered (this is hard to test directly)
+          // So we'll simulate the file selection directly
+          Object.defineProperty(replacementInput, 'files', {
+            value: [replacementFile],
+            writable: false
+          });
+          
+          // Trigger change event
+          replacementInput.dispatchEvent(new Event('change', { bubbles: true }));
+          
+          // Wait for image processing
+          setTimeout(() => {
+            try {
+              // 6. Verify image was replaced
+              const newSrc = imagePreview.src;
+              if (newSrc === originalSrc) {
+                throw new Error("Image should have been replaced");
+              }
+              
+              // 7. Verify state was reset
+              const imageManager = window.imageProcessingManager;
+              if (imageManager) {
+                if (imageManager.cropComplete !== false) {
+                  throw new Error("cropComplete should be reset to false");
+                }
+                if (imageManager.textProcessingComplete !== false) {
+                  throw new Error("textProcessingComplete should be reset to false");
+                }
+                if (imageManager.transformationComplete !== false) {
+                  throw new Error("transformationComplete should be reset to false");
+                }
+                if (imageManager.stylizedImageUrl !== null) {
+                  throw new Error("stylizedImageUrl should be reset to null");
+                }
+              }
+              
+              console.log("✅ Image replacement test passed!");
+              return true;
+              
+            } catch (error) {
+              console.error("❌ Image replacement test failed:", error);
+              return false;
+            }
+          }, 100);
+          
+        }, 100);
+        
+      } catch (error) {
+        console.error("❌ Image replacement test failed:", error);
+        return false;
+      }
+    }, 500);
+    
+  } catch (error) {
+    console.error("❌ Image replacement test failed:", error);
+    return false;
+  }
+}
+
+/**
+ * Test image replacement error handling
+ */
+function testImageReplacementErrorHandling() {
+  console.log("🧪 Testing image replacement error handling...");
+  
+  try {
+    // Setup test environment
+    setupTestEnvironment();
+    
+    // Create invalid files for testing
+    const invalidFiles = [
+      { name: 'test.txt', type: 'text/plain', description: 'non-image file' },
+      { name: 'large.jpg', type: 'image/jpeg', size: 11 * 1024 * 1024, description: 'oversized image' }
+    ];
+    
+    let testsPassed = 0;
+    
+    invalidFiles.forEach((fileData, index) => {
+      setTimeout(() => {
+        try {
+          // Create test file
+          const testFile = new File(['test content'], fileData.name, { 
+            type: fileData.type,
+            size: fileData.size || 1024
+          });
+          
+          // Get replacement input
+          const replacementInput = document.getElementById('pet-image-replacement-input');
+          if (!replacementInput) {
+            throw new Error("Replacement input not found");
+          }
+          
+          // Mock alert to capture error messages
+          const originalAlert = window.alert;
+          let alertMessage = '';
+          window.alert = (message) => {
+            alertMessage = message;
+          };
+          
+          // Simulate file selection
+          Object.defineProperty(replacementInput, 'files', {
+            value: [testFile],
+            writable: false
+          });
+          
+          // Trigger change event
+          replacementInput.dispatchEvent(new Event('change', { bubbles: true }));
+          
+          // Verify appropriate error was shown
+          if (fileData.type !== 'image/jpeg' && fileData.type !== 'image/png') {
+            if (!alertMessage.includes('valid image file')) {
+              throw new Error(`Expected invalid file type error for ${fileData.description}`);
+            }
+          } else if (fileData.size > 10 * 1024 * 1024) {
+            if (!alertMessage.includes('too large')) {
+              throw new Error(`Expected file size error for ${fileData.description}`);
+            }
+          }
+          
+          // Restore original alert
+          window.alert = originalAlert;
+          
+          console.log(`✅ Error handling test passed for ${fileData.description}`);
+          testsPassed++;
+          
+          if (testsPassed === invalidFiles.length) {
+            console.log("✅ All image replacement error handling tests passed!");
+          }
+          
+        } catch (error) {
+          console.error(`❌ Error handling test failed for ${fileData.description}:`, error);
+        }
+      }, index * 100);
+    });
+    
+  } catch (error) {
+    console.error("❌ Image replacement error handling test failed:", error);
+    return false;
+  }
+}
+
+// Update runAllTests function to include new tests
+function runAllTests() {
+  console.log("🧪 Running all pet background color tests...");
+  
+  const tests = [
+    testColorSelectorExists,
+    testColorSelectorFunctionality,
+    testColorSelectorMobile,
+    testColorSelectorAccessibility,
+    testImagePreviewFlow,
+    testGenerateButtonFunctionality,
+    testImageReplacement,
+    testImageReplacementErrorHandling,
+    testAPIIntegration,
+    testErrorHandling,
+    testPerformance
+  ];
+  
+  let passed = 0;
+  let failed = 0;
+  
+  tests.forEach((test, index) => {
+    setTimeout(() => {
+      try {
+        if (test()) {
+          passed++;
+        } else {
+          failed++;
+        }
+        
+        if (index === tests.length - 1) {
+          console.log(`🧪 Test Summary: ${passed} passed, ${failed} failed`);
+        }
+      } catch (error) {
+        console.error(`❌ Test ${test.name} threw an error:`, error);
+        failed++;
+      }
+    }, index * 100);
+  });
+} 

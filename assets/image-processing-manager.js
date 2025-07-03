@@ -1330,6 +1330,16 @@ class ImageProcessingManager {
       border: 2px solid #e9ecef;
     `;
 
+    // Create image preview container wrapper for click functionality
+    const imageWrapper = document.createElement("div");
+    imageWrapper.id = "pet-image-wrapper";
+    imageWrapper.style.cssText = `
+      position: relative;
+      display: inline-block;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    `;
+
     // Create image preview
     const imagePreview = document.createElement("img");
     imagePreview.id = "pet-image-preview";
@@ -1341,20 +1351,89 @@ class ImageProcessingManager {
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
       margin-bottom: 15px;
+      transition: all 0.2s ease;
     `;
+
+    // Create overlay with "Change Image" text
+    const imageOverlay = document.createElement("div");
+    imageOverlay.id = "pet-image-overlay";
+    imageOverlay.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+      border-radius: 8px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      pointer-events: none;
+      margin-bottom: 15px;
+    `;
+    imageOverlay.textContent = "Click to Change Image";
+
+    // Add hover effects
+    imageWrapper.addEventListener("mouseenter", () => {
+      imageOverlay.style.opacity = "1";
+      imagePreview.style.transform = "scale(1.05)";
+    });
+
+    imageWrapper.addEventListener("mouseleave", () => {
+      imageOverlay.style.opacity = "0";
+      imagePreview.style.transform = "scale(1)";
+    });
+
+    // Create hidden file input for image replacement
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*";
+    fileInput.style.display = "none";
+    fileInput.id = "pet-image-replacement-input";
+
+    // Add click handler to trigger file selection
+    imageWrapper.addEventListener("click", () => {
+      fileInput.click();
+    });
+
+    // Handle file selection
+    fileInput.addEventListener("change", (event) => {
+      this.handleImageReplacement(event);
+    });
+
+    // Assemble the image wrapper
+    imageWrapper.appendChild(imagePreview);
+    imageWrapper.appendChild(imageOverlay);
+    imageWrapper.appendChild(fileInput);
 
     // Create preview title
     const previewTitle = document.createElement("h3");
     previewTitle.textContent = "Your Uploaded Image";
     previewTitle.style.cssText = `
-      margin: 0 0 15px 0;
+      margin: 0 0 5px 0;
       font-size: 18px;
       color: #333;
     `;
 
+    // Create helper text
+    const helperText = document.createElement("p");
+    helperText.textContent = "Click on the image to upload a different one";
+    helperText.style.cssText = `
+      margin: 0 0 15px 0;
+      font-size: 12px;
+      color: #666;
+      font-style: italic;
+    `;
+
     // Add elements to preview container
     imagePreviewContainer.appendChild(previewTitle);
-    imagePreviewContainer.appendChild(imagePreview);
+    imagePreviewContainer.appendChild(helperText);
+    imagePreviewContainer.appendChild(imageWrapper);
 
     // Hide the original upload button instead of transforming it
     const uploadButton = instructionsPopup.querySelector("#pixar-upload-button");
@@ -1410,7 +1489,7 @@ class ImageProcessingManager {
     // Update instructions text
     const instructionsText = instructionsPopup.querySelector("p");
     if (instructionsText) {
-      instructionsText.textContent = "Your image looks great! Now choose a background color and click generate.";
+      instructionsText.textContent = "Your image looks great! You can click on it to change it, or choose a background color and click generate.";
     }
 
     // Hide the example images section since we now show the actual uploaded image
@@ -1470,6 +1549,66 @@ class ImageProcessingManager {
       // Show error message
       alert("There was an error processing your image. Please try again.");
     });
+  }
+
+  /**
+   * Handle image replacement when user clicks on the preview image
+   * @param {Event} event - The file input change event
+   */
+  handleImageReplacement(event) {
+    console.log("🐕 Handling image replacement");
+    
+    const file = event.target.files[0];
+    if (!file) {
+      console.log("🐕 No file selected for replacement");
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert("Please select a valid image file.");
+      return;
+    }
+
+    // Validate file size (optional - adjust as needed)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      alert("File size is too large. Please select an image smaller than 10MB.");
+      return;
+    }
+
+    console.log("🐕 New image selected:", file.name, "Size:", file.size);
+
+    // Update the original file and reset state
+    this.originalFile = file;
+    this.cropComplete = false;
+    this.textProcessingComplete = false;
+    this.transformationComplete = false;
+    this.stylizedImageUrl = null;
+
+    // Convert file to data URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.originalImageDataUrl = e.target.result;
+      console.log("🐕 New image converted to data URL, length:", this.originalImageDataUrl.length);
+
+      // Update the preview image
+      const imagePreview = document.getElementById("pet-image-preview");
+      if (imagePreview) {
+        imagePreview.src = this.originalImageDataUrl;
+        console.log("🐕 Image preview updated with new image");
+      }
+
+      // Reset the file input
+      event.target.value = "";
+    };
+
+    reader.onerror = (error) => {
+      console.error("🐕 Error reading replacement file:", error);
+      alert("There was an error reading the selected file. Please try again.");
+    };
+
+    reader.readAsDataURL(file);
   }
 
   /**
