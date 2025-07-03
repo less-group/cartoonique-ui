@@ -1304,6 +1304,13 @@ class ImageProcessingManager {
       return;
     }
 
+    // Check if image preview already exists - if so, don't create another one
+    const existingPreview = instructionsPopup.querySelector("#pet-image-preview-container");
+    if (existingPreview) {
+      console.log("🐕 Pet image preview already exists, skipping creation");
+      return;
+    }
+
     // Find the popup content container
     const popupContent = instructionsPopup.querySelector("div > div");
     if (!popupContent) {
