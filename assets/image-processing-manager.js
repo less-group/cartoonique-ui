@@ -1356,29 +1356,48 @@ class ImageProcessingManager {
     imagePreviewContainer.appendChild(previewTitle);
     imagePreviewContainer.appendChild(imagePreview);
 
-    // Find the upload button and replace it with generate button
+    // Hide the original upload button instead of transforming it
     const uploadButton = instructionsPopup.querySelector("#pixar-upload-button");
     if (uploadButton) {
-      uploadButton.textContent = "GENERATE IMAGE";
-      uploadButton.id = "pixar-generate-button";
-      uploadButton.style.backgroundColor = "#28a745"; // Green color
-      uploadButton.onclick = null; // Remove old click handler
-      
-      // Add new click handler for generate button
-      uploadButton.addEventListener("click", () => {
-        this.handlePetGenerateClick();
-      });
+      uploadButton.style.display = "none";
     }
+
+    // Create a new generate button that will be positioned after color selector
+    const generateButton = document.createElement("button");
+    generateButton.id = "pixar-generate-button";
+    generateButton.textContent = "GENERATE IMAGE";
+    generateButton.style.cssText = `
+      background-color: #28a745;
+      color: white;
+      padding: 18px 40px;
+      font-size: 20px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 20px auto;
+      display: block;
+      text-transform: uppercase;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    `;
+    
+    // Add click handler for generate button
+    generateButton.addEventListener("click", () => {
+      this.handlePetGenerateClick();
+    });
 
     // Insert image preview after the instructions but before the color selector
     const colorSelector = instructionsPopup.querySelector("#pet-background-color-selector");
     if (colorSelector) {
       colorSelector.parentNode.insertBefore(imagePreviewContainer, colorSelector);
+      // Insert generate button AFTER the color selector
+      colorSelector.parentNode.insertBefore(generateButton, colorSelector.nextSibling);
     } else {
       // Fallback: insert before the upload button
       const buttonContainer = instructionsPopup.querySelector("#pixar-upload-buttons");
       if (buttonContainer) {
         buttonContainer.parentNode.insertBefore(imagePreviewContainer, buttonContainer);
+        buttonContainer.parentNode.insertBefore(generateButton, buttonContainer.nextSibling);
       }
     }
 
