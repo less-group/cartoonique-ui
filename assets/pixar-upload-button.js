@@ -104,63 +104,25 @@
             <img  src="https://cdn.shopify.com/s/files/1/0896/3434/1212/files/mobileguideline.png?v=1745400537" alt="Mobile Example" style="width: 100%; height: 100%; object-fit: cover;">
         </div>
         
-        <div id="examples-container" style="margin-bottom: 10px;">
-          <!-- Good and Bad photo sections -->
-          <div style="margin-bottom: 10px;">
-            <h3 style="color: #FF4444; text-align: center; font-size: 24px; margin-bottom: 10px; font-weight: bold;">BAD PHOTO</h3>
-            <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
-              <div style="text-align: center; min-width: 180px; margin-bottom: 15px; ${window?.isPetTemplate ? 'width: 45%;' : 'width: 30%;' }">
-                <div style="position: relative; border: 2px solid #FF4444; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
-                  <img src="${window?.isPetTemplate ? 'https://cdn.shopify.com/s/files/1/0896/3434/1212/files/petbad1.webp?v=1746781545': 'https://cdn.shopify.com/s/files/1/0626/3416/4430/files/bad_photo_far.jpg?v=1683712345'}" alt="Far/Blurry Example" style="width: 100%; height: 100%; object-fit: cover;">
-                  <div style="position: absolute; top: 5px; right: 5px; background-color: #FF4444; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✕</div>
-                </div>
-                <p style="font-weight: bold; color: #FF4444; margin: 0;">FAR/BLURRY</p>
-              </div>
-          
-              <div style="text-align: center; width: 30%; min-width: 180px; margin-bottom: 15px; ${window?.isPetTemplate ? 'display: none;' : '' } ">
-                <div style="position: relative; border: 2px solid #FF4444; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
-                  <img src="https://cdn.shopify.com/s/files/1/0626/3416/4430/files/bad_photo_glasses.jpg?v=1683712345" alt="Glasses Example" style="width: 100%; height: 100%; object-fit: cover;">
-                  <div style="position: absolute; top: 5px; right: 5px; background-color: #FF4444; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✕</div>
-                </div>
-                <p style="font-weight: bold; color: #FF4444; margin: 0;">GLASSES</p>
-              </div>
-          
-              <div style="text-align: center; min-width: 180px; margin-bottom: 15px; ${window?.isPetTemplate ? 'width: 45%;' : 'width: 30%;' } ">
-                <div style="position: relative; border: 2px solid #FF4444; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
-                  <img src="${window?.isPetTemplate ? 'https://cdn.shopify.com/s/files/1/0896/3434/1212/files/petbad2.jpg?v=1746781545': 'https://cdn.shopify.com/s/files/1/0626/3416/4430/files/bad_photo_multiple.jpg?v=1683712345'}" alt="Multiple People Example" style="width: 100%; height: 100%; object-fit: cover;">
-                  <div style="position: absolute; top: 5px; right: 5px; background-color: #FF4444; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✕</div>
-                </div>
-                <p style="font-weight: bold; color: #FF4444; margin: 0;"> ${window?.isPetTemplate ? '2+ DOGS' : '2+ PEOPLE' }</p>
-              </div>
-            </div>
-          </div>
-        
-          <div style="margin-bottom: 10px;">
-            <h3 style="color: #33CC66; text-align: center; font-size: 24px; margin-bottom: 10px; font-weight: bold;">GOOD PHOTO</h3>
-            <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
-            
-              <div style="text-align: center; width: 30%; min-width: 180px; margin-bottom: 15px; ${window?.isPetTemplate ? 'display: none;' : '' }">
-                <div style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
-                  <img src="${window?.isPetTemplate ? 'https://cdn.shopify.com/s/files/1/0896/3434/1212/files/petgood1.jpg?v=1746781545': 'https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_closeup.jpg?v=1683712345'}" alt="Close-up Example" style="width: 100%; height: 100%; object-fit: cover;">
-                  <div style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>
-                </div>
-                <p style="font-weight: bold; color: #33CC66; margin: 0;">CLOSE-UP</p>
-              </div>
-          
-              <div style="text-align: center; min-width: 180px; margin-bottom: 15px; ${window?.isPetTemplate ? 'width: 45%;' : 'width: 30%;' }">
-                <div style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+        <div id="examples-container" style="margin-bottom: 20px;">
+          <!-- Only Good photo examples -->
+          <div style="margin-bottom: 20px;">
+            <h3 style="color: #33CC66; text-align: center; font-size: 24px; margin-bottom: 15px; font-weight: bold;">GOOD PHOTO EXAMPLES</h3>
+            <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 15px;">
+              <div style="text-align: center; width: 200px;">
+                <div style="position: relative; border: 3px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                   <img src="${window?.isPetTemplate ? 'https://cdn.shopify.com/s/files/1/0896/3434/1212/files/petgood2.jpg?v=1746781545': 'https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_clear.jpg?v=1683712345'}" alt="Clear Example" style="width: 100%; height: 100%; object-fit: cover;">
-                  <div style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>
+                  <div style="position: absolute; top: 8px; right: 8px; background-color: #33CC66; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px;">✓</div>
                 </div>
-                <p style="font-weight: bold; color: #33CC66; margin: 0;">CLEAR</p>
+                <p style="font-weight: bold; color: #33CC66; margin: 0; font-size: 16px;">CLEAR</p>
               </div>
           
-              <div style="text-align: center; min-width: 180px; margin-bottom: 15px; ${window?.isPetTemplate ? 'width: 45%;' : 'width: 30%;' }">
-                <div style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 5px; overflow: hidden;">
+              <div style="text-align: center; width: 200px;">
+                <div style="position: relative; border: 3px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                   <img src="${window?.isPetTemplate ? 'https://cdn.shopify.com/s/files/1/0896/3434/1212/files/petgood3.jpg?v=1746781545': 'https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_oneperson.jpg?v=1683712345'}" alt="One Person Example" style="width: 100%; height: 100%; object-fit: cover;">
-                  <div style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>
+                  <div style="position: absolute; top: 8px; right: 8px; background-color: #33CC66; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px;">✓</div>
                 </div>
-                <p style="font-weight: bold; color: #33CC66; margin: 0;">${window?.isPetTemplate ? '1 DOG' : '1 PERSON' }</p>
+                <p style="font-weight: bold; color: #33CC66; margin: 0; font-size: 16px;">${window?.isPetTemplate ? '1 DOG' : '1 PERSON' }</p>
               </div>
             </div>
           </div>
