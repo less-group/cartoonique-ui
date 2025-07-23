@@ -32,7 +32,7 @@
         "title": {
           "type": "title",
           "settings": {
-            "heading_size": "h3"
+            "heading_size": "h4"
           }
         },
         "rating_78azpd": {
@@ -152,6 +152,7 @@
         },
         "information_tag_7VN8LK": {
           "type": "information_tag",
+          "disabled": true,
           "settings": {
             "tag_style": "solid",
             "heading": "",
