@@ -55,17 +55,6 @@
             "highlight_sale_price": true
           }
         },
-        "custom_liquid_NHXr8z": {
-          "type": "custom_liquid",
-          "settings": {
-            "style": "static",
-            "title": "",
-            "heading_size": "caption3",
-            "custom_liquid": "Turn your pet into a unique cartoon-style portrait created from your photo, capturing their charm with love and detail.",
-            "icon": "none",
-            "icon_size": 24
-          }
-        },
         "inventory_status": {
           "type": "inventory_status",
           "disabled": true,
@@ -125,6 +114,20 @@
             "tab_3_text": "<p>Tell more about your product, care instructions, country of origin, manufacturer information, matching colors and accessories.</p>",
             "tab_3_page": "",
             "tab_3_body_size": "body3"
+          }
+        },
+        "collapsible_row_MCiMHt": {
+          "type": "collapsible_row",
+          "settings": {
+            "style": "static",
+            "title": "",
+            "heading_size": "caption2",
+            "icon": "none",
+            "icon_size": 24,
+            "text": "<p>Turn your pet into a unique cartoon-style portrait created from your photo, capturing their charm with love and detail.</p>",
+            "page": "",
+            "body_size": "body4",
+            "image_width": 60
           }
         },
         "d3d427d0-4e7d-4f81-9057-c64f65a4f183": {
@@ -246,10 +249,10 @@
         "title",
         "rating_78azpd",
         "price",
-        "custom_liquid_NHXr8z",
         "inventory_status",
         "28586830-d855-4547-8946-94914bac9e85",
         "29040344-ce22-4d9d-aab8-1dcb43bb2ab5",
+        "collapsible_row_MCiMHt",
         "d3d427d0-4e7d-4f81-9057-c64f65a4f183",
         "quantity_selector",
         "buy_buttons",
