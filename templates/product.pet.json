@@ -55,6 +55,17 @@
             "highlight_sale_price": true
           }
         },
+        "custom_liquid_NHXr8z": {
+          "type": "custom_liquid",
+          "settings": {
+            "style": "static",
+            "title": "",
+            "heading_size": "caption3",
+            "custom_liquid": "Turn your pet into a unique cartoon-style portrait created from your photo, capturing their charm with love and detail.",
+            "icon": "none",
+            "icon_size": 24
+          }
+        },
         "inventory_status": {
           "type": "inventory_status",
           "disabled": true,
@@ -235,6 +246,7 @@
         "title",
         "rating_78azpd",
         "price",
+        "custom_liquid_NHXr8z",
         "inventory_status",
         "28586830-d855-4547-8946-94914bac9e85",
         "29040344-ce22-4d9d-aab8-1dcb43bb2ab5",
@@ -273,14 +285,21 @@
     "35a80c75-d4b0-4340-9552-75a9f11586de": {
       "type": "images-with-text",
       "blocks": {
+        "image_thfMBn": {
+          "type": "image",
+          "settings": {
+            "image": "shopify://shop_images/1_3e89bc0e-ea1d-4f6d-ac62-92d921bd251b.png"
+          }
+        },
         "template--16729789563121__35a80c75-d4b0-4340-9552-75a9f11586de-1681824353e40c4786-0": {
           "type": "image",
           "settings": {
-            "image": "shopify://shop_images/Screenshot_2025-01-17_at_03.51.01.png"
+            "image": "shopify://shop_images/2_159ad383-002a-44cb-aa37-e8e0f9526c01.png"
           }
         }
       },
       "block_order": [
+        "image_thfMBn",
         "template--16729789563121__35a80c75-d4b0-4340-9552-75a9f11586de-1681824353e40c4786-0"
       ],
       "settings": {
@@ -288,15 +307,15 @@
         "container_size": "page-width",
         "content_layout": "left",
         "image_layout": "collage",
-        "img_ratio": 0.8,
+        "img_ratio": 1,
         "rotate_images": false,
         "icon": "none",
         "subheading": "",
-        "heading": "Modern Designs Featuring Your Loved One",
-        "heading_size": "h2",
-        "body": "<p>Our portraits are the perfect minimalist decor to start your gallery wall, design a statement shelf, or as a gift for your pet loving friends and family.</p>",
+        "heading": "See The Transformation",
+        "heading_size": "h3",
+        "body": "<p>We turn your pet photo into a fun, cartoon-style portrait. Full of charm, personality and tail-wagging cuteness.</p><p>Just upload your image and let us do the rest.</p>",
         "body_size": "body3",
-        "content_alignment": "left",
+        "content_alignment": "center",
         "desktop_content_width": 440,
         "first_button_text": "",
         "first_button_link": "",
