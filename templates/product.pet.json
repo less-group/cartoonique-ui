@@ -346,6 +346,41 @@
         "section_spacing_bottom": 20
       }
     },
+    "video_banner_nVbM3b": {
+      "type": "video-banner",
+      "name": "t:sections.video_banner.name",
+      "settings": {
+        "color_scheme": "white",
+        "enable_background_around_container": false,
+        "container_size": "page-width",
+        "desktop_ratio": 0.4,
+        "mobile_ratio": 1.3,
+        "shopify_video": "shopify://files/videos/IMG_7719.mov",
+        "youtube_or_vimeo_video": "https://www.youtube.com/watch?v=_9VUPq3SxOc",
+        "video_alt_text": "",
+        "enable_autoplay": false,
+        "enable_controls": true,
+        "enable_looping": false,
+        "mute_video": true,
+        "desktop_overlay_opacity": 20,
+        "mobile_overlay_opacity": 20,
+        "subheading": "",
+        "heading": "",
+        "heading_size": "h2",
+        "text": "",
+        "body_size": "body3",
+        "desktop_content_position": "center",
+        "desktop_content_align": "center",
+        "content_width": 528,
+        "content_spacing": 116,
+        "mobile_content_position": "center",
+        "mobile_content_align": "center",
+        "disable_lazy_loading": false,
+        "add_side_paddings": true,
+        "section_spacing_top": 12,
+        "section_spacing_bottom": 12
+      }
+    },
     "custom_liquid_Pn7bJY": {
       "type": "custom-liquid",
       "name": "t:sections.custom_liquid.name",
@@ -620,41 +655,6 @@
         "add_side_paddings": true,
         "section_spacing_top": 20,
         "section_spacing_bottom": 20
-      }
-    },
-    "video_banner_nVbM3b": {
-      "type": "video-banner",
-      "name": "t:sections.video_banner.name",
-      "settings": {
-        "color_scheme": "white",
-        "enable_background_around_container": false,
-        "container_size": "page-width",
-        "desktop_ratio": 0.4,
-        "mobile_ratio": 1.3,
-        "shopify_video": "shopify://files/videos/IMG_7719.mov",
-        "youtube_or_vimeo_video": "https://www.youtube.com/watch?v=_9VUPq3SxOc",
-        "video_alt_text": "",
-        "enable_autoplay": false,
-        "enable_controls": true,
-        "enable_looping": false,
-        "mute_video": true,
-        "desktop_overlay_opacity": 20,
-        "mobile_overlay_opacity": 20,
-        "subheading": "",
-        "heading": "",
-        "heading_size": "h2",
-        "text": "",
-        "body_size": "body3",
-        "desktop_content_position": "center",
-        "desktop_content_align": "center",
-        "content_width": 528,
-        "content_spacing": 116,
-        "mobile_content_position": "center",
-        "mobile_content_align": "center",
-        "disable_lazy_loading": false,
-        "add_side_paddings": true,
-        "section_spacing_top": 12,
-        "section_spacing_bottom": 12
       }
     }
   },
