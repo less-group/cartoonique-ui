@@ -306,7 +306,7 @@
         "template--16729789563121__35a80c75-d4b0-4340-9552-75a9f11586de-1681824353e40c4786-0"
       ],
       "settings": {
-        "color_scheme": "default",
+        "color_scheme": "custom-5",
         "container_size": "page-width",
         "content_layout": "left",
         "image_layout": "collage",
@@ -329,6 +329,18 @@
         "add_side_paddings": true,
         "section_spacing_top": 20,
         "section_spacing_bottom": 20
+      }
+    },
+    "custom_liquid_Pn7bJY": {
+      "type": "custom-liquid",
+      "name": "t:sections.custom_liquid.name",
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "page-width",
+        "custom_liquid": "<div class=\"section-how\">\n  <div class=\"section-how-container\">\n\n    <div class=\"section-how-image\">\n      <img src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/amanda.png?v=1752537681\" alt=\"Feature image\">\n    </div>\n\n    <div class=\"section-how-content\">\n      <div class=\"section-how-inner\">\n        <h2 class=\"section-how-title\">How It Works?</h2>\n\n        <div class=\"section-how-feature\">\n          <img class=\"section-how-icon\" src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/1_d4911457-aef4-418f-8e12-f57aa1898220.png?v=1745627764\">\n          <div>\n            <h4 class=\"section-how-feature-title\">Upload Your Image</h4>\n            <p class=\"section-how-text\"> Choose a clear photo of your pet. Ideally well-lit and showing their full face.</p>\n          </div>\n        </div>\n\n        <div class=\"section-how-feature\">\n          <img class=\"section-how-icon\" src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/2_e14353be-1420-4c80-87b9-34aa19a4f458.png?v=1745627764\">\n          <div>\n            <h4 class=\"section-how-feature-title\">Personalise How You Like</h4>\n            <p class=\"section-how-text\"> Add your pet’s name, or include a short message. Make it as fun or minimal as you like.</p>\n          </div>\n        </div>\n\n        <div class=\"section-how-feature\">\n          <img class=\"section-how-icon\" src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/3_9f1087c6-2cda-4255-a056-db5c77c979d0.png?v=1745627763\">\n          <div>\n            <h4 class=\"section-how-feature-title\">We Generate The Design</h4>\n            <p class=\"section-how-text\"> Using advanced design tools, we turn your photo into a custom cartoon-style portrait, ready to print and ship straight to you.</p>\n          </div>\n        </div>\n      </div>\n    </div>\n\n  </div>\n</div>\n\n<style>\n.section-how {\n  padding: 0px 0;\n  background-color: #fff;\n}\n.section-how-container {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 24px;\n  max-width: 1200px;\n  margin: 0 auto;\n  align-items: center;\n}\n.section-how-content {\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n}\n.section-how-inner {\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  padding-top: 40px;\n}\n.section-how-title {\n  font-size: 28px;\n  font-weight: 400;\n  text-align: center;\n}\n.section-how-feature {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.section-how-icon {\n  width: 80px;\n  height: 80px;\n  object-fit: contain;\n}\n.section-how-feature-title {\n  font-size: 18px;\n  font-weight: 500;\n  margin: 0;\n}\n.section-how-text {\n  font-size: 16px;\n  margin: 4px 0 0;\n}\n.section-how-button {\n  margin-top: 24px;\n  text-align: center;\n}\n.section-how-image {\n  max-width: 100%;\n  height: 100%;\n  overflow: hidden;\n  border-radius: 22px;\n  background-color: #f5f5f5;\n}\n.section-how-image img {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n\n@media (max-width: 768px) {\n  .section-how-container {\n    grid-template-columns: 1fr;\n  }\n  .section-how-image {\n    display: none;\n  }\n  .section-how-inner {\n    padding-top: 16px;\n  }\n}\n</style>",
+        "add_side_paddings": true,
+        "section_spacing_top": 12,
+        "section_spacing_bottom": 12
       }
     },
     "images_with_text_cRTMTt": {
@@ -593,29 +605,17 @@
         "section_spacing_top": 20,
         "section_spacing_bottom": 20
       }
-    },
-    "custom_liquid_Pn7bJY": {
-      "type": "custom-liquid",
-      "name": "t:sections.custom_liquid.name",
-      "settings": {
-        "color_scheme": "default",
-        "container_size": "page-width",
-        "custom_liquid": "<div class=\"section-how\">\n  <div class=\"section-how-container\">\n\n    <div class=\"section-how-image\">\n      <img src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/amanda.png?v=1752537681\" alt=\"Feature image\">\n    </div>\n\n    <div class=\"section-how-content\">\n      <div class=\"section-how-inner\">\n        <h2 class=\"section-how-title\">How It Works?</h2>\n\n        <div class=\"section-how-feature\">\n          <img class=\"section-how-icon\" src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/1_d4911457-aef4-418f-8e12-f57aa1898220.png?v=1745627764\">\n          <div>\n            <h4 class=\"section-how-feature-title\">Upload Your Image</h4>\n            <p class=\"section-how-text\"> Choose a clear photo of your pet. Ideally well-lit and showing their full face.</p>\n          </div>\n        </div>\n\n        <div class=\"section-how-feature\">\n          <img class=\"section-how-icon\" src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/2_e14353be-1420-4c80-87b9-34aa19a4f458.png?v=1745627764\">\n          <div>\n            <h4 class=\"section-how-feature-title\">Personalise How You Like</h4>\n            <p class=\"section-how-text\"> Add your pet’s name, or include a short message. Make it as fun or minimal as you like.</p>\n          </div>\n        </div>\n\n        <div class=\"section-how-feature\">\n          <img class=\"section-how-icon\" src=\"https://cdn.shopify.com/s/files/1/0896/3434/1212/files/3_9f1087c6-2cda-4255-a056-db5c77c979d0.png?v=1745627763\">\n          <div>\n            <h4 class=\"section-how-feature-title\">We Generate The Design</h4>\n            <p class=\"section-how-text\"> Using advanced design tools, we turn your photo into a custom cartoon-style portrait, ready to print and ship straight to you.</p>\n          </div>\n        </div>\n      </div>\n    </div>\n\n  </div>\n</div>\n\n<style>\n.section-how {\n  padding: 40px 0;\n  background-color: #fff;\n}\n.section-how-container {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 24px;\n  max-width: 1200px;\n  margin: 0 auto;\n  align-items: center;\n}\n.section-how-content {\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n}\n.section-how-inner {\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  padding-top: 40px;\n}\n.section-how-title {\n  font-size: 28px;\n  font-weight: 400;\n  text-align: center;\n}\n.section-how-feature {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.section-how-icon {\n  width: 80px;\n  height: 80px;\n  object-fit: contain;\n}\n.section-how-feature-title {\n  font-size: 18px;\n  font-weight: 500;\n  margin: 0;\n}\n.section-how-text {\n  font-size: 16px;\n  margin: 4px 0 0;\n}\n.section-how-button {\n  margin-top: 24px;\n  text-align: center;\n}\n.section-how-image {\n  max-width: 100%;\n  height: 100%;\n  overflow: hidden;\n  border-radius: 22px;\n  background-color: #f5f5f5;\n}\n.section-how-image img {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n\n@media (max-width: 768px) {\n  .section-how-container {\n    grid-template-columns: 1fr;\n  }\n  .section-how-image {\n    display: none;\n  }\n  .section-how-inner {\n    padding-top: 16px;\n  }\n}\n</style>",
-        "add_side_paddings": true,
-        "section_spacing_top": 12,
-        "section_spacing_bottom": 12
-      }
     }
   },
   "order": [
     "ff03a7f7-70a4-4aa2-8e65-56be8e7dbefc",
     "main",
     "35a80c75-d4b0-4340-9552-75a9f11586de",
+    "custom_liquid_Pn7bJY",
     "images_with_text_cRTMTt",
     "images_with_text_eCXtrc",
     "product-recommendations",
     "testimonials_RM4LwV",
-    "faq_Mnhka7",
-    "custom_liquid_Pn7bJY"
+    "faq_Mnhka7"
   ]
 }
