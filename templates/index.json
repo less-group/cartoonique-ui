@@ -265,6 +265,7 @@
         "template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-4",
         "template--16729789989105__73d14667-7990-4c4e-b25e-4bcc5aa291bb-1681820133fa864123-5"
       ],
+      "disabled": true,
       "settings": {
         "color_scheme": "default",
         "enable_background_around_container": true,
@@ -351,6 +352,7 @@
         "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-3",
         "template--16729789989105__dd10bcbe-6b5f-450d-ade6-fd728dbc9b00-1681820777c516347a-4"
       ],
+      "disabled": true,
       "settings": {
         "color_scheme": "default",
         "container_size": "large",
