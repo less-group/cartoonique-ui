@@ -341,6 +341,7 @@
       "block_order": [
         "image_Ndknwy"
       ],
+      "disabled": true,
       "settings": {
         "color_scheme": "default",
         "container_size": "page-width",
@@ -380,6 +381,7 @@
       "block_order": [
         "image_QyjMg7"
       ],
+      "disabled": true,
       "settings": {
         "color_scheme": "default",
         "container_size": "page-width",
@@ -489,8 +491,8 @@
         "autoplay_mode": "disabled",
         "autoplay_interval": 3,
         "add_side_paddings": true,
-        "section_spacing_top": 20,
-        "section_spacing_bottom": 20
+        "section_spacing_top": 0,
+        "section_spacing_bottom": 0
       }
     },
     "faq_Mnhka7": {
@@ -503,7 +505,7 @@
             "heading_size": "caption2",
             "icon": "none",
             "icon_size": 24,
-            "text": "<p>Brief and clear answer</p>",
+            "text": "<p>At the moment we only support one pet per portrait.</p>",
             "page": "",
             "body_size": "body3",
             "image_width": 100
@@ -516,7 +518,7 @@
             "heading_size": "caption2",
             "icon": "none",
             "icon_size": 24,
-            "text": "<p>Brief and clear answer</p>",
+            "text": "<p>A clear photo with your pet facing the camera works best. The better the photo, the better the result.</p>",
             "page": "",
             "body_size": "body3",
             "image_width": 100
@@ -529,7 +531,7 @@
             "heading_size": "caption2",
             "icon": "none",
             "icon_size": 24,
-            "text": "<p>Brief and clear answer</p>",
+            "text": "<p>Yes, you'll see a preview right on the editor page as soon as your image is uploaded and generated.</p>",
             "page": "",
             "body_size": "body3",
             "image_width": 100
@@ -542,7 +544,7 @@
             "heading_size": "caption2",
             "icon": "none",
             "icon_size": 24,
-            "text": "<p>Brief and clear answer</p>",
+            "text": "<p>Absolutely. Just send us a message at <a>hello@cartoonique.com</a> and we’ll be happy to help.</p>",
             "page": "",
             "body_size": "body3",
             "image_width": 100
@@ -555,7 +557,7 @@
             "heading_size": "caption2",
             "icon": "none",
             "icon_size": 24,
-            "text": "<p>Brief and clear answer</p>",
+            "text": "<p>Most orders arrive within 4 to 7 business days, depending on your location.</p>",
             "page": "",
             "body_size": "body3",
             "image_width": 100
