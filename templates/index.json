@@ -388,7 +388,7 @@
             "heading_size": "caption2",
             "icon": "none",
             "icon_size": 24,
-            "text": "<p>Brief and clear answer</p>",
+            "text": "<p>At the moment we only support one pet per portrait.</p>",
             "page": "",
             "body_size": "body3",
             "image_width": 100
@@ -401,7 +401,7 @@
             "heading_size": "caption2",
             "icon": "none",
             "icon_size": 24,
-            "text": "<p>Brief and clear answer</p>",
+            "text": "<p>A clear photo with your pet facing the camera works best. The better the photo, the better the result.</p>",
             "page": "",
             "body_size": "body3",
             "image_width": 100
@@ -414,7 +414,7 @@
             "heading_size": "caption2",
             "icon": "none",
             "icon_size": 24,
-            "text": "<p>Brief and clear answer</p>",
+            "text": "<p>Yes, you'll see a preview right on the editor page as soon as your image is uploaded and generated.</p>",
             "page": "",
             "body_size": "body3",
             "image_width": 100
@@ -427,7 +427,7 @@
             "heading_size": "caption2",
             "icon": "none",
             "icon_size": 24,
-            "text": "<p>Brief and clear answer</p>",
+            "text": "<p>Absolutely. Just send us a message at hello@cartoonique.com and we’ll be happy to help.</p>",
             "page": "",
             "body_size": "body3",
             "image_width": 100
@@ -440,7 +440,7 @@
             "heading_size": "caption2",
             "icon": "none",
             "icon_size": 24,
-            "text": "<p>Brief and clear answer</p>",
+            "text": "<p>Most orders arrive within 4 to 7 business days, depending on your location.</p>",
             "page": "",
             "body_size": "body3",
             "image_width": 100
