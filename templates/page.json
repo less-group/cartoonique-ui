@@ -51,7 +51,7 @@
         "color_scheme": "default",
         "enable_background_around_container": false,
         "container_size": "page-width",
-        "content_align": "center",
+        "content_align": "left",
         "add_side_paddings": true,
         "section_spacing_top": 0,
         "section_spacing_bottom": 0
