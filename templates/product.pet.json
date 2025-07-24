@@ -470,13 +470,13 @@
         "quote_n9NbRk"
       ],
       "settings": {
-        "color_scheme": "default",
+        "color_scheme": "white",
         "enable_background_around_container": true,
         "color_testimonials": true,
         "container_size": "page-width",
-        "desktop_layout": "bottom-carousel",
-        "mobile_layout": "slideshow",
-        "cards_per_slide": 2,
+        "desktop_layout": "bottom-grid",
+        "mobile_layout": "carousel",
+        "cards_per_slide": 3,
         "desktop_space_between_cards": 16,
         "desktop_quote_alignment": "left",
         "mobile_quote_alignment": "left",
