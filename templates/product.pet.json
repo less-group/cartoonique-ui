@@ -187,6 +187,20 @@
             "drawer_media_size": 60
           }
         },
+        "collapsible_row_7hiBKr": {
+          "type": "collapsible_row",
+          "settings": {
+            "style": "static",
+            "title": "",
+            "heading_size": "caption2",
+            "icon": "none",
+            "icon_size": 24,
+            "text": "<p>No worries, your image is safe and will be deleted after creation.</p>",
+            "page": "",
+            "body_size": "body6",
+            "image_width": 60
+          }
+        },
         "collapsible_row_6rEFRA": {
           "type": "collapsible_row",
           "settings": {
@@ -257,6 +271,7 @@
         "quantity_selector",
         "buy_buttons",
         "information_tag_7VN8LK",
+        "collapsible_row_7hiBKr",
         "collapsible_row_6rEFRA",
         "collapsible_row_Mgp6qD",
         "collapsible_row_Kq99fL",
