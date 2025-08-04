@@ -38,7 +38,7 @@
         "desktop_content_background": "none",
         "mobile_content_background": "none",
         "btn_text": "SHOP NOW",
-        "btn_url": "shopify://products/custom-cartoon-pet-portrait",
+        "btn_url": "shopify://products/custom-cartoon-dog-portrait",
         "btn_style": "solid",
         "extra_btn_text": "",
         "extra_btn_url": "",
@@ -71,7 +71,7 @@
         "featured_products": [
           "pet-and-owner-portrait",
           "pixar-couples-canvas",
-          "custom-cartoon-pet-portrait"
+          "custom-cartoon-dog-portrait"
         ],
         "img_ratio": "portrait",
         "product_card_align": "left",
@@ -129,7 +129,7 @@
         "content_alignment": "center",
         "desktop_content_width": 360,
         "first_button_text": "SHOP NOW",
-        "first_button_link": "shopify://products/custom-cartoon-pet-portrait",
+        "first_button_link": "shopify://products/custom-cartoon-dog-portrait",
         "first_button_style": "solid",
         "second_button_text": "",
         "second_button_link": "",

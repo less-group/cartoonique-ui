@@ -34,7 +34,7 @@
           "type": "buttons",
           "settings": {
             "btn_text": "CREATE NOW",
-            "btn_url": "shopify://products/custom-cartoon-pet-portrait",
+            "btn_url": "shopify://products/custom-cartoon-dog-portrait",
             "btn_style": "solid",
             "extra_btn_text": "",
             "extra_btn_url": "",
