@@ -372,7 +372,7 @@
         "desktop_content_position": "center",
         "desktop_content_align": "center",
         "content_width": 528,
-        "content_spacing": 116,
+        "content_spacing": 128,
         "mobile_content_position": "center",
         "mobile_content_align": "center",
         "disable_lazy_loading": false,
