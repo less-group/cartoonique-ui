@@ -1,0 +1,15 @@
+{% liquid
+  assign swatch_patterns = settings.primary_custom_colors_and_patterns
+  assign primary_custom_colors_and_patterns = swatch_patterns | newline_to_br | split: '<br />'
+%}
+
+{% render 'product-card', product: product, show_mobile_carousel: true, primary_custom_colors_and_patterns: primary_custom_colors_and_patterns %}
+
+{% schema %}
+{
+  "name": "product-card-template",
+  "tag": "div",
+  "class": "card-carousel__slide product-card-template",
+  "settings": []
+}
+{% endschema %}

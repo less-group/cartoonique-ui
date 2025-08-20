@@ -1,0 +1,74 @@
+{%- liquid
+  assign options = block.settings
+
+  assign show_item_1 = options.show_item_1
+  assign show_item_2 = options.show_item_2
+  assign show_item_3 = options.show_item_3
+  assign show_item_4 = options.show_item_4
+  assign show_item_5 = options.show_item_5
+  assign show_item_6 = options.show_item_6
+  assign show_item_7 = options.show_item_7
+  assign show_item_8 = options.show_item_8
+  assign show_item_9 = options.show_item_9
+  assign heading_size = options.heading_size
+  assign body_size = options.body_size
+  assign enable_vertical_text = options.enable_vertical_text
+  assign content_position = options.content_position
+  if content_position contains 'left'
+    assign content_align = 'left'
+  endif
+  if content_position contains 'center'
+    assign content_align = 'center'
+  endif
+  if content_position contains 'right'
+    assign content_align = 'right'
+  endif
+
+  assign hover_effect = options.hover_effect
+  assign block_visibility = options.block_visibility
+
+  assign enable_content_slide_in = settings.enable_content_slide_in
+
+  assign animate_card = false
+  assign card_class = 'card-grid__item'
+  if enable_content_slide_in
+    assign card_class = card_class | append: ' animate--slide-in'
+  assign animate_card = true
+  endif
+-%}
+
+<div
+  class='{{ class }} mega-menu__block mega-menu__block--images mega-menu__card-grid card-grid mega-menu-{{ block.id }} color-{{ block.settings.color_scheme }} mega-menu__block--spaced {% if block_visibility != 'desktop_and_mobile' %} mega-menu__block--only-{{block_visibility}}-visible {% endif %} {% if enable_vertical_text %} mega-menu__block--vertical mega-menu__block--{{content_align}} {% endif %}'
+  block-id='{{ block.id }}'
+  {{ block.shopify_attributes }}
+>
+  {%- liquid
+    if show_item_1 == true
+      render 'image-block', class: card_class, animate_card: 1, img_ratio: 'nature', heading_size: heading_size, body_size: body_size, enable_vertical_text: options.enable_vertical_text, title: options.item_1_title, text: options.item_1_text, image: options.item_1_img, video: options.item_1_video, link: options.item_1_link, link_text: options.item_1_btn_text, btn_style: options.item_1_btn_style, hover_effect: hover_effect, remove_animation_class: true
+    endif
+    if show_item_2 == true
+      render 'image-block', class: card_class, animate_card: 2, img_ratio: 'nature', heading_size: heading_size, body_size: body_size, enable_vertical_text: options.enable_vertical_text, title: options.item_2_title, text: options.item_2_text, image: options.item_2_img, video: options.item_2_video, link: options.item_2_link, link_text: options.item_2_btn_text, btn_style: options.item_2_btn_style, hover_effect: hover_effect, remove_animation_class: true
+    endif
+    if show_item_3 == true
+      render 'image-block', class: card_class, animate_card: 3, img_ratio: 'nature', heading_size: heading_size, body_size: body_size, enable_vertical_text: options.enable_vertical_text, title: options.item_3_title, text: options.item_3_text, image: options.item_3_img, video: options.item_3_video, link: options.item_3_link, link_text: options.item_3_btn_text, btn_style: options.item_3_btn_style, hover_effect: hover_effect, remove_animation_class: true
+    endif
+    if show_item_4 == true
+      render 'image-block', class: card_class, animate_card: 4, img_ratio: 'nature', heading_size: heading_size, body_size: body_size, enable_vertical_text: options.enable_vertical_text, title: options.item_4_title, text: options.item_4_text, image: options.item_4_img, video: options.item_4_video, link: options.item_4_link, link_text: options.item_4_btn_text, btn_style: options.item_4_btn_style, hover_effect: hover_effect, remove_animation_class: true
+    endif
+    if show_item_5 == true
+      render 'image-block', class: card_class, animate_card: 5, img_ratio: 'nature', heading_size: heading_size, body_size: body_size, enable_vertical_text: options.enable_vertical_text, title: options.item_5_title, text: options.item_5_text, image: options.item_5_img, video: options.item_5_video, link: options.item_5_link, link_text: options.item_5_btn_text, btn_style: options.item_5_btn_style, hover_effect: hover_effect, remove_animation_class: true
+    endif
+    if show_item_6 == true
+      render 'image-block', class: card_class, animate_card: 6, img_ratio: 'nature', heading_size: heading_size, body_size: body_size, enable_vertical_text: options.enable_vertical_text, title: options.item_6_title, text: options.item_6_text, image: options.item_6_img, video: options.item_6_video, link: options.item_6_link, link_text: options.item_6_btn_text, btn_style: options.item_6_btn_style, hover_effect: hover_effect, remove_animation_class: true
+    endif
+    if show_item_7 == true
+      render 'image-block', class: card_class, animate_card: 7, img_ratio: 'nature', heading_size: heading_size, body_size: body_size, enable_vertical_text: options.enable_vertical_text, title: options.item_7_title, text: options.item_7_text, image: options.item_7_img, video: options.item_7_video, link: options.item_7_link, link_text: options.item_7_btn_text, btn_style: options.item_7_btn_style, hover_effect: hover_effect, remove_animation_class: true
+    endif
+    if show_item_8 == true
+      render 'image-block', class: card_class, animate_card: 8, img_ratio: 'nature', heading_size: heading_size, body_size: body_size, enable_vertical_text: options.enable_vertical_text, title: options.item_8_title, text: options.item_8_text, image: options.item_8_img, video: options.item_8_video, link: options.item_8_link, link_text: options.item_8_btn_text, btn_style: options.item_8_btn_style, hover_effect: hover_effect, remove_animation_class: true
+    endif
+    if show_item_9 == true
+      render 'image-block', class: card_class, animate_card: 9, img_ratio: 'nature', heading_size: heading_size, body_size: body_size, enable_vertical_text: options.enable_vertical_text, title: options.item_9_title, text: options.item_9_text, image: options.item_9_img, video: options.item_9_video, link: options.item_9_link, link_text: options.item_9_btn_text, btn_style: options.item_9_btn_style, hover_effect: hover_effect, remove_animation_class: true
+    endif
+  -%}
+</div>

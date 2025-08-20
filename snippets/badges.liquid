@@ -1,0 +1,34 @@
+{% liquid
+  assign prepared_section_background_color = section_background_color | strip
+%}
+
+{% case name %}
+  {% when 'sold_out' %}
+    {% if product.available == false %}
+      <div class='{{ class }} product-badge product-badge--sold-out {% if prepared_section_background_color == settings.product_card_sold_out_badge_bg %} product-badge--with-inner-border {% endif %}'>
+        {{- 'product.store_front.sold_out' | t -}}
+      </div>
+    {% endif %}
+  {% when 'sale' %}
+    {% if product.compare_at_price > product.price %}
+      <div class='{{ class }} product-badge product-badge--sale {% if prepared_section_background_color == settings.product_sale_badge_bg %} product-badge--with-inner-border {% endif %}'>
+        {% render 'sale-badge-text', price: product.price, old_price: product.compare_at_price %}
+      </div>
+    {% endif %}
+  {% when 'custom_1' %}
+    <div class='{{ class }} product-badge product-badge--custom-1 {% if prepared_section_background_color == settings.product_card_custom_badge_1_bg %} product-badge--with-inner-border {% endif %}'>
+      {{ settings.product_card_custom_badge_1_text }}
+    </div>
+  {% when 'custom_2' %}
+    <div class='{{ class }} product-badge product-badge--custom-2 {% if prepared_section_background_color == settings.product_card_custom_badge_2_bg %} product-badge--with-inner-border {% endif %}'>
+      {{ settings.product_card_custom_badge_2_text }}
+    </div>
+  {% when 'custom_3' %}
+    <div class='{{ class }} product-badge product-badge--custom-3 {% if prepared_section_background_color == settings.product_card_custom_badge_3_bg %} product-badge--with-inner-border {% endif %}'>
+      {{ settings.product_card_custom_badge_3_text }}
+    </div>
+  {% when 'sale_amount' %}
+    <div class='{{ class }} product-sale-amount-badge {% if prepared_section_background_color == settings.product_sale_amount_badge_bg %} product-sale-amount-badge--with-inner-border {% endif %}'>
+      {% render 'sale-amount-badge-text', price: product.price, old_price: product.compare_at_price %}
+    </div>
+{% endcase %}

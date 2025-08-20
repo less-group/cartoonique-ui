@@ -1,0 +1,454 @@
+{%- liquid
+  assign options = section.settings
+  assign color_scheme = options.color_scheme
+  assign img_ratio = options.img_ratio
+  assign results_per_category = options.results_per_category
+  assign recommendations_title = options.recommendations_title
+  assign recommendations_queries = options.recommendations_queries | newline_to_br | split: '<br />'
+
+  assign tabs_count = 0
+
+  if predictive_search.resources.products.size > 0
+    assign tabs_count = tabs_count | plus: 1
+    assign has_products = true
+  endif
+
+  if predictive_search.resources.pages.size > 0
+    assign tabs_count = tabs_count | plus: 1
+    assign has_pages = true
+  endif
+
+  if predictive_search.resources.articles.size > 0
+    assign tabs_count = tabs_count | plus: 1
+    assign has_blog_posts = true
+  endif
+
+  if predictive_search.resources.collections.size > 0
+    assign tabs_count = tabs_count | plus: 1
+    assign has_collections = true
+  endif
+
+  if predictive_search.resources.queries.size > 0
+    assign tabs_count = tabs_count | plus: 1
+    assign has_queries = true
+
+    if predictive_search.resources.queries.size == 1
+      if predictive_search.resources.queries[0].text == predictive_search.terms
+        assign tabs_count = tabs_count | minus: 1
+        assign has_queries = false
+      endif
+    endif
+  endif
+
+  assign enable_content_slide_in = settings.enable_content_slide_in
+-%}
+
+{% liquid
+  assign swatch_patterns = settings.primary_custom_colors_and_patterns
+  assign primary_custom_colors_and_patterns = swatch_patterns | newline_to_br | split: '<br />'
+%}
+
+{% capture section_background_color %}
+  {% render 'get-section-background-color', section: section %}
+{% endcapture %}
+
+{%- if settings.search_type == 'modal_and_page' or settings.search_type == 'sidebar_only' -%}
+  {%- unless template.name contains 'search' -%}
+    <search-sidebar
+      class='search-sidebar color-{{ color_scheme }}'
+      id='SearchSidebar'
+      data-with-overlay='only-desktop'
+      data-overlay-important
+      data-with-close-on-outside
+      data-with-close-on-escape
+      data-sidebar-section
+      data-section-id='{{ section.id }}'
+      data-open-direction='right'
+      tabindex='-1'
+      {% if options.enable_extended_search %}
+        enable-extended-search
+      {% endif %}
+    >
+      <template data-sidebar-template='SearchSidebar'>
+        <div class='search-sidebar__body' data-sidebar-body>
+          <div class='search-sidebar__header-wrapper'>
+            <div class='search-sidebar__header'>
+              <div class='search-sidebar__header-title'>
+                {{ 'dialog_elements.search_drawer.store_front.header_title' | t }}
+              </div>
+              <sidebar-button>
+                <button
+                  data-sidebar-button
+                  data-sidebar-id='SearchSidebar'
+                  class='unstyled-button search-sidebar__close-button-wrapper close-button-with-scale-hover-wrapper'
+                  tabindex='0'
+                >
+                  <span class='search-sidebar__close-button-with-scale-hover close-button-with-scale-hover'></span>
+                </button>
+              </sidebar-button>
+            </div>
+            <search-sidebar-form-wrapper>
+              <form
+                class='search-sidebar__form'
+                id='SearchSidebarForm'
+                action='{{ routes.search_url }}'
+                method='get'
+                role='search'
+                data-sidebar-search-form
+              >
+                <search-field class='search-field' data-sidebar-search-input-component data-with-load-focus>
+                  <label class='visually-hidden' for='SearchSidebarForm-QueryInput-{{ section.id }}'>
+                    {{- 'dialog_elements.search_drawer.screen_reader.label_for_search_input' | t -}}
+                  </label>
+                  <input
+                    class='search-field__input'
+                    type='text'
+                    name='q'
+                    placeholder='{{ 'dialog_elements.search_drawer.store_front.placeholder_for_search_input' | t }}'
+                    data-sidebar-search-input
+                    data-search-field-input
+                    id='SearchSidebarForm-QueryInput-{{ section.id }}'
+                  >
+                  <div class='search-field__controls'>
+                    <button
+                      type='button'
+                      class='unstyled-button search-field__controls-item hidden'
+                      aria-label='{{ 'dialog_elements.search_drawer.screen_reader.screen_reader_label_for_search_button' | t }}'
+                      data-search-field-reset-button
+                    >
+                      {% render 'icon',
+                        icon_name: 'close-large',
+                        class: 'search-field__controls-item-icon search-field__controls-item-icon--reset'
+                      %}
+                    </button>
+                    <button
+                      type='submit'
+                      form='SearchSidebarForm'
+                      class='unstyled-button search-field__controls-item'
+                      aria-label='{{ 'dialog_elements.search_drawer.screen_reader.screen_reader_label_for_search_button' | t }}'
+                    >
+                      {% render 'icon', icon_name: 'main-search', class: 'search-field__controls-item-icon' %}
+                    </button>
+                  </div>
+                </search-field>
+                <input
+                  name='options[prefix]'
+                  type='hidden'
+                  value='last'
+                  id='SearchSidebarForm-OptionsPrefixInput-{{ section.id }}'
+                >
+                <input
+                  type='hidden'
+                  name='options[unavailable_products]'
+                  value='show'
+                  id='SearchSidebarForm-OptionsUnavailableProductsInput-{{ section.id }}'
+                >
+              </form>
+            </search-sidebar-form-wrapper>
+          </div>
+
+          <div class='search-sidebar__content' data-sidebar-search-content>
+            <div data-sidebar-search-content-results>
+              {% if predictive_search.performed and tabs_count > 0 %}
+                {%- if has_queries -%}
+                  <div class='search-sidebar-section '>
+                    <h6
+                      class='search-sidebar-section__header search-sidebar-section__header--queries'
+                    >
+                      <div class='search-sidebar-section__header-title'>
+                        {{- 'search_drawer.store_front.queries_tab' | t -}}
+                      </div>
+                    </h6>
+                    <div class='search-sidebar-section__card-grid--queries'>
+                      {%- for query in predictive_search.resources.queries limit: results_per_category -%}
+                        {% if query.text != predictive_search.terms %}
+                          <button
+                            class='unstyled-button search-sidebar-section__query link-parent-for-hover'
+                            data-sidebar-search-item
+                            data-sidebar-search-query='{{ query.text }}'
+                            tabindex='0'
+                          >
+                            <span class='underline-animation'>{{ query.styled_text }}</span>
+                          </button>
+                        {% endif %}
+                      {%- endfor -%}
+                    </div>
+                  </div>
+                {%- endif -%}
+              {% elsif predictive_search.performed and tabs_count == 0 and predictive_search.terms != blank %}
+                <span>
+                  {{ 'general.search_page.store_front.text_for_no_results' | t: search_query: predictive_search.terms }}
+                </span>
+              {% else %}
+                <div class='search-sidebar-section '>
+                  <h6 class='search-sidebar-section__header search-sidebar-section__header--queries'>
+                    <div class='search-sidebar-section__header-title'>
+                      {{ recommendations_title }}
+                    </div>
+                  </h6>
+                  <div class='search-sidebar-section__card-grid--queries'>
+                    {%- for query in recommendations_queries limit: results_per_category -%}
+                      <button
+                        class='unstyled-button search-sidebar-section__query link-parent-for-hover'
+                        data-sidebar-search-query='{{ query }}'
+                      >
+                        <span class='underline-animation'>{{ query }}</span>
+                      </button>
+                    {%- endfor -%}
+                  </div>
+                </div>
+              {% endif %}
+
+              {%- if has_products -%}
+                <div class='search-sidebar-section'>
+                  <h6
+                    class='search-sidebar-section__header'
+                  >
+                    <div class='search-sidebar-section__header-title'>
+                      {{- 'search_drawer.store_front.products_tab' | t -}}
+                    </div>
+                  </h6>
+                  <div class='card-grid search-sidebar-section__card-grid'>
+                    {%- for product in predictive_search.resources.products limit: results_per_category -%}
+                      <div class='card-grid__item' data-sidebar-search-item>
+                        {% render 'product-card',
+                          product: product,
+                          with_bottom_spacing: true,
+                          is_search_sidebar_result: true,
+                          img_ratio: img_ratio,
+                          add_side_paddings: add_side_paddings,
+                          primary_custom_colors_and_patterns: primary_custom_colors_and_patterns,
+                          section_background_color: section_background_color
+                        %}
+                      </div>
+                    {%- endfor -%}
+                  </div>
+                </div>
+              {%- endif -%}
+              {%- if has_blog_posts -%}
+                <div class='search-sidebar-section'>
+                  <h6
+                    class='search-sidebar-section__header'
+                  >
+                    <div class='search-sidebar-section__header-title'>
+                      {{- 'search_drawer.store_front.blog_posts_tab' | t -}}
+                    </div>
+                  </h6>
+                  <div class='card-grid search-sidebar-section__card-grid'>
+                    {%- for article in predictive_search.resources.articles limit: results_per_category -%}
+                      <div class='card-grid__item' data-sidebar-search-item>
+                        {% render 'article-card', with_bottom_spacing: true, article: article, img_ratio: img_ratio %}
+                      </div>
+                    {%- endfor -%}
+                  </div>
+                </div>
+              {%- endif -%}
+              {%- if has_collections -%}
+                <div class='search-sidebar-section'>
+                  <h6 class='search-sidebar-section__header'>
+                    <div class='search-sidebar-section__header-title'>
+                      {{- 'search_drawer.store_front.collections_tab' | t -}}
+                    </div>
+                  </h6>
+                  <div class='card-grid search-sidebar-section__card-grid'>
+                    {%- for collection in predictive_search.resources.collections limit: results_per_category -%}
+                      {% if img_ratio contains 'fit' %}
+                        {% assign img_ratio = img_ratio | remove: 'fit-' %}
+                      {% endif %}
+
+                      <div class='card-grid__item' data-sidebar-search-item>
+                        {% render 'collection-card',
+                          with_bottom_spacing: true,
+                          title: collection.title,
+                          img: collection.image,
+                          img_ratio: img_ratio,
+                          collection: collection,
+                          text_style: 'under-image',
+                          show_product_count: true,
+                          link_url: collection.url
+                        %}
+                      </div>
+                    {%- endfor -%}
+                  </div>
+                </div>
+              {%- endif -%}
+              {%- if has_pages -%}
+                <div class='search-sidebar-section'>
+                  <h6
+                    class='search-sidebar-section__header'
+                  >
+                    <div class='search-sidebar-section__header-title'>
+                      {{- 'search_drawer.store_front.pages_tab' | t -}}
+                    </div>
+                  </h6>
+                  <div class='card-grid search-sidebar-section__card-grid--pages'>
+                    {%- for page in predictive_search.resources.pages limit: results_per_category -%}
+                      <div class='card-grid__item' data-sidebar-search-item>
+                        {% render 'page-card',
+                          show_image: false,
+                          page: page,
+                          enable_content_slide_in: enable_content_slide_in,
+                          index: forloop.index,
+                          title_max_lines: 1
+                        %}
+                      </div>
+                    {%- endfor -%}
+                  </div>
+                </div>
+              {%- endif -%}
+            </div>
+          </div>
+
+          <div class='search-sidebar__footer hidden' data-sidebar-search-footer>
+            <button
+              class='btn btn--solid btn--lg search-sidebar__footer-button'
+              aria-label='{{ 'search_drawer.screen_reader.button_label' | t }}'
+              form='SearchSidebarForm'
+              type='submit'
+            >
+              {{ 'search_drawer.store_front.button_label' | t }}
+            </button>
+          </div>
+        </div>
+      </template>
+    </search-sidebar>
+  {%- endunless -%}
+{%- endif -%}
+
+{% render 'save-section-data-in-global-scope', section: section %}
+
+{% schema %}
+{
+  "name": "t:sections.search_drawer.name",
+  "tag": "aside",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "t:sections.search_drawer.description.content"
+    },
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:sections.general_section_settings.color_scheme_option_default_label"
+        },
+        {
+          "value": "primary",
+          "label": "t:sections.general_section_settings.color_scheme_option_primary_label"
+        },
+        {
+          "value": "secondary",
+          "label": "t:sections.general_section_settings.color_scheme_option_secondary_label"
+        },
+        {
+          "value": "custom-1",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_1_label"
+        },
+        {
+          "value": "custom-2",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_2_label"
+        },
+        {
+          "value": "custom-3",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_3_label"
+        },
+        {
+          "value": "white",
+          "label": "t:sections.general_section_settings.color_scheme_option_white_text_label"
+        },
+        {
+          "value": "black",
+          "label": "t:sections.general_section_settings.color_scheme_option_black_text_label"
+        },
+        {
+          "value": "custom-5",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_5_label"
+        }
+      ],
+      "default": "default",
+      "label": "t:sections.general_section_settings.color_scheme_label",
+      "info": "t:sections.general_section_settings.color_scheme_tip"
+    },
+    {
+      "type": "select",
+      "id": "img_ratio",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:sections.general_section_settings.img_ratio_option_default_label"
+        },
+        {
+          "value": "square",
+          "label": "t:sections.general_section_settings.img_ratio_option_fill_square_label"
+        },
+        {
+          "value": "portrait",
+          "label": "t:sections.general_section_settings.img_ratio_option_fill_portrait_label"
+        },
+        {
+          "value": "portrait-xl",
+          "label": "t:sections.general_section_settings.img_ratio_option_fill_portrait_xl_label"
+        },
+        {
+          "value": "landscape",
+          "label": "t:sections.general_section_settings.img_ratio_option_fill_landscape_label"
+        },
+        {
+          "value": "fit-square",
+          "label": "t:sections.general_section_settings.img_ratio_option_fit_square_label"
+        },
+        {
+          "value": "fit-portrait",
+          "label": "t:sections.general_section_settings.img_ratio_option_fit_portrait_label"
+        },
+        {
+          "value": "fit-portrait-xl",
+          "label": "t:sections.general_section_settings.img_ratio_option_fit_portrait_xl_label"
+        },
+        {
+          "value": "fit-landscape",
+          "label": "t:sections.general_section_settings.img_ratio_option_fit_landscape_label"
+        }
+      ],
+      "default": "default",
+      "label": "t:sections.general_section_settings.img_ratio_label"
+    },
+    {
+      "type": "range",
+      "id": "results_per_category",
+      "min": 2,
+      "max": 10,
+      "step": 2,
+      "default": 10,
+      "label": "t:sections.search_drawer.results_per_category.label",
+      "info": "t:sections.search_drawer.results_per_category.info"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_extended_search",
+      "default": false,
+      "label": "t:sections.search_drawer.enable_extended_search.label",
+      "info": "t:sections.search_drawer.enable_extended_search.info"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.search_drawer.recommendations_settings_header.content"
+    },
+    {
+      "type": "text",
+      "id": "recommendations_title",
+      "default": "Most searched",
+      "label": "t:sections.search_drawer.recommendations_title.label"
+    },
+    {
+      "type": "textarea",
+      "id": "recommendations_queries",
+      "default": "party dress\nblue denim\nhandbag\nshirt",
+      "label": "t:sections.search_drawer.recommendations_queries.label",
+      "info": "t:sections.search_drawer.recommendations_queries.info"
+    }
+  ]
+}
+{% endschema %}

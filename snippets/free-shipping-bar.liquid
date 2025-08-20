@@ -1,0 +1,31 @@
+{%- liquid
+  assign free_shipping_threshold_value = settings.cart_free_shipping_bar_threshold
+  assign cart_free_shipping_heading_size = settings.cart_free_shipping_heading_size
+  assign cart_free_shipping_bar_style = settings.cart_free_shipping_bar_style
+
+  assign threshold_without_currency = free_shipping_threshold_value | times: 100
+  assign cart_total_without_currency = cart.total_price | times: 1.0
+  assign difference = threshold_without_currency | minus: cart_total_without_currency
+  assign difference_with_currency = difference | money_with_currency
+  assign difference_percent = cart_total_without_currency | divided_by: threshold_without_currency | times: 100
+-%}
+
+<free-shipping-bar
+  class='free-shipping-bar'
+  data-achieved-message='{{ 'general.free_shipping_bar.store_front.achieved_message' | t }}'
+  data-progress-message='{{ 'general.free_shipping_bar.store_front.progress_message' | t }}'
+  data-free-shipping-difference='{{ difference_with_currency | strip_html }}'
+  data-free-shipping-difference-percent='{{ difference_percent }}'
+>
+  <div
+    class='free-shipping-bar__title {{ cart_free_shipping_heading_size }}'
+    data-free-shipping-bar-message
+  >
+    {{ message }}
+  </div>
+
+  <div class='free-shipping-bar__progress {% if cart_free_shipping_bar_style == "dashed" %} free-shipping-bar__progress--dashed {% endif %}'>
+    <div class='free-shipping-bar__progress-bar'></div>
+    <div class='free-shipping-bar__progress-bar-dots' data-free-shipping-progress-bar-dots></div>
+  </div>
+</free-shipping-bar>

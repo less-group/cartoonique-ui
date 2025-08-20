@@ -1,0 +1,345 @@
+{%- liquid
+  assign img = article.image
+  assign title = article.title
+  assign content = article.excerpt_or_content | strip_html | truncatewords: 30
+  assign author = article.author
+  assign date = article.published_at
+  assign comments_count = article.comments_count
+  assign type = type | default: 'full'
+
+  if article.title == blank
+    assign title = 'cards.article_card.store_front.default_title' | t
+  endif
+  if article.excerpt_or_content == blank
+    assign content = 'cards.article_card.store_front.default_content' | t
+  endif
+  if article.author == blank
+    assign author = 'cards.article_card.store_front.default_author' | t
+  endif
+  if article.published_at == blank
+    assign date = '11/03/2020'
+  endif
+  if article.comments_count == blank
+    assign comments_count = 0
+  endif
+
+  if article.tags.size > 0
+    if show_tags == 'selected' and selected_tags.size > 0
+      for selected_tag in selected_tags
+        if article.tags contains selected_tag
+          assign tags = selected_tags
+          break
+        endif
+      endfor
+    elsif show_tags == 'all'
+      assign tags = article.tags
+    endif
+  endif
+
+  assign enable_content_slide_in = settings.enable_content_slide_in
+  assign enable_image_zoom_out = settings.enable_image_zoom_out
+
+  assign image_class = 'article-card__image zoom shape__target-image'
+  if enable_image_zoom_out
+    assign image_class = image_class | append: ' scroll-trigger animate--zoom-out'
+  endif
+-%}
+
+{% capture article_card_tags %}
+  {%- if show_tags != 'none' and tags.size > 0 -%}
+    {% if collapse_extra_tags == true and tags_position == 'on_image' %}
+      <div class='article-card__tags-container  article-card__tags-container--on-image {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: 1;'
+        {% endif %}
+      >
+        <collapsed-tags class="article-card__tags-component">
+          <div
+            data-visible-tags
+            class='article-card__tags article-card__tags--with-collapse'
+          >
+            {%- for item in tags -%}
+              {% assign tag = item | strip %}
+              
+      
+              {% if article.tags contains tag %}                
+                {% assign blog_slug = article.handle | split: '/' | first %}
+                {% assign tag_slug = tag | replace: ' ', '-' %}
+
+                <div
+                  data-tag
+                  class='article-card__tag'
+                >
+                  <a href="/blogs/{{blog_slug}}/tagged/{{tag_slug}}" aria-label="{{tag}}">{{tag}}</a>
+                </div>
+              {% endif %}
+            {%- endfor -%}
+            <div class='show-more-container article-card__extend-button' data-extend-button>
+              <float-element-btn
+                class='article-card__tag show-more'
+                data-aria-expanded='false'
+                data-float-element-id='{{layout}}-{{ article.id }}'
+                data-trigger='click'
+                tabindex='0'
+              >
+                <div class='show-more__dot'></div>
+                <div class='show-more__dot'></div>
+                <div class='show-more__dot'></div>
+              </float-element-btn>
+      
+              <float-element
+                class='dropdown article-card__dropdown'
+                aria-hidden='true'
+                id='{{layout}}-{{ article.id }}'
+                data-placement='bottom-end'
+                data-main-axis-offset='{% if settings.round_level != "0" %} 8{% else %} 0{% endif %}'
+                data-collapsed-tags
+                data-strategy='fixed'
+              >
+                <template data-float-element-template='{{layout}}-{{ article.id }}'>
+                  <div class='article-card__dropdown-body'></div>
+                </template>
+              </float-element>
+            </div>
+          </div>
+        </collapsed-tags>
+      </div>
+    {% elsif collapse_extra_tags == true and tags_position == 'under_image' %}
+      <div class='article-card__tags-container article-card__tags-container--under-image {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: 1;'
+        {% endif %}
+      >
+        <collapsed-tags class="article-card__tags-component">
+          <div
+            class='article-card__tags article-card__tags--with-collapse'
+            data-visible-tags
+          >
+            {%- for item in tags -%}
+              {% assign tag = item | strip %}
+      
+              {% if article.tags contains tag %}
+                <div
+                  data-tag
+                  class='article-card__tag article-card__tag--under-image'
+                >
+                  {{- tag | link_to_tag: tag -}}
+                </div>
+              {% endif %}
+            {%- endfor -%}
+      
+            <div class='show-more-container article-card__extend-button' data-extend-button>
+              <float-element-btn
+                class='article-card__tag show-more article-card__tag--under-image'
+                data-aria-expanded='false'
+                data-float-element-id='{{layout}}-{{ article.id }}'
+                data-trigger='click'
+                tabindex='0'
+              >
+                <div class='show-more__dot'></div>
+                <div class='show-more__dot'></div>
+                <div class='show-more__dot'></div>
+              </float-element-btn>
+      
+              <float-element
+                class='dropdown article-card__dropdown'
+                aria-hidden='true'
+                id='{{layout}}-{{ article.id }}'
+                data-placement='bottom-end'
+                data-main-axis-offset='{% if settings.round_level != "0" %} 8{% else %} 0{% endif %}'
+                data-collapsed-tags
+                data-strategy='fixed'
+              >
+                <template data-float-element-template='{{layout}}-{{ article.id }}'>
+                  <div class='article-card__dropdown-body'></div>
+                </template>
+              </float-element>
+            </div>
+          </div>
+        </collapsed-tags>
+      </div>    
+    {% else %}
+      <div class="article-card__tags-container {% if tags_position == 'under_image' %} article-card__tags-container--under-image {% elsif tags_position == 'on_image' %} article-card__tags-container--on-image {% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}"
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: 1;'
+        {% endif %}
+      >
+        <article-tags class='article-card__tags-component'>
+          <div
+            class='article-card__tags'
+          >
+            {%- for item in tags -%}
+              {% assign tag = item | strip %}
+      
+              {% if article.tags contains tag %}
+                <div
+                  class='article-card__tag article-card__tag--under-image article-card__tag--with-heght-collapse'
+                  data-tag
+                >
+                  {{- tag | link_to_tag: tag -}}
+                </div>
+              {% endif %}
+            {%- endfor -%}
+
+            <div class='show-more-container article-card__extend-button--with-heght-collapse' data-extend-button>
+              <float-element-btn
+                class='article-card__tag show-more article-card__tag--under-image article-card__tag--with-heght-collapse'
+                data-aria-expanded='false'
+                data-float-element-id='{{layout}}-{{ article.id }}-article-tags'
+                data-trigger='click'
+                tabindex='0'
+              >
+                <div class='show-more__dot'></div>
+                <div class='show-more__dot'></div>
+                <div class='show-more__dot'></div>
+              </float-element-btn>
+      
+              <float-element
+                class='dropdown article-card__dropdown'
+                aria-hidden='true'
+                id='{{layout}}-{{ article.id }}-article-tags'
+                data-placement='top-end'
+                data-main-axis-offset='{% if settings.round_level != "0" %} 8{% else %} 0{% endif %}'
+                data-collapsed-tags
+                data-strategy='fixed'
+              >
+                <template data-float-element-template='{{layout}}-{{ article.id }}-article-tags'>
+                  <div class='article-card__dropdown-body'></div>
+                </template>
+              </float-element>
+            </div>
+          </div>
+        
+        </article-tags>
+      </div>
+    {% endif %}
+  {%- endif -%}
+{% endcapture %}
+
+{% capture article_card_image %}  
+  <div class='article-card__image-wrapper shape shape--{{ img_ratio }} {% if img_ratio contains 'fit' %} shape--fit {% endif %}'>
+    {%- if img != blank -%}
+      <img
+        {% render 'image-attributes',
+          image: img,
+          size: 'medium',
+          class: image_class
+        %}
+      >
+    {%- else -%}
+      {{ 'image' | placeholder_svg_tag: 'article-card__image placeholder-image zoom shape__target-image' }}
+    {%- endif -%}
+
+    {% if tags_position == 'on_image' %}
+      {{ article_card_tags }}
+    {% endif %}
+  </div>
+{% endcapture %}
+
+{% capture article_card_details %}
+  <div class='article-card__details {% if with_bottom_spacing %}article-card__details--bottom-spacing{% endif %} {% if color_post_background %} article-card__details--with-background {% endif %} {% if section.settings.add_side_paddings == false %} article-card__details--left-spacing {% endif %}'>
+    {% if tags_position == 'under_image' %}
+      {{ article_card_tags }}
+    {% endif %}
+
+    {%- if show_author or show_date or show_comment_count -%}
+      <div class='article-card__meta body-color {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: 2;'
+        {% endif %}
+      >
+        {%- if show_author -%}
+          <span class='article-card__meta-item'>{{- author -}}</span>
+        {%- endif -%}
+        {%- if show_date -%}
+          <span class='article-card__meta-item'>{{- date | date: format: 'abbreviated_date' -}}</span>
+        {%- endif -%}
+        {%- if show_comment_count -%}
+          <span class='article-card__meta-item'>
+            {{- 'cards.article_card.store_front.comments_count' | t: count: comments_count -}}
+          </span>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+    {%- if title != blank -%}
+      <h2 class='article-card__title h6 {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: 3;'
+        {% endif %}
+      >
+        {{- title -}}
+      </h2>
+    {%- endif -%}
+    {%- if show_subheading and content != blank -%}
+      <div class='body3 {% if title != blank %} body-color {% endif %} article-card__description body-font-weight-from-global-settings {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: 4;'
+          data-remove-animation-class
+        {% endif %}
+      >
+        {{- content -}}
+      </div>
+    {%- endif -%}
+    {%- if show_read_more -%}
+      <a
+        class='link article-card__read-more-link {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: 5;'
+        {% endif %}
+        {% if article.url != blank %}
+          href='{{ article.url }}'
+        {% endif %}
+      >
+        <span class="link-parent-for-hover">
+          <span class='link__text'>{{ 'cards.article_card.store_front.read_more_link' | t }}</span>
+        </span>
+        {%- render 'icon', icon_name: 'arrow', class: 'link__chevron' -%}
+      </a>
+    {%- endif -%}
+
+  </div>  
+{% endcapture %}
+
+{% capture article_card_full %}
+  <article-card class='article-card link-parent-for-hover zoom-parent-for-hover {{ class }} {% if color_post_background %} article-card--with-background {% endif %}'>
+    <a
+      class='article-card__link'
+      {% if article.url != blank %}
+        href='{{ article.url }}'
+      {% endif %}
+      aria-label='{{ article.title }}'
+    ></a>
+
+    {{article_card_image}}
+    {{article_card_details}}
+    
+  </article-card>  
+{% endcapture %}
+
+{% case type %}
+  {% when 'full' %}
+    {{ article_card_full }}
+
+  {% when 'image' %}
+    {{ article_card_image }}
+
+    <a
+      class='article-card__link'
+      {% if article.url != blank %}
+        href='{{ article.url }}'
+      {% endif %}
+      aria-label='{{ article.title }}'
+      tabindex='-1'
+    ></a>
+
+  {% when 'details' %}
+    {{ article_card_details }}
+
+    <a
+      class='article-card__link'
+      {% if article.url != blank %}
+        href='{{ article.url }}'
+      {% endif %}
+      aria-label='{{ article.title }}'
+    ></a>
+{% endcase %}

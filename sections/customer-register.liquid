@@ -1,0 +1,279 @@
+{%- liquid
+  assign options = section.settings
+  assign add_side_paddings = options.add_side_paddings
+  assign section_spacing_top = options.section_spacing_top
+  assign section_spacing_bottom = options.section_spacing_bottom
+  assign color_scheme = options.color_scheme
+
+  assign enable_content_slide_in = settings.enable_content_slide_in
+-%}
+
+{% capture css %}
+  {% style %}
+    .section-{{section.id}} {
+        --gsc-section-spacing-top: {{ section_spacing_top }}px;
+        --gsc-section-spacing-bottom: {{ section_spacing_bottom }}px;
+        --gsc-container-width: 40rem;
+    }
+  {% endstyle %}
+{% endcapture %}
+
+{% render 'inline-css-minifier', css: css %}
+
+<register-component class='login section section-{{ section.id }} color-{{ color_scheme }}'>
+  <div class='container {% if add_side_paddings == true %}container--with-aside-paddings{% endif %} section-spacing'>
+    <div class='login__content'>
+      <h2
+        class='login__title h5 {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: 1;'
+        {% endif %}
+        tabindex='-1'
+      >
+        {{ 'customer.register.store_front.title' | t }}
+      </h2>
+    </div>
+    {%- form 'create_customer', novalidate: 'novalidate', class: 'login__form', data-register-form: '' -%}
+      <div
+        class='field login__field {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: 2;'
+        {% endif %}
+      >
+        <label class='label' for='RegisterForm-FirstName'>{{ 'customer.register.store_front.first_name' | t }}</label>
+        <input
+          class='input input--{{ settings.input_style }} input--large'
+          type='text'
+          id='RegisterForm-FirstName'
+          name='customer[first_name]'
+          {% if form.first_name %}
+            value='{{ form.first_name }}'
+          {% endif %}
+          autocomplete='given-name'
+          autofocus
+          placeholder='{{ 'customer.register.store_front.first_name' | t }}'
+          required
+        >
+      </div>
+
+      <div
+        class='field login__field {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: 3;'
+        {% endif %}
+      >
+        <label class='label' for='RegisterForm-LastName'>{{ 'customer.register.store_front.last_name' | t }}</label>
+        <input
+          class='input input--{{ settings.input_style }} input--large'
+          type='text'
+          id='RegisterForm-LastName'
+          name='customer[last_name]'
+          {% if form.last_name %}
+            value='{{ form.last_name }}'
+          {% endif %}
+          autocomplete='family-name'
+          placeholder='{{ 'customer.register.store_front.last_name' | t }}'
+          required
+        >
+      </div>
+
+      <div
+        class='field login__field {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: 4;'
+        {% endif %}
+      >
+        <label class='label' for='RegisterForm-email'>{{ 'customer.register.store_front.email' | t }}</label>
+        <input
+          class='input input--{{ settings.input_style }} input--large'
+          type='email'
+          id='RegisterForm-email'
+          name='customer[email]'
+          {% if form.email %}
+            value='{{ form.email }}'
+          {% endif %}
+          spellcheck='false'
+          autocapitalize='off'
+          autocomplete='email'
+          aria-required='true'
+          placeholder='{{ 'customer.register.store_front.email' | t }}'
+          required
+        >
+      </div>
+
+      {%- if form.errors contains 'email' -%}
+        {% assign error = form.errors.translated_fields.email
+          | capitalize
+          | append: ' '
+          | append: form.errors.messages.email
+        %}
+        <script>
+          window.notification = { text: '{{ error }}', variant: 'warning' }
+          localStorage?.removeItem('isRegistered')
+        </script>
+      {%- endif -%}
+
+      <div
+        class='field login__field {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: 5;'
+        {% endif %}
+      >
+        <label class='label' for='RegisterForm-password'>{{ 'customer.register.store_front.password' | t }}</label>
+
+        <password-field class='password-input'>
+          <input
+            class='input input--{{ settings.input_style }} input--large password-input__input'
+            type='password'
+            id='RegisterForm-password'
+            name='customer[password]'
+            aria-required='true'
+            placeholder='{{ 'customer.register.store_front.password' | t }}'
+            data-password-field-input
+            required
+          >
+          <button type='button' class='password-input__btn unstyled-button' data-password-field-button>
+            {% render 'icon',
+              icon_name: 'password-input-opened-eye',
+              class: 'password-input__icon password-input__icon--eye'
+            %}
+            {% render 'icon',
+              icon_name: 'password-input-closed-eye',
+              class: 'password-input__icon password-input__icon--closed-eye'
+            %}
+          </button>
+        </password-field>
+      </div>
+
+      {%- if form.errors contains 'password' -%}
+        {%- assign error = form.errors.translated_fields.password
+          | capitalize
+          | append: ' '
+          | append: form.errors.messages.password
+        -%}
+        <script>
+          window.notification = { text: '{{ error }}', variant: 'warning' }
+          localStorage?.removeItem('isRegistered')
+        </script>
+      {%- endif -%}
+
+      <div
+        class='login__btns {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: 6;'
+        {% endif %}
+      >
+        <button
+          class='btn btn--solid btn--lg login__btn'
+          aria-label='{{ 'customer.register.screen_reader.create_account_button_label' | t }}'
+        >
+          {{ 'customer.register.store_front.create_account_button_label' | t }}
+        </button>
+      </div>
+
+      <div
+        class='login__footer {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+        {% if enable_content_slide_in %}
+          style='--gsc-animation-order: 7;'
+        {% endif %}
+      >
+        {{ 'customer.register.store_front.sign_in_link_html' | t: account_login_url: routes.account_login_url }}
+      </div>
+
+      {%- if form.errors contains 'form' -%}
+        {% assign error = form.errors.messages.form %}
+
+        <script>
+          window.notification = { text: '{{ error }}', variant: 'warning', duration: 15000 }
+          localStorage?.removeItem('isRegistered')
+        </script>
+      {%- endif -%}
+    {%- endform -%}
+  </div>
+</register-component>
+
+{% render 'save-section-data-in-global-scope', section: section %}
+
+{% schema %}
+{
+  "name": "t:sections.register_form.name",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:sections.general_section_settings.color_scheme_option_default_label"
+        },
+        {
+          "value": "primary",
+          "label": "t:sections.general_section_settings.color_scheme_option_primary_label"
+        },
+        {
+          "value": "secondary",
+          "label": "t:sections.general_section_settings.color_scheme_option_secondary_label"
+        },
+        {
+          "value": "custom-1",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_1_label"
+        },
+        {
+          "value": "custom-2",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_2_label"
+        },
+        {
+          "value": "custom-3",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_3_label"
+        },
+        {
+          "value": "white",
+          "label": "t:sections.general_section_settings.color_scheme_option_white_text_label"
+        },
+        {
+          "value": "black",
+          "label": "t:sections.general_section_settings.color_scheme_option_black_text_label"
+        },
+        {
+          "value": "custom-5",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_5_label"
+        }
+      ],
+      "default": "default",
+      "label": "t:sections.general_section_settings.color_scheme_label",
+      "info": "t:sections.general_section_settings.color_scheme_tip"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.general_section_settings.paddings.header_title"
+    },
+    {
+      "type": "checkbox",
+      "id": "add_side_paddings",
+      "default": true,
+      "label": "t:sections.general_section_settings.paddings.add_side_paddings.label"
+    },
+    {
+      "type": "range",
+      "id": "section_spacing_top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 96,
+      "unit": "t:sections.general_section_settings.paddings.section_spacing_top.unit",
+      "label": "t:sections.general_section_settings.paddings.section_spacing_top.label"
+    },
+    {
+      "type": "range",
+      "id": "section_spacing_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 96,
+      "unit": "t:sections.general_section_settings.paddings.section_spacing_bottom.unit",
+      "label": "t:sections.general_section_settings.paddings.section_spacing_bottom.label"
+    }
+  ]
+}
+{% endschema %}

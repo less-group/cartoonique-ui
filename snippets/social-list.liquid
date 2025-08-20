@@ -1,0 +1,194 @@
+{%- liquid
+  assign instagram_link = settings.social_instagram_link
+  assign facebook_link = settings.social_facebook_link
+  assign twitter_link = settings.social_twitter_link
+  assign youtube_link = settings.social_youtube_link
+  assign pinterest_link = settings.social_pinterest_link
+  assign tiktok_link = settings.social_tiktok_link
+  assign tumblr_link = settings.social_tumblr_link
+  assign snapchat_link = settings.social_snapchat_link
+  assign linkedin_link = settings.social_linkedin_link
+  assign vimeo_link = settings.social_vimeo_link
+  assign flickr_link = settings.social_flickr_link
+  assign reddit_link = settings.social_reddit_link
+  assign email_link = settings.social_email_link
+  assign social_behance_link = settings.social_behance_link
+  assign social_discord_link = settings.social_discord_link
+  assign social_dribbble_link = settings.social_dribbble_link
+  assign social_medium_link = settings.social_medium_link
+  assign social_twitch_link = settings.social_twitch_link
+  assign social_whatsapp_link = settings.social_whatsapp_link
+  assign social_viber_link = settings.social_viber_link
+  assign social_telegram_link = settings.social_telegram_link
+  assign icon_style = settings.social_icon_style
+
+  if social_behance_link != blank or social_discord_link != blank or social_dribbble_link != blank or social_medium_link != blank or social_twitch_link != blank or social_whatsapp_link != blank or social_viber_link != blank or social_telegram_link != blank or email_link != blank or reddit_link != blank or flickr_link != blank or linkedin_link != blank or vimeo_link != blank or youtube_link != blank or snapchat_link != blank or tumblr_link != blank or tiktok_link != blank or instagram_link != blank or pinterest_link != blank or facebook_link != blank or twitter_link != blank
+    assign has_social_links = true
+  endif
+
+  assign enable_content_slide_in = settings.enable_content_slide_in
+-%}
+
+{%- if has_social_links -%}
+  <ul
+    class='social-list {{ class }} {% if enable_content_slide_in and disable_animation != true %}scroll-trigger animate--slide-in{% endif %}'
+    {% if enable_content_slide_in and disable_animation != true %}
+      style='--gsc-animation-order: 1;'
+    {% endif %}
+    role='list'
+  >
+    {%- if instagram_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ instagram_link }}' class='link social-list__item-link' aria-label='Instagram'>
+          {%- render 'icon-pack',
+            icon: 'instagram',
+            type: 'solid',
+            class: 'social-list__item-link-icon',
+            icon_style: icon_style
+          -%}
+        </a>
+      </li>
+    {%- endif -%}
+    {%- if facebook_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ facebook_link }}' class='link social-list__item-link' aria-label='Facebook'>
+          {%- render 'icon-pack', icon: 'facebook', class: 'social-list__item-link-icon', icon_style: icon_style -%}
+        </a>
+      </li>
+    {%- endif -%}
+    {%- if twitter_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ twitter_link }}' class='link social-list__item-link' aria-label='Twitter'>
+          {%- render 'icon-pack', icon: 'twitter', class: 'social-list__item-link-icon', icon_style: icon_style -%}
+        </a>
+      </li>
+    {%- endif -%}
+    {%- if youtube_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ youtube_link }}' class='link social-list__item-link' aria-label='Youtube'>
+          {%- render 'icon-pack', icon: 'youtube', class: 'social-list__item-link-icon', icon_style: icon_style -%}
+        </a>
+      </li>
+    {%- endif -%}
+    {%- if pinterest_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ pinterest_link }}' class='link social-list__item-link' aria-label='Pinterest'>
+          {%- render 'icon-pack', icon: 'pinterest', class: 'social-list__item-link-icon', icon_style: icon_style -%}
+        </a>
+      </li>
+    {%- endif -%}
+
+    {%- if tiktok_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ tiktok_link }}' class='link social-list__item-link' aria-label='Tiktok'>
+          {%- render 'icon-pack', icon: 'tiktok', class: 'social-list__item-link-icon', icon_style: icon_style -%}
+        </a>
+      </li>
+    {%- endif -%}
+    {%- if tumblr_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ tumblr_link }}' class='link social-list__item-link' aria-label='Tumblr'>
+          {%- render 'icon-pack', icon: 'tumblr', class: 'social-list__item-link-icon', icon_style: icon_style -%}
+        </a>
+      </li>
+    {%- endif -%}
+    {%- if snapchat_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ snapchat_link }}' class='link social-list__item-link' aria-label='Snapchat'>
+          {%- render 'icon-pack', icon: 'snapchat', class: 'social-list__item-link-icon', icon_style: icon_style -%}
+        </a>
+      </li>
+    {%- endif -%}
+    {%- if linkedin_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ linkedin_link }}' class='link social-list__item-link' aria-label='Linkedin'>
+          {%- render 'icon-pack', icon: 'linkedin', class: 'social-list__item-link-icon', icon_style: icon_style -%}
+        </a>
+      </li>
+    {%- endif -%}
+    {%- if vimeo_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ vimeo_link }}' class='link social-list__item-link' aria-label='Vimeo'>
+          {%- render 'icon-pack', icon: 'vimeo', class: 'social-list__item-link-icon', icon_style: icon_style -%}
+        </a>
+      </li>
+    {%- endif -%}
+    {%- if flickr_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ flickr_link }}' class='link social-list__item-link' aria-label='Flickr'>
+          {%- render 'icon-pack', icon: 'flickr', class: 'social-list__item-link-icon', icon_style: icon_style -%}
+        </a>
+      </li>
+    {%- endif -%}
+    {%- if reddit_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ reddit_link }}' class='link social-list__item-link' aria-label='Reddit'>
+          {%- render 'icon-pack', icon: 'reddit', class: 'social-list__item-link-icon', icon_style: icon_style -%}
+        </a>
+      </li>
+    {%- endif -%}
+    {%- if email_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ email_link }}' class='link social-list__item-link' aria-label='Email'>
+          {%- render 'icon-pack', icon: 'email', class: 'social-list__item-link-icon', icon_style: icon_style -%}
+        </a>
+      </li>
+    {%- endif -%}
+    {%- if social_behance_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ social_behance_link }}' class='link social-list__item-link' aria-label='Behance'>
+          {%- render 'icon-pack', icon: 'behance', class: 'social-list__item-link-icon', icon_style: icon_style -%}
+        </a>
+      </li>
+    {%- endif -%}
+    {%- if social_discord_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ social_discord_link }}' class='link social-list__item-link' aria-label='Discord'>
+          {%- render 'icon-pack', icon: 'discord', class: 'social-list__item-link-icon', icon_style: icon_style -%}
+        </a>
+      </li>
+    {%- endif -%}
+    {%- if social_dribbble_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ social_dribbble_link }}' class='link social-list__item-link' aria-label='Dribbble'>
+          {%- render 'icon-pack', icon: 'dribbble', class: 'social-list__item-link-icon', icon_style: icon_style -%}
+        </a>
+      </li>
+    {%- endif -%}
+    {%- if social_medium_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ social_medium_link }}' class='link social-list__item-link' aria-label='Medium'>
+          {%- render 'icon-pack', icon: 'medium', class: 'social-list__item-link-icon', icon_style: icon_style -%}
+        </a>
+      </li>
+    {%- endif -%}
+    {%- if social_twitch_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ social_twitch_link }}' class='link social-list__item-link' aria-label='Twitch'>
+          {%- render 'icon-pack', icon: 'twitch', class: 'social-list__item-link-icon', icon_style: icon_style -%}
+        </a>
+      </li>
+    {%- endif -%}
+    {%- if social_whatsapp_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ social_whatsapp_link }}' class='link social-list__item-link' aria-label='WhatsApp'>
+          {%- render 'icon-pack', icon: 'whatsapp', class: 'social-list__item-link-icon', icon_style: icon_style -%}
+        </a>
+      </li>
+    {%- endif -%}
+    {%- if social_viber_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ social_viber_link }}' class='link social-list__item-link' aria-label='Viber'>
+          {%- render 'icon-pack', icon: 'viber', class: 'social-list__item-link-icon', icon_style: icon_style -%}
+        </a>
+      </li>
+    {%- endif -%}
+    {%- if social_telegram_link != blank -%}
+      <li class='social-list__item'>
+        <a href='{{ social_telegram_link }}' class='link social-list__item-link' aria-label='Telegram'>
+          {%- render 'icon-pack', icon: 'telegram', class: 'social-list__item-link-icon', icon_style: icon_style -%}
+        </a>
+      </li>
+    {%- endif -%}
+  </ul>
+{%- endif -%}

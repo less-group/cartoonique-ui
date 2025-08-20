@@ -1,0 +1,256 @@
+{% liquid
+  assign product_card_with_bottom_spacing = false
+  if settings.round_level != '0'
+    assign product_card_with_bottom_spacing = true
+  endif
+  assign view_all_collection_link_text = 'cards.collection_card.store_front.view_all_collection_link_text' | t
+
+  assign collection_card_is_added = false
+  assign collection_card_target_item_index = blank
+
+  case collection_card_position
+    when 'after-item-1'
+      assign collection_card_target_item_index = 1
+    when 'after-item-2'
+      assign collection_card_target_item_index = 2
+    when 'after-item-3'
+      assign collection_card_target_item_index = 3
+    when 'after-item-4'
+      assign collection_card_target_item_index = 4
+    when 'after-item-5'
+      assign collection_card_target_item_index = 5
+  endcase
+
+  assign product_limit = product_limit
+  if collection_card_position == 'none'
+    assign product_limit = product_limit | plus: 1
+  endif
+
+  assign show_mobile_carousel = false
+  if mobile_layout contains 'column'
+    assign show_mobile_carousel = true
+  endif
+
+  assign enable_content_slide_in = settings.enable_content_slide_in
+%}
+{% liquid
+  assign swatch_patterns = settings.primary_custom_colors_and_patterns
+  assign primary_custom_colors_and_patterns = swatch_patterns | newline_to_br | split: '<br />'
+%}
+{% capture section_background_color %}
+  {% render 'get-section-background-color', section: section %}
+{% endcapture %}
+
+
+<slider-grid
+  class='slider-grid {% if show_navigation_on_hover %}card-carousel--navigation-on-hover{% endif %}'
+  {% if autoplay_mode != 'disabled' %}
+    autoplay-mode='{{autoplay_mode}}'
+    autoplay-interval='{{autoplay_interval}}'
+  {% endif %}
+  {% if desktop_layout contains 'grid' %}
+    desktop-disabled
+  {% endif %}
+  {% if mobile_layout contains 'column' %}
+    mobile-disabled
+  {% endif %}
+>
+  <div
+    slider-grid-track
+    class='slider-grid-track slider-grid__d-{{desktop_layout}} slider-grid__m-{{mobile_layout}}'
+  >
+    {% if featured_products != blank %}
+      {%- for product in featured_products limit: product_limit -%}
+        <div
+          class='slider-grid__slide {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+          {% if enable_content_slide_in %}
+            style='--gsc-animation-order: {{forloop.index}};'
+          {% endif %}
+          slider-grid-slide
+        >
+          {%- render 'product-card',
+            product: product,
+            img_ratio: img_ratio,
+            product_card_align: product_card_align,
+            add_side_paddings: add_side_paddings,
+            with_bottom_spacing: product_card_with_bottom_spacing,
+            primary_custom_colors_and_patterns: primary_custom_colors_and_patterns,
+            section_background_color: section_background_color,
+            show_mobile_carousel: show_mobile_carousel
+          -%}
+        </div>
+      {%- endfor -%}
+    {% elsif featured_collection != blank %}
+      {% if collection_card_position == 'before-all-items' %}
+        {% if img_ratio contains 'fit' %}
+          {% assign img_ratio = img_ratio | remove: 'fit-' %}
+        {% endif %}
+
+        <div
+          class='slider-grid__slide collection__collection-card-slide {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+          {% if enable_content_slide_in %}
+            style='--gsc-animation-order: 0;'
+          {% endif %}
+          slider-grid-slide
+        >
+          {% if collection_card_count > 0 %}
+            {%- render 'collection-card',
+              title: featured_collection.title,
+              img: featured_collection.image,
+              img_ratio: img_ratio,
+              collection: featured_collection,
+              text_style: collection_card_content_position,
+              content_align: collection_card_content_align,
+              heading_size: collection_card_heading_size,
+              show_product_count: collection_card_show_product_count,
+              link_url: featured_collection.url
+            -%}
+          {% endif %}
+
+          {% assign collection_card_is_added = true %}
+        </div>
+      {% endif %}
+
+      {%- for product in featured_collection.products limit: product_limit -%}
+        <div
+          class='slider-grid__slide collection__collection-card-slide {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+          {% if enable_content_slide_in %}
+            style='--gsc-animation-order: {{forloop.index}};'
+          {% endif %}
+          slider-grid-slide
+        >
+          {%- render 'product-card',
+            product: product,
+            img_ratio: img_ratio,
+            product_card_align: product_card_align,
+            add_side_paddings: add_side_paddings,
+            with_bottom_spacing: product_card_with_bottom_spacing,
+            primary_custom_colors_and_patterns: primary_custom_colors_and_patterns,
+            section_background_color: section_background_color,
+            show_mobile_carousel: show_mobile_carousel
+          -%}
+        </div>
+
+        {% if forloop.index == collection_card_target_item_index %}
+          {% if img_ratio contains 'fit' %}
+            {% assign img_ratio = img_ratio | remove: 'fit-' %}
+          {% endif %}
+
+          <div
+            class='slider-grid__slide collection__collection-card-slide {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+            {% if enable_content_slide_in %}
+              style='--gsc-animation-order: {{forloop.index}};'
+            {% endif %}
+            slider-grid-slide
+          >
+            {% if collection_card_count > 0 %}
+              {%- render 'collection-card',
+                title: featured_collection.title,
+                img: featured_collection.image,
+                img_ratio: img_ratio,
+                collection: featured_collection,
+                text_style: collection_card_content_position,
+                content_align: collection_card_content_align,
+                heading_size: collection_card_heading_size,
+                show_product_count: collection_card_show_product_count,
+                link_url: featured_collection.url
+              -%}
+            {% endif %}
+
+            {% assign collection_card_is_added = true %}
+          </div>
+        {% endif %}
+      {%- endfor -%}
+
+      {% if collection_card_position != 'none' %}
+        {% if collection_card_is_added == false or collection_card_position == 'after-all-items' %}
+          {% if img_ratio contains 'fit' %}
+            {% assign img_ratio = img_ratio | remove: 'fit-' %}
+          {% endif %}
+
+          <div
+            class='slider-grid__slide collection__collection-card-slide {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+            {% if enable_content_slide_in %}
+              style='--gsc-animation-order: {{product_limit}};'
+            {% endif %}
+            slider-grid-slide
+          >
+            {% if collection_card_count > 0 %}
+              {%- render 'collection-card',
+                title: featured_collection.title,
+                img: featured_collection.image,
+                img_ratio: img_ratio,
+                collection: featured_collection,
+                text_style: collection_card_content_position,
+                content_align: collection_card_content_align,
+                heading_size: collection_card_heading_size,
+                show_product_count: collection_card_show_product_count,
+                link_url: featured_collection.url
+              -%}
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endif %}
+
+    {% else %}
+      {%- for product in prepared_collection_placeholder limit: product_limit -%}
+        <div
+          class='slider-grid__slide {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+          {% if enable_content_slide_in %}
+            style='--gsc-animation-order: {{forloop.index}};'
+          {% endif %}
+          slider-grid-slide
+        >
+          {%- render 'product-card',
+            product: product,
+            img_ratio: img_ratio,
+            product_card_align: product_card_align,
+            add_side_paddings: add_side_paddings,
+            with_bottom_spacing: product_card_with_bottom_spacing,
+            primary_custom_colors_and_patterns: primary_custom_colors_and_patterns,
+            section_background_color: section_background_color
+          -%}
+        </div>
+      {%- endfor -%}
+    {% endif %}
+  </div>
+
+  {% if desktop_layout != 'grid' %}
+    <div class='card-carousel__position-btn-wrap card-carousel__position-btn-wrap--prev {% if img_ratio == 'nature' %} card-carousel__position-btn-wrap--nature-img-ratio {% endif %}'>
+      <div class='shape shape--{{ img_ratio }}'>
+        <button
+          type='button'
+          class='carousel-btn card-carousel__carousel-btn card-carousel__carousel-btn--prev'
+          data-direction='prev'
+          tabindex='0'
+          disabled
+        >
+          {% render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon x-flip' %}
+        </button>
+      </div>
+    </div>
+
+    <div class='card-carousel__position-btn-wrap card-carousel__position-btn-wrap--next {% if img_ratio == 'nature' %} card-carousel__position-btn-wrap--nature-img-ratio {% endif %}'>
+      <div class='shape shape--{{ img_ratio }}'>
+        <button
+          type='button'
+          class='carousel-btn card-carousel__carousel-btn card-carousel__carousel-btn--next'
+          data-direction='next'
+          tabindex='0'
+          disabled
+        >
+          {%- render 'icon', icon_name: 'chevron', class: 'carousel-btn__icon' -%}
+        </button>
+      </div>
+    </div>
+  {% endif %}
+
+  {%- if desktop_layout == 'carousel-overflow' -%}
+    <div
+      class='progress-bar progress-bar--with-background card-carousel__progress-bar {% if mobile_layout != 'carousel-overflow' %}progress-bar--desktop-only{% endif %}'
+      data-target='scroll'
+    >
+      <div class='slider-grid__progress-bar-indicator' slider-grid-progress></div>
+    </div>
+  {%- endif -%}
+</slider-grid>

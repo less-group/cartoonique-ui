@@ -1,0 +1,266 @@
+{%- liquid
+  assign with_only_links = true
+  assign is_first_link = true
+  assign is_second_link = true
+
+  if btn_text != blank and btn_style != 'link'
+    assign with_only_links = false
+    assign is_first_link = false
+  endif
+
+  if extra_btn_text != blank and extra_btn_style != 'link'
+    assign with_only_links = false
+    assign is_second_link = false
+  endif
+
+  if text != blank
+    assign with_only_links = false
+  endif
+
+  assign continue_observe_animation = continue_observe_animation | default: false
+  assign enable_content_slide_in = settings.enable_content_slide_in
+-%}
+
+{%- if caption != blank or title != blank or text != blank or btn_text != blank or extra_btn_text != blank -%}
+  <div class='image-banner__content-wrap'>
+    <div class='image-banner__content image-banner__content--desktop image-banner__content--with-{{ desktop_content_background }}-background'>
+      {%- if caption != blank -%}
+        <div
+          class='caption image-banner__caption {% if desktop_content_background == 'solid' %} desktop-body-color {% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+          {% if enable_content_slide_in %}
+            style='--gsc-animation-order: 1;'
+            {% if continue_observe_animation %}
+              data-keep-observe-animation
+            {% endif %}
+            {% if remove_animation_class %}
+              data-remove-animation-class
+            {% endif %}
+          {% endif %}
+        >
+          {{ caption }}
+        </div>
+      {%- endif -%}
+      {%- if title != blank -%}
+        <h2
+          class='image-banner__title {{ heading_size }} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+          {% if enable_content_slide_in %}
+            style='--gsc-animation-order: 2;'
+            {% if continue_observe_animation %}
+              data-keep-observe-animation
+            {% endif %}
+            {% if remove_animation_class %}
+              data-remove-animation-class
+            {% endif %}
+          {% endif %}
+        >
+          {{ title }}
+        </h2>
+      {%- endif -%}
+      {%- if text != blank -%}
+        <div
+          class='rte {{ body_size }} {% if desktop_content_background == 'solid' and title != blank %} desktop-body-color {% endif %} image-banner__text body-font-weight-from-global-settings {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+          {% if enable_content_slide_in %}
+            style='--gsc-animation-order: 3;'
+            {% if continue_observe_animation %}
+              data-keep-observe-animation
+            {% endif %}
+            {% if remove_animation_class %}
+              data-remove-animation-class
+            {% endif %}
+          {% endif %}
+        >
+          {{ text }}
+        </div>
+      {%- endif -%}
+      {%- if btn_text != blank or extra_btn_text != blank -%}
+        <div
+          class='image-banner__btns {% if is_first_link %} image-banner__btns--with-first-button-link {% endif %} {% if is_second_link %} image-banner__btns--with-second-button-link {% endif %} {% if with_only_links %} image-banner__btns--with-only-links {% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+          {% if enable_content_slide_in %}
+            style='--gsc-animation-order: 4;'
+            {% if continue_observe_animation %}
+              data-keep-observe-animation
+            {% endif %}
+            {% if remove_animation_class %}
+              data-remove-animation-class
+            {% endif %}
+          {% endif %}
+        >
+          {%- if btn_text != blank -%}
+            {%- if btn_style == 'link' -%}
+              <a
+                class='link image-banner__btn-link'
+                {% if btn_url != blank %}
+                  href='{{ btn_url }}'
+                {% endif %}
+                aria-label='{% if btn_text != blank %}{{ btn_text | strip_html | escape }}{% elsif btn_url.title != blank %}{{ btn_url.title | strip_html | escape }}{% else %}#{% endif %}'
+              >
+                <span class='link-parent-for-hover'>
+                  <span class='link__text'>{{ btn_text }}</span>
+                </span>
+                {%- render 'icon', icon_name: 'link-chevron', class: 'link__chevron' -%}
+              </a>
+            {%- else -%}
+              <a
+                class='btn btn--{{ btn_style }} image-banner__btn'
+                {% if btn_url != blank %}
+                  href='{{ btn_url }}'
+                {% endif %}
+                aria-label='{% if btn_text != blank %}{{ btn_text | strip_html | escape }}{% elsif btn_url.title != blank %}{{ btn_url.title | strip_html | escape }}{% else %}#{% endif %}'
+              >
+                {{- btn_text -}}
+              </a>
+            {%- endif -%}
+          {%- endif -%}
+          {%- if extra_btn_text != blank -%}
+            {% if extra_btn_style == 'link' -%}
+              <a
+                class='link image-banner__btn-link'
+                {% if extra_btn_url != blank %}
+                  href='{{ extra_btn_url }}'
+                {% endif %}
+                aria-label='{% if extra_btn_text != blank %}{{ extra_btn_text | strip_html | escape }}{% elsif extra_btn_url.title != blank %}{{ extra_btn_url.title | strip_html | escape }}{% else %}#{% endif %}'
+              >
+                <span class='link-parent-for-hover'>
+                  <span class='link__text'>{{ extra_btn_text }}</span>
+                </span>
+                {%- render 'icon', icon_name: 'link-chevron', class: 'link__chevron' -%}
+              </a>
+            {%- else -%}
+              <a
+                class='btn btn--{{ extra_btn_style }} image-banner__btn'
+                {% if extra_btn_url != blank %}
+                  href='{{ extra_btn_url }}'
+                {% endif %}
+                aria-label='{% if extra_btn_text != blank %}{{ extra_btn_text | strip_html | escape }}{% elsif extra_btn_url.title != blank %}{{ extra_btn_url.title | strip_html | escape }}{% else %}#{% endif %}'
+              >
+                {{- extra_btn_text -}}
+              </a>
+            {%- endif -%}
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    </div>
+
+    <div class='image-banner__content image-banner__content--mobile image-banner__content--with-{{ mobile_content_background }}-background'>
+      {%- if caption != blank -%}
+        <div
+          class='caption image-banner__caption {% if mobile_content_background == 'solid' %} mobile-body-color {% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+          {% if enable_content_slide_in %}
+            style='--gsc-animation-order: 1;'
+            {% if continue_observe_animation %}
+              data-keep-observe-animation
+            {% endif %}
+            {% if remove_animation_class %}
+              data-remove-animation-class
+            {% endif %}
+          {% endif %}
+        >
+          {{ caption }}
+        </div>
+      {%- endif -%}
+      {%- if title != blank -%}
+        <h2
+          class='image-banner__title {{ heading_size }} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+          {% if enable_content_slide_in %}
+            style='--gsc-animation-order: 2;'
+            {% if continue_observe_animation %}
+              data-keep-observe-animation
+            {% endif %}
+            {% if remove_animation_class %}
+              data-remove-animation-class
+            {% endif %}
+          {% endif %}
+        >
+          {{ title }}
+        </h2>
+      {%- endif -%}
+      {%- if text != blank -%}
+        <div
+          class='rte {{ body_size }} image-banner__text body-font-weight-from-global-settings {% if mobile_content_background == 'solid' and title != blank %} mobile-body-color {% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+          {% if enable_content_slide_in %}
+            style='--gsc-animation-order: 3;'
+            {% if continue_observe_animation %}
+              data-keep-observe-animation
+            {% endif %}
+            {% if remove_animation_class %}
+              data-remove-animation-class
+            {% endif %}
+          {% endif %}
+        >
+          {{ text }}
+        </div>
+      {%- endif -%}
+      {%- if btn_text != blank or extra_btn_text != blank -%}
+        <div
+          class='image-banner__btns {% if is_first_link %} image-banner__btns--with-first-button-link {% endif %} {% if is_second_link %} image-banner__btns--with-second-button-link {% endif %} {% if with_only_links %} image-banner__btns--with-only-links {% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+          {% if enable_content_slide_in %}
+            style='--gsc-animation-order: 4;'
+            {% if continue_observe_animation %}
+              data-keep-observe-animation
+            {% endif %}
+            {% if remove_animation_class %}
+              data-remove-animation-class
+            {% endif %}
+          {% endif %}
+        >
+          {%- if btn_text != blank -%}
+            {%- if btn_style == 'link' -%}
+              <a
+                class='link image-banner__btn-link'
+                {% if btn_url != blank %}
+                  href='{{ btn_url }}'
+                {% endif %}
+                aria-label='{{ btn_text | strip_html | escape }}'
+                tabindex='-1'
+              >
+                <span class='link-parent-for-hover'>
+                  <span class='link__text'>{{ btn_text }}</span>
+                </span>
+                {%- render 'icon', icon_name: 'link-chevron', class: 'link__chevron' -%}
+              </a>
+            {%- else -%}
+              <a
+                class='btn btn--{{ btn_style }} image-banner__btn'
+                {% if btn_url != blank %}
+                  href='{{ btn_url }}'
+                {% endif %}
+                aria-label='{{- btn_text | strip_html | escape -}}'
+                tabindex='-1'
+              >
+                {{- btn_text -}}
+              </a>
+            {%- endif -%}
+          {%- endif -%}
+          {%- if extra_btn_text != blank -%}
+            {% if extra_btn_style == 'link' -%}
+              <a
+                class='link image-banner__btn-link'
+                {% if extra_btn_url != blank %}
+                  href='{{ extra_btn_url }}'
+                {% endif %}
+                aria-label='{{ extra_btn_text | strip_html | escape }}'
+                tabindex='-1'
+              >
+                <span class='link-parent-for-hover'>
+                  <span class='link__text'>{{ extra_btn_text }}</span>
+                </span>
+                {%- render 'icon', icon_name: 'link-chevron', class: 'link__chevron' -%}
+              </a>
+            {%- else -%}
+              <a
+                class='btn btn--{{ extra_btn_style }} image-banner__btn'
+                {% if extra_btn_url != blank %}
+                  href='{{ extra_btn_url }}'
+                {% endif %}
+                aria-label='{{- extra_btn_text | strip_html | escape -}}'
+                tabindex='-1'
+              >
+                {{- extra_btn_text -}}
+              </a>
+            {%- endif -%}
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+{%- endif -%}

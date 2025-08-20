@@ -1,0 +1,98 @@
+{%- assign image = media.image -%}
+{%- assign media_type = media.media_type -%}
+
+<div class='product-modal__slide-inner'>
+  {%- if media_type == 'image' -%}
+    <product-modal-image-wrap class='product-modal__image-wrap'>
+      <img
+        class='product-modal__image'
+        loading='lazy'
+        src='{{ image | image_url: width: image.width, height: image.height }}'
+        alt='{{ image.alt | escape }}'
+        width='{{ image.width }}'
+        height='{{ image.height }}'
+        data-product-modal-image
+      >
+
+      <div class='product-modal__dots-spinner-wrap' data-product-modal-image-preloader>
+        <div class='dots-spinner'>
+          <div class='dots-spinner__dot'></div>
+          <div class='dots-spinner__dot'></div>
+          <div class='dots-spinner__dot'></div>
+        </div>
+      </div>
+    </product-modal-image-wrap>
+
+  {%- elsif media_type == 'video' or media_type == 'external_video' -%}
+    <deferred-media
+      class='deferred-media'
+      {% if enable_video_autoplay %}
+        data-autoplay
+      {% endif %}
+    >
+      <div
+        id='Deferred-Poster-Modal-{{ media.id }}'
+        class='product-modal__image-wrap deferred-media__poster'
+        type='button'
+      >
+        <div class='deferred-media__button'>
+          {%- render 'icon',
+            icon_name: 'play',
+            class: 'deferred-media__button-icon deferred-media__button-icon--play',
+            icon_style: 'solid'
+          -%}
+        </div>
+        {%- if media != blank -%}
+          {%- assign image = media.preview_image -%}
+
+          <img
+            {% render 'image-attributes',
+              image: image,
+              is_multiply_target: enable_multiply,
+              class_from_parent: class,
+              class: 'product-modal__image product-modal__image--video'
+            %}
+          >
+        {%- else -%}
+          {{ 'image' | placeholder_svg_tag: placeholder_class }}
+        {%- endif -%}
+      </div>
+      <template>
+        {%- liquid
+          assign video_class = 'deffered-media__video'
+
+          if section.settings.scale_video == true
+            assign video_class = 'deffered-media__video deffered-media__video--with-scale'
+          endif
+
+          case media_type
+            when 'external_video'
+              if media.host == 'youtube'
+                echo media | external_video_url: autoplay: false, loop: enable_video_looping, playlist: media.external_id | external_video_tag: class: video_class, loading: 'lazy'
+              else
+                echo media | external_video_url: autoplay: false, loop: enable_video_looping | external_video_tag: class: video_class, loading: 'lazy'
+              endif
+            when 'video'
+              if enable_video_autoplay
+                echo media | media_tag: class: video_class, image_size: '2048x', autoplay: true, loop: enable_video_looping, controls: false, preload: 'none'
+              else
+                echo media | media_tag: class: video_class, image_size: '2048x', autoplay: false, loop: enable_video_looping, controls: true, preload: 'none'
+              endif
+          endcase
+        -%}
+      </template>
+    </deferred-media>
+  {%- else -%}
+    <product-modal-image-wrap class='product-modal__image-wrap' data-product-modal-image>
+      {{ 'image' | placeholder_svg_tag: 'placeholder-image product-modal__image product-modal__image--placeholder' }}
+
+      <div class='product-modal__dots-spinner-wrap' data-product-modal-image-preloader>
+        <div class='dots-spinner'>
+          <div class='dots-spinner__dot'></div>
+          <div class='dots-spinner__dot'></div>
+          <div class='dots-spinner__dot'></div>
+        </div>
+      </div>
+    </product-modal-image-wrap>
+  {%- endif -%}
+</div>

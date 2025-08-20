@@ -1,0 +1,100 @@
+{%- assign gift_card_recipient_control_flag = 'properties[__shopify_send_gift_card_to_recipient]' -%}
+
+<recipient-form
+  class='recipient-form'
+  data-section-id='{{ section.id }}'
+  data-product-variant-id='{{ product.selected_or_first_available_variant.id }}'
+>
+  <div class='recipient-form__trigger'>
+    <label class='slider-switch' for='Recipient-checkbox-{{ section.id }}'>
+      <input
+        id='Recipient-checkbox-{{ section.id }}'
+        name='{{ gift_card_recipient_control_flag }}'
+        type='checkbox'
+        aria-label='{{ 'general.gift_recipient_form.screen_reader.send_gift_checkbox_label' | t }}'
+        class='slider-switch__checkbox'
+        data-recipient-form-checkbox
+      >
+      <div class='slider-switch__container'>
+        <div class='slider-switch__toggle'></div>
+      </div>
+    </label>
+
+    <label class='recipient-form__trigger-label' for='Recipient-checkbox-{{ section.id }}'>
+      {{ 'general.gift_recipient_form.store_front.send_gift_checkbox_label' | t }}
+    </label>
+  </div>
+
+  <div class='recipient-form__fields' data-recipient-form-fields>
+    <div class='field  recipient-form__field'>
+      <input
+        class='input input--{{ settings.input_style }} input--large'
+        id='Recipient-email-{{ section.id }}'
+        type='email'
+        placeholder='{{ "general.gift_recipient_form.store_front.recipient_email_input_placeholder" | t }}'
+        aria-label='{{ "general.gift_recipient_form.screen_reader.recipient_email_input_placeholder" | t }}'
+        name='properties[Recipient email]'
+        value='{{ form.email }}'
+        data-recipient-form-input
+      >
+    </div>
+    <div class='field  recipient-form__field'>
+      <input
+        class='input input--{{ settings.input_style }} input--large'
+        autocomplete='name'
+        type='text'
+        id='Recipient-name-{{ section.id }}'
+        name='properties[Recipient name]'
+        placeholder='{{ "general.gift_recipient_form.store_front.recipient_name_input_placeholder" | t }}'
+        aria-label='{{ "general.gift_recipient_form.screen_reader.recipient_name_input_placeholder" | t }}'
+        value='{{ form.name }}'
+        data-recipient-form-input
+      >
+    </div>
+
+    <div class='field recipient-form__field'>
+      <textarea
+        id='Recipient-message-{{ section.id }}'
+        class='textarea textarea--{{ settings.input_style }}'
+        name='properties[Message]'
+        maxlength='200'
+        placeholder='{{ "general.gift_recipient_form.store_front.message_input_placeholder" | t }}'
+        aria-label='{{ "general.gift_recipient_form.screen_reader.message_input_placeholder" | t }}'
+        data-recipient-form-input
+      >{{ form.message }}</textarea>
+    </div>
+
+    <div class='field recipient-form__field'>
+      <input
+        autocomplete='send_on'
+        type='date'
+        class='input input--large input--{{ settings.input_style }}'
+        id='Recipient-send-on-{{ section.id }}'
+        name='properties[Send on]'
+        placeholder='{{ "general.gift_recipient_form.store_front.date_input_placeholder" | t }}'
+        aria-label='{{ "general.gift_recipient_form.screen_reader.date_input_placeholder" | t }}'
+        pattern='\d{4}-\d{2}-\d{2}'
+        value='{% if form.send_on != blank %}{{form.send_on}}{% else %}{{ "now" | date: "%Y-%m-%d" }}{% endif %}'
+        data-recipient-form-input
+      >
+      <label class='field__label' for='Recipient-send-on-{{ section.id }}'>
+        {{- 'general.gift_recipient_form.store_front.date_input_placeholder' | t -}}
+      </label>
+    </div>
+  </div>
+  <input
+    type='hidden'
+    name='{{ gift_card_recipient_control_flag }}'
+    value='if_present'
+    id='Recipient-control-{{ section.id }}'
+    disabled
+  >
+  <input
+    type='hidden'
+    name='properties[__shopify_offset]'
+    value=''
+    id='Recipient-timezone-offset-{{ section.id }}'
+    disabled
+    data-recipient-form-timezone-input
+  >
+</recipient-form>

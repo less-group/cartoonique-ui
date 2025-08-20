@@ -1,0 +1,535 @@
+{%- comment -%}
+  ----------------------------------------------------------------------------------------------------------------------
+  BUY BUTTONS
+  ----------------------------------------------------------------------------------------------------------------------
+
+  This component is used to show the buy buttons
+
+  ********************************************
+  Supported variables
+  ********************************************
+
+  * product: the product from which to show the buttons
+  * show_payment_button: if we show or not the dynamic checkout button
+  * show_gift_card_recipient: for gift card products, an optional message/email to be sent to the recipient
+  * button_size: the size of the button (default to xl if none is passed)
+  * atc_button_background: the background of the ATC button
+  * atc_button_text_color: the text color of the ATC button
+  * payment_button_background: the custom dynamic checkout button background
+  * payment_button_text_color: the custom dynamic checkout button text color
+  * form_id: if specified, define the form ID linked to this input
+{%- endcomment -%}
+
+{%- assign variant_picker_block = section.blocks | where: 'type', 'variant_picker' | first -%}
+
+{%- assign recipient_feature_active = false -%}
+
+{%- if product.gift_card? and show_gift_card_recipient -%}
+  {%- assign recipient_feature_active = true -%}
+  {%- assign show_payment_button = false -%}
+{%- endif -%}
+
+{%- form 'product', product, is: 'product-form', id: form_id -%}
+  <input
+    type="hidden"
+    {% if variant_picker_block != blank %}
+      disabled
+    {% endif %}
+    name="id"
+    value="{{ product.selected_or_first_available_variant.id }}"
+  >
+
+  {%- assign button_disabled = false -%}
+  {%- assign button_size = button_size | default: 'xl' -%}
+
+  {%- if product.selected_or_first_available_variant == null -%}
+    {%- capture button_content -%}{{ 'product.general.unavailable_button' | t }}{%- endcapture -%}
+    {%- assign button_disabled = true -%}
+  {%- elsif product.selected_or_first_available_variant.available -%}
+    {%- if product.template_suffix contains 'pre-order' -%}
+      {%- capture button_content -%}{{ 'product.general.pre_order_button' | t }}{%- endcapture -%}
+    {%- else -%}
+      {%- comment -%}Change text to reflect image upload for face swap products{%- endcomment -%}
+      {%- if product.template_suffix contains 'with-faceswap' -%}
+        {%- capture button_content -%}UPLOAD IMAGE & ADD TO CART{%- endcapture -%}
+      {%- else -%}
+      {%- capture button_content -%}{{ 'product.general.add_to_cart_button' | t }}{%- endcapture -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- else -%}
+    {%- capture button_content -%}{{ 'product.general.sold_out_button' | t }}{%- endcapture -%}
+    {%- assign button_disabled = true -%}
+  {%- endif -%}
+
+  <div class="v-stack gap-4">
+    {%- if recipient_feature_active -%}
+      <gift-card-recipient class="gift-card-recipient v-stack gap-3">
+        {%- assign checkbox_label = 'gift_card.recipient.checkbox' | t -%}
+        {%- render 'checkbox', label: checkbox_label, name: 'properties[__shopify_send_gift_card_to_recipient]' -%}
+
+        <div class="gift-card-recipient__fields" hidden>
+          <div class="fieldset">
+            {%- liquid
+              assign recipient_email_label = 'gift_card.recipient.email_label' | t
+              render 'input', type: 'email', label: recipient_email_label, name: 'properties[Recipient email]', value: form.email, required: true
+
+              assign recipient_name_label = 'gift_card.recipient.name_label' | t
+              render 'input', label: recipient_name_label, name: 'properties[Recipient name]', value: form.name
+
+              assign send_on_label = 'gift_card.recipient.send_on_label' | t
+              render 'input', type: 'date', label: send_on_label, name: 'properties[Send on]', value: form.send_on, pattern: '\d{4}-\d{2}-\d{2}'
+              render 'input', type: 'hidden', name: 'properties[__shopify_offset]'
+
+              assign message_label = 'gift_card.recipient.message_label' | t
+              render 'input', label: message_label, name: 'properties[Message]', value: form.message, multiline: 3, maxlength: 200, show_max_characters_count: true
+            -%}
+          </div>
+        </div>
+      </gift-card-recipient>
+    {%- endif -%}
+
+    <buy-buttons class="buy-buttons {% if show_payment_button %}buy-buttons--multiple{% endif %}" template="{{ product.template_suffix | escape }}" form="{{ form_id }}">
+      <button 
+        id="atc-button"
+        type="submit" 
+        class="button {% if show_payment_button %}button--secondary{% endif %} {% if button_disabled %}button--disabled{% endif %} button--{{ button_size }}"
+        {% if button_disabled %}disabled{% endif %}
+        {% if atc_button_background != blank and atc_button_background != 'rgba(0,0,0,0)' %}
+          style="--button-background: {{ atc_button_background.rgb }}; --button-text-color: {{ atc_button_text_color.rgb }};"
+        {% endif %}
+      >
+        {{ button_content }}
+      </button>
+
+      {%- if show_payment_button -%}
+        {{- form | payment_button -}}
+
+        <style>
+          #{{ form_id }} .shopify-payment-button {
+            {%- unless product.selected_or_first_available_variant.available -%}
+              display: none;
+            {%- endunless -%}
+
+            {%- if payment_button_background != blank and payment_button_background != 'rgba(0,0,0,0)' -%}
+              --button-background: {{ payment_button_background.rgb }};
+            {%- endif -%}
+
+            {%- if payment_button_text_color != blank and payment_button_text_color != 'rgba(0,0,0,0)' -%}
+              --button-text-color: {{ payment_button_text_color.rgb }};
+            {%- endif -%}
+          }
+        </style>
+      {%- endif -%}
+    </buy-buttons>
+
+    <!-- Hidden area for pixar components and debug info -->
+    <div id="pixar-component-area" style="height: 0; overflow: hidden; position: absolute; visibility: hidden;">
+      {% if settings.enable_pixar_transform %}
+        {% render 'pixar-transform-file-input', product: product, section_id: section.id, customer: customer %}
+      {% else %}
+        {% render 'face-swap-file-input', product: product, section_id: section.id, customer: customer %}
+      {% endif %}
+      
+      <div id="pixar-component-debug" style="display: none;">
+        <div id="debug-info-content"></div>
+      </div>
+    </div>
+
+    <script>
+      // Initialize processing state variable
+      window.imageUploaded = false;
+      
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('🔄 Buy button handler initialized');
+        
+        // Set up debugging
+        var debugInfo = document.getElementById('debug-info-content');
+        if (debugInfo) debugInfo.innerHTML = '<p>Buy button handler initialized</p>';
+        
+        // Check if this is a faceswap product and add a dedicated upload button if needed
+        var templateSuffix = '{{ product.template_suffix }}'.trim();
+        if (templateSuffix.includes('with-faceswap')) {
+          console.log('🔄 This is a faceswap product, adding dedicated upload button');
+          
+          // Find the Add to Cart button container
+          var buyButtonsContainer = document.querySelector('.buy-buttons');
+          if (buyButtonsContainer) {
+            // Create the dedicated upload button
+            var uploadButton = document.createElement('button');
+            uploadButton.type = 'button'; // Not a submit button
+            uploadButton.id = 'dedicated-upload-button';
+            uploadButton.className = 'button button--primary button--xl';
+            uploadButton.style.marginBottom = '15px';
+            uploadButton.style.backgroundColor = '#4a7dbd'; // Blue color
+            uploadButton.style.color = 'white';
+            uploadButton.style.fontWeight = 'bold';
+            uploadButton.style.display = 'block';
+            uploadButton.style.width = '100%';
+            uploadButton.innerHTML = '📸 UPLOAD YOUR PHOTO FIRST';
+            
+            // Add click handler
+            uploadButton.addEventListener('click', function() {
+              console.log('🔄 Dedicated upload button clicked');
+              // Initialize image processing if needed
+              if (typeof window.triggerImageUpload !== 'function') {
+                initializeImageProcessing();
+              }
+              
+              // Trigger image upload
+              if (typeof window.triggerImageUpload === 'function') {
+                window.triggerImageUpload();
+              } else {
+                console.error('🔄 Error: triggerImageUpload function not available');
+              }
+            });
+            
+            // Insert button before the original Add to Cart button
+            var atcButton = buyButtonsContainer.querySelector('button');
+            if (atcButton) {
+              atcButton.parentNode.insertBefore(uploadButton, atcButton);
+              console.log('🔄 Dedicated upload button added to the page');
+              
+              // Update the Add to Cart button
+              atcButton.textContent = 'ADD TO CART';
+              atcButton.setAttribute('data-requires-upload', 'true');
+            }
+          }
+        }
+        
+        // Register image processing handlers
+        function initializeImageProcessing() {
+          // Create global references
+          window.pixarComponentReady = false;
+          window.pixarComponent = findComponent();
+          
+          // Define component finder function
+          function findComponent() {
+            var components = [
+              document.querySelector('pixar-transform-file-input'),
+              document.querySelector('face-swap-file-input-wrapper'),
+              document.querySelector('.file-input-wrapper')
+            ];
+            
+            for (var i = 0; i < components.length; i++) {
+              if (components[i]) {
+                if (debugInfo) debugInfo.innerHTML += '<p>Found component: ' + components[i].tagName + '</p>';
+                return components[i];
+              }
+            }
+            return null;
+          }
+          
+          // Try to find input element
+          function findFileInput() {
+            // Try component first
+            var component = window.pixarComponent || findComponent();
+            if (component) {
+              var fileInput = component.querySelector('input[type="file"]');
+              if (fileInput) return fileInput;
+              
+              if (debugInfo) debugInfo.innerHTML += '<p>Component found but no file input inside</p>';
+            }
+            
+            // Try known selectors
+            var inputs = [
+              document.querySelector('.file-input-wrapper__file-input'),
+              document.querySelector('input[type="file"]')
+            ];
+            
+            for (var i = 0; i < inputs.length; i++) {
+              if (inputs[i]) {
+                if (debugInfo) debugInfo.innerHTML += '<p>Found file input directly</p>';
+                return inputs[i];
+              }
+            }
+            
+            return null;
+          }
+          
+          // Create a fallback input if needed
+          function createFallbackInput() {
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.id = 'fallback-file-input';
+            input.style.display = 'none';
+            document.body.appendChild(input);
+            
+            // Set up change listener
+            input.addEventListener('change', function(e) {
+              if (input.files && input.files[0]) {
+                handleSelectedFile(input.files[0]);
+              }
+            });
+            
+            if (debugInfo) debugInfo.innerHTML += '<p>Created fallback file input</p>';
+            return input;
+          }
+          
+          // Trigger file selection
+          window.triggerImageUpload = function() {
+            if (debugInfo) debugInfo.innerHTML = '<p>Image upload triggered</p>';
+            console.log('🔄 Image upload triggered');
+            
+            // First check if we can find the pixarComponent
+            var pixarComponent = document.querySelector('pixar-transform-file-input') || 
+                                document.querySelector('face-swap-file-input-wrapper');
+            
+            if (pixarComponent && typeof pixarComponent.openPopup === 'function') {
+              // Use the component's openPopup method to show instructions first
+              console.log('🔄 Using component openPopup method to show instructions');
+              if (debugInfo) debugInfo.innerHTML += '<p>Opening instructions popup</p>';
+              pixarComponent.openPopup();
+              return;
+            }
+            
+            // If instructions popup is available directly, try to show it
+            var instructionsPopup = document.getElementById('pixar-instructions-popup');
+            if (instructionsPopup) {
+              console.log('🔄 Found instructions popup, displaying it');
+              if (debugInfo) debugInfo.innerHTML += '<p>Opening instructions popup directly</p>';
+              instructionsPopup.style.display = 'block';
+              document.body.style.overflow = 'hidden';
+              return;
+            }
+            
+            // Fallback to original behavior if no popup methods are available
+            // Try to find existing file input
+            var fileInput = findFileInput();
+            
+            // Create fallback if needed
+            if (!fileInput) {
+              if (debugInfo) debugInfo.innerHTML += '<p>No file input found, creating fallback</p>';
+              fileInput = createFallbackInput();
+            }
+            
+            // Trigger click
+            if (fileInput) {
+              if (debugInfo) debugInfo.innerHTML += '<p>Clicking file input</p>';
+              fileInput.click();
+            } else {
+              if (debugInfo) debugInfo.innerHTML += '<p>ERROR: Could not find or create a file input</p>';
+              console.error('Could not find or create a file input');
+            }
+          };
+          
+          // Handle the selected file
+          function handleSelectedFile(file) {
+            if (debugInfo) debugInfo.innerHTML += '<p>File selected: ' + file.name + '</p>';
+            console.log('🔄 File selected:', file.name);
+            
+            // Try built-in handlers first
+            var handled = false;
+            
+            // 1. Try component's handleFileSelect
+            var component = window.pixarComponent || findComponent();
+            if (component && typeof component.handleFileSelect === 'function') {
+              if (debugInfo) debugInfo.innerHTML += '<p>Using component\'s handleFileSelect</p>';
+              component.handleFileSelect({ target: { files: [file] } });
+              handled = true;
+            }
+            
+            // 2. Try image processing manager
+            if (!handled && window.imageProcessingManager && typeof window.imageProcessingManager.handleFileSelect === 'function') {
+              if (debugInfo) debugInfo.innerHTML += '<p>Using ImageProcessingManager</p>';
+              window.imageProcessingManager.handleFileSelect({ target: { files: [file] } });
+              handled = true;
+            }
+            
+            // 3. Fallback to basic image display
+            if (!handled) {
+              if (debugInfo) debugInfo.innerHTML += '<p>Using fallback image display</p>';
+              displayImageDirectly(file);
+            }
+            
+            // Mark as uploaded so form can submit
+            window.imageUploaded = true;
+            
+            // Update button text
+            var button = document.getElementById('atc-button');
+            if (button) {
+              button.textContent = 'IMAGE UPLOADED - ADD TO CART';
+            }
+          }
+          
+          // Simple image display fallback
+          function displayImageDirectly(file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+              var imageUrl = e.target.result;
+              
+              // Find product images and replace them
+              var productImages = document.querySelectorAll('.product-gallery img, .product__media img');
+              if (productImages.length > 0) {
+                if (debugInfo) debugInfo.innerHTML += '<p>Updating ' + productImages.length + ' product images</p>';
+                productImages.forEach(function(img) {
+                  img.src = imageUrl;
+                });
+              } else {
+                if (debugInfo) debugInfo.innerHTML += '<p>No product images found to update</p>';
+              }
+            };
+            reader.readAsDataURL(file);
+          }
+        }
+        
+        // Initialize image processing functionality
+        initializeImageProcessing();
+        
+        // Set up form submission interception for with-faceswap products
+        var productForm = document.querySelector('form[is="product-form"]');
+        if (productForm) {
+          // Clean up the template suffix string to handle any whitespace issues
+          var rawTemplateSuffix = '{{ product.template_suffix }}';
+          var templateSuffix = rawTemplateSuffix.trim();
+          
+          console.log('🛑 DEBUG: Product template suffix is:', templateSuffix);
+          console.log('🛑 DEBUG: Raw template suffix is:', rawTemplateSuffix);
+          console.log('🛑 DEBUG: Product form found:', productForm);
+          
+          // Force a check for specific elements on the page that would indicate a faceswap product
+          var isFaceswapPage = templateSuffix.includes('with-faceswap') || 
+                              document.querySelector('.file-input-wrapper') !== null ||
+                              document.querySelector('pixar-transform-file-input') !== null;
+          
+          console.log('🛑 DEBUG: Is faceswap page detected:', isFaceswapPage);
+          
+          if (isFaceswapPage) {
+            console.log('🛑 DEBUG: This is a faceswap product, setting up interception');
+            
+            // Apply direct interception to all buttons in the form to be extra safe
+            var allButtons = productForm.querySelectorAll('button[type="submit"]');
+            console.log('🛑 DEBUG: Found ' + allButtons.length + ' submit buttons in the form');
+            
+            allButtons.forEach(function(button, index) {
+              console.log('🛑 DEBUG: Setting up interception for button #' + index);
+              
+              // Override the button's click handler
+              button.addEventListener('click', function(e) {
+                console.log('🛑 DEBUG: Button #' + index + ' clicked');
+                
+                // Check if this is a faceswap product and no image uploaded yet
+                if (!window.imageUploaded) {
+                  console.log('🛑 DEBUG: Preventing button click and triggering image upload');
+                  e.preventDefault();
+                  e.stopPropagation();
+                  
+                  // Trigger image upload
+                  if (typeof window.triggerImageUpload === 'function') {
+                    window.triggerImageUpload();
+                  } else {
+                    console.error('🛑 ERROR: triggerImageUpload function not available');
+                  }
+                  
+                  return false;
+                } else {
+                  console.log('🛑 DEBUG: Image already uploaded, allowing button click');
+                }
+              }, true); // Use capturing phase to ensure this runs first
+            });
+            
+            // Also set a global click handler on the document to catch any other potential add to cart buttons
+            document.addEventListener('click', function(e) {
+              // If the click is on a button inside the product form
+              if (e.target.tagName === 'BUTTON' && productForm.contains(e.target) && !window.imageUploaded) {
+                console.log('🛑 DEBUG: Caught click on button inside product form');
+                
+                // Check if this looks like an add to cart button
+                var buttonText = e.target.textContent.toLowerCase();
+                if (buttonText.includes('add to cart') || buttonText.includes('upload')) {
+                  console.log('🛑 DEBUG: Button appears to be an Add to Cart button');
+                  e.preventDefault();
+                  e.stopPropagation();
+                  
+                  if (typeof window.triggerImageUpload === 'function') {
+                    window.triggerImageUpload();
+                  }
+                  
+                  return false;
+                }
+              }
+            }, true);
+            
+            productForm.addEventListener('submit', function(e) {
+              console.log('🛑 DEBUG: Form submit event triggered');
+              // If this is a faceswap product and no image uploaded yet
+              if (!window.imageUploaded) {
+                console.log('🛑 DEBUG: Preventing form submission and triggering image upload');
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Trigger image upload
+                if (typeof window.triggerImageUpload === 'function') {
+                  window.triggerImageUpload();
+                }
+                
+                return false;
+              }
+              
+              // Otherwise continue with form submission
+              return true;
+            }, true); // Use capturing phase to ensure our handler runs first
+            
+            console.log('🔄 Form submission interception set up for faceswap product');
+          } else {
+            console.log('🛑 DEBUG: Not a faceswap product, template suffix does not match');
+          }
+        } else {
+          console.log('🛑 DEBUG: Product form not found');
+        }
+
+        // Set up mutation observer to watch for dynamically added buttons
+        var observer = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.addedNodes && mutation.addedNodes.length > 0) {
+              for (var i = 0; i < mutation.addedNodes.length; i++) {
+                var node = mutation.addedNodes[i];
+                
+                // Check if the added node is a button or contains buttons
+                if (node.nodeType === 1) { // ELEMENT_NODE
+                  if (node.tagName === 'BUTTON' || node.querySelector('button')) {
+                    console.log('🔄 Detected new button added to the page');
+                    
+                    // Find all buttons in the added node
+                    var buttons = node.tagName === 'BUTTON' ? [node] : node.querySelectorAll('button');
+                    
+                    // Apply our protection to each button
+                    buttons.forEach(function(button) {
+                      if (!button.hasAttribute('data-intercept-applied') && 
+                          (button.type === 'submit' || button.textContent.toLowerCase().includes('add to cart'))) {
+                        
+                        console.log('🔄 Applying interception to dynamically added button');
+                        
+                        // Mark this button as processed
+                        button.setAttribute('data-intercept-applied', 'true');
+                        
+                        // Add our click handler
+                        button.addEventListener('click', function(e) {
+                          if (!window.imageUploaded && templateSuffix.includes('with-faceswap')) {
+                            console.log('🔄 Intercepted click on dynamically added button');
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            // Trigger image upload
+                            if (typeof window.triggerImageUpload === 'function') {
+                              window.triggerImageUpload();
+                            }
+                            
+                            return false;
+                          }
+                        }, true);
+                      }
+                    });
+                  }
+                }
+              }
+            }
+          });
+        });
+        
+        // Start observing the document with the configured parameters
+        observer.observe(document.body, { childList: true, subtree: true });
+      });
+    </script>
+  </div>
+{%- endform -%}

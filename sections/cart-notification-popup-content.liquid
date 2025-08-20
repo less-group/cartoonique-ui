@@ -1,0 +1,112 @@
+{%- if cart != empty -%}
+  {%- for item in cart.items -%}
+    {% assign image = item.image %}
+
+    <div
+      class='cart-notification-popup-item'
+      id='CartNotificationPopupItem-{{ item.variant.id }}'
+    >
+      <div class='hidden'>
+        <div id='NewCartCount'>
+          {%- if cart != empty -%}
+            <div class='cart-count {% if cart.item_count > 9 %}cart-count--ellipse{% endif %}'>
+              <span aria-hidden='true'>{{ cart.item_count }}</span>
+            </div>
+          {%- endif -%}
+        </div>
+      </div>
+      <div class='cart-notification-popup-item__link'>
+        <a
+          href='{{ item.url }}'
+          class='shape shape--default'
+          aria-hidden='true'
+          tabindex='-1'
+          aria-label='{{ item.product.title }}'
+        >
+          <img
+            {% render 'image-attributes',
+              image: image,
+              size: 'medium',
+              class: 'cart-notification-popup-item__image shape__target-image'
+            %}
+          >
+        </a>
+        <div class='checkmark-with-chevron cart-notification-popup-item__checkmark-with-chevron'>
+          <svg class='checkmark-with-chevron__icon' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 52 52'>
+            <circle class="checkmark-with-chevron__circle" cx="26" cy="26" r="25" fill="none"/>
+            <path class="checkmark-with-chevron__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class='cart-notification-popup-item__info'>
+        <a
+          href='{{ item.url }}'
+          class='cart-notification-popup-item__name'
+          aria-label='{{ item.product.title | strip_html | escape }}'
+        >
+          <span class='cart-notification-popup-item__name-label'>{{ item.product.title | escape }}</span>
+        </a>
+        {%- if item.product.has_only_default_variant == false
+          or item.properties.size != 0
+          or item.selling_plan_allocation != null
+        -%}
+          {%- if item.product.has_only_default_variant == false -%}
+            {%- for option in item.options_with_values -%}
+              <div class='cart-notification-popup-item__option'>{{ option.name }} - {{ option.value }}</div>
+            {%- endfor -%}
+          {%- endif -%}
+          {%- for property in item.properties -%}
+            {%- assign property_first_char = property.first | slice: 0 -%}
+            {%- if property.last != blank and property_first_char != '_' -%}
+              <div class='cart-notification-popup-item__option'>
+                <div>{{ property.first }}:</div>
+                <div>
+                  {%- if property.last contains '/uploads/' -%}
+                    <a href='{{ property.last }}'>
+                      {{ property.last | split: '/' | last }}
+                    </a>
+                  {%- else -%}
+                    {{ property.last }}
+                  {%- endif -%}
+                </div>
+              </div>
+            {%- endif -%}
+          {%- endfor -%}
+          <div class='cart-notification-popup-item__option'>{{ item.selling_plan_allocation.selling_plan.name }}</div>
+        {%- endif -%}
+        {%- if item.discounts.size > 0 -%}
+          <div class='cart-notification-popup-item__discounts'>
+            {%- for discount in item.discounts -%}
+              <div class='discount'>
+                {%- render 'icon', icon_name: 'discount', class: 'discount__icon' -%}
+                {{ discount.title }}
+              </div>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+
+        <div class='cart-notification-popup-item__price'>
+          <div class='cart-notification-popup-item__price-item'>
+            {{ item.final_line_price | money }}
+          </div>
+          {%- if item.original_line_price != item.final_line_price -%}
+            <div class='cart-notification-popup-item__price-item--small cart-notification-popup-item__price-item--old'>
+              {{ item.original_line_price | money }}
+            </div>
+          {%- endif -%}
+          {%- if item.variant.available and item.unit_price_measurement -%}
+            <div class='cart-notification-popup-item__price-item--small'>
+              ({{ item.variant.unit_price | money }}
+              <span aria-hidden='true'>/</span>
+              {%- if item.variant.unit_price_measurement.reference_value != 1 -%}
+                {{- item.variant.unit_price_measurement.reference_value -}}
+              {%- endif -%}
+              {{ item.variant.unit_price_measurement.reference_unit }})
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {%- endfor -%}
+{%- endif -%}

@@ -1,0 +1,372 @@
+{%- liquid
+  assign sidebar_class = ''
+
+  assign primary_option_names = settings.primary_option_name | downcase | split: ','
+  assign primary_option_name_downcase = blank
+
+  for name in primary_option_names
+    assign name_striped_and_downcase = name | strip
+
+    for filter in results.filters
+      assign filter_label_downcase = filter.label | downcase 
+      if filter_label_downcase == name_striped_and_downcase
+        assign primary_option_name_downcase = name_striped_and_downcase
+        break
+      endif
+    endfor
+  endfor
+
+  assign secondary_option_names = settings.secondary_option_names | newline_to_br | split: '<br />'
+
+  if filter_style contains 'embed'
+    if filters_position == 'left'
+      assign sidebar_class = 'sidebar-filters--static-left'
+    else
+      assign sidebar_class = 'sidebar-filters--static-right'
+    endif
+  endif
+
+  if filter_style contains 'drawer'
+    if filters_position == 'left'
+      assign sidebar_class = 'sidebar-filters--drawer-left'
+    else
+      assign sidebar_class = 'sidebar-filters--drawer-right'
+    endif
+  endif
+-%}
+
+{% capture desktop_filters %}
+    <div class="sidebar-filters__body" id="FiltersDesktop" data-sidebar-body>
+        <div class="sidebar-filters__content" sort-by="{{ results.sort_by }}">
+            {%- render 'loading-overlay', class: 'filters__form-loading-overlay', id: "SidebarFiltersDesktop-loadingOverlay", attrs: "data-filters-loading-overlay" -%}
+            <div class="sidebar-filters__header" data-filters-header>
+                <div class="sidebar-filters__header-label">
+                    {{- 'general.filters.store_front.header' | t -}}
+                    &nbsp;
+                    {% if results.products_count.size > 0 %}
+                        <div class="filters__results-count">
+                            {{- 'general.filters.store_front.header_with_results_count' | t: count: results.products_count -}}
+                        </div>
+                    {% endif %}
+                </div>
+                <sidebar-button>
+                    <button type='button' data-sidebar-button data-sidebar-id="SidebarFiltersDesktop" class="unstyled-button close-button-with-scale-hover" aria-label="{{- 'general.filters.screen_reader.hide_filters' | t -}}">
+                    </button>
+                </sidebar-button>
+            </div>
+            <form class="filters__form" data-filters-form>
+                {%- for filter in results.filters -%}
+                    {%- liquid
+                        assign filter_label_downcase = filter.label | downcase
+
+                        assign is_swatch = false
+                        assign is_primary_swatch = false
+                        
+                        if filter_label_downcase == primary_option_name_downcase
+                            assign is_primary_swatch = true
+                            assign is_swatch = true
+                        else
+                            for secondary_option_name in secondary_option_names
+                                assign secondary_option_name_downcase = secondary_option_name | downcase | strip
+                                
+                                if secondary_option_name_downcase == filter_label_downcase
+                                    assign is_swatch = true
+
+                                    break
+                                endif
+                            endfor
+                        endif
+                        
+                        if filter.presentation != 'text' and filter.type != 'price_range'
+                            assign is_primary_swatch = true
+                            assign is_swatch = true
+                        endif
+                    -%}
+
+                        <div class="filters__item {% if show_divider %} filters__item--bordered {% endif %} {% if categories_style == 'static' %} filters__item--bottom-spacing {% endif %} {% if is_swatch == true and is_primary_swatch == true %} theme-with-size{{ settings.primary_size_for_filters }}-swatch-in-filters{% elsif is_swatch == true and is_primary_swatch == false %} theme-with-size{{ settings.secondary_size_for_filters }}-swatch-in-filters{% endif %}">
+                            {%- if filter.label == 'Availability' -%}
+                                <div class="filters__label {% if show_divider and forloop.index > 1 %} filters__label--top-spacing {% endif %} {% if enable_uppercase_title %}filters__label--uppercase{% endif %}">
+                                    <div>
+                                        {{ 'general.filters.store_front.in_stock_only_label' | t }}
+                                    </div>
+                                    {%- assign in_stock_filter = filter.values | where: 'param_name', filter.param_name | first -%}
+                                    
+                                    <label class="slider-switch" for="DesktopFilters-out-of-stock-switch">
+                                        <input id="DesktopFilters-out-of-stock-switch" name="{{ in_stock_filter.param_name }}" value="{{ in_stock_filter.value }}" {% if in_stock_filter.active %} checked{% endif %} type="checkbox" class="slider-switch__checkbox" />
+                                        <div class="slider-switch__container">
+                                            <div class="slider-switch__toggle"></div>
+                                        </div>
+                                    </label>
+                                </div>
+                            {%- elsif categories_style contains 'tabs' -%}
+                                <accordeon-component class="accordeon filters__accordeon" data-aria-expanded="{% if categories_style contains 'expanded' %}true{% else %}false{% endif %}">
+                                    <accordeon-button class="accordeon__btn filters__label {% if show_divider and forloop.index > 1 %} filters__label--top-spacing {% endif %} {% if enable_uppercase_title %}filters__label--uppercase{% endif %}" tabindex="0">
+                                        {{ filter.label }}
+                                        {% if filter.active_values.size > 0 %}
+                                            ({{filter.active_values.size}})
+                                        {% endif %}
+                                        {%- render 'icon', icon_name: 'chevron', class: 'accordeon__icon filters__chevron' -%}
+                                    </accordeon-button>
+                                    <div class="accordeon__content-wrap" data-accordeon-content-wrap>
+                                        <div class="accordeon__content" data-accordeon-content>
+                                            {%- if categories_style contains 'tabs' -%}
+                                                <list-component data-initial-count="{{ initial_visible_option_count }}" data-show-count="{{ filter.values.size }}" class="filters__options {% if option_style contains 'text' %}filters__options--text-variant{% endif %} {% if option_style contains 'button' %}filters__options--button-variant{% endif %}">
+                                            {%- else -%}
+                                                <div class="filters__options {% if option_style contains 'text' %}filters__options--text-variant{% endif %} {% if option_style contains 'button' %}filters__options--button-variant{% endif %}">
+                                            {%- endif -%}
+                                                {%- if is_swatch and show_color_swatches -%}
+                                                    {%- render 'shop-colors', filter: filter, is_primary_swatch: is_primary_swatch, option_style: option_style, show_result_count: show_result_count -%}
+                                                {%- elsif filter.type == 'price_range' -%}
+                                                    {%- liquid
+                                                        assign currency_symbol = cart.currency.symbol
+                                                        assign max_price = filter.range_max | divided_by: 100.00 | ceil 
+                                                        assign max_price_caption = currency_symbol | append: max_price
+                                                        assign max_value = filter.max_value.value | default: filter.range_max  | divided_by: 100.00
+                                                        
+                                                        assign min_price = 0.00
+                                                        assign min_value = filter.min_value.value | default: 0.00 | divided_by: 100.00
+                                                    -%}
+            
+                                                    <price-range data-currency-format='{{ shop.money_format | strip_html }}' data-numbers-after-comma="{{numbers_after_comma}}" class="filters__price-range">
+                                                        <label for="DesktopFilters-MaxPriceNumberInput" class="visually-hidden">{{ "shop.screen_reader.aria_label_for_max_number_input" | t }}</label>
+                                                        <label for="DesktopFilters-MinPriceNumberInput" class="visually-hidden">{{ "shop.screen_reader.aria_label_for_min_number_input" | t }}</label>
+                                                        <label for="DesktopFilters-MinPriceRangeInput" class="visually-hidden">{{ "shop.screen_reader.aria_label_for_max_range_input" | t }}</label>
+                                                        <label for="DesktopFilters-MaxPriceRangeInput" class="visually-hidden">{{ "shop.screen_reader.aria_label_for_min_range_input" | t }}</label>
+            
+                                                        <p class="price-range__highest-price-caption">{{ 'general.filters.store_front.highest_price_label' | t: price: max_price_caption }}</p>
+            
+            
+                                                        <div class="price-range__slider-wrap">
+                                                            <div class="price-range__slider">
+                                                                <div class="price-range__slider-progress" data-price-range-progress></div>
+                                                            </div>
+                                                        </div>
+            
+                                                        <div class="price-range__inputs" data-price-range-inputs-wrapper>
+                                                            <input tabindex="-1" id="DesktopFilters-MinPriceRangeInput" class="price-range__input" data-price-min-range-input data-price-range-min-input name="{{ filter.min_value.param_name }}" max="{{ max_price }}" min="0" step="1" type="range" value="{{ min_value }}" aria-label="{{ "shop.screen_reader.aria_label_for_max_range_input" }}">
+                                                            <input tabindex="-1" id="DesktopFilters-MaxPriceRangeInput" class="price-range__input" data-price-max-range-input data-price-range-max-input name="{{ filter.max_value.param_name }}" max="{{ max_price }}" min="0" step="1" type="range" value="{{ max_value }}" aria-label="{{ "shop.screen_reader.aria_label_for_min_range_input" }}">
+                                                        </div>
+                                                        
+                                                        <div class="price-range__numbers">
+                                                            <div class="price-range__number-wrapper">
+                                                                <span class="price-range__currency-symbol">{{currency_symbol}}</span>
+                                                                <input id="DesktopFilters-MinPriceNumberInput" class="input input--{{settings.input_style}} price-range__number" data-price-min-range-number type="number" value="{{ min_value }}" aria-label="{{ "shop.screen_reader.aria_label_for_min_number_input" | t }}">
+                                                            </div>
+            
+                                                            <span>-</span>
+            
+                                                            <div class="price-range__number-wrapper">
+                                                                <span class="price-range__currency-symbol">{{currency_symbol}}</span>
+                                                                <input id="DesktopFilters-MaxPriceNumberInput" class="input input--{{settings.input_style}} price-range__number" data-price-max-range-number type="number" value="{{ max_value }}" aria-label="{{ "shop.screen_reader.aria_label_for_max_number_input" | t }}">
+                                                            </div>
+                                                        </div>
+                                                    </price-range>
+                                                {%- else -%}
+                                                    {%- assign showed_filter_value_count = 0 -%}
+
+                                                    {%- for value in filter.values -%}
+                                                            {%- assign showed_filter_value_count = showed_filter_value_count | plus: 1 -%}
+
+                                                            {%- if option_style contains 'checkbox' -%}
+                                                                <label class="checkbox {% if value.count == 0 and value.active == false %}checkbox--disabled{% endif %} {% if showed_filter_value_count > initial_visible_option_count %}hidden{% endif %}" data-list-item  for="Filter-Dekstop-{{ filter.label | escape }}-{{ forloop.index }}" {% if value.count != 0 and value.active %}data-filters-checkbox{% endif %}>
+                                                                    <input class="checkbox__input" id="Filter-Dekstop-{{ filter.label | escape }}-{{ forloop.index }}" type="checkbox" name="{{ value.param_name }}" value="{{ value.value }}" {% if value.active %} checked {% endif %} {% if value.count == 0 and value.active == false %} disabled {% endif %}>
+                                                                    <span class="checkbox__span {% if option_style == 'checkbox-outline' %} checkbox__span--outline{% else %} checkbox__span--solid{% endif %}"></span>
+                                                                    <span>
+                                                                        {{ value.label | escape }}
+                                                                        {% if show_result_count %}
+                                                                            <span class="filters__option-count">({{ value.count }})</span>
+                                                                        {% endif %}
+                                                                    </span>
+                                                                </label>
+                                                            {%- elsif option_style == 'text' -%}
+                                                                <label class="checkbox {% if value.count == 0 and value.active == false %}checkbox--disabled{% endif %} {% if showed_filter_value_count > initial_visible_option_count %}hidden{% endif %}" data-list-item for="Filter-Dekstop-{{ filter.label | escape }}-{{ forloop.index }}" {% if value.count != 0 and value.active %}data-filters-checkbox{% endif %}>
+                                                                    <div class="filters__text-option">
+                                                                        <span>
+                                                                            {{ value.label | escape }}
+                                                                            {% if show_result_count %}
+                                                                                <span class="filters__option-count">({{ value.count }})</span>
+                                                                            {% endif %}
+                                                                        </span>
+                                                                        <input class="checkbox__input" id="Filter-Dekstop-{{ filter.label | escape }}-{{ forloop.index }}" type="checkbox" name="{{ value.param_name }}" value="{{ value.value }}" {% if value.active %} checked {% endif %} {% if value.count == 0 and value.active == false %} disabled {% endif %}>
+                                                                        <span class="checkbox__span filters__text-option-checkbox checkbox__span--solid"></span>
+                                                                    </div>
+                                                                </label>
+                                                            {%- elsif option_style contains 'button' -%}
+                                                                <label class="checkbox {% if value.count == 0 and value.active == false %}checkbox--disabled{% endif %} {% if showed_filter_value_count > initial_visible_option_count %}hidden{% endif %}" data-list-item for="Filter-Dekstop-{{ filter.label | escape }}-{{ forloop.index }}" {% if value.count != 0 and value.active %}data-filters-checkbox{% endif %}>
+                                                                    <input class="checkbox__input" id="Filter-Dekstop-{{ filter.label | escape }}-{{ forloop.index }}" type="checkbox" name="{{ value.param_name }}" value="{{ value.value }}" {% if value.active %} checked {% endif %} {% if value.count == 0 and value.active == false %} disabled {% endif %}>
+                                                                    <div class="pill pill--small {% if option_style == 'button-outline' %}pill--outline{% endif %} {% if option_style == 'button-solid' %}pill--solid{% endif %} {% if value.active %}selected{% endif %}" {% if value.count == 0 and value.active == false %} disabled {% endif %}>
+                                                                        <span class="pill__label">{{ value.label | escape }} ({{ value.count }})</span>
+                                                                    </div>
+                                                                </label>
+                                                            {%- endif -%}
+                                                    {%- endfor -%}
+                                                    {%- if filter.values.size > initial_visible_option_count -%}
+                                                        <list-btn class="filters__more" data-trigger="expand" tabindex="0">
+                                                            {%- render 'icon', icon_name: 'plus', class: 'filters__more-icon' -%}
+                                                            {{ 'general.filters.store_front.expand_options_button_label' | t }}
+                                                        </list-btn>
+                                                        <list-btn class="filters__more hidden" data-trigger="collapse" tabindex="0">
+                                                            {%- render 'icon', icon_name: 'minus', class: 'filters__more-icon' -%}
+                                                            {{ 'general.filters.store_front.collapse_options_button_label' | t }}
+                                                        </list-btn>
+                                                    {%- endif -%}
+                                                {% endif %}
+                                            {%- if categories_style contains 'tabs' -%}
+                                                </list-component>
+                                            {%- else -%}
+                                                </div>
+                                            {%- endif -%}
+                                        </div>
+                                    </div>
+                                </accordeon-component>
+                            {%- else -%}
+                                <div class="filters__label {% if show_divider and forloop.index > 1 %} filters__label--top-spacing {% endif %} {% if enable_uppercase_title %}filters__label--uppercase{% endif %}">
+                                    {{ filter.label }}
+                                    {% if filter.active_values.size > 0 %}
+                                        ({{filter.active_values.size}})
+                                    {% endif %}
+                                </div>
+
+                                {%- if filter.values.size > initial_visible_option_count -%}
+                                    <list-component data-initial-count="{{ initial_visible_option_count }}" data-show-count="{{ filter.values.size }}" class="filters__options {% if option_style contains 'text' %}filters__options--text-variant{% endif %} {% if option_style contains 'button' %}filters__options--button-variant{% endif %}">
+                                {%- else -%}
+                                    <div class="filters__options {% if option_style contains 'text' %}filters__options--text-variant{% endif %} {% if option_style contains 'button' %}filters__options--button-variant{% endif %}">
+                                {%- endif -%}
+                                    {%- if is_swatch and show_color_swatches -%}
+                                        {% render 'shop-colors', filter: filter, is_primary_swatch: is_primary_swatch, option_style: option_style, show_result_count: show_result_count %}
+                                    {%- elsif filter.type == 'price_range' -%}
+                                        {%- liquid
+                                            assign currency_symbol = cart.currency.symbol
+                                            assign max_price = filter.range_max | divided_by: 100.00 | ceil 
+                                            assign max_price_caption = currency_symbol | append: max_price
+                                            assign max_value = filter.max_value.value | default: filter.range_max  | divided_by: 100.00
+                                            
+                                            assign min_price = 0.00
+                                            assign min_value = filter.min_value.value | default: 0.00 | divided_by: 100.00
+                                        -%}
+
+                                        <price-range data-currency-format='{{ shop.money_format | strip_html }}' data-numbers-after-comma="{{numbers_after_comma}}" class="filters__price-range">
+                                            <label for="DesktopFilters-MaxPriceNumberInput" class="visually-hidden">{{ "shop.screen_reader.aria_label_for_max_number_input" | t }}</label>
+                                            <label for="DesktopFilters-MinPriceNumberInput" class="visually-hidden">{{ "shop.screen_reader.aria_label_for_min_number_input" | t }}</label>
+                                            <label for="DesktopFilters-MinPriceRangeInput" class="visually-hidden">{{ "shop.screen_reader.aria_label_for_max_range_input" | t }}</label>
+                                            <label for="DesktopFilters-MaxPriceRangeInput" class="visually-hidden">{{ "shop.screen_reader.aria_label_for_min_range_input" | t }}</label>
+
+                                            <p class="price-range__highest-price-caption">{{ 'general.filters.store_front.highest_price_label' | t: price: max_price_caption }}</p>
+
+
+                                            <div class="price-range__slider-wrap">
+                                                <div class="price-range__slider">
+                                                    <div class="price-range__slider-progress" data-price-range-progress></div>
+                                                </div>
+                                            </div>
+
+                                            <div class="price-range__inputs" data-price-range-inputs-wrapper>
+                                                <input tabindex="-1" id="DesktopFilters-MinPriceRangeInput" class="price-range__input" data-price-min-range-input data-price-range-min-input name="{{ filter.min_value.param_name }}" max="{{ max_price }}" min="0" step="1" type="range" value="{{ min_value }}" aria-label="{{ "shop.screen_reader.aria_label_for_max_range_input" }}">
+                                                <input tabindex="-1" id="DesktopFilters-MaxPriceRangeInput" class="price-range__input" data-price-max-range-input data-price-range-max-input name="{{ filter.max_value.param_name }}" max="{{ max_price }}" min="0" step="1" type="range" value="{{ max_value }}" aria-label="{{ "shop.screen_reader.aria_label_for_min_range_input" }}">
+                                            </div>
+                                            
+                                            <div class="price-range__numbers">
+                                                <div class="price-range__number-wrapper">
+                                                    <span class="price-range__currency-symbol">{{currency_symbol}}</span>
+                                                    <input id="DesktopFilters-MinPriceNumberInput" class="input input--{{settings.input_style}} price-range__number" data-price-min-range-number type="number" value="{{ min_value }}" aria-label="{{ "shop.screen_reader.aria_label_for_min_number_input" | t }}">
+                                                </div>
+
+                                                <span>-</span>
+
+                                                <div class="price-range__number-wrapper">
+                                                    <span class="price-range__currency-symbol">{{currency_symbol}}</span>
+                                                    <input id="DesktopFilters-MaxPriceNumberInput" class="input input--{{settings.input_style}} price-range__number" data-price-max-range-number type="number" value="{{ max_value }}" aria-label="{{ "shop.screen_reader.aria_label_for_max_number_input" | t }}">
+                                                </div>
+                                            </div>
+                                        </price-range>
+                                    {%- else -%}
+                                        {%- assign showed_filter_value_count = 0 -%}
+
+                                        {%- for value in filter.values -%}
+                                                {%- assign showed_filter_value_count = showed_filter_value_count | plus: 1 -%}
+
+                                                {%- if option_style contains 'checkbox' -%}
+                                                    <label class="checkbox {% if value.count == 0 and value.active == false %}checkbox--disabled{% endif %} {% if showed_filter_value_count > initial_visible_option_count %}hidden{% endif %}" data-list-item for="Filter-Dekstop-{{ filter.label | escape }}-{{ forloop.index }}" {% if value.count != 0 and value.active %}data-filters-checkbox{% endif %}>
+                                                        <input class="checkbox__input" id="Filter-Dekstop-{{ filter.label | escape }}-{{ forloop.index }}" type="checkbox" name="{{ value.param_name }}" value="{{ value.value }}" {% if value.active %} checked {% endif %} {% if value.count == 0 and value.active == false %} disabled {% endif %}>
+                                                        <span class="checkbox__span {% if option_style == 'checkbox-outline' %} checkbox__span--outline{% else %} checkbox__span--solid{% endif %}"></span>
+                                                        <span>
+                                                            {{ value.label | escape }}
+                                                            {% if show_result_count %}
+                                                                <span class="filters__option-count">({{ value.count }})</span>
+                                                            {% endif %}
+                                                        </span>
+                                                    </label>
+                                                {%- elsif option_style == 'text' -%}
+                                                    <label class="checkbox {% if value.count == 0 and value.active == false %}checkbox--disabled{% endif %} {% if showed_filter_value_count > initial_visible_option_count %}hidden{% endif %}" data-list-item for="Filter-Dekstop-{{ filter.label | escape }}-{{ forloop.index }}" {% if value.count != 0 and value.active %}data-filters-checkbox{% endif %}>
+                                                        <div class="filters__text-option">
+                                                            <span>
+                                                                <span>
+                                                                    {{ value.label | escape }}
+                                                                    {% if show_result_count %}
+                                                                        <span class="filters__option-count">({{ value.count }})</span>
+                                                                    {% endif %}
+                                                                </span>
+                                                            </span>
+                                                            <input class="checkbox__input" id="Filter-Dekstop-{{ filter.label | escape }}-{{ forloop.index }}" type="checkbox" name="{{ value.param_name }}" value="{{ value.value }}" {% if value.active %} checked {% endif %} {% if value.count == 0 and value.active == false %} disabled {% endif %}>
+                                                            <span class="checkbox__span filters__text-option-checkbox checkbox__span--solid"></span>
+                                                        </div>
+                                                    </label>
+                                                {%- elsif option_style contains 'button' -%}
+                                                    <label class="checkbox {% if value.count == 0 and value.active == false %}checkbox--disabled{% endif %} {% if showed_filter_value_count > initial_visible_option_count %}hidden{% endif %}" data-list-item for="Filter-Dekstop-{{ filter.label | escape }}-{{ forloop.index }}" {% if value.count != 0 and value.active %}data-filters-checkbox{% endif %}>
+                                                        <input class="checkbox__input" id="Filter-Dekstop-{{ filter.label | escape }}-{{ forloop.index }}" type="checkbox" name="{{ value.param_name }}" value="{{ value.value }}" {% if value.active %} checked {% endif %} {% if value.count == 0 and value.active == false %} disabled {% endif %}>
+                                                        <div class="pill pill--small {% if option_style == 'button-outline' %}pill--outline{% endif %} {% if option_style == 'button-solid' %}pill--solid{% endif %} {% if value.active %}selected{% endif %}" {% if value.count == 0 and value.active == false %} disabled {% endif %}>
+                                                            <span class="pill__label">{{ value.label | escape }} ({{ value.count }})</span>
+                                                        </div>
+                                                    </label>
+                                                {%- endif -%}
+                                        {%- endfor -%}
+                                        {%- if filter.values.size > initial_visible_option_count -%}
+                                            <list-btn class="filters__more" data-trigger="expand" tabindex="0">
+                                                {%- render 'icon', icon_name: 'plus', class: 'filters__more-icon' -%}
+                                                {{ 'general.filters.store_front.expand_options_button_label' | t }}
+                                            </list-btn>
+                                            <list-btn class="filters__more hidden" data-trigger="collapse" tabindex="0">
+                                                {%- render 'icon', icon_name: 'minus', class: 'filters__more-icon' -%}
+                                                {{ 'general.filters.store_front.collapse_options_button_label' | t }}
+                                            </list-btn>
+                                        {%- endif -%}
+                                    {%- endif -%}
+                                {%- if filter.values.size > initial_visible_option_count -%}
+                                    </list-component>
+                                {%- else -%}
+                                    </div>
+                                {%- endif -%}
+                            {%- endif -%}
+                        </div>
+                {%- endfor -%}
+            </form>
+        </div>
+    </div>
+{% endcapture %}
+
+<sidebar-filters-desktop
+  id='SidebarFiltersDesktop'
+  class='sidebar-filters sidebar-filters--desktop {{ sidebar_class }} {% if filter_style == 'open-embed' %} is-opened {% endif %} {% if filter_style contains 'embed' %}sidebar-filters--static{% endif %} {% if filter_style contains 'drawer' %}sidebar-filters--drawer{% endif %}'
+  data-section-id='{{ section.id }}'
+  tabindex='-1'
+  data-with-close-on-escape
+  {% if filter_style contains 'drawer' %}
+    data-overlay-important data-with-close-on-outside 
+    data-open-direction='{% if filters_position == 'left' %}left{% else %}right{% endif %}' data-with-overlay
+  {% endif %}
+  {% if filter_style == 'open-embed' %}
+    is-open-on-init
+    data-sidebar-section
+  {% endif %}
+  {% if filter_style contains 'embed' %}
+    is-embed-filters
+  {% endif %}
+>
+  {% if filter_style == 'open-embed' %}
+    {{ desktop_filters }}
+  {% else %}
+    <template data-sidebar-template='SidebarFiltersDesktop'>
+      {{ desktop_filters }}
+    </template>
+  {% endif %}
+</sidebar-filters-desktop>

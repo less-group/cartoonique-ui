@@ -1,0 +1,618 @@
+{%- liquid
+  assign enable_image_zoom = section.settings.enable_image_zoom
+  assign first_3d_model = product.media | where: 'media_type', 'model' | first
+
+  assign product_media = product.media | default: (1..12)
+  assign featured_media = product.featured_media
+
+  assign sectionIdWithQuickViewPrefix = section.id | append: '---QuickView'
+-%}
+
+<div class='product__content {% if section.settings.media_to_content_ratio != 'fixed' %}product__content--with-not-fixed-content{% endif %}'>
+  {%- liquid
+    render 'product-media-list', section: section, product: product, product_media: product_media, featured_media: featured_media, sectionId: sectionId, block_layout: block_layout
+    render 'product-info', section: section, product: product, sectionId: sectionId, block_layout: block_layout
+  -%}
+</div>
+
+<div>
+  {%- if first_3d_model -%}
+    <link
+      href='https://cdn.shopify.com/shopifycloud/model-viewer-ui/assets/v1.0/model-viewer-ui.css'
+      id='ModelViewerStyle'
+      media='print'
+      onload="this.media='all'"
+      rel='stylesheet'
+    >
+  {%- endif -%}
+
+  {% capture css %}
+    {% style %}
+      {% for block in section.blocks %}
+        {% case block.type %}
+          {% when 'description' %}
+            .block-{{ block.id }} {
+              --gsc-icon-size: {{ block.settings.icon_size }}px;
+            }
+          {% when 'custom_liquid' %}
+            .block-{{ block.id }} {
+              --gsc-icon-size: {{ block.settings.icon_size }}px;
+            }
+          {% when 'collapsible_row' %}
+            .block-{{ block.id }} {
+              --gsc-image-width: {{ block.settings.image_width }}%;
+              --gsc-icon-size: {{ block.settings.icon_size }}px;
+            }
+          {% when 'information_tag' %}
+            .block-{{ block.id }} {
+              {% if block.settings.tag_background_gradient != blank %}
+                --gsc-tag-background-color: {{ block.settings.tag_background_gradient }};
+              {% else %}
+                --gsc-tag-background-color: {{ block.settings.tag_background_color }};
+              {% endif %}
+              --gsc-tag-text-color: {{ block.settings.tag_text_color }};
+              --gsc-tag-icon-size: {{ block.settings.icon_size }}px;
+            }
+
+            .block-{{ block.id }}-drawer {
+              --gsc-image-width: {{ block.settings.drawer_media_size }}%;
+            }
+          {% when 'variant_picker' %}
+            .block-{{ block.id }}-drawer {
+              --gsc-image-width: {{ block.settings.image_width }}%;
+            }
+          {% when 'price' %}
+            .block-{{ block.id }} {
+              --gsc-product-price-fz: var(--gsc-product-price-font-size-{{- block.settings.price_size -}});
+              --gsc-product-price-lh: var(--gsc-product-price-line-height-{{- block.settings.price_size -}});
+              --gsc-product-price-fw: 700;
+            }
+          {% when 'inventory_status' %}
+            .block-{{ block.id }} {
+              {% if block.settings.high_inventory_gradient != blank %}
+                --gsc-product-high-level-inventory-indicator-color: {{ block.settings.high_inventory_gradient }};
+              {% else %}
+                --gsc-product-high-level-inventory-indicator-color: {{ block.settings.high_inventory_color }};
+              {% endif %}
+
+              {% if block.settings.low_inventory_gradient != blank %}
+                --gsc-product-low-level-inventory-indicator-color: {{ block.settings.low_inventory_gradient }};
+              {% else %}
+                --gsc-product-low-level-inventory-indicator-color: {{ block.settings.low_inventory_color }};
+              {% endif %}
+              
+              --gsc-product-high-level-inventory-label-color: {{ block.settings.high_inventory_label_color }};
+              --gsc-product-low-level-inventory-label-color: {{ block.settings.low_inventory_label_color }};
+
+              {% if block.settings.show_progress_bar %}
+                --gsc-free-shipping-bar-size: {{ block.settings.progress_bar_size }}px;
+                --gsc-free-shipping-bar-bg-high: {{ block.settings.high_inventory_progress_bar_bg.red }},{{ block.settings.high_inventory_progress_bar_bg.green }},{{ block.settings.high_inventory_progress_bar_bg.blue }};
+                --gsc-free-shipping-bar-bg-low: {{ block.settings.low_inventory_progress_bar_bg.red }},{{ block.settings.low_inventory_progress_bar_bg.green }},{{ block.settings.low_inventory_progress_bar_bg.blue }};
+              {% endif %}
+            }
+          {% when 'button' %}
+            .block-{{ block.id }} {
+              {% if block.settings.button_background_gradient != blank %}
+                --gsc-product-button-block-background-color: {{ block.settings.button_background_gradient }};
+              {% else %}
+                --gsc-product-button-block-background-color: {{ block.settings.button_background_color }};
+              {% endif %}
+              --gsc-product-button-block-text-color: {{ block.settings.button_text_color }};
+            }
+          {% when 'product_drawer_with_tabs' %}
+            .block-{{ block.id }} {            
+              {% if block.settings.button_background_gradient != blank %}
+                --gsc-product-drawer-tabs-button-background-color: {{ block.settings.button_background_gradient }};
+              {% else %}
+                --gsc-product-drawer-tabs-button-background-color: {{ block.settings.button_background_color }};  
+              {% endif %}
+              --gsc-product-drawer-tabs-button-text-color: {{ block.settings.button_text_color }};
+              --gsc-product-drawer-tabs-icon-size: {{ block.settings.icon_size }}px;
+            }
+        {% endcase %}
+      {% endfor %}
+    {% endstyle %}
+  {% endcapture %}
+
+  {% render 'inline-css-minifier', css: css %}
+</div>
+
+<script id='RecentViewedProductCardSnippetString'>
+  window.addEventListener('load', () => {
+    window.recentlyViewed.updateProductsInLocalStorage('{{ product.handle }}')
+  })
+</script>
+
+<div>
+  {%- for block in section.blocks -%}
+    {% case block.type %}
+      {% when 'variant_picker' %}
+        {%- liquid
+          assign block_option_name_downcase = block.settings.option_name | downcase
+          assign page = block.settings.page
+          assign image = block.settings.image
+          assign video = block.settings.video
+          assign text = block.settings.text
+          assign information_drawer_button_label = block.settings.information_drawer_button_label
+        -%}
+
+        {%- for option in product.options_with_values -%}
+          {%- assign option_name_downcase = option.name | downcase -%}
+
+          {%- if block_option_name_downcase == option_name_downcase -%}
+            <product-information-drawer
+              id='product-variant-picker-popup-{{ product.id }}-{{ sectionId }}'
+              class='product-information-drawer block-{{ block.id }}-drawer'
+              data-with-overlay
+              data-with-close-on-outside
+              data-with-close-on-escape
+              data-overlay-important
+              data-open-direction='right'
+              tabindex='-1'
+            >
+              <template data-sidebar-template='product-variant-picker-popup-{{ product.id }}-{{ sectionId }}'>
+                <div class='product-information-drawer__body' data-sidebar-body>
+                  <div class='product-information-drawer__header'>
+                    <div class='product-information-drawer__header-title'>
+                      {{ information_drawer_button_label | strip_html }}
+                    </div>
+                    <sidebar-button>
+                      <button
+                        data-sidebar-button
+                        class='unstyled-button product-information-drawer__header-close-button-wrapper close-button-with-scale-hover-wrapper'
+                        data-sidebar-id='product-variant-picker-popup-{{ product.id }}-{{ sectionId }}'
+                        type='button'
+                      >
+                        <span
+                          class='close-button-with-scale-hover product-information-drawer__close-button-with-scale-hover'
+                        ></span>
+                      </button>
+                    </sidebar-button>
+                  </div>
+
+                  <div class='product-information-drawer__viewport' data-product-information-drawer-viewport>
+                    <div class='product-information-drawer__content body-color product-information-drawer__content--restrict-top-space'>
+                      {% if text != blank %}
+                        <div class='rte'>
+                          {{ text }}
+                        </div>
+                      {% endif %}
+
+                      {% if page != blank %}
+                        <div class='rte rte--page'>
+                          {{ page.content }}
+                        </div>
+                      {% endif %}
+
+                      {%- if video != blank -%}
+                        {% render 'video-with-alt',
+                          video: video,
+                          class: 'product-information-drawer__image',
+                          autoplay: true,
+                          loop: true,
+                          muted: true,
+                          controls: false,
+                          loading: 'eager'
+                        %}
+                      {%- elsif image != blank -%}
+                        <img
+                          {% render 'image-attributes',
+                            image: image,
+                            size: 'medium',
+                            class: 'product-information-drawer__image'
+                          %}
+                        >
+                      {%- endif -%}
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </product-information-drawer>
+          {%- endif -%}
+        {%- endfor -%}
+      {% when 'product_drawer_with_tabs' %}
+        {%- liquid
+          assign options = block.settings
+          assign btn_text = options.popup_link_text
+
+          assign tab_1_title = options.tab_1_title
+          assign tab_1_text = options.tab_1_text
+          assign tab_1_page = options.tab_1_page
+          assign tab_1_body_size = options.tab_1_body_size
+
+          assign tab_2_title = options.tab_2_title
+          assign tab_2_text = options.tab_2_text
+          assign tab_2_page = options.tab_2_page
+          assign tab_2_body_size = options.tab_2_body_size
+
+          assign tab_3_title = options.tab_3_title
+          assign tab_3_text = options.tab_3_text
+          assign tab_3_page = options.tab_3_page
+          assign tab_3_body_size = options.tab_3_body_size
+
+          assign first_visible_tab_id = ''
+          assign tab_count = 0
+
+          assign tab_1_id = 'tab1'
+          assign tab_2_id = 'tab2'
+          assign tab_3_id = 'tab3'
+
+          if tab_1_title != blank
+            assign first_visible_tab_id = tab_1_id
+          elsif tab_2_title != blank
+            assign first_visible_tab_id = tab_2_id
+          elsif tab_3_title != blank
+            assign first_visible_tab_id = tab_3_id
+          endif
+
+          if tab_1_title != blank
+            assign tab_count = tab_count | plus: 1
+          endif
+
+          if tab_2_title != blank
+            assign tab_count = tab_count | plus: 1
+          endif
+
+          if tab_3_title != blank
+            assign tab_count = tab_count | plus: 1
+          endif
+        -%}
+
+        <product-information-drawer
+          id='product-information-sidebar-{{ block.id }}-{{ product.id }}-{{ sectionId }}'
+          class='product-information-drawer block-{{ block.id }}-drawer'
+          data-with-overlay
+          data-with-close-on-outside
+          data-with-close-on-escape
+          data-overlay-important
+          data-open-direction='right'
+          tabindex='-1'
+        >
+          <template data-sidebar-template='product-information-sidebar-{{ block.id }}-{{ product.id }}-{{ sectionId }}'>
+            <div class='product-information-drawer__body' data-sidebar-body>
+              <div class='product-information-drawer__header'>
+                <div class='product-information-drawer__header-title'>
+                  {% if tab_count == 1 %}
+                    {{ first_tab_title | strip_html }}
+                  {% else %}
+                    {{ btn_text | strip_html }}
+                  {% endif %}
+                </div>
+                <sidebar-button>
+                  <button
+                    data-sidebar-button
+                    class='unstyled-button product-information-drawer__header-close-button-wrapper close-button-with-scale-hover-wrapper'
+                    data-sidebar-id='product-information-sidebar-{{ block.id }}-{{ product.id }}-{{ sectionId }}'
+                    type='button'
+                  >
+                    <span
+                      class='close-button-with-scale-hover product-information-drawer__close-button-with-scale-hover'
+                    ></span>
+                  </button>
+                </sidebar-button>
+              </div>
+
+              <div class='product-information-drawer__viewport' data-product-information-drawer-viewport>
+                <tabs-component data-selected-tab-id='{{ first_visible_tab_id }}'>
+                  {% if tab_count > 1 %}
+                    <div class='product-information-drawer__tab-names'>
+                      {% if tab_1_title != blank %}
+                        <div
+                          data-tabs-name
+                          class='product-information-drawer__tab-name {% if tab_count == 1 %} product-information-drawer__tab-name--single {% endif %} {% if tab_1_id == first_visible_tab_id %}selected{% endif %}'
+                          data-id='tab1'
+                          tabindex='0'
+                        >
+                          {{ tab_1_title }}
+                        </div>
+                      {% endif %}
+                      {% if tab_2_title != blank %}
+                        <div
+                          data-tabs-name
+                          class='product-information-drawer__tab-name {% if tab_count == 1 %} product-information-drawer__tab-name--single {% endif %} {% if tab_2_id == first_visible_tab_id %}selected{% endif %}'
+                          data-id='tab2'
+                          tabindex='0'
+                        >
+                          {{ tab_2_title }}
+                        </div>
+                      {% endif %}
+                      {% if tab_3_title != blank %}
+                        <div
+                          data-tabs-name
+                          class='product-information-drawer__tab-name {% if tab_count == 1 %} product-information-drawer__tab-name--single {% endif %} {% if tab_3_id == first_visible_tab_id %}selected{% endif %}'
+                          data-id='tab3'
+                          tabindex='0'
+                        >
+                          {{ tab_3_title }}
+                        </div>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+
+                  <div class='tabs product-details__tabs' data-tabs-container>
+                    <template data-tabs-elements-template>
+                      {% if tab_1_title != blank and tab_1_id != first_visible_tab_id %}
+                        <tab-component
+                          class='product-information-drawer__tab-element'
+                          aria-hidden='true'
+                          data-id='tab1'
+                        >
+                          <div data-tabs-element-content class='product-information-drawer__content body-color'>
+                            {% if tab_1_text != blank %}
+                              <div class='rte {{ tab_1_body_size }}'>
+                                {{ tab_1_text }}
+                              </div>
+                            {% endif %}
+
+                            {% if tab_1_page != blank %}
+                              <div class='rte rte--page {{ tab_1_body_size }}'>
+                                {{ tab_1_page.content }}
+                              </div>
+                            {% endif %}
+                          </div>
+                        </tab-component>
+                      {% endif %}
+                      {% if tab_2_title != blank and tab_2_id != first_visible_tab_id %}
+                        <tab-component
+                          class='product-information-drawer__tab-element'
+                          aria-hidden='true'
+                          data-id='tab2'
+                        >
+                          <div data-tabs-element-content class='product-information-drawer__content body-color'>
+                            {% if tab_2_text != blank %}
+                              <div class='rte {{ tab_1_body_size }}'>
+                                {{ tab_2_text }}
+                              </div>
+                            {% endif %}
+
+                            {% if tab_2_page != blank %}
+                              <div class='rte rte--page {{ tab_2_body_size }}'>
+                                {{ tab_2_page.content }}
+                              </div>
+                            {% endif %}
+                          </div>
+                        </tab-component>
+                      {% endif %}
+                      {% if tab_3_title != blank and tab_3_id != first_visible_tab_id %}
+                        <tab-component
+                          class='product-information-drawer__tab-element'
+                          aria-hidden='true'
+                          data-id='tab3'
+                        >
+                          <div data-tabs-element-content class='product-information-drawer__content body-color'>
+                            {% if tab_3_text != blank %}
+                              <div class='rte {{ tab_3_body_size }}'>
+                                {{ tab_3_text }}
+                              </div>
+                            {% endif %}
+
+                            {% if tab_3_page != blank %}
+                              <div class='rte rte--page {{ tab_3_body_size }}'>
+                                {{ tab_3_page.content }}
+                              </div>
+                            {% endif %}
+                          </div>
+                        </tab-component>
+                      {% endif %}
+                    </template>
+
+                    {% if tab_1_title != blank and tab_1_id == first_visible_tab_id %}
+                      <tab-component
+                        class='product-information-drawer__tab-element'
+                        aria-hidden='false'
+                        data-id='tab1'
+                      >
+                        <div data-tabs-element-content class='product-information-drawer__content body-color'>
+                          {% if tab_1_text != blank %}
+                            <div class='rte {{ tab_1_body_size }}'>
+                              {{ tab_1_text }}
+                            </div>
+                          {% endif %}
+
+                          {% if tab_1_page != blank %}
+                            <div class='rte rte--page {{ tab_1_body_size }}'>
+                              {{ tab_1_page.content }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </tab-component>
+                    {% endif %}
+                    {% if tab_2_title != blank and tab_2_id == first_visible_tab_id %}
+                      <tab-component
+                        class='product-information-drawer__tab-element'
+                        aria-hidden='false'
+                        data-id='tab2'
+                      >
+                        <div data-tabs-element-content class='product-information-drawer__content body-color'>
+                          {% if tab_2_text != blank %}
+                            <div class='rte {{ tab_2_body_size }}'>
+                              {{ tab_2_text }}
+                            </div>
+                          {% endif %}
+
+                          {% if tab_2_page != blank %}
+                            <div class='rte rte--page {{ tab_2_body_size }}'>
+                              {{ tab_2_page.content }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </tab-component>
+                    {% endif %}
+                    {% if tab_3_title != blank and tab_3_id == first_visible_tab_id %}
+                      <tab-component
+                        class='product-information-drawer__tab-element'
+                        aria-hidden='false'
+                        data-id='tab3'
+                      >
+                        <div data-tabs-element-content class='product-information-drawer__content body-color'>
+                          {% if tab_3_text != blank %}
+                            <div class='rte {{ tab_3_body_size }}'>
+                              {{ tab_3_text }}
+                            </div>
+                          {% endif %}
+
+                          {% if tab_3_page != blank %}
+                            <div class='rte rte--page {{ tab_3_body_size }}'>
+                              {{ tab_3_page.content }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </tab-component>
+                    {% endif %}
+                  </div>
+                </tabs-component>
+              </div>
+            </div>
+          </template>
+        </product-information-drawer>
+
+      {% when 'information_tag' %}
+        {% if block.settings.enable_drawer %}
+          {%- liquid
+            assign options = block.settings
+            assign drawer_page = options.drawer_page
+            assign drawer_body_size = options.drawer_body_size
+            assign drawer_image = options.drawer_image
+            assign drawer_video = options.drawer_video
+            assign drawer_text = options.drawer_text
+            assign heading = options.heading
+          -%}
+
+          <product-information-drawer
+            id='product-information-sidebar-{{ block.id }}-{{ product.id }}-{{ sectionId }}'
+            class='product-information-drawer block-{{ block.id }}-drawer'
+            data-with-overlay
+            data-with-close-on-outside
+            data-with-close-on-escape
+            data-overlay-important
+            data-open-direction='right'
+            tabindex='-1'
+          >
+            <template data-sidebar-template='product-information-sidebar-{{ block.id }}-{{ product.id }}-{{ sectionId }}'>
+              <div class='product-information-drawer__body' data-sidebar-body>
+                <div class='product-information-drawer__header'>
+                  <div class='product-information-drawer__header-title'>
+                    {{ heading | strip_html }}
+                  </div>
+                  <sidebar-button>
+                    <button
+                      data-sidebar-button
+                      class='unstyled-button product-information-drawer__header-close-button-wrapper close-button-with-scale-hover-wrapper'
+                      data-sidebar-id='product-information-sidebar-{{ block.id }}-{{ product.id }}-{{ sectionId }}'
+                      type='button'
+                    >
+                      <span
+                        class='close-button-with-scale-hover product-information-drawer__close-button-with-scale-hover'
+                      ></span>
+                    </button>
+                  </sidebar-button>
+                </div>
+
+                <div class='product-information-drawer__viewport' data-product-information-drawer-viewport>
+                  <div class='product-information-drawer__content body-color product-information-drawer__content--restrict-top-space'>
+                    {% if drawer_text != blank %}
+                      <div class='rte'>
+                        {{ drawer_text }}
+                      </div>
+                    {% endif %}
+
+                    {% if drawer_page != blank %}
+                      <div class='rte rte--page {{ drawer_body_size }}'>
+                        {{ drawer_page.content }}
+                      </div>
+                    {% endif %}
+
+                    {%- if drawer_video != blank -%}
+                      {% render 'video-with-alt',
+                        video: drawer_video,
+                        class: 'product-information-drawer__image',
+                        autoplay: true,
+                        loop: true,
+                        muted: true,
+                        controls: false,
+                        loading: 'eager'
+                      %}
+                    {%- elsif drawer_image != blank -%}
+                      <img
+                        {% render 'image-attributes',
+                          image: drawer_image,
+                          size: 'medium',
+                          class: 'product-information-drawer__image'
+                        %}
+                      >
+                    {%- endif -%}
+                  </div>
+                </div>
+              </div>
+            </template>
+          </product-information-drawer>
+        {% endif %}
+    {% endcase %}
+  {%- endfor -%}
+  {%- liquid
+    if enable_image_zoom
+      render 'product-modal', product: product, product_media: product_media, featured_media: featured_media, sectionId: sectionId
+    endif
+  -%}
+</div>
+
+{%- if first_3d_model -%}
+  <script id='ProductJSON-{{ product.id }}' type='application/json'>
+    {{ product.media | where: 'media_type', 'model' | json }}
+  </script>
+{%- endif -%}
+
+{%- liquid
+  if product.selected_or_first_available_variant.featured_media
+    assign seo_media = product.selected_or_first_available_variant.featured_media
+  else
+    assign seo_media = product.featured_media
+  endif
+-%}
+
+<script type='application/ld+json'>
+  {
+    "@context": "http://schema.org/",
+    "@type": "Product",
+    "name": {{ product.title | json }},
+    "url": {{ request.origin | append: product.url | json }},
+    {% if seo_media -%}
+      "image": [
+        {{ seo_media | image_url: width: seo_media.preview_image.width | prepend: "https:" | json }}
+      ],
+    {%- endif %}
+    "description": {{ product.description | strip_html | json }},
+    {% if product.selected_or_first_available_variant.sku != blank -%}
+      "sku": {{ product.selected_or_first_available_variant.sku | json }},
+    {%- endif %}
+    "brand": {
+      "@type": "Brand",
+      "name": {{ product.vendor | json }}
+    },
+    "offers": [
+      {%- for variant in product.variants -%}
+        {
+          "@type" : "Offer",
+          {%- if variant.sku != blank -%}
+            "sku": {{ variant.sku | json }},
+          {%- endif -%}
+          {%- if variant.barcode.size == 12 -%}
+            "gtin12": {{ variant.barcode }},
+          {%- endif -%}
+          {%- if variant.barcode.size == 13 -%}
+            "gtin13": {{ variant.barcode }},
+          {%- endif -%}
+          {%- if variant.barcode.size == 14 -%}
+            "gtin14": {{ variant.barcode }},
+          {%- endif -%}
+          "name": {{ variant.title | json }},
+          "availability" : "http://schema.org/{% if variant.available %}InStock{% else %}OutOfStock{% endif %}",
+          "price" : {{ variant.price | divided_by: 100.00 | json }},
+          "priceValidUntil": {{ product.published_at | date: '%Y-%m-%d' | json }},
+          "priceCurrency" : {{ cart.currency.iso_code | json }},
+          "url" : {{ request.origin | append: variant.url | json }}
+        }{% unless forloop.last %},{% endunless %}
+      {%- endfor -%}
+    ]
+  }
+</script>

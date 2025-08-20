@@ -1,0 +1,25 @@
+{%- liquid
+  assign current_color_scheme = 'default'
+  assign target_color_scheme = section.settings.color_scheme
+
+  if section.settings.color_scheme == 'default'
+    assign target_color_scheme = settings.default_color_scheme
+  endif
+
+  case target_color_scheme
+    when 'primary'
+      assign current_color_scheme = 'primary'
+    when 'secondary'
+      assign current_color_scheme = 'secondary'
+    when 'custom-1'
+      assign current_color_scheme = 'custom_1'
+    when 'custom-2'
+      assign current_color_scheme = 'custom_2'
+    when 'custom-3'
+      assign current_color_scheme = 'custom_3'
+  endcase
+
+  assign key = current_color_scheme | append: '_background_color'
+  assign section_background_color = settings[key] | downcase
+-%}
+{{- section_background_color -}}

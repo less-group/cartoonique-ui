@@ -1,0 +1,11 @@
+<script>
+  try {
+    if (!window.auroraTheme) {
+      window.auroraTheme = {}
+    }
+
+    window.auroraTheme.themeSettings = {{ settings | json }}
+  } catch {
+
+  }
+</script>

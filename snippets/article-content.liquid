@@ -1,0 +1,9 @@
+<div
+  class='container container--{{ section.settings.container_size }} container--with-aside-paddings body-font-weight-from-global-settings {% if settings.enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+  {% if settings.enable_content_slide_in %}
+    style='--gsc-animation-order: {{index}};'
+  {% endif %}
+  {{ block.shopify_attributes }}
+>
+  <div class='rte rte--blog-post article__content body-color {{ block.settings.body_size }}'>{{ article.content }}</div>
+</div>

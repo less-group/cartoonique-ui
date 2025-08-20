@@ -1,0 +1,118 @@
+{% liquid
+  assign options = block.settings
+
+  assign show_sold_out_badge = options.show_sold_out_badge
+  assign show_sale_badge = options.show_sale_badge
+  assign show_custom_1_badge = options.show_custom_1_badge
+  assign show_custom_2_badge = options.show_custom_2_badge
+  assign show_custom_3_badge = options.show_custom_3_badge
+
+  assign show_badges = false
+  if show_sold_out_badge or show_sale_badge or show_custom_1_badge or show_custom_2_badge or show_custom_3_badge
+    assign show_badges = true
+  endif
+%}
+
+{% capture section_background_color %}
+  {% render 'get-section-background-color', section: section %}
+{% endcapture %}
+
+{% if show_badges %}
+  <product-block
+    class='product-badges-wrapper block-{{ block.id }}'
+    id='product-badges-{{ product.id }}-{{ sectionId }}'
+    {{ block.shopify_attributes }}
+  >
+    {%- for variant in product.variants -%}
+      <template data-product-block-template='{{ variant.id }}'>
+        <div class='product-badges' data-product-block-item>
+          {%- if show_sold_out_badge -%}
+            {% render 'badges',
+              name: 'sold_out',
+              product: variant,
+              section_background_color: section_background_color
+            %}
+          {% endif %}
+          {%- if show_sale_badge -%}
+            {% if variant.compare_at_price != variant.price %}
+              {% render 'badges', name: 'sale', product: variant, section_background_color: section_background_color %}
+            {% endif %}
+          {%- endif -%}
+          {%- for tag in product.tags -%}
+            {%- assign tag_downcase = tag | downcase -%}
+            {%- assign product_card_custom_badge_1_tag_downcase = settings.product_card_custom_badge_1_tag
+              | downcase
+            -%}
+            {%- assign product_card_custom_badge_2_tag_downcase = settings.product_card_custom_badge_2_tag
+              | downcase
+            -%}
+            {%- assign product_card_custom_badge_3_tag_downcase = settings.product_card_custom_badge_3_tag
+              | downcase
+            -%}
+
+            {%- if show_custom_1_badge
+              and tag_downcase == product_card_custom_badge_1_tag_downcase
+              and product_card_custom_badge_1_tag_downcase != blank
+            -%}
+              {% render 'badges', name: 'custom_1', section_background_color: section_background_color %}
+            {%- endif -%}
+
+            {%- if show_custom_2_badge
+              and tag_downcase == product_card_custom_badge_2_tag_downcase
+              and product_card_custom_badge_2_tag_downcase != blank
+            -%}
+              {% render 'badges', name: 'custom_2', section_background_color: section_background_color %}
+            {%- endif -%}
+
+            {%- if show_custom_3_badge
+              and tag_downcase == product_card_custom_badge_3_tag_downcase
+              and product_card_custom_badge_3_tag_downcase != blank
+            -%}
+              {% render 'badges', name: 'custom_3', section_background_color: section_background_color %}
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+      </template>
+    {%- endfor -%}
+
+    <div data-product-block-container>
+      <div class='product-badges' data-product-block-item>
+        {%- if show_sold_out_badge -%}
+          {% render 'badges', name: 'sold_out', product: product, section_background_color: section_background_color %}
+        {% endif %}
+        {%- if show_sale_badge -%}
+          {% if product.compare_at_price != product.price %}
+            {% render 'badges', name: 'sale', product: product, section_background_color: section_background_color %}
+          {% endif %}
+        {%- endif -%}
+        {%- for tag in product.tags -%}
+          {%- assign tag_downcase = tag | downcase -%}
+          {%- assign product_card_custom_badge_1_tag_downcase = settings.product_card_custom_badge_1_tag | downcase -%}
+          {%- assign product_card_custom_badge_2_tag_downcase = settings.product_card_custom_badge_2_tag | downcase -%}
+          {%- assign product_card_custom_badge_3_tag_downcase = settings.product_card_custom_badge_3_tag | downcase -%}
+
+          {%- if show_custom_1_badge
+            and tag_downcase == product_card_custom_badge_1_tag_downcase
+            and product_card_custom_badge_1_tag_downcase != blank
+          -%}
+            {% render 'badges', name: 'custom_1', section_background_color: section_background_color %}
+          {%- endif -%}
+
+          {%- if show_custom_2_badge
+            and tag_downcase == product_card_custom_badge_2_tag_downcase
+            and product_card_custom_badge_2_tag_downcase != blank
+          -%}
+            {% render 'badges', name: 'custom_2', section_background_color: section_background_color %}
+          {%- endif -%}
+
+          {%- if show_custom_3_badge
+            and tag_downcase == product_card_custom_badge_3_tag_downcase
+            and product_card_custom_badge_3_tag_downcase != blank
+          -%}
+            {% render 'badges', name: 'custom_3', section_background_color: section_background_color %}
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </product-block>
+{% endif %}

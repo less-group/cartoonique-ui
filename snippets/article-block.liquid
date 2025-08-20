@@ -1,0 +1,10 @@
+<div
+  class='container container--{{ section.settings.container_size }} container--with-aside-paddings {% if settings.enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+  {% if settings.enable_content_slide_in %}
+    style='--gsc-animation-order: {{index}};'
+  {% endif %}
+  {{ block.shopify_attributes }}
+  data-custom-app
+>
+  {% render block %}
+</div>

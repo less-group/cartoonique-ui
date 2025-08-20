@@ -1,0 +1,1200 @@
+{%- liquid
+  assign blocks = section.blocks
+  assign options = section.settings
+
+  assign color_scheme = options.color_scheme
+  assign show_navigation_arrows = options.show_navigation_arrows
+  assign show_language_selector = options.show_language_selector
+  assign show_currency_selector = options.show_currency_selector
+  assign show_currency_flags = options.show_currency_flags
+  assign show_social_media_icons = options.show_social_media_icons
+  assign show_only_on_homepage = options.show_only_on_homepage
+
+  assign container_size = options.container_size
+  assign enable_sticky = options.enable_sticky
+
+  assign autoplay_mode = options.autoplay_mode
+  assign autoplay_interval = options.autoplay_interval
+
+  assign show_announcement_bar = true
+  if show_only_on_homepage == true and request.page_type != 'index'
+    assign show_announcement_bar = false
+  endif
+
+  assign add_side_paddings = options.add_side_paddings
+  assign desktop_spacing_top = options.desktop_spacing_top
+  assign desktop_spacing_bottom = options.desktop_spacing_bottom
+  assign mobile_spacing_top = options.mobile_spacing_top
+  assign mobile_spacing_bottom = options.mobile_spacing_bottom
+-%}
+
+{%- capture css -%}
+  {% style %}
+    .shopify-section-announcement-bar {
+      {% if enable_sticky contains 'mobile'  %}
+        z-index: 8889;
+        position: sticky;
+        top: 0;
+      {% endif %}
+
+      {% if add_side_paddings %}
+        --gsc-padding-inline: {{settings.aside_padding_size}}px;
+      {% else %}
+        --gsc-padding-inline: 0px;
+      {% endif %}
+
+      --gsc-desktop-spacing-top: {{desktop_spacing_top}}px;
+      --gsc-desktop-spacing-bottom: {{desktop_spacing_bottom}}px;
+
+      --gsc-mobile-spacing-top: {{mobile_spacing_top}}px;
+      --gsc-mobile-spacing-bottom: {{mobile_spacing_bottom}}px;
+    }
+
+    @media {% render 'media-queries', screen: 'md' %} {
+      .shopify-section-announcement-bar {
+        {% if enable_sticky contains 'desktop'  %}
+          z-index: 6;
+          position: sticky;
+          {% if container_size == 'full-screen' or add_side_paddings == false %}
+            top: 0;
+          {% else %}
+            top: min(var(--gsc-desktop-spacing-top), 20px);
+            bottom: 20px;
+          {% endif %}
+        {% else if enable_sticky == 'mobile_only' %}
+          position: relative;
+        {% endif %}
+      }
+    }
+  {% endstyle %}
+{%- endcapture -%}
+
+{%- render 'inline-css-minifier', css: css -%}
+
+{%- if show_announcement_bar == true -%}
+  {% if enable_sticky != 'none' %}
+    <announcement-bar class='announcement-bar section section-{{ section.id }} color-{{ color_scheme }} container container--{{ container_size }}' data-section-id="{{ section.id }}">
+  {% else %}
+    <div class='announcement-bar section section-{{ section.id }} color-{{ color_scheme }} container container--{{ container_size }}'>
+  {% endif %}
+
+      <div class='announcement-bar__outer-container container container--{{ container_size }}'>
+        <div class='announcement-bar__inner-container'>
+          <div class='announcement-bar__left-panel {% if show_social_media_icons != "desktop_and_mobile" %}announcement-bar-content--{{ show_social_media_icons }}{% endif %}'>
+            {%- if show_social_media_icons != 'hide' -%}
+              {%- render 'social-list', class: 'announcement-bar__social-list', disable_animation: true -%}
+            {%- endif -%}
+          </div>
+          <div class='announcement-bar__center-panel'>
+            {%- if blocks.size > 0 -%}
+              <carousel-component
+                class='carousel announcement-bar__carousel {% if container_size == 'full-screen' %}announcement-bar__carousel--extended{% else %}announcement-bar__carousel--base{% endif %}'
+                {% if autoplay_mode == 'one_at_time' %}
+                  data-autoplay-mode='one_at_time'
+                  data-autoplay-interval='{{autoplay_interval}}'
+                  data-loop='infinite'
+                {% endif %}
+                data-section-id='{{ section.id }}'
+                with-hover-pause
+                data-draggable
+                data-align='start'
+                data-axis='x'
+                data-contain-scroll='trimSnaps'
+              >
+                {%- if blocks.size > 1 and show_navigation_arrows == true -%}
+                  <carousel-button
+                    class='carousel__btn announcement-bar__carousel-btn'
+                    data-direction='prev'
+                    tabindex='0'
+                  >
+                    {%- render 'icon',
+                      icon_name: 'chevron',
+                      class: 'announcement-bar__chevron x-flip',
+                      stroke_width: 1
+                    -%}
+                  </carousel-button>
+                {%- endif -%}
+                <div class='carousel__viewport embla' data-carousel-viewport>
+                  <div class='carousel__container announcement__carousel-container' data-carousel-container>
+                    {%- for block in blocks -%}
+                      <div
+                        class='carousel__slide announcement-bar__slide block-{{ block.id }}'
+                        block-id='{{ block.id }}'
+                        {{ block.shopify_attributes }}
+                      >
+                        {%- if block.settings.link != blank -%}
+                          <a
+                            href='{{ block.settings.link.url }}'
+                            class='announcement-bar__link'
+                            aria-label='{{ block.settings.text | strip_html | escape }}'
+                          ></a>
+                        {%- endif -%}
+                        <div class=' announcement-bar__text'>
+                          {% assign custom_icon_image = block.settings.custom_icon_image %}
+                          {% assign icon = block.settings.icon %}
+
+                          {%- if custom_icon_image != blank -%}
+                            <img
+                              {% render 'image-attributes',
+                                image: custom_icon_image,
+                                size: 'small',
+                                class: 'announcement-bar__text-icon'
+                              %}
+                            >
+                          {%- elsif icon != 'none' -%}
+                            {% render 'icon-pack', icon: icon, class: 'announcement-bar__text-icon' %}
+                          {%- endif -%}
+
+                          <div class='rte  announcement-bar__rte'>
+                            {{ block.settings.text }}
+                          </div>
+                        </div>
+                      </div>
+                    {%- endfor -%}
+                  </div>
+                </div>
+                {%- if blocks.size > 1 and show_navigation_arrows == true -%}
+                  <carousel-button
+                    class='carousel__btn announcement-bar__carousel-btn'
+                    data-direction='next'
+                    tabindex='0'
+                  >
+                    {%- render 'icon', icon_name: 'chevron', class: 'announcement-bar__chevron', stroke_width: 1 -%}
+                  </carousel-button>
+                {%- endif -%}
+              </carousel-component>
+            {%- endif -%}
+          </div>
+          <div class='announcement-bar__right-panel'>
+            {%- if show_currency_selector != 'hide'
+              or show_language_selector != 'hide'
+              or show_social_media_icons != 'hide'
+            -%}
+              <div class='announcement-bar__settings'>
+                <div class='localization-dropdown-wrapper {% if show_language_selector != "desktop_and_mobile" %}announcement-bar-content--{{ show_language_selector }}{% endif %}'>
+                  {%- if show_language_selector != 'hide' -%}
+                    <dropdown-opener
+                      class='localization-dropdown-toggle'
+                      data-aria-expanded='false'
+                      data-float-element-id='AnnouncementBarLanguageSelector'
+                      data-trigger='click'
+                      tabindex='0'
+                    >
+                      <span id="language-selector-text">{{ localization.language.endonym_name | capitalize }}</span>
+                      {% render 'icon',
+                        icon_name: 'chevron',
+                        class: 'localization-dropdown-toggle__chevron',
+                        stroke_width: 1
+                      %}
+                    </dropdown-opener>
+                    <float-element
+                      class='localization-dropdown color-{{ color_scheme }}'
+                      aria-hidden='true'
+                      id='AnnouncementBarLanguageSelector'
+                      data-placement='bottom-end'
+                      data-main-axis-offset='12'
+                      data-alignment-axis-offset='-22'
+                      data-strategy='fixed'
+                      data-with-portal
+                      data-floating-element-id='language-selector-text'
+                    >
+                      <template data-float-element-template='AnnouncementBarLanguageSelector'>
+                        <div class='localization-dropdown__body'>
+                          <localization-selector>
+                            {%- form 'localization', id: 'AnnouncementBarLanguageForm' -%}
+                              {%- for language in localization.available_languages -%}
+                                <button
+                                  class='localization-dropdown__item link-parent-for-hover {% if localization.language == language %} selected{% endif %}'
+                                  data-localization-item
+                                  data-value='{{ language.iso_code }}'
+                                  data-focus-trap-target
+                                  aria-label='{{ language.endonym_name | strip_html | escape }}'
+                                >
+                                  <span class='underline-animation'>{{ language.endonym_name | capitalize }}</span>
+                                </button>
+                              {%- endfor -%}
+                              <input
+                                type='hidden'
+                                name='locale_code'
+                                data-localization-input
+                                value='{{ localization.language.endonym_name }}'
+                                id='AnnouncementBarLanguageForm-LocaleCodeInput'
+                              >
+                            {%- endform -%}
+                          </localization-selector>
+                        </div>
+                      </template>
+                    </float-element>
+                  {%- endif -%}
+                </div>
+
+                <div class='announcement-bar__social-list--inside-right-panel'>
+                  {%- if show_social_media_icons != 'hide' and show_social_media_icons != 'desktop_only' -%}
+                    {%- render 'social-list', class: 'announcement-bar__social-list', disable_animation: true -%}
+                  {%- endif -%}
+                </div>
+
+                <div class='localization-dropdown-wrapper {% if show_currency_selector != "desktop_and_mobile" %}announcement-bar-content--{{ show_currency_selector }}{% endif %}'>
+                  {%- if show_currency_selector != 'hide' -%}
+                    <dropdown-opener
+                      class='localization-dropdown-toggle'
+                      data-aria-expanded='false'
+                      data-float-element-id='AnnouncementBarCurrencySelector'
+                      data-trigger='click'
+                      tabindex='0'
+                    >
+                      {% if show_currency_flags %}
+                        {{
+                          localization.country
+                          | image_url: width: 20
+                          | image_tag: class: 'localization-dropdown-toggle__flag'
+                        }}
+                      {% endif %}
+
+                      <span id="currency-selector-text">{{ localization.country.currency.iso_code }}</span>
+
+                      {% render 'icon',
+                        icon_name: 'chevron',
+                        class: 'localization-dropdown-toggle__chevron',
+                        stroke_width: 1
+                      %}
+                    </dropdown-opener>
+                    <float-element
+                      class='localization-dropdown color-{{ color_scheme }}'
+                      aria-hidden='true'
+                      id='AnnouncementBarCurrencySelector'
+                      data-placement='bottom-end'
+                      data-main-axis-offset='12'
+                      data-alignment-axis-offset='-22'
+                      data-strategy='fixed'
+                      data-floating-element-id='currency-selector-text'
+                    >
+                      <template data-float-element-template='AnnouncementBarCurrencySelector'>
+                        <div class='localization-dropdown__body'>
+                          <localization-selector>
+                            {% if localization.available_countries.size > 10 %}
+                              <div class='localization-dropdown__search-field'>
+                                <label class='visually-hidden' for='AnnouncementBarCurrencyForm-Search'>
+                                  {{- 'general.localization_selector.store_front.search_title' | t -}}
+                                </label>
+
+                                <input
+                                  class='input input--{{ settings.input_style }}'
+                                  type='text'
+                                  name='AnnouncementBarCurrencyForm-Search'
+                                  placeholder='{{- 'general.localization_selector.store_front.search_title' | t -}}'
+                                  id='AnnouncementBarCurrencyForm-Search'
+                                  data-localization-search-field
+                                >
+
+                                <button
+                                  type='button'
+                                  class='unstyled-button localization-dropdown__search-field-reset-btn hidden'
+                                  aria-label='{{ 'general.search_page.screen_reader.label_for_search_button' | t }}'
+                                  data-search-field-reset-button
+                                >
+                                  {% render 'icon',
+                                    icon_name: 'close',
+                                    class: 'localization-dropdown__search-field-reset-icon',
+                                    stroke_width: 1.5
+                                  %}
+                                </button>
+                              </div>
+                            {% endif %}
+
+                            {%- form 'localization', id: 'AnnouncementBarCurrencyForm' -%}
+                              {%- for country in localization.available_countries -%}
+                                <button
+                                  data-localization-item
+                                  class='localization-dropdown__item link-parent-for-hover {% if localization.country == country %} selected{% endif %}'
+                                  data-value='{{ country.iso_code }}'
+                                  data-country='{{ country.name | strip_html | escape | downcase }}'
+                                  data-focus-trap-target
+                                  aria-label='{{ country.name | strip_html | escape }} {{ country.currency.iso_code | strip_html | escape }}'
+                                >
+                                  {% if show_currency_flags %}
+                                    {{ country | image_url: width: 22 | image_tag }}
+                                  {% endif %}
+
+                                  <span class='underline-animation'>
+                                    {{- country.name }}, {{ country.currency.iso_code -}}
+                                  </span>
+                                </button>
+                              {%- endfor -%}
+                              <input
+                                type='hidden'
+                                name='country_code'
+                                data-localization-input
+                                value='{{ localization.country.iso_code }}'
+                                id='AnnouncementBarCurrencyForm-CountryCodeInput'
+                              >
+                            {%- endform -%}
+                          </localization-selector>
+                        </div>
+                      </template>
+                    </float-element>
+                  {%- endif -%}
+                </div>
+              </div>
+            {%- endif -%}
+          </div>
+        </div>
+      </div>
+  
+  {% if enable_sticky != 'none' %}
+    {% if settings.round_level != "0" %}
+      <div class='announcement-bar__sticky-backdrop color-{{ color_scheme }} container container--{{ container_size }}'></div>
+    {% endif %}
+    </announcement-bar>
+  {% else %}
+    </div>
+  {% endif %}
+{%- endif -%}
+
+{% render 'save-section-data-in-global-scope', section: section %}
+
+{% schema %}
+{
+  "name": "t:sections.announcement_bar.name",
+  "max_blocks": 6,
+  "class": "shopify-section-announcement-bar",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_only_on_homepage",
+      "default": false,
+      "label": "t:sections.announcement_bar.show_only_on_homepage_label"
+    },
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:sections.general_section_settings.color_scheme_option_default_label"
+        },
+        {
+          "value": "primary",
+          "label": "t:sections.general_section_settings.color_scheme_option_primary_label"
+        },
+        {
+          "value": "secondary",
+          "label": "t:sections.general_section_settings.color_scheme_option_secondary_label"
+        },
+        {
+          "value": "custom-1",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_1_label"
+        },
+        {
+          "value": "custom-2",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_2_label"
+        },
+        {
+          "value": "custom-3",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_3_label"
+        },
+        {
+          "value": "white",
+          "label": "t:sections.general_section_settings.color_scheme_option_white_text_label"
+        },
+        {
+          "value": "black",
+          "label": "t:sections.general_section_settings.color_scheme_option_black_text_label"
+        },
+        {
+          "value": "custom-5",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_5_label"
+        }
+      ],
+      "default": "secondary",
+      "label": "t:sections.general_section_settings.color_scheme_label",
+      "info": "t:sections.general_section_settings.color_scheme_tip"
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "options": [
+        {
+          "value": "full-screen",
+          "label": "t:sections.general_section_settings.container_size.screen_width_option"
+        },
+        {
+          "value": "page-width",
+          "label": "t:sections.general_section_settings.container_size.page_width_option"
+        },
+        {
+          "value": "large",
+          "label": "t:sections.general_section_settings.container_size.large_width_option"
+        },
+        {
+          "value": "medium",
+          "label": "t:sections.general_section_settings.container_size.medium_width_option"
+        }
+      ],
+      "default": "full-screen",
+      "label": "t:sections.general_section_settings.container_size.label"
+    },
+    {
+      "type": "select",
+      "id": "enable_sticky",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.announcement_bar.enable_sticky.none"
+        },
+        {
+          "value": "desktop_and_mobile",
+          "label": "t:sections.announcement_bar.enable_sticky.desktop_and_mobile"
+        },
+        {
+          "value": "desktop_only",
+          "label": "t:sections.announcement_bar.enable_sticky.desktop_only"
+        },
+        {
+          "value": "mobile_only",
+          "label": "t:sections.announcement_bar.enable_sticky.mobile_only"
+        }
+      ],
+      "default": "desktop_only",
+      "label": "t:sections.announcement_bar.enable_sticky.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_navigation_arrows",
+      "default": true,
+      "label": "t:sections.announcement_bar.show_navigation_arrows_label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.announcement_bar.carousel_settings_header"
+    },
+    {
+      "type": "select",
+      "id": "autoplay_mode",
+      "options": [
+        {
+          "value": "disabled",
+          "label": "t:sections.general_section_settings.carousel-settings.autoplay_mode.options.option_1"
+        },
+        {
+          "value": "one_at_time",
+          "label": "t:sections.general_section_settings.carousel-settings.autoplay_mode.options.option_3"
+        }
+      ],
+      "default": "disabled",
+      "label": "t:sections.general_section_settings.carousel-settings.autoplay_mode.label"
+    },
+    {
+      "type": "range",
+      "id": "autoplay_interval",
+      "min": 1,
+      "max": 10,
+      "step": 1,
+      "default": 6,
+      "unit": "t:sections.general_section_settings.carousel-settings.autoplay_interval.unit",
+      "label": "t:sections.general_section_settings.carousel-settings.autoplay_interval.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.general_section_settings.show_language_selector.label"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:sections.general_section_settings.show_language_selector.info"
+    },
+    {
+      "type": "select",
+      "id": "show_language_selector",
+      "options": [
+        {
+          "value": "hide",
+          "label": "t:sections.general_section_settings.show_language_selector.options.hide"
+        },
+        {
+          "value": "desktop_and_mobile",
+          "label": "t:sections.general_section_settings.show_language_selector.options.desktop_and_mobile"
+        },
+        {
+          "value": "desktop_only",
+          "label": "t:sections.general_section_settings.show_language_selector.options.desktop_only"
+        },
+        {
+          "value": "mobile_only",
+          "label": "t:sections.general_section_settings.show_language_selector.options.mobile_only"
+        }
+      ],
+      "default": "desktop_only",
+      "label": "t:sections.general_section_settings.show_language_selector.show_selector"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.general_section_settings.show_currency_selector.label"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:sections.general_section_settings.show_currency_selector.info"
+    },
+    {
+      "type": "select",
+      "id": "show_currency_selector",
+      "options": [
+        {
+          "value": "hide",
+          "label": "t:sections.general_section_settings.show_currency_selector.options.hide"
+        },
+        {
+          "value": "desktop_and_mobile",
+          "label": "t:sections.general_section_settings.show_currency_selector.options.desktop_and_mobile"
+        },
+        {
+          "value": "desktop_only",
+          "label": "t:sections.general_section_settings.show_currency_selector.options.desktop_only"
+        },
+        {
+          "value": "mobile_only",
+          "label": "t:sections.general_section_settings.show_currency_selector.options.mobile_only"
+        }
+      ],
+      "default": "desktop_only",
+      "label": "t:sections.general_section_settings.show_currency_selector.show_selector"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_currency_flags",
+      "default": true,
+      "label": "t:sections.general_section_settings.show_currency_selector.show_flags"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.announcement_bar.social_media_icons.header"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:sections.announcement_bar.social_media_icons.info"
+    },
+    {
+      "type": "select",
+      "id": "show_social_media_icons",
+      "options": [
+        {
+          "value": "hide",
+          "label": "t:sections.announcement_bar.social_media_icons.options.hide"
+        },
+        {
+          "value": "desktop_and_mobile",
+          "label": "t:sections.announcement_bar.social_media_icons.options.desktop_and_mobile"
+        },
+        {
+          "value": "desktop_only",
+          "label": "t:sections.announcement_bar.social_media_icons.options.desktop_only"
+        },
+        {
+          "value": "mobile_only",
+          "label": "t:sections.announcement_bar.social_media_icons.options.mobile_only"
+        }
+      ],
+      "default": "desktop_only",
+      "label": "t:sections.announcement_bar.social_media_icons.options_label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.general_section_settings.paddings.header_title"
+    },
+    {
+      "type": "checkbox",
+      "id": "add_side_paddings",
+      "default": true,
+      "label": "t:sections.general_section_settings.paddings.add_side_paddings.label"
+    },
+    {
+      "type": "range",
+      "id": "desktop_spacing_top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 20,
+      "unit": "t:sections.announcement_bar.paddings.unit",
+      "label": "t:sections.announcement_bar.paddings.desktop.top"
+    },
+    {
+      "type": "range",
+      "id": "desktop_spacing_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 0,
+      "unit": "t:sections.announcement_bar.paddings.unit",
+      "label": "t:sections.announcement_bar.paddings.desktop.bottom"
+    },
+    {
+      "type": "range",
+      "id": "mobile_spacing_top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 0,
+      "unit": "t:sections.announcement_bar.paddings.unit",
+      "label": "t:sections.announcement_bar.paddings.mobile.top"
+    },
+    {
+      "type": "range",
+      "id": "mobile_spacing_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 0,
+      "unit": "t:sections.announcement_bar.paddings.unit",
+      "label": "t:sections.announcement_bar.paddings.mobile.bottom"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "announcement",
+      "name": "t:sections.announcement_bar.announcement_block_name",
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "t:sections.announcement_bar.announcement_block_text_label",
+          "default": "<p>Make an announcement</p>"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "t:sections.announcement_bar.announcement_block_link_label"
+        },
+        {
+          "type": "select",
+          "id": "icon",
+          "options": [
+            {
+              "value": "none",
+              "label": "t:sections.general_section_settings.icon.none_icon_label"
+            },
+            {
+              "value": "settings",
+              "label": "t:sections.general_section_settings.icon.general_group.settings_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "search",
+              "label": "t:sections.general_section_settings.icon.general_group.search_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "eye",
+              "label": "t:sections.general_section_settings.icon.general_group.eye_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "eye-slash",
+              "label": "t:sections.general_section_settings.icon.general_group.eye_slash_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "user",
+              "label": "t:sections.general_section_settings.icon.general_group.user_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "love-outline",
+              "label": "t:sections.general_section_settings.icon.general_group.love_outline_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "love-solid",
+              "label": "t:sections.general_section_settings.icon.general_group.love_solid_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "like",
+              "label": "t:sections.general_section_settings.icon.general_group.like_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "dislike",
+              "label": "t:sections.general_section_settings.icon.general_group.dislike_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "lamp",
+              "label": "t:sections.general_section_settings.icon.general_group.lamp_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "star-outline",
+              "label": "t:sections.general_section_settings.icon.general_group.star_outline_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "star-solid",
+              "label": "t:sections.general_section_settings.icon.general_group.star_solid_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "trash",
+              "label": "t:sections.general_section_settings.icon.general_group.trash_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "document",
+              "label": "t:sections.general_section_settings.icon.general_group.document_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "copy",
+              "label": "t:sections.general_section_settings.icon.general_group.copy_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "share",
+              "label": "t:sections.general_section_settings.icon.general_group.share_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "plus",
+              "label": "t:sections.general_section_settings.icon.general_group.plus_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "minus",
+              "label": "t:sections.general_section_settings.icon.general_group.minus_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "checkmark",
+              "label": "t:sections.general_section_settings.icon.general_group.checkmark_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "arrow-right",
+              "label": "t:sections.general_section_settings.icon.general_group.arrow_right_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "arrow-left",
+              "label": "t:sections.general_section_settings.icon.general_group.arrow_left_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "undo",
+              "label": "t:sections.general_section_settings.icon.general_group.undo_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "redo",
+              "label": "t:sections.general_section_settings.icon.general_group.redo_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "refresh",
+              "label": "t:sections.general_section_settings.icon.general_group.refresh_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "notification",
+              "label": "t:sections.general_section_settings.icon.general_group.notification_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "clock",
+              "label": "t:sections.general_section_settings.icon.general_group.clock_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "calendar",
+              "label": "t:sections.general_section_settings.icon.general_group.calendar_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "information",
+              "label": "t:sections.general_section_settings.icon.general_group.information_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            },
+            {
+              "value": "bag",
+              "label": "t:sections.general_section_settings.icon.shop_group.bag_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "cart",
+              "label": "t:sections.general_section_settings.icon.shop_group.cart_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "barcode",
+              "label": "t:sections.general_section_settings.icon.shop_group.barcode_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "coupon",
+              "label": "t:sections.general_section_settings.icon.shop_group.coupon_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "gift",
+              "label": "t:sections.general_section_settings.icon.shop_group.gift_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "discount-outline",
+              "label": "t:sections.general_section_settings.icon.shop_group.discount_outline_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "discount-solid",
+              "label": "t:sections.general_section_settings.icon.shop_group.discount_solid_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "medal",
+              "label": "t:sections.general_section_settings.icon.shop_group.medal_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "pen-and-ruler",
+              "label": "t:sections.general_section_settings.icon.shop_group.pen_and_ruler_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "color-swatch",
+              "label": "t:sections.general_section_settings.icon.shop_group.color_swatch_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "car",
+              "label": "t:sections.general_section_settings.icon.shop_group.car_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "cup",
+              "label": "t:sections.general_section_settings.icon.shop_group.cup_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "cake",
+              "label": "t:sections.general_section_settings.icon.shop_group.cake_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "hanger",
+              "label": "t:sections.general_section_settings.icon.shop_group.hanger_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "t-shirt",
+              "label": "t:sections.general_section_settings.icon.shop_group.t_shirt_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "dress",
+              "label": "t:sections.general_section_settings.icon.shop_group.dress_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "jewelry",
+              "label": "t:sections.general_section_settings.icon.shop_group.jewelry_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "furniture",
+              "label": "t:sections.general_section_settings.icon.shop_group.furniture_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "toy",
+              "label": "t:sections.general_section_settings.icon.shop_group.toy_icon_label",
+              "group": "t:sections.general_section_settings.icon.shop_group.label"
+            },
+            {
+              "value": "shipping-box",
+              "label": "t:sections.general_section_settings.icon.shipping_group.shipping_box_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "address-pin",
+              "label": "t:sections.general_section_settings.icon.shipping_group.address_pin_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "fast-delivery",
+              "label": "t:sections.general_section_settings.icon.shipping_group.fast_delivery_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "delivery-truck",
+              "label": "t:sections.general_section_settings.icon.shipping_group.delivery_truck_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "easy-returns",
+              "label": "t:sections.general_section_settings.icon.shipping_group.easy_returns_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "world",
+              "label": "t:sections.general_section_settings.icon.shipping_group.world_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "plane",
+              "label": "t:sections.general_section_settings.icon.shipping_group.plane_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "search-order",
+              "label": "t:sections.general_section_settings.icon.shipping_group.search_order_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "briefcase",
+              "label": "t:sections.general_section_settings.icon.shipping_group.briefcase_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "store",
+              "label": "t:sections.general_section_settings.icon.shipping_group.store_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+            {
+              "value": "routing",
+              "label": "t:sections.general_section_settings.icon.shipping_group.routing_icon_label",
+              "group": "t:sections.general_section_settings.icon.shipping_group.label"
+            },
+
+            {
+              "value": "credit-card",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.credit_card_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "lock",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.lock_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "shield",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.shield_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "secure-payment",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.secure_payment_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "wallet",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.wallet_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "cash",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.cash_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "receipt",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.receipt_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "tag",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.tag_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "list",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.list_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "scanner",
+              "label": "t:sections.general_section_settings.icon.payment_security_group.scanner_icon_label",
+              "group": "t:sections.general_section_settings.icon.payment_security_group.label"
+            },
+            {
+              "value": "phone",
+              "label": "t:sections.general_section_settings.icon.communication_group.phone_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "chat",
+              "label": "t:sections.general_section_settings.icon.communication_group.chat_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "message",
+              "label": "t:sections.general_section_settings.icon.communication_group.message_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "email-outline",
+              "label": "t:sections.general_section_settings.icon.communication_group.email_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "customer-support",
+              "label": "t:sections.general_section_settings.icon.communication_group.customer_support_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "printer-and-fax",
+              "label": "t:sections.general_section_settings.icon.communication_group.printer_and_fax_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "devices",
+              "label": "t:sections.general_section_settings.icon.communication_group.devices_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "mobile",
+              "label": "t:sections.general_section_settings.icon.communication_group.mobile_icon_label",
+              "group": "t:sections.general_section_settings.icon.communication_group.label"
+            },
+            {
+              "value": "virus",
+              "label": "t:sections.general_section_settings.icon.ecology_group.virus_icon_label",
+              "group": "t:sections.general_section_settings.icon.ecology_group.label"
+            },
+            {
+              "value": "mask",
+              "label": "t:sections.general_section_settings.icon.ecology_group.mask_icon_label",
+              "group": "t:sections.general_section_settings.icon.ecology_group.label"
+            },
+            {
+              "value": "eco",
+              "label": "t:sections.general_section_settings.icon.ecology_group.eco_icon_label",
+              "group": "t:sections.general_section_settings.icon.ecology_group.label"
+            },
+            {
+              "value": "rabbit",
+              "label": "t:sections.general_section_settings.icon.ecology_group.rabbit_icon_label",
+              "group": "t:sections.general_section_settings.icon.ecology_group.label"
+            },
+            {
+              "value": "twitter",
+              "label": "t:sections.general_section_settings.icon.social_group.twitter_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "facebook",
+              "label": "t:sections.general_section_settings.icon.social_group.facebook_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "pinterest",
+              "label": "t:sections.general_section_settings.icon.social_group.pinterest_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "instagram",
+              "label": "t:sections.general_section_settings.icon.social_group.instagram_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "tiktok",
+              "label": "t:sections.general_section_settings.icon.social_group.tiktok_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "tumblr",
+              "label": "t:sections.general_section_settings.icon.social_group.tumblr_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "snapchat",
+              "label": "t:sections.general_section_settings.icon.social_group.snapchat_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "youtube",
+              "label": "t:sections.general_section_settings.icon.social_group.youtube_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "vimeo",
+              "label": "t:sections.general_section_settings.icon.social_group.vimeo_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "linkedin",
+              "label": "t:sections.general_section_settings.icon.social_group.linkedin_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "flickr",
+              "label": "t:sections.general_section_settings.icon.social_group.flickr_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "reddit",
+              "label": "t:sections.general_section_settings.icon.social_group.reddit_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "email-solid",
+              "label": "t:sections.general_section_settings.icon.social_group.email_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "behance",
+              "label": "t:sections.general_section_settings.icon.social_group.behance_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "discord",
+              "label": "t:sections.general_section_settings.icon.social_group.discord_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "dribbble",
+              "label": "t:sections.general_section_settings.icon.social_group.dribbble_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "medium",
+              "label": "t:sections.general_section_settings.icon.social_group.medium_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "twitch",
+              "label": "t:sections.general_section_settings.icon.social_group.twitch_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "whatsapp",
+              "label": "t:sections.general_section_settings.icon.social_group.whatsapp_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "viber",
+              "label": "t:sections.general_section_settings.icon.social_group.viber_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "telegram",
+              "label": "t:sections.general_section_settings.icon.social_group.telegram_label",
+              "group": "t:sections.general_section_settings.icon.social_group.label"
+            },
+            {
+              "value": "coffee",
+              "label": "t:sections.general_section_settings.icon.general_group.coffee_icon_label",
+              "group": "t:sections.general_section_settings.icon.general_group.label"
+            }
+          ],
+          "default": "none",
+          "label": "t:sections.general_section_settings.icon.label",
+          "info": "t:sections.general_section_settings.icon.info"
+        },
+        {
+          "type": "image_picker",
+          "id": "custom_icon_image",
+          "label": "t:sections.general_section_settings.custom_icon_image.label"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

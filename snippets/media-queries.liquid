@@ -1,0 +1,10 @@
+{% case screen %}
+  {% when 'only_mobile' %}
+    screen and (max-width: 768px)
+  {% when 'md' %}
+    screen and (min-width: 768px)
+  {% when 'lg' %}
+    screen and (min-width: 992px)
+  {% when 'xl' %}
+    screen and (min-width: 1400px)
+{% endcase %}

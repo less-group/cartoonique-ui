@@ -1,0 +1,455 @@
+{% liquid
+  assign options = block.settings
+
+  assign color_scheme = options.color_scheme
+  assign vertical_spacing = options.vertical_spacing
+  assign horizontal_spacing = options.horizontal_spacing
+  assign desktop_width = options.desktop_width
+  assign desktop_position = options.desktop_position
+
+  assign heading = options.heading
+  assign heading_size = options.heading_size
+  assign subheading = options.subheading
+  assign body = options.body
+  assign body_size = options.body_size
+  assign disclaimer = options.disclaimer
+  assign content_alignment = options.content_alignment
+  assign show_socials = options.show_socials
+
+  assign show_signup_checkbox = options.show_signup_checkbox
+  assign signup_checkbox_text = options.signup_checkbox_text
+
+  assign page_condition = options.page_condition
+  assign pages = options.pages
+  assign product_tags = options.product_tags
+  assign when_show = options.when_show
+  assign time_delay = options.time_delay
+  assign page_scroll = options.page_scroll
+  assign exit_intent = options.exit_intent
+  assign frequency = options.frequency
+
+  assign input_style = options.input_style
+  assign submit_btn_label = options.submit_btn_label
+  assign submit_btn_style = options.submit_btn_style
+  assign close_btn_label = options.close_btn_label
+  assign close_btn_style = options.close_btn_style
+
+  assign img = options.img
+  assign video = options.video
+  assign img_position = options.img_position
+  assign hide_img_mobile = options.hide_img_mobile
+  assign img_overlay_opacity = options.img_overlay_opacity | times: 0.01
+
+  assign storefront_overlay_solid = options.storefront_overlay_solid
+  assign storefront_overlay_gradient = options.storefront_overlay_gradient
+  assign storefront_overlay_opacity = options.storefront_overlay_opacity | times: 0.01
+  assign content_blur = options.content_blur
+
+  assign show_success_message = options.show_success_message
+  assign success_heading = options.success_heading
+  assign success_body = options.success_body
+  assign discount_code = options.discount_code
+
+  assign timer_desktop_width = options.timer_desktop_width
+
+  if desktop_position == 'top_center' or desktop_position == 'bottom_center'
+    assign horizontal_spacing = 32
+  endif
+
+  if desktop_position == 'center_left' or desktop_position == 'center_right'
+    assign vertical_spacing = 32
+  endif
+
+  assign has_image = false
+
+  if img != blank or video != blank
+    assign has_image = true
+  endif
+
+  assign has_btn = false
+  if submit_btn_label != blank or close_btn_label != blank
+    assign has_btn = true
+  endif
+
+  assign one_btn = false
+  if has_btn == true and submit_btn_label == blank or has_btn == true and close_btn_label == blank
+    assign one_btn = true
+  endif
+
+  assign enable_content_slide_in = settings.enable_content_slide_in
+%}
+
+{% capture css %}
+  {% style %}
+    .block-{{ block.id}}{
+      --gsc-content-align: {{ content_alignment}};
+      --gsc-desktop-width: {{ desktop_width}}px;
+      --gsc-overlay-opacity: {{ img_overlay_opacity }};
+      --gsc-timer-width: 100%;
+    }
+
+    @media {% render 'media-queries', screen: 'md' %} {
+      .block-{{ block.id }} {
+          --gsc-timer-width: {{ timer_desktop_width }}%;
+      }
+
+      .block-{{ block.id }}.popup--flyout {
+        padding: {{vertical_spacing}}px {{horizontal_spacing}}px;
+      }
+    }
+  {% endstyle %}
+{% endcapture %}
+
+{% render 'inline-css-minifier', css: css %}
+
+<popup-signup
+  class='popup popup-signup popup--{{popup_variant}} popup-position--{{desktop_position}} block-{{block.id}} color-{{color_scheme}}'
+  id='Popups-Signup-{{ block.id }}'
+  data-block-id='{{block.id}}'
+  role='dialog'
+  aria-label='Signup Popup {{ heading }}'
+  aria-modal='true'
+  tabindex='-1'
+  data-ignore-esc-key
+  data-variant='{{popup_variant}}'
+  data-page-condition='{{page_condition}}'
+  data-pages='{{pages}}'
+  data-product-tags='{{product_tags}}'
+  data-when-show='{{when_show}}'
+  data-time-delay='{{time_delay}}'
+  data-page-scroll='{{page_scroll}}'
+  data-exit-intent='{{exit_intent}}'
+  data-frequency='{{frequency}}'
+  data-overlay-solid='{{storefront_overlay_solid}}'
+  data-overlay-gradient='{{storefront_overlay_gradient}}'
+  data-overlay-opacity='{{storefront_overlay_opacity}}'
+  data-overlay-blur='{{ content_blur | divided_by: 2.0 }}'
+  data-show-success-message='{{show_success_message}}'
+  data-has-image='{{has_image}}'
+  data-hide-img-mobile='{{hide_img_mobile}}'
+  data-skip-transition-wait
+  {{ block.shopify_attributes }}
+>
+  <template data-modal-template='Popups-Signup-{{ block.id }}'>
+    {% liquid
+      assign form_id = 'PopupSignupForm-' | append: block.id
+      assign form_class = 'popup__body' | append: ' popup--with-image-on-' | append: img_position
+    %}
+
+    {%- form 'customer', id: form_id, class: form_class -%}
+      {% liquid
+        assign is_success_message = form.posted_successfully?
+        if show_success_message == false or request.design_mode
+          assign is_success_message = false
+        endif
+      %}
+
+      <button
+        type='button'
+        class='unstyled-button close-button-with-scale-hover-wrapper popup__close-button'
+        tabindex='0'
+        aria-label='{{- 'popups.screen_reader.close' | t -}}'
+        data-close-small-btn
+      >
+        <span class='close-button-with-scale-hover'></span>
+      </button>
+      {% unless is_success_message %}
+        {% if has_image %}
+          <div class='popup__media-container'>
+            {% render 'media-with-art-direction',
+              class: 'popup__media',
+              with_overlay: true,
+              with_placeholder: false,
+              desktop_img: img,
+              mobile_img: img,
+              mobile_video: video,
+              desktop_video: video,
+              loading: 'eager'
+            %}
+          </div>
+        {% endif %}
+      {% endunless %}
+      <div class='popup__content-container'>
+        <div class='popup__content'>
+          {% if is_success_message %}
+            {% comment %} Success message markup {% endcomment %}
+            <div class='popup__checkmark checkmark-with-chevron'>
+              <div class='checkmark-with-chevron__outline-container'>
+                <svg
+                  class='checkmark-with-chevron__icon checkmark-with-chevron__icon--static'
+                  xmlns='http://www.w3.org/2000/svg'
+                  viewBox='0 0 52 52'
+                >
+                  <circle
+                    class="checkmark-with-chevron__circle"
+                    cx="26"
+                    cy="26"
+                    r="25"
+                    fill="none" />
+                  <path
+                    class="checkmark-with-chevron__check"
+                    fill="none"
+                    d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+                </svg>
+              </div>
+            </div>
+            {% if success_heading != blank %}
+              <h2
+                class='{{heading_size}} popup__heading popup__heading--success {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 1;'
+                {% endif %}
+              >
+                {{ success_heading }}
+              </h2>
+            {% endif %}
+            {% if success_body != blank %}
+              <div
+                class='{{body_size}} popup__body-text body-font-weight-from-global-settings {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 2;'
+                {% endif %}
+              >
+                {{ success_body }}
+              </div>
+            {% endif %}
+            {% if discount_code != blank %}
+              <div
+                class='popup__discount popup__discount--success {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 3;'
+                {% endif %}
+              >
+                <clipboard-button
+                  class='popup__btn-discount'
+                  aria-hidden='true'
+                  data-value='{{discount_code}}'
+                  data-tooltip-id='DiscountCodeTooltip'
+                  data-clipboard-button-tooltip-target-id='DiscountCodeTooltip'
+                  tabindex='0'
+                >
+                  {%- render 'icon', icon_name: 'copy', class: 'copy-icon' -%}
+                  <div class='popup__btn-discount-label'>
+                    {{ discount_code }}
+                  </div>
+                </clipboard-button>
+                <clipboard-button-tooltip
+                  class='tooltip'
+                  aria-hidden='true'
+                  id='DiscountCodeTooltip'
+                  data-placement='bottom'
+                  data-main-axis-offset='5'
+                >
+                  <template data-clipboard-button-tooltip-template='DiscountCodeTooltip'>
+                    <div>
+                      <div class='tooltip__body'>
+                        <div class='tooltip__arrow' data-float-element-arrow></div>
+                        {{ 'gift_card.store_front.copied' | t }}
+                      </div>
+                    </div>
+                  </template>
+                </clipboard-button-tooltip>
+              </div>
+            {% endif %}
+          {% else %}
+            {% comment %} Modal content template {% endcomment %}
+            {% if subheading != blank %}
+              <div
+                class='caption popup__subheading {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 1;'
+                {% endif %}
+              >
+                {{ subheading }}
+              </div>
+            {% endif %}
+            {% if heading != blank %}
+              <h2
+                class='{{heading_size}} popup__heading {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 2;'
+                {% endif %}
+              >
+                {{ heading }}
+              </h2>
+            {% endif %}
+            {% if body != blank %}
+              <div
+                class='{{body_size}} popup__body-text body-font-weight-from-global-settings {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 3;'
+                {% endif %}
+              >
+                {{ body }}
+              </div>
+            {% endif %}
+            {% if with_timer %}
+              <div
+                class='popup__timer {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 4;'
+                {% endif %}
+              >
+                {% render 'timer', timerId: 'popup-' | append block.id, block: block %}
+              </div>
+            {% endif %}
+            <input
+              name='contact[tags]'
+              type='hidden'
+              value='newsletter'
+              id='{{form_id}}-ContactTagsInput'
+            >
+            <div
+              class='field popup__field {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+              {% if enable_content_slide_in %}
+                style='--gsc-animation-order: 5;'
+              {% endif %}
+            >
+              <div class='popup__field-content'>
+                <label class='visually-hidden' for='{{form_id}}-ContactEmailInput'>
+                  {{- 'forms.newsletter.screen_reader.email_input_label' | t -}}
+                </label>
+                <input
+                  type='email'
+                  name='contact[email]'
+                  class='input popup__field-input input--large input--{{ input_style }}'
+                  value='{{ form.email }}'
+                  aria-required='true'
+                  autocorrect='off'
+                  autocapitalize='off'
+                  autocomplete='email'
+                  placeholder='{{ 'forms.newsletter.store_front.email_input_placeholder' | t }}'
+                  required
+                  id='{{form_id}}-ContactEmailInput'
+                >
+                {% if has_btn == false %}
+                  <button
+                    class='btn btn--solid btn--lg input-btn popup__field-with-input-btn'
+                    name='commit'
+                    type='submit'
+                    aria-label='{{ 'forms.newsletter.screen_reader.subscribe_button_label' | t }}'
+                  >
+                    {% render 'icon', icon_name: 'arrow', class: 'newsletter__arrow' %}
+                  </button>
+                {% endif %}
+              </div>
+            </div>
+
+            {% if show_signup_checkbox %}
+              <label
+                class='checkbox checkbox--consent popup__checkbox body-font-weight-from-global-settings {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 6;'
+                {% endif %}
+                for='signup_checkbox_{{form_id}}'
+              >
+                <input
+                  class='checkbox__input'
+                  id='signup_checkbox_{{form_id}}'
+                  type='checkbox'
+                  required
+                >
+                <span class='checkbox__span checkbox__span--{{ input_style }}'></span>
+                <span>{{ signup_checkbox_text }}</span>
+              </label>
+            {% endif %}
+
+            {% if has_btn %}
+              <div
+                class='popup__btns-wrapper {% if one_btn %} popup__btns-wrapper--one-btn {% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 7;'
+                {% endif %}
+              >
+                <div class='popup__btns'>
+                  {% if submit_btn_label != blank %}
+                    {% if submit_btn_style == 'link' %}
+                      <button
+                        class='link popup__btn-link unstyled-button'
+                        name='commit'
+                        aria-label='{{promo_btn_label | strip_html | escape}}'
+                        data-submit-btn
+                      >
+                        <span class='link-parent-for-hover'>
+                          <span class='link__text'>{{ submit_btn_label }}</span>
+                        </span>
+                        {%- render 'icon', icon_name: 'link-chevron', class: 'link__chevron' -%}
+                      </button>
+                    {% else %}
+                      <button
+                        class='btn btn--{{ submit_btn_style }} popup__btn'
+                        name='commit'
+                        aria-label='{{submit_btn_label | strip_html | escape}}'
+                        data-submit-btn
+                      >
+                        {{ submit_btn_label }}
+                      </button>
+                    {% endif %}
+                  {% endif %}
+                  {% if close_btn_label != blank %}
+                    {% if close_btn_style == 'link' %}
+                      <button
+                        type='button'
+                        class='link popup__btn-link unstyled-button'
+                        aria-label='{{close_btn_label | strip_html | escape}}'
+                        data-close-btn
+                      >
+                        <span class='link-parent-for-hover'>
+                          <span class='link__text'>{{ close_btn_label }}</span>
+                        </span>
+                        {%- render 'icon', icon_name: 'link-chevron', class: 'link__chevron' -%}
+                      </button>
+                    {% else %}
+                      <button
+                        type='button'
+                        class='btn btn--{{ close_btn_style }} popup__btn'
+                        aria-label='{{close_btn_label | strip_html | escape}}'
+                        data-close-btn
+                      >
+                        {{ close_btn_label }}
+                      </button>
+                    {% endif %}
+                  {% endif %}
+                </div>
+              </div>
+            {% endif %}
+            {% if disclaimer != blank %}
+              <div
+                class='popup__disclaimer {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+                {% if enable_content_slide_in %}
+                  style='--gsc-animation-order: 8;'
+                {% endif %}
+              >
+                {{ disclaimer }}
+              </div>
+            {% endif %}
+            {% if show_socials %}
+              {%- render 'social-list', class: 'popup__social-list' -%}
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+      {%- if form.errors -%}
+        {%- assign error_message = form.errors.translated_fields.email
+          | capitalize
+          | append: ' '
+          | append: form.errors.messages.email
+        -%}
+        <script>
+          window.notification = { text: '{{ error_message }}', variant: 'warning' }
+        </script>
+      {%- endif -%}
+      {%- if form.posted_successfully? -%}
+        {%- assign success_message = 'forms.newsletter.store_front.success' | t -%}
+        <script>
+          window.notification = { text: '{{ success_message }}', variant: 'success' }
+        </script>
+      {%- endif -%}
+    {%- endform -%}
+  </template>
+</popup-signup>
+
+{% if options.teaser_desktop_show != 'none' or options.teaser_mobile_show != 'none' %}
+  {% render 'popup-teaser', options: options, block: block %}
+{% endif %}

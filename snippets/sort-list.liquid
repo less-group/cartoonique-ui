@@ -1,0 +1,130 @@
+{%- liquid
+  assign current_sort_by = results.sort_by | default: results.default_sort_by
+
+  for option in results.sort_options
+    if current_sort_by == option.value
+      assign active_sort_label = option.name
+    endif
+  endfor
+-%}
+
+<div id='ShopSortList'>
+  <div class='sort-list--mobile'>
+    <sidebar-button>
+      <button
+        class='unstyled-button sort-list__btn'
+        data-sidebar-button
+        data-sidebar-id='SortListSidebar'
+        aria-label='{{ 'general.sort_list.screen_reader.button_label' | t }}'
+        type='button'
+      >
+        {% render 'icon', icon_name: 'sort', class: 'sort-list__btn-icon' %}
+        {{ 'general.sort_list.store_front.button_label' | t }}
+      </button>
+    </sidebar-button>
+    <sidebar-component
+      class='sidebar sidebar-sort-list'
+      id='SortListSidebar'
+      data-with-close-on-outside
+      data-with-close-on-escape
+      data-open-direction='left'
+      tabindex='-1'
+    >
+      <template data-sidebar-template='SortListSidebar'>
+        <div class='sidebar__body sort-list-sidebar__body' data-sidebar-body>
+          <div class='sort-list-sidebar__header'>
+            {{ 'general.sort_list.store_front.sort_by' | t }}
+            <sidebar-button>
+              <button
+                data-sidebar-button
+                data-sidebar-id='SortListSidebar'
+                class='unstyled-button close-button-with-scale-hover'
+                aria-label='{{ 'general.sort_list.screen_reader.hide_sort_list' | t }}'
+                type='button'
+              ></button>
+            </sidebar-button>
+          </div>
+          <sort-list class='sort-list-sidebar__form-wrap'>
+            <form class='sort-list-sidebar__form'>
+              {% for option in results.sort_options %}
+                <label
+                  for='sort-list-mobile-{{ option.value }}-{{ option.position }}-{{ forloop.index }}'
+                  class='sort-list-sidebar__form-label checkbox'
+                  data-sort-list-label
+                >
+                  {% if current_sort_by == option.value %}
+                    {% render 'icon', icon_name: 'check', class: 'sort-list-sidebar__check-icon' %}
+                  {% endif %}
+                  <input
+                    class='checkbox__input'
+                    type='radio'
+                    name='sort_by'
+                    value='{{ option.value }}'
+                    id='sort-list-mobile-{{ option.value }}-{{ option.position }}-{{ forloop.index }}'
+                    {% if current_sort_by == option.value %}
+                      checked
+                    {% endif %}
+                  >
+                  {{ option.name }}
+                </label>
+              {% endfor %}
+            </form>
+          </sort-list>
+        </div>
+      </template>
+    </sidebar-component>
+  </div>
+
+  <div class='sort-list--desktop'>
+    <dropdown-opener
+      class='sort-list__btn'
+      data-float-element-id='SortList'
+      data-aria-expanded='false'
+      data-trigger='click'
+      tabindex='0'
+    >
+      {% render 'icon', icon_name: 'sort', class: 'sort-list__btn-icon' %}
+      {{ 'general.sort_list.store_front.button_label' | t }}
+      <div class='sort-list-dropdown__active-sort-option'>
+        {{ active_sort_label }}
+      </div>
+    </dropdown-opener>
+    <float-element
+      class='sort-list-dropdown'
+      aria-hidden='true'
+      id='SortList'
+      data-placement='bottom-start'
+      data-main-axis-offset='12'
+    >
+      <template data-float-element-template='SortList'>
+        <div>
+          <sort-list>
+            <form class='sort-list-dropdown__form'>
+              {% for option in results.sort_options %}
+                <label
+                  for='sort-list-desktop-{{ option.value }}-{{ option.position }}-{{ forloop.index }}'
+                  class='sort-list-dropdown__item checkbox {% if current_sort_by == option.value %}active{% endif %}'
+                  tabindex='0'
+                  data-focus-trap-target
+                  data-sort-list-label
+                >
+                  <input
+                    class='checkbox__input'
+                    type='radio'
+                    name='sort_by'
+                    value='{{ option.value }}'
+                    id='sort-list-desktop-{{ option.value }}-{{ option.position }}-{{ forloop.index }}'
+                    {% if current_sort_by == option.value %}
+                      checked
+                    {% endif %}
+                  >
+                  {{ option.name }}
+                </label>
+              {% endfor %}
+            </form>
+          </sort-list>
+        </div>
+      </template>
+    </float-element>
+  </div>
+</div>

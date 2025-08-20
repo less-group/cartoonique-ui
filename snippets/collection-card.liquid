@@ -1,0 +1,161 @@
+{%- liquid
+  assign all_products_count = collection.all_products_count | default: 0
+
+  if img == blank
+    assign img = collection.products[0].featured_image
+  endif
+
+  if title == blank
+    assign title = 'cards.collection_card.store_front.default_title' | t
+  endif
+
+  assign on_image_variant_list = 'on-image-top,on-image-center,on-image-bottom,on-image-bottom-vertical' | split: ','
+  assign on_image_mode_enabled = false
+
+  if on_image_variant_list contains text_style
+    assign on_image_mode_enabled = true
+  endif
+
+  assign enable_background = false
+
+  if text_style == 'under-image-with-background'
+    assign enable_background = true
+  endif
+
+  assign btn_style = btn_style | default: 'link'
+
+  assign is_to_show_default_btn = false
+
+  if hover_effect == 'show_button'
+    assign is_to_show_default_btn = true
+  endif
+
+  if gradient_style == blank
+    if text_style contains 'on-image-top'
+      assign gradient_style = 'top'
+    elsif text_style contains 'on-image-center' or text_style == 'on-image-bottom-vertical'
+      assign gradient_style = 'center'
+    elsif text_style contains 'on-image-bottom'
+      assign gradient_style = 'bottom'
+    endif
+  endif
+
+  assign image_class = 'collection-card__image zoom shape__target-image' | append: in_header_class
+  if animate_image
+    assign image_class = image_class | append: ' scroll-trigger animate--zoom-out'
+  endif
+-%}
+
+<div class='collection-card link-parent-for-hover zoom-parent-for-hover {{ class }} {% if enable_background %} collection-card--with-background {% endif %} {% if hover_effect == 'show_all' %} collection-card--show-all-on-hover {% endif %} {% if hover_effect == 'show_button' %} collection-card--show-button-on-hover {% endif %} {% if add_side_paddings == false or add_side_paddings == blank %} collection-card--without-aside-paddings {% endif %}'>
+  <div
+    class='collection-card__media shape shape--{{ img_ratio }} {% if img_ratio contains 'fit' %} shape--fit {% endif %}'
+    {% if img_ratio == 'nature' %}
+      style='padding-bottom: {{ 1 | divided_by: img.aspect_ratio | times: 100 }}%;'
+    {% endif %}
+  >
+    {%- if img != blank -%}
+      <img
+        {% render 'image-attributes',
+          image: img,
+          size: 'medium',
+          class: image_class
+        %}
+      >
+    {%- else -%}
+      {{ 'collection-1' | placeholder_svg_tag: 'placeholder-image collection-card__image zoom shape__target-image' }}
+    {%- endif -%}
+    {%- if on_image_mode_enabled -%}
+      <div
+        class='overlay collection-card__overlay {% if gradient_style == 'top' %} collection-card__overlay--top-gradient {% endif %} {% if gradient_style == 'center' %} collection-card__overlay--center-gradient {% endif %} {% if gradient_style == 'bottom' %} collection-card__overlay--bottom-gradient {% endif %}'
+      ></div>
+    {%- endif -%}
+  </div>
+  <div
+    class='
+      collection-card__content
+      {% if on_image_mode_enabled %} collection-card__content--on-image {% else %} collection-card__content--under-image {% endif %}
+      {% if with_bottom_spacing %} collection-card__content--bottom-spacing {% endif %}
+      {% if content_align == 'center' %} collection-card__content--center-alignment {% endif %}
+      {% if content_align == 'right' %} collection-card__content--right-alignment {% endif %}
+
+      {% if text_style == 'on-image-top' %} collection-card__content--on-image-top {% endif %}
+      {% if text_style == 'on-image-center' %} collection-card__content--on-image-center {% endif %}
+      {% if text_style == 'on-image-bottom' %} collection-card__content--on-image-bottom {% endif %}
+      {% if text_style == 'on-image-bottom-vertical' %} collection-card__content--on-image-bottom-vertical {% endif %}
+    '
+  >
+    <a
+      class='collection-card__link'
+      aria-label='{{ collection.title | strip_html | escape }}'
+      {% if collection.url != blank %}
+        href='{{ collection.url }}'
+      {% endif %}
+    ></a>
+
+    {%- if on_image_mode_enabled -%}
+      {%- if show_product_count == 'caption' -%}
+        <div class='collection-card__count'>
+          {{- 'cards.collection_card.store_front.product_count' | t: count: all_products_count -}}
+        </div>
+      {%- endif -%}
+      <h2 class='collection-card__title {{ heading_size }}'>
+        {{ title -}}
+        {%- if show_product_count == 'superscript' -%}
+          &nbsp;<sup class='collection-card__superscript'>{{ all_products_count }}</sup>
+        {%- endif %}
+      </h2>
+
+      {%- if link_text != blank -%}
+        {%- if btn_style == 'link' -%}
+          <a
+            class='link'
+            {% if collection.url != blank %}
+              href='{{ collection.url }}'
+            {% endif %}
+            aria-label='{{ link_text }}'
+          >
+            <span class='link-parent-for-hover'>
+              <span class='link__text'>{{ link_text }}</span>
+            </span>
+            {%- render 'icon', icon_name: 'link-chevron', class: 'link__chevron' -%}
+          </a>
+        {%- else -%}
+          <a
+            class='btn btn--{{ btn_style }}'
+            {% if collection.url != blank %}
+              href='{{ collection.url }}'
+            {% endif %}
+            aria-label='{{- link_text -}}'
+          >
+            {{- link_text -}}
+          </a>
+        {%- endif -%}
+      {%- endif -%}
+
+      {%- if link_text == blank and collection.url != blank and is_to_show_default_btn == true -%}
+        <a
+          class='btn btn--solid image-block__btn--default'
+          {% if collection.url != blank %}
+            href='{{ collection.url }}'
+          {% endif %}
+          aria-label='{{- collection.title -}}'
+        >
+          {% render 'icon-pack', icon: 'arrow', class: '' %}
+        </a>
+      {%- endif -%}
+
+    {%- else -%}
+      <h2 class='collection-card__title {{ heading_size }}'>
+        {{ title -}}
+        {%- if show_product_count == 'superscript' -%}
+          &nbsp;<sup class='collection-card__superscript'>{{ all_products_count }}</sup>
+        {%- endif %}
+      </h2>
+      {%- if show_product_count == 'caption' -%}
+        <div class='collection-card__count'>
+          {{- 'cards.collection_card.store_front.product_count' | t: count: all_products_count -}}
+        </div>
+      {%- endif -%}
+    {%- endif -%}
+  </div>
+</div>

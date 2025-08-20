@@ -1,0 +1,266 @@
+{%- liquid
+  assign img_ratio = section.settings.img_ratio
+  assign enable_image_zoom = section.settings.enable_image_zoom
+  assign enable_video_autoplay = section.settings.enable_video_autoplay
+  assign enable_video_looping = section.settings.enable_video_looping
+  assign enable_video_controls = section.settings.enable_video_controls
+  assign enable_darken_mode = settings.enable_product_darken_background
+
+  assign primary_option_names = settings.primary_option_name | split: ','
+  assign option = blank
+
+  for name in primary_option_names
+    assign name_striped = name | strip
+    if product.options_by_name[name_striped] != blank
+      assign option = product.options_by_name[name_striped]
+      break
+    endif
+  endfor
+
+  assign option = option.values | first
+-%}
+
+<product-media-carousel
+  class='product-media-carousel'
+  data-section='{{ sectionId }}'
+  id='product-media-{{ product.id }}-{{ sectionId }}'
+>
+  <carousel-component
+    class='carousel product-media-carousel__carousel {% if product_media.size == 1 %}product-media-carousel__carousel--one-image{% endif %} {% if block_layout == 'thumbnails-bottom' %} product-media-carousel__carousel--with-bottom-thumbnails {% endif %} {% if block_layout == 'thumbnails-right' %} product-media-carousel__carousel--with-right-thumbnails {% endif %} {% if block_layout == 'thumbnails-left' %} product-media-carousel__carousel--with-left-thumbnails {% endif %}'
+    data-section-id='{{ sectionId }}'
+    data-product-media-carousel-component
+    tabindex='-1'
+    with-hover-pause
+    data-align='start'
+    data-draggable
+    data-contain-scroll='trimSnaps'
+    {% if block_layout == 'thumbnails-left' or block_layout == 'thumbnails-right' %}
+      data-axis='y'
+    {% else %}
+      data-axis='x'
+    {% endif %}
+    media-for='carousel'
+  >
+    <div
+      class='shape shape--{{ img_ratio }} product-media-carousel__viewport embla {% if block_layout == 'thumbnails-left' or block_layout == 'thumbnails-right' %} carousel__viewport carousel__viewport--vertical{% endif %}'
+      data-carousel-viewport
+    >
+      <div
+        class='carousel__container product-media-carousel__container'
+        data-carousel-container
+        data-container='carousel'
+      >
+        {%- if product.media != blank -%}
+          {%- if featured_media != null -%}
+            <div
+              class='carousel__slide product-media-carousel__slide'
+              {% if featured_media.media_type == 'image' and enable_image_zoom %}
+                data-zoom-cursor-target
+              {% endif %}
+              data-media-id='{{ featured_media.id }}'
+              data-variant='{{ featured_media.alt | strip_html | escape }}'
+            >
+              {% render 'product-media',
+                product: product,
+                enable_image_zoom: enable_image_zoom,
+                enable_video_autoplay: enable_video_autoplay,
+                media: featured_media,
+                modal_media_id: featured_media.id,
+                enable_video_looping: enable_video_looping,
+                enable_video_controls: enable_video_controls,
+                sectionId: sectionId,
+                class: 'shape__target-image',
+                index: 0
+              %}
+            </div>
+          {%- endif -%}
+
+          {%- for media in product_media -%}
+            {%- if media.id != featured_media.id or media.id == blank -%}
+              {% liquid
+                assign index = forloop.index0
+                if featured_media != null
+                  assign index = forloop.index
+                endif
+              %}
+
+              <div
+                class='carousel__slide product-media-carousel__slide'
+                {% if media.media_type == 'image' and enable_image_zoom %}
+                  data-zoom-cursor-target
+                {% endif %}
+                data-media-id='{{ media.id }}'
+                data-variant='{{ media.alt | strip_html | escape }}'
+              >
+                {% render 'product-media',
+                  product: product,
+                  enable_image_zoom: enable_image_zoom,
+                  enable_video_autoplay: enable_video_autoplay,
+                  media: media,
+                  modal_media_id: media.id,
+                  enable_video_looping: enable_video_looping,
+                  enable_video_controls: enable_video_controls,
+                  sectionId: sectionId,
+                  class: 'shape__target-image',
+                  index: index
+                %}
+              </div>
+            {%- endif -%}
+          {%- endfor -%}
+
+        {%- else -%}
+          {%- for media in product_media -%}
+            <div
+              class='carousel__slide product-media-carousel__slide'
+              {% if enable_image_zoom %}
+                data-zoom-cursor-target
+              {% endif %}
+              data-media-id='{{ forloop.index }}'
+              data-variant='{{ media.alt | strip_html | escape }}'
+            >
+              {% render 'product-media',
+                product: product,
+                enable_image_zoom: enable_image_zoom,
+                enable_video_autoplay: enable_video_autoplay,
+                media: media,
+                modal_media_id: forloop.index,
+                enable_video_looping: enable_video_looping,
+                enable_video_controls: enable_video_controls,
+                sectionId: sectionId,
+                class: 'shape__target-image'
+              %}
+            </div>
+          {%- endfor -%}
+        {%- endif -%}
+      </div>
+    </div>
+
+    {% if product_media.size > 1 %}
+      <div class='product-media-carousel__thumbs-wrap'>
+        <carousel-dots
+          class='carousel product-thumbnail-carousel {% if block_layout == 'thumbnails-left' or block_layout == 'thumbnails-right' %} product-thumbnail-carousel--aside {% else %} product-thumbnail-carousel--bottom{% endif %}'
+          data-contain-scroll='keepSnaps'
+          data-skip-snaps
+          data-draggable
+          data-align='center'
+          data-in-view-threshhold='1'
+          {% if block_layout == 'thumbnails-left' or block_layout == 'thumbnails-right' %}
+            data-with-wheel-gestures
+            data-axis='y'
+          {% else %}
+            data-axis='x'
+          {% endif %}
+          media-for='dots'
+        >
+          <carousel-button
+            class='carousel-btn product-thumbnail-carousel__btn {% if block_layout == 'thumbnails-bottom' %} product-thumbnail-carousel__btn--under product-thumbnail-carousel__btn--under-prev {% endif %} {% if block_layout == 'thumbnails-right' or block_layout == 'thumbnails-left' %} product-thumbnail-carousel__btn--aside product-thumbnail-carousel__btn--aside-prev {% endif %}'
+            data-direction='prev'
+            tabindex='0'
+            data-hide-inside-dots
+          >
+            {%- liquid
+              if block_layout == 'thumbnails-bottom'
+                render 'icon', icon_name: 'chevron', class: 'product-thumbnail-carousel__chevron x-flip'
+              else
+                render 'icon', icon_name: 'chevron', class: 'product-thumbnail-carousel__chevron product-thumbnail-carousel__chevron--top'
+              endif
+            -%}
+          </carousel-button>
+          <div
+            class='carousel__viewport product-thumbnail-carousel__carousel-viewport embla {% if block_layout == 'thumbnails-left' or block_layout == 'thumbnails-right' %}carousel__viewport--vertical{% endif %}'
+            data-carousel-viewport
+          >
+            <div
+              class='carousel__container product-thumbnail-carousel__container'
+              data-carousel-container
+              data-container='dots'
+            >
+              {%- if featured_media != null -%}
+                {%- assign image = featured_media | default: featured_media.image -%}
+
+                <div
+                  class='carousel__slide product-thumbnail-carousel__thumb is-primary'
+                  tabindex='0'
+                  data-carousel-dot
+                  data-dot-index='{{ forloop.index0 }}'
+                  data-variant='{{ image.alt | strip_html | escape }}'
+                >
+                  <div class='product-thumbnail-carousel__thumb-image shape shape--{{ img_ratio }}  {% if img_ratio contains 'fit' %} shape--fit {% endif %} {% if enable_darken_mode %} multiply-mode {% endif %}'>
+                    <img
+                      {% render 'image-attributes',
+                        image: image,
+                        size: 'medium',
+                        is_multiply_target: enable_darken_mode,
+                        class_from-parent: class,
+                        class: 'shape__target-image'
+                      %}
+                    >
+                  </div>
+                </div>
+              {%- endif -%}
+              {%- for media in product_media -%}
+                {%- if media.id != featured_media.id or media.id == blank -%}
+                  <div
+                    class='carousel__slide product-thumbnail-carousel__thumb {% if forloop.index == 1 and featured_media == null %}is-primary{% endif %}'
+                    tabindex='0'
+                    data-carousel-dot
+                    data-dot-index='{{ forloop.index0 }}'
+                    data-variant='{{ media.alt | strip_html | escape }}'
+                  >
+                    <div class='product-thumbnail-carousel__thumb-image shape shape--{{ img_ratio }}  {% if img_ratio contains 'fit' %} shape--fit {% endif %} {% if enable_darken_mode %}multiply-mode{% endif %}'>
+                      {%- assign image = media.preview_image -%}
+
+                      {%- if image != blank and media.id != blank -%}
+                        <img
+                          {% render 'image-attributes',
+                            image: image,
+                            size: 'medium',
+                            is_multiply_target: enable_darken_mode,
+                            class_from_parent: class,
+                            class: 'shape__target-image'
+                          %}
+                        >
+                      {%- else -%}
+                        {{ 'image' | placeholder_svg_tag: 'placeholder-image shape__target-image' }}
+                      {%- endif -%}
+
+                      {%- if media.media_type == 'external_video'
+                        or media.media_type == 'video'
+                        or media.media_type == 'model'
+                      -%}
+                        {% case media.media_type %}
+                          {% when 'video', 'external_video' %}
+                            <div class='product-thumbnail-carousel__thumb-icon-wrapper'>
+                              {% render 'icon', icon_name: 'play', class: 'product-thumbnail-carousel__thumb-icon' %}
+                            </div>
+                          {% when 'model' %}
+                            <div class='product-thumbnail-carousel__thumb-icon-wrapper'>
+                              {% render 'icon', icon_name: '3d', class: 'product-thumbnail-carousel__thumb-icon' %}
+                            </div>
+                        {% endcase %}
+                      {%- endif -%}
+                    </div>
+                  </div>
+                {%- endif -%}
+              {%- endfor -%}
+            </div>
+          </div>
+          <carousel-button
+            class='carousel-btn product-thumbnail-carousel__btn {% if block_layout == 'thumbnails-bottom' %} product-thumbnail-carousel__btn--under product-thumbnail-carousel__btn--under-next {% endif %} {% if block_layout == 'thumbnails-right' or block_layout == 'thumbnails-left' %} product-thumbnail-carousel__btn--aside product-thumbnail-carousel__btn--aside-next {% endif %}'
+            data-direction='next'
+            tabindex='0'
+            data-hide-inside-dots
+          >
+            {%- liquid
+              if block_layout == 'thumbnails-bottom'
+                render 'icon', icon_name: 'chevron', class: 'product-thumbnail-carousel__chevron'
+              else
+                render 'icon', icon_name: 'chevron', class: 'product-thumbnail-carousel__chevron product-thumbnail-carousel__chevron--bottom'
+              endif
+            -%}
+          </carousel-button>
+        </carousel-dots>
+      </div>
+    {% endif %}
+  </carousel-component>
+</product-media-carousel>

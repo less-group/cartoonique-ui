@@ -1,0 +1,15 @@
+{%- if video != blank -%}
+  {% render 'video-with-alt',
+    video: video,
+    class: 'images-with-text__image-list-item-media',
+    autoplay: true,
+    loop: true,
+    muted: true,
+    controls: false,
+    loading: 'lazy'
+  %}
+{%- elsif image != blank -%}
+  <img
+    {% render 'image-attributes', image: image, class: 'images-with-text__image-list-item-media' %}
+  >
+{%- endif -%}

@@ -1,0 +1,65 @@
+{%- liquid
+  assign options = block.settings
+  assign block_style = options.block_style
+  assign title = options.title
+  assign heading_size = options.heading_size
+  assign body_size = options.body_size
+  assign text = product.description
+  assign custom_icon_image = options.custom_icon_image
+  assign icon = options.icon
+%}
+{%- if product != blank and text != blank -%}
+  {%- if block_style contains 'collapsible' -%}
+    <accordeon-component
+      class='accordeon-plus accordeon-plus--bottom-bordered accordeon-plus--top-bordered product-content-tab product-content-tab--collapsible-row block-{{ block.id }}'
+      data-aria-expanded='{% if block_style == 'collapsible_row_open' %}true{% else %}false{% endif %}'
+      {{ block.shopify_attributes }}
+    >
+      <accordeon-button class='product-content-tab__btn {{ heading_size }}' tabindex='0'>
+        {%- if custom_icon_image != blank -%}
+          <img
+            {% render 'image-attributes', image: custom_icon_image, size: 'small', class: 'accordeon-plus__btn-icon' %}
+          >
+        {%- elsif icon != 'none' -%}
+          {% render 'icon-pack', icon: icon, class: 'accordeon-plus__btn-icon' %}
+        {%- endif -%}
+        {{ title }}
+        {%- render 'icon', icon_name: 'plus', class: 'accordeon-plus__icon' -%}
+      </accordeon-button>
+      <div class='accordeon-plus__content-wrap' data-accordeon-content-wrap>
+        <div class='accordeon-plus__content product-content-tab__content' data-accordeon-content>
+          <div class='rte product-content-tab__rte {{ body_size }} body-color body-font-weight-from-global-settings'>
+            {{ text }}
+          </div>
+        </div>
+      </div>
+    </accordeon-component>
+  {%- else -%}
+    <div class='product-content-tab block-{{ block.id }}' {{ block.shopify_attributes }}>
+      {% if title != blank %}
+        <div class='product-content-tab__title {{ heading_size }}'>
+          {%- if custom_icon_image != blank -%}
+            <img
+              {% render 'image-attributes',
+                image: custom_icon_image,
+                size: 'small',
+                class: 'accordeon-plus__btn-icon'
+              %}
+            >
+          {%- elsif icon != 'none' -%}
+            {% render 'icon-pack', icon: icon, class: 'accordeon-plus__btn-icon' %}
+          {%- endif -%}
+          {{ title }}
+        </div>
+      {% endif %}
+
+      {% if text != blank %}
+        <div class='product-content-tab__content'>
+          <div class='rte product-content-tab__rte {{ body_size }} body-color body-font-weight-from-global-settings'>
+            {{ text }}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  {%- endif -%}
+{%- endif -%}

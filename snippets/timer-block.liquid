@@ -1,0 +1,94 @@
+{% liquid
+  assign options = block.settings
+  assign color_scheme = options.color_scheme
+  assign show_background = options.show_background
+  assign heading = options.heading
+  assign heading_size = options.heading_size
+  assign body_size = options.body_size
+  assign body = options.body
+  assign content_align = options.content_alignment
+  assign width = options.timer_desktop_width
+
+  assign flex_align = 'flex-start'
+  if content_align == 'center'
+    assign flex_align = 'center'
+  endif
+  if content_align == 'right'
+    assign flex_align = 'flex-end'
+  endif
+%}
+
+{% capture css %}
+  {% style %}
+    .block-{{block.id}} {
+        --gsc-content-align: {{ content_align }};
+        --gsc-timer-flex-align: {{ flex_align }};
+
+        --gsc-timer-in-block-width: 100%;
+    }
+
+    @media {% render 'media-queries', screen: 'md' %} {
+      .block-{{block.id}} {
+          --gsc-timer-in-block-width: {{ width }}%;
+      }
+    }
+  {% endstyle %}
+{% endcapture %}
+
+{% render 'inline-css-minifier', css: css %}
+
+<div
+  class='timer-block color-{{ color_scheme }} {% if show_background %} timer-block--with-background{% endif %}'
+  {{ attrs }}
+>
+  {% if heading != blank %}
+    <h2 class='timer-block__heading {{ heading_size }}'>
+      {{ heading }}
+    </h2>
+  {% endif %}
+
+  {% if body != blank %}
+    <div
+      class='rte timer-block__body {{ body_size }} body-color body-font-weight-from-global-settings'
+    >
+      {{ body }}
+    </div>
+  {% endif %}
+
+  {% render 'timer', block: block, ensure_width: ensure_width %}
+
+  {% if options.discount_code != blank %}
+    <div class='in-cart-banner__discount'>
+      <clipboard-button
+        class='in-cart-banner__btn-discount popup__btn-discount'
+        aria-hidden='true'
+        data-value='{{options.discount_code}}'
+        data-tooltip-id='DiscountCodeTooltip-{{block.id}}'
+        data-clipboard-button-tooltip-target-id='DiscountCodeTooltip-{{block.id}}'
+        tabindex='0'
+      >
+        {%- render 'icon', icon_name: 'copy', class: 'copy-icon' -%}
+        <div class='in-cart-banner__btn-discount-label popup__btn-discount-label'>
+          {{ options.discount_code }}
+        </div>
+      </clipboard-button>
+
+      <clipboard-button-tooltip
+        class='tooltip'
+        aria-hidden='true'
+        id='DiscountCodeTooltip-{{block.id}}'
+        data-placement='bottom'
+        data-main-axis-offset='5'
+      >
+        <template data-clipboard-button-tooltip-template='DiscountCodeTooltip-{{block.id}}'>
+          <div>
+            <div class='tooltip__body'>
+              <div class='tooltip__arrow' data-float-element-arrow></div>
+              {{ 'gift_card.store_front.copied' | t }}
+            </div>
+          </div>
+        </template>
+      </clipboard-button-tooltip>
+    </div>
+  {% endif %}
+</div>

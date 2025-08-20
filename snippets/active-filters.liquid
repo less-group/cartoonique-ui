@@ -1,0 +1,72 @@
+{%- liquid
+  assign sort_by = results.sort_by | default: results.default_sort_by
+
+  if results.url
+    assign results_url = results.url
+  else
+    assign terms = results.terms | escape
+    assign results_url = '?q=' | append: terms | append: '&options%5Bprefix%5D=last&sort_by=' | append: sort_by
+  endif
+-%}
+
+<shop-active-filters id='ShopActiveFilters'>
+  {%- if active_filter_count > 0 -%}
+    <div class='filters__active-options' data-shop-active-filters-options>
+      {%- for filter in results.filters -%}
+        {%- if filter.type == 'price_range' -%}
+          {% if filter.max_value.value < filter.range_max or filter.min_value.value > 0 %}
+            <filter-remove-btn
+              class='filters__active-option'
+              data-url='{{ filter.url_to_remove }}'
+              data-filter-remove-btn
+              tabindex='0'
+            >
+              {{ filter.min_value.value | money }} - {{ filter.max_value.value | money }}
+              <span class='close-button'>
+                {% render 'icon',
+                  icon_name: 'close-large',
+                  stroke_width: 2,
+                  class: 'filters__active-option-close close-button__icon'
+                %}
+              </span>
+            </filter-remove-btn>
+          {% endif %}
+          {% break %}
+        {%- endif -%}
+      {%- endfor -%}
+
+      {%- for filter in results.filters -%}
+        {%- for value in filter.values -%}
+          {% if value.active %}
+            <filter-remove-btn
+              class='filters__active-option'
+              data-url='{{ value.url_to_remove }}'
+              data-filter-remove-btn
+              tabindex='0'
+            >
+              {{ value.label | escape }}
+              <span class='close-button'>
+                {% render 'icon',
+                  icon_name: 'close-large',
+                  stroke_width: 2,
+                  class: 'filters__active-option-close close-button__icon'
+                %}
+              </span>
+            </filter-remove-btn>
+          {% endif %}
+        {%- endfor -%}
+      {%- endfor -%}
+
+      {%- if active_filter_count > 0 -%}
+        <filter-remove-btn
+          class='filters__reset'
+          data-url='{{ results_url }}'
+          data-filters-reset
+          tabindex='0'
+        >
+          {{ 'general.filters.store_front.clear_all' | t }}
+        </filter-remove-btn>
+      {%- endif -%}
+    </div>
+  {%- endif -%}
+</shop-active-filters>

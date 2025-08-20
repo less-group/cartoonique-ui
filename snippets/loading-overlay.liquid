@@ -1,0 +1,11 @@
+{%- assign loading_spinner_class = 'loading-spinner ' | append: loading_spinner_class -%}
+
+<div
+  class='loading-overlay {{ class }} hidden'
+  {% if id != blank %}
+    id='{{ id }}'
+  {% endif %}
+  {{ attrs }}
+>
+  <div class="loading-spinner {{loading_spinner_class}}"></div>
+</div>

@@ -1,0 +1,615 @@
+{%- liquid
+  assign options = section.settings
+  assign container_size = options.container_size
+
+  assign add_side_paddings = options.add_side_paddings
+  assign section_spacing_top = options.section_spacing_top
+  assign section_spacing_bottom = options.section_spacing_bottom
+  assign color_scheme = options.color_scheme
+-%}
+
+{% capture css %}
+  {% style %}
+    .section-{{section.id}} {
+        --gsc-section-spacing-top: {{ section_spacing_top }}px;
+        --gsc-section-spacing-bottom: {{ section_spacing_bottom }}px;
+    }
+  {% endstyle %}
+{% endcapture %}
+
+{% render 'inline-css-minifier', css: css %}
+
+<addresses-component>
+  <div class='account section section-{{ section.id }} color-{{ color_scheme }}'>
+    <div class='account__container container container--{{ container_size }} {% if add_side_paddings == true %}container--with-aside-paddings{% endif %} section-spacing'>
+      {% render 'account-page-menu' %}
+
+      <div class='account__content'>
+        <div class='addresses__header'>
+          <h2 class='h5'>{{ 'customer.addresses.store_front.title' | t }}</h2>
+        </div>
+        <div class='addresses'>
+          {%- for address in customer.addresses -%}
+            <accordeon-component class='accordeon addresses__accordeon' data-aria-expanded='false'>
+              <div class='addresses__address'>
+                <div class='addresses__address-details'>
+                  {%- if address == customer.default_address -%}
+                    <div class='addresses__default-label'>{{ 'customer.addresses.store_front.default' | t }}</div>
+                  {%- endif -%}
+                  {%- if address.name != blank -%}
+                    <div class='addresses__address-details-item'>{{ address.name }}</div>
+                  {%- endif -%}
+                  {%- if address.company != blank -%}
+                    <div class='addresses__address-details-item'>{{ address.company }}</div>
+                  {%- endif -%}
+                  {%- if address.city != blank -%}
+                    <div class='addresses__address-details-item'>{{ address.city }}</div>
+                  {%- endif -%}
+                  {%- if address.address1 != blank -%}
+                    <div class='addresses__address-details-item'>{{ address.address1 }}</div>
+                  {%- endif -%}
+                  {%- if address.address2 != blank -%}
+                    <div class='addresses__address-details-item'>{{ address.address2 }}</div>
+                  {%- endif -%}
+                  {%- if address.country != blank -%}
+                    <div class='addresses__address-details-item'>{{ address.country }}</div>
+                  {%- endif -%}
+                  {%- if address.zip != blank -%}
+                    <div class='addresses__address-details-item'>{{ address.zip }}</div>
+                  {%- endif -%}
+                  {%- if address.phone != blank -%}
+                    <div class='addresses__address-details-item'>{{ address.phone }}</div>
+                  {%- endif -%}
+                </div>
+                <div class='addresses__address-btns'>
+                  <accordeon-button
+                    class='btn btn--solid btn--sm addresses__address-btn'
+                    type='button'
+                    id='EditFormButton_{{ address.id }}'
+                    aria-label='{{ 'customer.addresses.screen_reader.edit_address' | t }} {{ forloop.index }}'
+                    aria-controls='EditAddress_{{ address.id }}'
+                    data-aria-expanded='false'
+                    tabindex='0'
+                  >
+                    {{ 'customer.addresses.store_front.edit' | t }}
+                  </accordeon-button>
+                  <button
+                    class='btn btn--outline btn--sm addresses__address-btn'
+                    type='button'
+                    aria-label='{{ 'customer.addresses.screen_reader.delete' | t }} {{ forloop.index }}'
+                    data-target='{{ address.url }}'
+                    data-confirm-message='{{ 'customer.addresses.store_front.delete_confirm' | t }}'
+                    data-addresses-delete-button
+                  >
+                    {{ 'customer.addresses.store_front.delete' | t }}
+                  </button>
+                </div>
+              </div>
+              <div class='accordeon__content-wrap' data-accordeon-content-wrap>
+                <div class='accordeon__content' data-accordeon-content>
+                  <div class='addresses__form' id='EditAddress_{{ address.id }}'>
+                    <h3 class='addresses__form-title h6'>{{ 'customer.addresses.store_front.edit_address' | t }}</h3>
+                    {%- form 'customer_address', address -%}
+                      <div class='field-group addresses__form-field addresses__form-field-group'>
+                        <div class='field'>
+                          <label class='label' for='AddressFirstName_{{ form.id }}'>
+                            {{- 'customer.addresses.store_front.first_name' | t -}}
+                          </label>
+                          <input
+                            class='input input--{{ settings.input_style }} input--large'
+                            type='text'
+                            id='AddressFirstName_{{ form.id }}'
+                            name='address[first_name]'
+                            value='{{ form.first_name }}'
+                            autocomplete='given-name'
+                            placeholder='{{ 'customer.addresses.store_front.first_name' | t }}'
+                          >
+                        </div>
+                        <div class='field'>
+                          <label class='label' for='AddressLastName_{{ form.id }}'>
+                            {{- 'customer.addresses.store_front.last_name' | t -}}
+                          </label>
+                          <input
+                            class='input input--{{ settings.input_style }} input--large'
+                            type='text'
+                            id='AddressLastName_{{ form.id }}'
+                            name='address[last_name]'
+                            value='{{ form.last_name }}'
+                            autocomplete='family-name'
+                            placeholder='{{ 'customer.addresses.store_front.last_name' | t }}'
+                          >
+                        </div>
+                      </div>
+                      <div class='field addresses__form-field'>
+                        <label class='label' for='AddressCompany_{{ form.id }}'>
+                          {{- 'customer.addresses.store_front.company' | t -}}
+                        </label>
+                        <input
+                          class='input input--{{ settings.input_style }} input--large'
+                          type='text'
+                          id='AddressCompany_{{ form.id }}'
+                          name='address[company]'
+                          value='{{ form.company }}'
+                          autocomplete='organization'
+                          placeholder='{{ 'customer.addresses.store_front.company' | t }}'
+                        >
+                      </div>
+                      <div class='field addresses__form-field'>
+                        <label class='label' for='AddressAddress1_{{ form.id }}'>
+                          {{- 'customer.addresses.store_front.address1' | t -}}
+                        </label>
+                        <input
+                          class='input input--{{ settings.input_style }} input--large'
+                          type='text'
+                          id='AddressAddress1_{{ form.id }}'
+                          name='address[address1]'
+                          value='{{ form.address1 }}'
+                          autocomplete='address-line1'
+                          placeholder='{{ 'customer.addresses.store_front.address1' | t }}'
+                        >
+                      </div>
+                      <div class='field addresses__form-field'>
+                        <label class='label' for='AddressAddress2_{{ form.id }}'>
+                          {{- 'customer.addresses.store_front.address2' | t -}}
+                        </label>
+                        <input
+                          class='input input--{{ settings.input_style }} input--large'
+                          type='text'
+                          id='AddressAddress2_{{ form.id }}'
+                          name='address[address2]'
+                          value='{{ form.address2 }}'
+                          autocomplete='address-line2'
+                          placeholder='{{ 'customer.addresses.store_front.address2' | t }}'
+                        >
+                      </div>
+                      <div class='field-group addresses__form-field addresses__form-field-group'>
+                        <div class='field'>
+                          <label class='label' for='AddressCity_{{ form.id }}'>
+                            {{- 'customer.addresses.store_front.city' | t -}}
+                          </label>
+                          <input
+                            class='input input--{{ settings.input_style }} input--large'
+                            type='text'
+                            id='AddressCity_{{ form.id }}'
+                            name='address[city]'
+                            value='{{ form.city }}'
+                            autocomplete='address-level2'
+                            placeholder='{{ 'customer.addresses.store_front.city' | t }}'
+                          >
+                        </div>
+                        <div class='field'>
+                          <label class='label' for='AddressCity_{{ form.id }}'>
+                            {{- 'customer.addresses.store_front.country' | t -}}
+                          </label>
+
+                          <country-selector>
+                            <select class='input input--{{ settings.input_style }} input--large hidden'>
+                              {{ all_country_option_tags }}
+                            </select>
+                            <input
+                              class='hidden'
+                              name='address[country]'
+                              data-default='{{ form.country }}'
+                              data-form-id='{{ form.id }}'
+                              autocomplete='country'
+                              id='AddressCountry_{{ form.id }}'
+                            >
+                            <dropdown-opener
+                              class='dropdown__toggle'
+                              data-aria-expanded='false'
+                              data-float-element-id='EditCountry-{{form.id}}'
+                              data-trigger='click'
+                              tabindex="0"
+                            >
+                              <span class='dropdown__toggle-label'>{{ form.country }}</span>
+                              {% render 'icon', icon_name: 'chevron', class: 'dropdown__chevron' %}
+                            </dropdown-opener>
+                            <float-element
+                              class='dropdown addresses__address-country-dropdown'
+                              aria-hidden='true'
+                              id='EditCountry-{{ form.id }}'
+                              data-placement='bottom-start'
+                              data-main-axis-offset='{% if settings.round_level != "0" %} 8{% else %} 0{% endif %}'
+                            >
+                              <template data-float-element-template='EditCountry-{{ form.id }}'>
+                                <div></div>
+                              </template>
+                            </float-element>
+                          </country-selector>
+                        </div>
+                      </div>
+                      <div class='field addresses__form-field'>
+                        <label class='label' for='AddressZip_{{ form.id }}'>
+                          {{- 'customer.addresses.store_front.zip' | t -}}
+                        </label>
+                        <input
+                          class='input input--{{ settings.input_style }} input--large'
+                          type='text'
+                          id='AddressZip_{{ form.id }}'
+                          name='address[zip]'
+                          value='{{ form.zip }}'
+                          autocapitalize='characters'
+                          autocomplete='postal-code'
+                          placeholder='{{ 'customer.addresses.store_front.zip' | t }}'
+                        >
+                      </div>
+                      <div class='field addresses__form-field'>
+                        <label class='label' for='AddressPhone_{{ form.id }}'>
+                          {{- 'customer.addresses.store_front.phone' | t -}}
+                        </label>
+                        <input
+                          class='input input--{{ settings.input_style }} input--large'
+                          type='tel'
+                          id='AddressPhone_{{ form.id }}'
+                          name='address[phone]'
+                          value='{{ form.phone }}'
+                          autocomplete='tel'
+                          placeholder='{{ 'customer.addresses.store_front.phone' | t }}'
+                        >
+                      </div>
+                      <div class='field addresses__form-field'>
+                        <label
+                          class='checkbox addresses__form-checkbox body-font-weight-from-global-settings'
+                          for='address_default_address_{{ form.id }}'
+                        >
+                          <input
+                            class='checkbox__input'
+                            id='address_default_address_{{ form.id }}'
+                            type='checkbox'
+                            name='address[default]'
+                            value='1'
+                            {%- if address == customer.default_address -%}
+                              checked
+                            {% endif %}
+                          >
+                          <span class='checkbox__span checkbox__span--solid'></span>
+                          <span>{{ 'customer.addresses.store_front.set_default' | t }}</span>
+                        </label>
+                      </div>
+                      <div class='addresses__form-btns'>
+                        <button
+                          class='btn btn--solid btn--sm'
+                          aria-label='{{ 'customer.addresses.screen_reader.update' | t }}'
+                        >
+                          {{ 'customer.addresses.store_front.update' | t }}
+                        </button>
+                        <accordeon-button>
+                          <button
+                            class='btn btn--outline btn--sm'
+                            type='reset'
+                            aria-label='{{ 'customer.addresses.screen_reader.cancel' | t }}'
+                          >
+                            {{ 'customer.addresses.store_front.cancel' | t }}
+                          </button>
+                        </accordeon-button>
+                      </div>
+                    {%- endform -%}
+                  </div>
+                </div>
+              </div>
+            </accordeon-component>
+          {%- endfor -%}
+        </div>
+        <accordeon-component class='accordeon addresses__accordeon' data-aria-expanded='false'>
+          <div class='accordeon__content-wrap' data-accordeon-content-wrap>
+            <div class='accordeon__content' data-accordeon-content>
+              <div class='addresses__form' id='AddAddress'>
+                <h3 class='addresses__form-title h6' id='AddressNewHeading'>
+                  {{ 'customer.addresses.store_front.add_new' | t }}
+                </h3>
+                {%- form 'customer_address', customer.new_address, aria-labelledBy: 'AddressNewHeading' -%}
+                  <div class='field-group addresses__form-field addresses__form-field-group'>
+                    <div class='field'>
+                      <label class='label' for='AddressFirstNameNew'>
+                        {{- 'customer.addresses.store_front.first_name' | t -}}
+                      </label>
+                      <input
+                        class='input input--{{ settings.input_style }} input--large'
+                        type='text'
+                        id='AddressFirstNameNew'
+                        name='address[first_name]'
+                        value='{{ form.first_name }}'
+                        autocomplete='given-name'
+                        placeholder='{{ 'customer.addresses.store_front.first_name' | t }}'
+                      >
+                    </div>
+                    <div class='field'>
+                      <label class='label' for='AddressLastNameNew'>
+                        {{- 'customer.addresses.store_front.last_name' | t -}}
+                      </label>
+                      <input
+                        class='input input--{{ settings.input_style }} input--large'
+                        type='text'
+                        id='AddressLastNameNew'
+                        name='address[last_name]'
+                        value='{{ form.last_name }}'
+                        autocomplete='family-name'
+                        placeholder='{{ 'customer.addresses.store_front.last_name' | t }}'
+                      >
+                    </div>
+                  </div>
+                  <div class='field addresses__form-field'>
+                    <label class='label' for='AddressCompanyNew'>
+                      {{- 'customer.addresses.store_front.company' | t -}}
+                    </label>
+                    <input
+                      class='input input--{{ settings.input_style }} input--large'
+                      type='text'
+                      id='AddressCompanyNew'
+                      name='address[company]'
+                      value='{{ form.company }}'
+                      autocomplete='organization'
+                      placeholder='{{ 'customer.addresses.store_front.company' | t }}'
+                    >
+                  </div>
+                  <div class='field addresses__form-field'>
+                    <label class='label' for='AddressAddress1New'>
+                      {{- 'customer.addresses.store_front.address1' | t -}}
+                    </label>
+                    <input
+                      class='input input--{{ settings.input_style }} input--large'
+                      type='text'
+                      id='AddressAddress1New'
+                      name='address[address1]'
+                      value='{{ form.address1 }}'
+                      autocomplete='address-line1'
+                      placeholder='{{ 'customer.addresses.store_front.address1' | t }}'
+                    >
+                  </div>
+                  <div class='field addresses__form-field'>
+                    <label class='label' for='AddressAddress2New'>
+                      {{- 'customer.addresses.store_front.address2' | t -}}
+                    </label>
+                    <input
+                      class='input input--{{ settings.input_style }} input--large'
+                      type='text'
+                      id='AddressAddress2New'
+                      name='address[address2]'
+                      value='{{ form.address2 }}'
+                      autocomplete='address-line2'
+                      placeholder='{{ 'customer.addresses.store_front.address2' | t }}'
+                    >
+                  </div>
+                  <div class='field-group addresses__form-field addresses__form-field-group'>
+                    <div class='field'>
+                      <label class='label' for='AddressCityNew'>{{ 'customer.addresses.store_front.city' | t }}</label>
+                      <input
+                        class='input input--{{ settings.input_style }} input--large'
+                        type='text'
+                        id='AddressCityNew'
+                        name='address[city]'
+                        value='{{ form.city }}'
+                        autocomplete='address-level2'
+                        placeholder='{{ 'customer.addresses.store_front.city' | t }}'
+                      >
+                    </div>
+                    <div class='field'>
+                      <label class='label' for='AddressCity_{{ form.id }}'>
+                        {{- 'customer.addresses.store_front.country' | t -}}
+                      </label>
+
+                      <country-selector>
+                        <select class='input input--{{ settings.input_style }} input--large hidden'>
+                          {{ all_country_option_tags }}
+                        </select>
+                        <input
+                          class='hidden'
+                          name='address[country]'
+                          data-default='{{ form.country }}'
+                          data-form-id='{{ form.id }}'
+                          autocomplete='country'
+                          id='AddressCountryNew_{{ form.id }}'
+                        >
+                        <dropdown-opener
+                          class='dropdown__toggle'
+                          data-aria-expanded='false'
+                          data-float-element-id='EditCountry-{{form.id}}'
+                          data-trigger='click'
+                          tabindex="0"
+                        >
+                          <span class='dropdown__toggle-label'>{{ form.country }}</span>
+                          {% render 'icon', icon_name: 'chevron', class: 'dropdown__chevron' %}
+                        </dropdown-opener>
+                        <float-element
+                          class='dropdown addresses__address-country-dropdown'
+                          aria-hidden='true'
+                          id='EditCountry-{{ form.id }}'
+                          data-placement='bottom-start'
+                          data-main-axis-offset='{% if settings.round_level != "0" %} 8{% else %} 0{% endif %}'
+                        >
+                          <template data-float-element-template='EditCountry-{{ form.id }}'>
+                            <div></div>
+                          </template>
+                        </float-element>
+                      </country-selector>
+                    </div>
+                  </div>
+
+                  <div class='field addresses__form-field'>
+                    <label class='label' for='AddressZipNew'>{{ 'customer.addresses.store_front.zip' | t }}</label>
+                    <input
+                      class='input input--{{ settings.input_style }} input--large'
+                      type='text'
+                      id='AddressZipNew'
+                      name='address[zip]'
+                      value='{{ form.zip }}'
+                      autocapitalize='characters'
+                      autocomplete='postal-code'
+                      placeholder='{{ 'customer.addresses.store_front.zip' | t }}'
+                    >
+                  </div>
+                  <div class='field addresses__form-field'>
+                    <label class='label' for='AddressPhoneNew'>{{ 'customer.addresses.store_front.phone' | t }}</label>
+                    <input
+                      class='input input--{{ settings.input_style }} input--large'
+                      type='tel'
+                      id='AddressPhoneNew'
+                      name='address[phone]'
+                      value='{{ form.phone }}'
+                      autocomplete='tel'
+                      placeholder='{{ 'customer.addresses.store_front.phone' | t }}'
+                    >
+                  </div>
+                  <div class='field addresses__form-field'>
+                    <label
+                      class='checkbox addresses__form-checkbox body-font-weight-from-global-settings'
+                      for='address_default_address_{{ form.id }}'
+                    >
+                      <input
+                        class='checkbox__input'
+                        id='address_default_address_{{ form.id }}'
+                        name='address[default]'
+                        type='checkbox'
+                        value='1'
+                      >
+                      <span class='checkbox__span checkbox__span--solid'></span>
+                      <span>{{ 'customer.addresses.store_front.set_default' | t }}</span>
+                    </label>
+                  </div>
+                  <div class='field addresses__form-btns'>
+                    <button
+                      class='btn btn--solid btn--sm'
+                      aria-label='{{ 'customer.addresses.screen_reader.add' | t }}'
+                    >
+                      {{ 'customer.addresses.store_front.add' | t }}
+                    </button>
+                    <accordeon-button>
+                      <button
+                        class='btn btn--outline btn--sm'
+                        type='reset'
+                        aria-label='{{ 'customer.addresses.screen_reader.cancel' | t }}'
+                      >
+                        {{ 'customer.addresses.store_front.cancel' | t }}
+                      </button>
+                    </accordeon-button>
+                  </div>
+                {%- endform -%}
+              </div>
+            </div>
+          </div>
+          <accordeon-button
+            aria-controls='AddAddress'
+            data-aria-expanded='false'
+            class='btn btn--solid btn--lg account__add-address-btn'
+            type='button'
+            tabindex='0'
+          >
+            {{ 'customer.addresses.store_front.add_new' | t }}
+          </accordeon-button>
+        </accordeon-component>
+      </div>
+    </div>
+  </div>
+</addresses-component>
+
+<script>
+  window.onload = () => {
+    typeof CustomerAddresses !== 'undefined' && new CustomerAddresses()
+  }
+</script>
+
+{% render 'save-section-data-in-global-scope', section: section %}
+
+{% schema %}
+{
+  "name": "t:sections.addresses_page.name",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:sections.general_section_settings.color_scheme_option_default_label"
+        },
+        {
+          "value": "primary",
+          "label": "t:sections.general_section_settings.color_scheme_option_primary_label"
+        },
+        {
+          "value": "secondary",
+          "label": "t:sections.general_section_settings.color_scheme_option_secondary_label"
+        },
+        {
+          "value": "custom-1",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_1_label"
+        },
+        {
+          "value": "custom-2",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_2_label"
+        },
+        {
+          "value": "custom-3",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_3_label"
+        },
+        {
+          "value": "white",
+          "label": "t:sections.general_section_settings.color_scheme_option_white_text_label"
+        },
+        {
+          "value": "black",
+          "label": "t:sections.general_section_settings.color_scheme_option_black_text_label"
+        },
+        {
+          "value": "custom-5",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_5_label"
+        }
+      ],
+      "default": "default",
+      "label": "t:sections.general_section_settings.color_scheme_label",
+      "info": "t:sections.general_section_settings.color_scheme_tip"
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "options": [
+        {
+          "value": "page-width",
+          "label": "t:sections.general_section_settings.container_size.page_width_option"
+        },
+        {
+          "value": "large",
+          "label": "t:sections.general_section_settings.container_size.large_width_option"
+        },
+        {
+          "value": "medium",
+          "label": "t:sections.general_section_settings.container_size.medium_width_option"
+        }
+      ],
+      "default": "large",
+      "label": "t:sections.general_section_settings.container_size.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.general_section_settings.paddings.header_title"
+    },
+    {
+      "type": "checkbox",
+      "id": "add_side_paddings",
+      "default": true,
+      "label": "t:sections.general_section_settings.paddings.add_side_paddings.label"
+    },
+    {
+      "type": "range",
+      "id": "section_spacing_top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 96,
+      "unit": "t:sections.general_section_settings.paddings.section_spacing_top.unit",
+      "label": "t:sections.general_section_settings.paddings.section_spacing_top.label"
+    },
+    {
+      "type": "range",
+      "id": "section_spacing_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 96,
+      "unit": "t:sections.general_section_settings.paddings.section_spacing_bottom.unit",
+      "label": "t:sections.general_section_settings.paddings.section_spacing_bottom.label"
+    }
+  ]
+}
+{% endschema %}

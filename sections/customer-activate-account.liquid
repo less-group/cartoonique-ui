@@ -1,0 +1,216 @@
+{%- liquid
+  assign options = section.settings
+  assign container_size = options.container_size
+
+  assign add_side_paddings = options.add_side_paddings
+  assign section_spacing_top = options.section_spacing_top
+  assign section_spacing_bottom = options.section_spacing_bottom
+  assign color_scheme = options.color_scheme
+-%}
+
+{% capture css %}
+  {% style %}
+    .section-{{section.id}} {
+        --gsc-section-spacing-top: {{ section_spacing_top }}px;
+        --gsc-section-spacing-bottom: {{ section_spacing_bottom }}px;
+        --gsc-container-width: 40rem;
+    }
+  {% endstyle %}
+{% endcapture %}
+
+{% render 'inline-css-minifier', css: css %}
+
+<div class='login section section-{{ section.id }} color-{{ color_scheme }}'>
+  <div class='container {% if add_side_paddings == true %}container--with-aside-paddings{% endif %} section-spacing'>
+    <div class='login__content'>
+      <h2 class='login__title h5' tabindex='-1'>
+        {{ 'customer.activate_account.store_front.title' | t }}
+      </h2>
+      <div class='login__text body-font-weight-from-global-settings'>
+        {{ 'customer.activate_account.store_front.text' | t }}
+      </div>
+    </div>
+
+    {%- form 'activate_customer_password', class: 'login__form' -%}
+      <div class='field login__field'>
+        <label class='label' for='password'>
+          {{- 'customer.activate_account.store_front.label_for_password_input' | t -}}
+        </label>
+
+        <password-field class='password-input'>
+          <input
+            class='input input--{{ settings.input_style }} input--large password-input__input'
+            type='password'
+            name='customer[password]'
+            id='password'
+            autocomplete='new-password'
+            placeholder='{{ 'customer.activate_account.store_front.placeholder_for_password_input' | t }}'
+            data-password-field-input
+            autofocus
+            required
+          >
+          <button type='button' class='password-input__btn unstyled-button' data-password-field-button>
+            {% render 'icon',
+              icon_name: 'password-input-opened-eye',
+              class: 'password-input__icon password-input__icon--eye'
+            %}
+            {% render 'icon',
+              icon_name: 'password-input-closed-eye',
+              class: 'password-input__icon password-input__icon--closed-eye'
+            %}
+          </button>
+        </password-field>
+
+        {%- if form.errors contains 'password' -%}
+          {% assign error = form.errors.translated_fields.password
+            | capitalize
+            | append: form.errors.messages.password
+          %}
+          <script>
+            window.notification = { text: '{{ error }}', variant: 'warning' }
+          </script>
+        {%- endif -%}
+      </div>
+      <div class='field login__field'>
+        <label class='label' for='password_confirmation'>
+          {{- 'customer.activate_account.store_front.label_for_password_confirm_input' | t -}}
+        </label>
+
+        <password-field class='password-input'>
+          <input
+            class='input input--{{ settings.input_style }} input--large password-input__input'
+            type='password'
+            name='customer[password_confirmation]'
+            id='password_confirmation'
+            autocomplete='new-password'
+            placeholder='{{ 'customer.activate_account.store_front.placeholder_for_password_confirm_input' | t }}'
+            data-password-field-input
+            required
+          >
+          <button type='button' class='password-input__btn unstyled-button' data-password-field-button>
+            {% render 'icon',
+              icon_name: 'password-input-opened-eye',
+              class: 'password-input__icon password-input__icon--eye'
+            %}
+            {% render 'icon',
+              icon_name: 'password-input-closed-eye',
+              class: 'password-input__icon password-input__icon--closed-eye'
+            %}
+          </button>
+        </password-field>
+
+        {%- if form.errors contains 'password_confirmation' -%}
+          {% assign error = form.errors.translated_fields.password_confirmation
+            | capitalize
+            | append: form.errors.messages.password_confirmation
+          %}
+          <script>
+            window.notification = { text: '{{ error }}', variant: 'warning' }
+          </script>
+        {%- endif -%}
+      </div>
+      <div class='login__btns'>
+        <button
+          class='btn btn--solid btn--lg login__btn'
+          aria-label='{{ 'customer.activate_account.screen_reader.activate_button_label' | t }}'
+        >
+          {{ 'customer.activate_account.store_front.activate_button_label' | t }}
+        </button>
+      </div>
+      <div class='login__footer'>
+        <button
+          name='decline'
+          aria-label='{{ 'customer.activate_account.screen_reader.decline_invitation_button_label' | t }}'
+        >
+          {{ 'customer.activate_account.store_front.decline_invitation_button_label' | t }}
+        </button>
+      </div>
+    {%- endform -%}
+  </div>
+</div>
+
+{% render 'save-section-data-in-global-scope', section: section %}
+
+{% schema %}
+{
+  "name": "t:sections.activate_page.name",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:sections.general_section_settings.color_scheme_option_default_label"
+        },
+        {
+          "value": "primary",
+          "label": "t:sections.general_section_settings.color_scheme_option_primary_label"
+        },
+        {
+          "value": "secondary",
+          "label": "t:sections.general_section_settings.color_scheme_option_secondary_label"
+        },
+        {
+          "value": "custom-1",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_1_label"
+        },
+        {
+          "value": "custom-2",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_2_label"
+        },
+        {
+          "value": "custom-3",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_3_label"
+        },
+        {
+          "value": "white",
+          "label": "t:sections.general_section_settings.color_scheme_option_white_text_label"
+        },
+        {
+          "value": "black",
+          "label": "t:sections.general_section_settings.color_scheme_option_black_text_label"
+        },
+        {
+          "value": "custom-5",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_5_label"
+        }
+      ],
+      "default": "default",
+      "label": "t:sections.general_section_settings.color_scheme_label",
+      "info": "t:sections.general_section_settings.color_scheme_tip"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.general_section_settings.paddings.header_title"
+    },
+    {
+      "type": "checkbox",
+      "id": "add_side_paddings",
+      "default": true,
+      "label": "t:sections.general_section_settings.paddings.add_side_paddings.label"
+    },
+    {
+      "type": "range",
+      "id": "section_spacing_top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 48,
+      "unit": "t:sections.general_section_settings.paddings.section_spacing_top.unit",
+      "label": "t:sections.general_section_settings.paddings.section_spacing_top.label"
+    },
+    {
+      "type": "range",
+      "id": "section_spacing_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 48,
+      "unit": "t:sections.general_section_settings.paddings.section_spacing_bottom.unit",
+      "label": "t:sections.general_section_settings.paddings.section_spacing_bottom.label"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,149 @@
+{%- liquid
+  assign options = block.settings
+
+  assign color_background = options.color_background
+  assign color_background_gradient = options.color_background_gradient
+  assign color_text = options.color_text
+  assign color_button_background = options.color_button_background
+  assign color_button_background_gradient = options.color_button_background_gradient
+  assign color_button_label = options.color_button_label
+-%}
+
+{% capture css %}
+  {% style %}
+    .block-{{ block.id }} {
+      {% if color_background_gradient != blank or color_background != blank and color_background != 'rgba(0,0,0,0)' %}
+        {% if color_background_gradient != blank %}
+          --gsc-background-color-100: {{ color_background_gradient }};
+        {% else %}
+          --gsc-background-color-100: {{ color_background }};
+        {% endif %}
+      {% endif %}
+
+      {% if color_text != blank and color_text != 'rgba(0,0,0,0)' %}
+        --gsc-text-color-100: {{ color_text }};
+        --gsc-text-color-80: {{ color_text | color_modify: 'alpha', 0.8 }};
+        --gsc-text-color: {{color_text.red}}, {{color_text.green}}, {{color_text.blue}};
+      {% endif %}
+
+      {% if color_button_background_gradient != blank or color_button_background != blank and color_button_background != 'rgba(0,0,0,0)' %}
+        {% if color_button_background_gradient != blank %}
+          --gsc-button-background-color-100: {{ color_button_background_gradient }};
+          --gsc-outline-button-background-color-100:  {{ color_button_background_gradient }};
+        {% else %}
+          --gsc-button-background-color-100: {{ color_button_background }};
+          --gsc-outline-button-background-color-100:  {{ color_button_background }};
+        {% endif %}
+      {% endif %}
+
+      {% if color_button_label != blank and color_button_label != 'rgba(0,0,0,0)' %}
+        --gsc-button-text-color-100: {{ color_button_label }};
+        --gsc-outline-button-text-color-100: {{ color_button_label }};
+
+        .link {
+          --gsc-button-background-color-100: {{ color_button_label }};
+        }
+      {% endif %}
+    }
+    {% endstyle %}
+{% endcapture %}
+
+{% render 'inline-css-minifier', css: css %}
+
+<div
+  class='in-cart-banner {{ class }} color-{{ options.color_scheme }} block-{{ block.id }}'
+  {{ block.shopify_attributes }}
+>
+  {%- if options.btn_text == blank and options.btn_url != blank -%}
+    <a class='in-cart-banner__overlay-link' href='{{- options.btn_url -}}'></a>
+  {%- endif -%}
+  {%- if options.subheading != blank
+    or options.heading != blank
+    or options.text != blank
+    or options.btn_text != blank
+  -%}
+    <div class='in-cart-banner__content in-cart-banner__content--with-{{ options.content_align }}-alignment'>
+      {%- if options.subheading != blank or options.heading != blank or options.text != blank -%}
+        <div class='in-cart-banner__content-info'>
+          {%- if options.subheading != blank -%}
+            <div class='in-cart-banner__subheading'>{{- options.subheading -}}</div>
+          {%- endif -%}
+
+          {%- if options.heading != blank -%}
+            <h2 class='in-cart-banner__heading {{ options.heading_size }}'>{{- options.heading -}}</h2>
+          {%- endif -%}
+
+          {%- if options.text != blank -%}
+            <div class='in-cart-banner__text rte {{ options.body_size }} body-font-weight-from-global-settings'>
+              {{- options.text -}}
+            </div>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+
+      {% if options.discount_code != blank %}
+        <div class='in-cart-banner__discount'>
+          <clipboard-button
+            class='in-cart-banner__btn-discount popup__btn-discount'
+            aria-hidden='true'
+            data-value='{{options.discount_code}}'
+            data-tooltip-id='DiscountCodeTooltip-{{block.id}}'
+            data-clipboard-button-tooltip-target-id='DiscountCodeTooltip-{{block.id}}'
+            tabindex='0'
+          >
+            {%- render 'icon', icon_name: 'copy', class: 'copy-icon' -%}
+            <div class='in-cart-banner__btn-discount-label popup__btn-discount-label'>
+              {{ options.discount_code }}
+            </div>
+          </clipboard-button>
+
+          <clipboard-button-tooltip
+            class='tooltip'
+            aria-hidden='true'
+            id='DiscountCodeTooltip-{{block.id}}'
+            data-placement='bottom'
+            data-main-axis-offset='5'
+          >
+            <template data-clipboard-button-tooltip-template='DiscountCodeTooltip-{{block.id}}'>
+              <div>
+                <div class='tooltip__body color-{{ options.color_scheme }}'>
+                  <div class='tooltip__arrow' data-float-element-arrow></div>
+                  {{ 'gift_card.store_front.copied' | t }}
+                </div>
+              </div>
+            </template>
+          </clipboard-button-tooltip>
+        </div>
+      {% endif %}
+
+      {%- if options.btn_text != blank -%}
+        <div class='in-cart-banner__content-buttons'>
+          {%- if options.btn_style == 'link' -%}
+            <a
+              class='link'
+              {% if options.btn_url != blank %}
+                href='{{- options.btn_url -}}'
+              {% endif %}
+              aria-label='{%- if options.btn_text != blank -%}{{- options.btn_text | strip_html | escape -}}{%- elsif options.btn_url.title != blank -%}{{- options.btn_url.title | strip_html | escape -}}{%- else -%}#{%- endif -%}'
+            >
+              <span class='link-parent-for-hover'>
+                <span class='link__text'>{{- options.btn_text -}}</span>
+              </span>
+              {%- render 'icon', icon_name: 'link-chevron', class: 'link__chevron' -%}
+            </a>
+          {%- else -%}
+            <a
+              class='btn btn--{{ options.btn_style }} {% if options.btn_style == 'outline' and color_button_background_gradient != blank %}btn--outline-gradient{% endif %}'
+              {% if options.btn_url != blank %}
+                href='{{- options.btn_url -}}'
+              {% endif %}
+              aria-label='{%- if options.btn_text != blank -%}{{- options.btn_text | strip_html | escape -}}{%- elsif options.btn_url.title != blank -%}{{- options.btn_url.title | strip_html | escape -}}{%- else -%}#{%- endif -%}'
+            >
+              {{- options.btn_text -}}
+            </a>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    </div>
+  {%- endif -%}
+</div>

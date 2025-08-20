@@ -1,0 +1,124 @@
+{% liquid
+  assign is_to_show_default_btn = false
+
+  if hover_effect == 'show_button' or hover_effect == 'show_text'
+    assign is_to_show_default_btn = true  
+  endif
+
+  assign enable_image_zoom_out = settings.enable_image_zoom_out
+
+  assign image_class = 'shape__target-image zoom'
+  if enable_image_zoom_out
+    assign image_class = image_class | append: ' scroll-trigger animate--zoom-out'
+  endif
+%}
+
+<div class='image-block link-parent-for-hover zoom-parent-for-hover {{ class }} {% if hover_effect == 'show_all' %} image-block--show-all-on-hover {% endif %} {% if hover_effect == 'show_button' %} image-block--show-button-on-hover {% endif %} {% if hover_effect == 'show_text' %} image-block--show-text-on-hover {% endif %}'
+  {% if animate_card %}
+    style='--gsc-animation-order: {{animate_card}};'
+  {% endif %}
+>
+  <div class='shape shape--{{ img_ratio }} {% if img_ratio contains 'fit' %} shape--fit {% endif %}'>
+    <div class='overlay overlay--black'></div>
+    {%- if video != blank -%}
+      {% render 'video-with-alt',
+        video: video,
+        class: image_class,
+        autoplay: true,
+        loop: true,
+        muted: true,
+        controls: false,
+        loading: 'lazy'
+      %}
+    {%- elsif image != blank -%}      
+      {% if remove_animation_class %}
+        {%  assign image_class = 'shape__target-image zoom animate--zoom-out' %}
+      {% endif %}
+
+      <img
+        {% render 'image-attributes', image: image, size: 'medium', class: image_class %}
+      >
+    {%- else -%}
+      {% assign class = 'placeholder-image shape__target-image zoom' %}
+      {{ 'image' | placeholder_svg_tag: class }}
+    {%- endif -%}
+
+    {%- if caption != blank or title != blank or text != blank or link_text != blank -%}
+      <div class='image-block__content-wrap'>
+        <div class='image-block__content {% if enable_vertical_text %} image-block__content--vertical {% endif %}'>
+          {%- if caption != blank -%}
+            <div class='caption image-block__caption'>{{ caption }}</div>
+          {%- endif -%}
+
+          {%- if title != blank -%}
+            <h2 class='image-block__title {{ heading_size }}'>{{ title }}</h2>
+          {%- endif -%}
+
+          {% if hover_effect == 'show_text' %}
+            <div class='image-block__text-wrapper'>
+          {% endif %}
+
+          {%- if text != blank -%}
+            <div class='image-block__text rte {{ body_size }} body-font-weight-from-global-settings'>{{ text }}</div>
+          {%- endif -%}
+
+          {%- if link_text != blank -%}
+            <div class='image-block__btn'>
+              {%- if btn_style == 'link' -%}
+                <a
+              class='link {% if enable_vertical_text %} link--vertical {% endif %}'
+                  {% if link != blank %}
+                    href='{{ link }}'
+                  {% endif %}
+                  aria-label='{{ link_text }}'
+                >
+                  <span class="link-parent-for-hover">
+                    <span class='link__text'>{{ link_text }}</span>
+                  </span>
+                  {%- render 'icon', icon_name: 'link-chevron', class: 'link__chevron' -%}
+                </a>
+              {%- else -%}
+                <a
+                  class='btn btn--{{ btn_style }} rich-text__btn'
+                  {% if link != blank %}
+                    href='{{ link }}'
+                  {% endif %}
+                  aria-label='{{- link_text -}}'
+                >
+                  {{- link_text -}}
+                </a>
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+
+          {%- if link_text == blank and link != blank and is_to_show_default_btn == true -%}
+            <div class='image-block__btn'>
+              <a
+                class='btn btn--solid image-block__btn--default'
+                {% if link != blank %}
+                  href='{{ link }}'
+                {% endif %}
+                aria-label='{{- link_text -}}'
+              >
+                {% render 'icon-pack', icon: 'arrow', class: '' %}
+              </a>
+            </div>
+          {%- endif -%}
+
+          {% if hover_effect == 'show_text' %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    {%- endif -%}
+
+    {% if link != blank %}
+      <a
+        href='{{ link }}'
+        class='unstyled-link image-block__image-link {% if link == blank %}image-block__image-link--without-cursor{% endif %}'
+        aria-label='{% if link_text != blank %}{{ link_text }}{% elsif link.title != blank %}{{ link.title }}{% else %}#{% endif %}'
+        ></a>
+    {% endif %}
+        
+  </div>
+</div>

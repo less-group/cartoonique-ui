@@ -1,0 +1,46 @@
+{% assign alignment = content_position | split: '-' %}
+
+{% if is_vertical == false or is_vertical == blank %}
+  {% case content_position %}
+    {% when 'top-left' %}
+      align-items: flex-start; justify-content: flex-start;
+    {% when 'top-center' %}
+      align-items: center; justify-content: flex-start;
+    {% when 'top-right' %}
+      align-items: flex-end; justify-content: flex-start;
+    {% when 'center-left' %}
+      align-items: flex-start; justify-content: center;
+    {% when 'center-center' %}
+      align-items: center; justify-content: center;
+    {% when 'center-right' %}
+      align-items: flex-end; justify-content: center;
+    {% when 'bottom-left' %}
+      align-items: flex-start; justify-content: flex-end;
+    {% when 'bottom-center' %}
+      align-items: center; justify-content: flex-end;
+    {% when 'bottom-right' %}
+      align-items: flex-end; justify-content: flex-end;
+  {% endcase %}
+  text-align: {{ alignment[1] }};
+{% else %}
+  {% case content_position %}
+    {% when 'top-left' %}
+      align-items: flex-end; justify-content: flex-start; text-align: right;
+    {% when 'top-center' %}
+      align-items: flex-end; justify-content: center; text-align: right;
+    {% when 'top-right' %}
+      align-items: flex-end; justify-content: flex-end; text-align: right;
+    {% when 'center-left' %}
+      align-items: center; justify-content: flex-start; text-align: center;
+    {% when 'center-center' %}
+      align-items: center; justify-content: center; text-align: center;
+    {% when 'center-right' %}
+      align-items: center; justify-content: flex-end; text-align: center;
+    {% when 'bottom-left' %}
+      align-items: flex-start; justify-content: flex-start; text-align: left;
+    {% when 'bottom-center' %}
+      align-items: flex-start; justify-content: center; text-align: left;
+    {% when 'bottom-right' %}
+      align-items: flex-start; justify-content: flex-end; text-align: left;
+  {% endcase %}
+{% endif %}

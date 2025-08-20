@@ -1,0 +1,109 @@
+<aside>
+  <quick-view
+    class='quick-view'
+    id='Quick-view'
+    data-with-overlay="only-desktop"
+    data-overlay-important
+    data-with-close-on-outside
+    data-with-close-on-escape
+    data-target-id='QuickViewProduct'
+    data-open-direction='right'
+  >
+    <template data-sidebar-template='Quick-view'>
+      <div data-sidebar-body></div>
+    </template>
+  </quick-view>
+</aside>
+
+{% if settings.hide_transitional_popup == false %}
+  <aside>
+    <cart-notification-popup
+      class='cart-notification-popup'
+      id='CartNotificationPopup'
+      data-overlay-important
+      data-with-close-on-outside
+      data-with-overlay
+    >
+      <template data-modal-template='CartNotificationPopup'>
+        <div role='dialog' aria-modal='true' class='cart-notification-popup__body'>
+          <div class='cart-notification-popup__header'>
+            <div class='cart-notification-popup__header-title'>
+              {{- 'general.cart_notification_popup.store_front.title' | t -}}
+            </div>
+            <modal-button
+              data-action='close'
+              class='close-button-with-scale-hover'
+              data-modal='#CartNotificationPopup'
+              tabindex='0'
+            >
+            </modal-button>
+          </div>
+          <div>
+            <div class='cart-notification-popup__content' data-cart-notification-popup></div>
+            <form
+              class='cart-notification-popup__form'
+              action='{{ routes.cart_url }}'
+              method='post'
+              id='cart-notification-form'
+            >
+              <a
+                class='btn btn--lg btn--outline cart-notification-popup__form-button btn--with-small-horizontal-padding'
+                href='{{ routes.cart_url }}'
+                aria-label='{{- 'general.cart_notification_popup.screen_reader.text_for_go_to_cart_button' | t -}}'
+              >
+                {{- 'general.cart_notification_popup.store_front.text_for_go_to_cart_button' | t -}}
+              </a>
+              {% if settings.hide_checkout_button == false %}
+                <button
+                  type='submit'
+                  id='checkout'
+                  class='btn btn--lg btn--solid cart-notification-popup__form-button btn--with-small-horizontal-padding'
+                  name='checkout'
+                  aria-label='{{ 'general.cart_notification_popup.screen_reader.text_for_checkout_button' | t }}'
+                >
+                  <span data-button-text>
+                    {{- 'general.cart_notification_popup.store_front.text_for_checkout_button' | t -}}
+                  </span>
+                </button>
+              {% endif %}
+            </form>
+          </div>
+        </div>
+      </template>
+    </cart-notification-popup>
+  </aside>
+{% endif %}
+
+<aside>
+  <notification-component class='notification' id='GlobalNotification'>
+    <div class='notification__overlay'></div>
+    <div class='notification__body'>
+      <div class='alert notification__alert' role='alert' data-notification-alert>
+        {% render 'icon', icon_name: 'error', class: 'alert__icon' %}
+        <span class='visually-hidden' role='alert' data-notification-screen-reader-alert-text></span>
+        <div class='alert__text' data-notification-alert-text></div>
+        <div class='alert__close-icon-wrapper' data-notification-close-button>
+          {% render 'icon', icon_name: 'notification-close', class: 'alert__close-icon' %}
+        </div>
+      </div>
+    </div>
+  </notification-component>
+</aside>
+
+<aside>
+  <sidebar-component
+    class='sidebar pickup-availability-sidebar'
+    id='pickup-availability-sidebar'
+    data-with-overlay="only-desktop"
+    data-with-close-on-outside
+    data-with-close-on-escape
+    data-overlay-important
+    data-section-id='{{ section.id }}'
+    data-open-direction='right'
+    tabindex='-1'
+  >
+    <template data-sidebar-template='pickup-availability-sidebar'>
+      <div class='sidebar__body pickup-availability-sidebar__body' data-sidebar-body></div>
+    </template>
+  </sidebar-component>
+</aside>

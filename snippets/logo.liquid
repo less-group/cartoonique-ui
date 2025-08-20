@@ -1,0 +1,20 @@
+{%- if image != blank -%}
+  <a
+    class='unstyled-link {{ class }}'
+    href='{{ routes.root_url }}'
+    aria-label='{{ 'general.logo.screen_reader.aria_label' | t }}'
+  >
+    <img
+      {{ attrs }}
+      {% render 'image-attributes', image: image, size: 'small', custom_width: logo_width, class: 'logo-img', is_in_header: is_in_header %}
+    >
+  </a>
+{%- elsif logo_text != blank -%}
+  <a
+    class='logo-text {{ class }} heading-font-family'
+    href='{{ routes.root_url }}'
+    aria-label='{{ 'general.logo.screen_reader.aria_label' | t }}'
+  >
+    {{- shop.name -}}
+  </a>
+{%- endif -%}

@@ -1,0 +1,1006 @@
+{%- liquid
+  assign options = section.settings
+
+  assign color_scheme = options.color_scheme
+  assign container_size = options.container_size
+  assign section_spacing_top = options.section_spacing_top
+  assign section_spacing_bottom = options.section_spacing_bottom
+  assign add_side_paddings = options.add_side_paddings
+
+  assign subheading = options.subheading
+  assign heading = options.heading
+  assign body_richtext = options.body_richtext
+  assign heading_size = options.heading_size
+  assign body_size = options.body_size
+  assign content_alignment = options.content_alignment
+
+  assign map_position = options.map_position
+  assign map_desktop_ratio = options.map_desktop_ratio
+  assign map_mobile_ratio = options.map_mobile_ratio
+  assign map_default_image = options.map_default_image
+  assign api_key = options.api_key
+  assign map_style = options.map_style
+  assign map_custom_style = options.map_custom_style
+  assign map_zoom = options.map_zoom
+  assign expand_first_tab = options.expand_first_tab
+
+  assign stores_list = section.blocks
+
+  assign enable_content_slide_in = settings.enable_content_slide_in
+  assign enable_image_zoom_out = settings.enable_image_zoom_out
+
+  assign image_class = 'map__default-image'
+  if enable_image_zoom_out
+    assign image_class = image_class | append: ' scroll-trigger animate--zoom-out'
+  endif
+-%}
+
+{% capture css %}
+  {% style %}
+    .section-{{ section.id }} {
+      --gsc-section-spacing-top: {{ section_spacing_top }}px;
+      --gsc-section-spacing-bottom: {{ section_spacing_bottom }}px;
+      --gsc-space-between-cards: 1.2rem;
+
+      --gsc-map-desktop-ratio: {{ map_desktop_ratio }};
+      --gsc-map-mobile-ratio: {{ map_mobile_ratio }};
+    }
+  {% endstyle %}
+{% endcapture %}
+
+{% render 'inline-css-minifier', css: css %}
+
+{% capture default_image %}  
+  {% if map_default_image == blank %}
+    {{ 'image' | placeholder_svg_tag: 'placeholder-image map__default-image' }}
+  {% else %}
+    <img
+      {% render 'image-attributes', image: map_default_image, class: image_class %}
+    >
+  {% endif %}
+{% endcapture %}
+
+<store-locator class='map section-{{ section.id }} color-{{ color_scheme }}'>
+  <div class='map__inner-container map__inner-container--map-on-{{map_position}}-side container container--{{ container_size }} {% if add_side_paddings == true %}container--with-aside-paddings{% endif %} section-spacing'>
+    <div class='map__map-container'>
+      {% if api_key == blank %}
+        {{ default_image }}
+      {% else %}
+        {% render 'map',
+          api_key: api_key,
+          map_style: map_style,
+          map_custom_style: map_custom_style,
+          map_zoom: map_zoom
+        %}
+      {% endif %}
+    </div>
+
+    <template map-default-image>
+      {{ default_image }}
+    </template>
+
+    <div class='map__stores-container'>
+      {%- if subheading != blank or heading != blank or body_richtext != blank -%}
+        <div class='map__heading {% if content_alignment != 'left' %} map__heading--alignment-{{content_alignment}} {% endif %}'>
+          {%- if subheading != blank -%}
+            <span
+              class='caption map__caption body-color {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+              {% if enable_content_slide_in %}
+                style='--gsc-animation-order: 1;'
+              {% endif %}
+            >
+              {{- subheading -}}
+            </span>
+          {%- endif -%}
+          {%- if heading != blank -%}
+            <h2
+              class='{{ heading_size }} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+              {% if enable_content_slide_in %}
+                style='--gsc-animation-order: 2;'
+              {% endif %}
+            >
+              {{ heading }}
+            </h2>
+          {%- endif -%}
+          {%- if body_richtext != blank -%}
+            <div
+              class='{{ body_size }} map__subtitle {% if heading != blank %} body-color {% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+              {% if enable_content_slide_in %}
+                style='--gsc-animation-order: 3;'
+              {% endif %}
+            >
+              {{ body_richtext }}
+            </div>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+
+      {% if expand_first_tab == false and stores_list.size == 1 %}
+        {% assign store = stores_list | first %}
+        {% assign images_length = 0 %}
+
+        {% if store.settings.image_1 != blank %}
+          {% assign images_length = images_length | plus: 1 %}
+        {% endif %}
+        {% if store.settings.image_2 != blank %}
+          {% assign images_length = images_length | plus: 1 %}
+        {% endif %}
+        {% if store.settings.image_3 != blank %}
+          {% assign images_length = images_length | plus: 1 %}
+        {% endif %}
+
+        {% assign img_ratio = store.settings.img_ratio | times: 100 %}
+
+        {% capture css %}
+            {% style %}
+              .block-{{ store.id }} {
+                  --gsc-img-ratio: {{ img_ratio }}%;
+              }
+            {% endstyle %}
+          {% endcapture %}
+
+        {% render 'inline-css-minifier', css: css %}
+
+        <div
+          class='map__accordeon-plus-content body-font-weight-from-global-settings block-{{ store.id }} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+          {% if enable_content_slide_in %}
+            style='--gsc-animation-order: 4;'
+          {% endif %}
+          data-store
+          data-block-id='{{ store.id }}'
+          data-coordinates='{{store.settings.store_coordinates}}'
+          data-name='{{store.settings.store_name}}'
+        >
+          {% if images_length != 0 %}
+            <carousel-component
+              class='carousel map__store-images'
+              data-section-id='{{ sectionId }}'
+              tabindex='-1'
+              data-align='start'
+              data-draggable
+              data-contain-scroll='trimSnaps'
+              data-axis='x'
+            >
+              <div
+                class='embla map__carousel-viewport carousel__viewport'
+                data-carousel-viewport
+              >
+                <div
+                  class='carousel__container'
+                  data-carousel-container
+                >
+                  {% if store.settings.image_1 != blank %}
+                    <div
+                      class='carousel__slide'
+                      data-media-id='{{ featured_media.id }}'
+                    >
+                      <div class='shape shape--nature'>
+                        <img
+                          {% render 'image-attributes', image: store.settings.image_1, class: 'map__store-image shape__target-image', %}
+                        >
+                      </div>
+                    </div>
+                  {%- endif %}
+
+                  {% if store.settings.image_2 != blank %}
+                    <div
+                      class='carousel__slide'
+                      data-media-id='{{ featured_media.id }}'
+                    >
+                      <div class='shape shape--nature'>
+                        <img
+                          {% render 'image-attributes', image: store.settings.image_2, class: 'map__store-image shape__target-image', %}
+                        >
+                      </div>
+                    </div>
+                  {%- endif %}
+
+                  {% if store.settings.image_3 != blank %}
+                    <div
+                      class='carousel__slide'
+                      data-media-id='{{ featured_media.id }}'
+                    >
+                      <div class='shape shape--nature'>
+                        <img
+                          {% render 'image-attributes', image: store.settings.image_3, class: 'map__store-image shape__target-image', %}
+                        >
+                      </div>
+                    </div>
+                  {%- endif %}
+                </div>
+
+                {% if images_length > 1 %}
+                  <div class='solid-dots-carousel__container--with-background'>
+                    <carousel-dots
+                      class='solid-dots-carousel solid-dots-carousel--with-background'
+                      data-contain-scroll='keepSnaps'
+                      data-align='center'
+                    >
+                      <div class='solid-dots-carousel__viewport embla' data-carousel-viewport>
+                        <div class='solid-dots-carousel__container' data-carousel-container>
+                          {% if store.settings.image_1 != blank %}
+                            <div
+                              class='solid-dots-carousel__solid-dot is-primary'
+                              tabindex='0'
+                              data-carousel-dot
+                              data-dot-index='0'
+                            >
+                              <div class='solid-dots-carousel__solid-dot-circle'></div>
+                            </div>
+                          {%- endif %}
+                          {% if store.settings.image_2 != blank %}
+                            <div
+                              class='solid-dots-carousel__solid-dot'
+                              tabindex='0'
+                              data-carousel-dot
+                              data-dot-index='1'
+                            >
+                              <div class='solid-dots-carousel__solid-dot-circle'></div>
+                            </div>
+                          {%- endif %}
+                          {% if store.settings.image_3 != blank %}
+                            <div
+                              class='solid-dots-carousel__solid-dot'
+                              tabindex='0'
+                              data-carousel-dot
+                              data-dot-index='2'
+                            >
+                              <div class='solid-dots-carousel__solid-dot-circle'></div>
+                            </div>
+                          {%- endif %}
+                        </div>
+                      </div>
+                    </carousel-dots>
+                  </div>
+                {% endif %}
+              </div>
+            </carousel-component>
+          {% endif %}
+
+          {% if store.settings.store_name != blank
+            or store.settings.store_details != blank
+            or store.settings.show_directions
+          %}
+            <div class='map__store-details {% if content_alignment != 'left' %} map__store-details--alignment-{{content_alignment}} {% endif %}'>
+              {% if store.settings.store_name != blank %}
+                <p class='map__store-title {{ store.settings.heading_size }}'>
+                  {{ store.settings.store_name }}
+                </p>
+              {% endif %}
+
+              {% if store.settings.store_details != blank %}
+                <div class='rte body-color {{ store.settings.body_size }}'>
+                  {{ store.settings.store_details }}
+                </div>
+              {% endif %}
+
+              {% if store.settings.show_directions %}
+                <a
+                  class='btn btn--solid map__directions-btn'
+                  target='_blank'
+                  href='https://www.google.com/maps/dir//{{ store.settings.store_coordinates }}'
+                  aria-label='{{ 'store_locator.screen_reader.show_directions_btn' | t }}'
+                >
+                  {{ 'store_locator.store_front.show_directions_btn' | t }}
+                </a>
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+
+      {% else %}
+        <div class='map__stores'>
+          {% for store in stores_list -%}
+            {% assign images_length = 0 %}
+
+            {% if store.settings.image_1 != blank %}
+              {% assign images_length = images_length | plus: 1 %}
+            {% endif %}
+            {% if store.settings.image_2 != blank %}
+              {% assign images_length = images_length | plus: 1 %}
+            {% endif %}
+            {% if store.settings.image_3 != blank %}
+              {% assign images_length = images_length | plus: 1 %}
+            {% endif %}
+
+            {% assign img_ratio = store.settings.img_ratio | times: 100 %}
+
+            {% capture css %}
+              {% style %}
+                .block-{{ store.id }} {
+                    --gsc-img-ratio: {{ img_ratio }}%;
+                }
+              {% endstyle %}
+            {% endcapture %}
+
+            {% render 'inline-css-minifier', css: css %}
+
+            <accordeon-component
+              class='accordeon-plus map__accordeon-plus block-{{ store.id }} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+              {% if enable_content_slide_in %}
+                style='--gsc-animation-order: {{forloop.index}};'
+              {% endif %}
+              {% if expand_first_tab == true and forloop.first == true %}
+                data-aria-expanded='true'
+              {% else %}
+                data-aria-expanded='false'
+              {% endif %}
+              data-section-id='{{ section.id }}'
+              data-block-id='{{ store.id }}'
+              {{ store.shopify_attributes }}
+              data-store
+              data-coordinates='{{store.settings.store_coordinates}}'
+              data-name='{{store.settings.store_name}}'
+            >
+              <accordeon-button
+                class='accordeon-plus__btn map__accordeon-plus-btn {{ store.settings.heading_size }} {% if forloop.first == true %} map__accordeon-plus-btn--first {% endif %} {% if stores_list.size == 1 %} map__accordeon-plus-btn--alone {% endif %}'
+                tabindex='0'
+              >
+                {{ store.settings.store_name }}
+                {% render 'icon', icon_name: 'plus', class: 'accordeon-plus__icon' %}
+              </accordeon-button>
+
+              <div class='accordeon-plus__content-wrap' data-accordeon-content-wrap>
+                <div
+                  class='map__accordeon-plus-content accordeon-plus__content body-font-weight-from-global-settings'
+                  data-accordeon-content
+                >
+                  {% if images_length != 0 %}
+                    <carousel-component
+                      class='carousel map__store-images'
+                      data-section-id='{{ sectionId }}'
+                      tabindex='-1'
+                      data-align='start'
+                      data-draggable
+                      data-contain-scroll='trimSnaps'
+                      data-axis='x'
+                    >
+                      <div
+                        class='embla map__carousel-viewport carousel__viewport'
+                        data-carousel-viewport
+                      >
+                        <div
+                          class='carousel__container'
+                          data-carousel-container
+                        >
+                          {% if store.settings.image_1 != blank %}
+                            <div
+                              class='carousel__slide'
+                              data-media-id='{{ featured_media.id }}'
+                            >
+                              <div class='shape shape--nature'>
+                                <img
+                                  {% render 'image-attributes', image: store.settings.image_1, class: 'map__store-image shape__target-image', %}
+                                >
+                              </div>
+                            </div>
+                          {%- endif %}
+
+                          {% if store.settings.image_2 != blank %}
+                            <div
+                              class='carousel__slide'
+                              data-media-id='{{ featured_media.id }}'
+                            >
+                              <div class='shape shape--nature'>
+                                <img
+                                  {% render 'image-attributes', image: store.settings.image_2, class: 'map__store-image shape__target-image', %}
+                                >
+                              </div>
+                            </div>
+                          {%- endif %}
+
+                          {% if store.settings.image_3 != blank %}
+                            <div
+                              class='carousel__slide'
+                              data-media-id='{{ featured_media.id }}'
+                            >
+                              <div class='shape shape--nature'>
+                                <img
+                                  {% render 'image-attributes', image: store.settings.image_3, class: 'map__store-image shape__target-image', %}
+                                >
+                              </div>
+                            </div>
+                          {%- endif %}
+                        </div>
+
+                        {% if images_length > 1 %}
+                          <div class='solid-dots-carousel__container--with-background'>
+                            <carousel-dots
+                              class='solid-dots-carousel solid-dots-carousel--with-background'
+                              data-contain-scroll='keepSnaps'
+                              data-align='center'
+                            >
+                              <div class='solid-dots-carousel__viewport embla' data-carousel-viewport>
+                                <div class='solid-dots-carousel__container' data-carousel-container>
+                                  {% if store.settings.image_1 != blank %}
+                                    <div
+                                      class='solid-dots-carousel__solid-dot is-primary'
+                                      tabindex='0'
+                                      data-carousel-dot
+                                      data-dot-index='0'
+                                    >
+                                      <div class='solid-dots-carousel__solid-dot-circle'></div>
+                                    </div>
+                                  {%- endif %}
+                                  {% if store.settings.image_2 != blank %}
+                                    <div
+                                      class='solid-dots-carousel__solid-dot'
+                                      tabindex='0'
+                                      data-carousel-dot
+                                      data-dot-index='1'
+                                    >
+                                      <div class='solid-dots-carousel__solid-dot-circle'></div>
+                                    </div>
+                                  {%- endif %}
+                                  {% if store.settings.image_3 != blank %}
+                                    <div
+                                      class='solid-dots-carousel__solid-dot'
+                                      tabindex='0'
+                                      data-carousel-dot
+                                      data-dot-index='2'
+                                    >
+                                      <div class='solid-dots-carousel__solid-dot-circle'></div>
+                                    </div>
+                                  {%- endif %}
+                                </div>
+                              </div>
+                            </carousel-dots>
+                          </div>
+                        {% endif %}
+                      </div>
+                    </carousel-component>
+                  {% endif %}
+
+                  {% if store.settings.store_details != blank or store.settings.show_directions %}
+                    <div class='map__store-details'>
+                      <div class='rte body-color {{ store.settings.body_size }}'>
+                        {{ store.settings.store_details }}
+                      </div>
+
+                      {% if store.settings.show_directions %}
+                        <a
+                          class='btn btn--solid map__directions-btn'
+                          target='_blank'
+                          href='https://www.google.com/maps/dir//{{ store.settings.store_coordinates }}'
+                          aria-label='{{ 'store_locator.screen_reader.show_directions_btn' | t }}'
+                        >
+                          {{ 'store_locator.store_front.show_directions_btn' | t }}
+                        </a>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            </accordeon-component>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</store-locator>
+
+{% schema %}
+{
+  "name": "t:sections.store_locator.name",
+  "tag": "section",
+  "class": "map-section",
+  "settings": [
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:sections.general_section_settings.color_scheme_option_default_label"
+        },
+        {
+          "value": "primary",
+          "label": "t:sections.general_section_settings.color_scheme_option_primary_label"
+        },
+        {
+          "value": "secondary",
+          "label": "t:sections.general_section_settings.color_scheme_option_secondary_label"
+        },
+        {
+          "value": "custom-1",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_1_label"
+        },
+        {
+          "value": "custom-2",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_2_label"
+        },
+        {
+          "value": "custom-3",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_3_label"
+        },
+        {
+          "value": "white",
+          "label": "t:sections.general_section_settings.color_scheme_option_white_text_label"
+        },
+        {
+          "value": "black",
+          "label": "t:sections.general_section_settings.color_scheme_option_black_text_label"
+        },
+        {
+          "value": "custom-5",
+          "label": "t:sections.general_section_settings.color_scheme_option_custom_5_label"
+        }
+      ],
+      "default": "default",
+      "label": "t:sections.general_section_settings.color_scheme_label",
+      "info": "t:sections.general_section_settings.color_scheme_tip"
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "options": [
+        {
+          "value": "full-screen",
+          "label": "t:sections.general_section_settings.container_size.screen_width_option"
+        },
+        {
+          "value": "page-width",
+          "label": "t:sections.general_section_settings.container_size.page_width_option"
+        },
+        {
+          "value": "large",
+          "label": "t:sections.general_section_settings.container_size.large_width_option"
+        },
+        {
+          "value": "medium",
+          "label": "t:sections.general_section_settings.container_size.medium_width_option"
+        },
+        {
+          "value": "small",
+          "label": "t:sections.general_section_settings.container_size.small_width_option"
+        },
+        {
+          "value": "xsmall",
+          "label": "t:sections.general_section_settings.container_size.extra_small_width_option"
+        }
+      ],
+      "default": "large",
+      "label": "t:sections.general_section_settings.container_size.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "expand_first_tab",
+      "default": false,
+      "label": "t:sections.store_locator.map.expand_first_tab.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.store_locator.content.settings_header"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "t:sections.store_locator.content.subheading.label",
+      "default": "FIND US"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:sections.store_locator.content.heading.label",
+      "default": "Store locations"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "label": "t:sections.general_section_settings.label_for_heading_size_setting",
+      "options": [
+        {
+          "value": "display1",
+          "label": "t:sections.general_section_settings.display_size_1_option"
+        },
+        {
+          "value": "display2",
+          "label": "t:sections.general_section_settings.display_size_2_option"
+        },
+        {
+          "value": "display3",
+          "label": "t:sections.general_section_settings.display_size_3_option"
+        },
+        {
+          "value": "h1",
+          "label": "t:sections.general_section_settings.heading_size_1_option"
+        },
+        {
+          "value": "h2",
+          "label": "t:sections.general_section_settings.heading_size_2_option"
+        },
+        {
+          "value": "h3",
+          "label": "t:sections.general_section_settings.heading_size_3_option"
+        },
+        {
+          "value": "h4",
+          "label": "t:sections.general_section_settings.heading_size_4_option"
+        },
+        {
+          "value": "h5",
+          "label": "t:sections.general_section_settings.heading_size_5_option"
+        },
+        {
+          "value": "h6",
+          "label": "t:sections.general_section_settings.heading_size_6_option"
+        },
+        {
+          "value": "caption1",
+          "label": "t:sections.general_section_settings.caption_size_1_option"
+        },
+        {
+          "value": "caption2",
+          "label": "t:sections.general_section_settings.caption_size_2_option"
+        },
+        {
+          "value": "caption3",
+          "label": "t:sections.general_section_settings.caption_size_3_option"
+        }
+      ],
+      "default": "h2"
+    },
+    {
+      "type": "richtext",
+      "id": "body_richtext",
+      "label": "t:sections.store_locator.content.body.label",
+      "default": "<p>Add locations of your points of sale on the map, provide store details like opening hours, interior photos, and more.</p>"
+    },
+    {
+      "type": "select",
+      "id": "body_size",
+      "label": "t:sections.general_section_settings.label_for_body_size_setting",
+      "options": [
+        {
+          "value": "body0",
+          "label": "t:sections.general_section_settings.body_size_0_option"
+        },
+        {
+          "value": "body1",
+          "label": "t:sections.general_section_settings.body_size_1_option"
+        },
+        {
+          "value": "body2",
+          "label": "t:sections.general_section_settings.body_size_2_option"
+        },
+        {
+          "value": "body3",
+          "label": "t:sections.general_section_settings.body_size_3_option"
+        },
+        {
+          "value": "body4",
+          "label": "t:sections.general_section_settings.body_size_4_option"
+        },
+        {
+          "value": "body5",
+          "label": "t:sections.general_section_settings.body_size_5_option"
+        },
+        {
+          "value": "body6",
+          "label": "t:sections.general_section_settings.body_size_6_option"
+        }
+      ],
+      "default": "body3",
+      "info": "t:sections.store_locator.content.body_size.info"
+    },
+    {
+      "type": "text_alignment",
+      "id": "content_alignment",
+      "label": "t:sections.general_section_settings.content_alignment.label",
+      "default": "left"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.store_locator.map.settings_header"
+    },
+    {
+      "type": "text",
+      "id": "api_key",
+      "label": "t:sections.store_locator.map.api_key.label",
+      "info": "t:sections.store_locator.map.api_key.info"
+    },
+    {
+      "type": "range",
+      "id": "map_desktop_ratio",
+      "min": 0.2,
+      "max": 2,
+      "step": 0.1,
+      "default": 1,
+      "unit": "t:sections.store_locator.map.map_desktop_ratio.unit",
+      "label": "t:sections.store_locator.map.map_desktop_ratio.label"
+    },
+    {
+      "type": "range",
+      "id": "map_mobile_ratio",
+      "min": 0.2,
+      "max": 2,
+      "step": 0.1,
+      "default": 1,
+      "unit": "t:sections.store_locator.map.map_mobile_ratio.unit",
+      "label": "t:sections.store_locator.map.map_mobile_ratio.label"
+    },
+    {
+      "type": "select",
+      "id": "map_position",
+      "label": "t:sections.store_locator.map.map_position.label",
+      "options": [
+        {
+          "value": "left",
+          "label": "t:sections.store_locator.map.map_position.options.option_1"
+        },
+        {
+          "value": "right",
+          "label": "t:sections.store_locator.map.map_position.options.option_2"
+        },
+        {
+          "value": "top",
+          "label": "t:sections.store_locator.map.map_position.options.option_3"
+        },
+        {
+          "value": "bottom",
+          "label": "t:sections.store_locator.map.map_position.options.option_4"
+        }
+      ],
+      "default": "right",
+      "info": "t:sections.store_locator.map.map_position.info"
+    },
+    {
+      "type": "select",
+      "id": "map_style",
+      "label": "t:sections.store_locator.map.map_style.label",
+      "options": [
+        {
+          "value": "standard",
+          "label": "t:sections.store_locator.map.map_style.options.option_1"
+        },
+        {
+          "value": "silver",
+          "label": "t:sections.store_locator.map.map_style.options.option_2"
+        },
+        {
+          "value": "retro",
+          "label": "t:sections.store_locator.map.map_style.options.option_3"
+        },
+        {
+          "value": "dark",
+          "label": "t:sections.store_locator.map.map_style.options.option_4"
+        },
+        {
+          "value": "night",
+          "label": "t:sections.store_locator.map.map_style.options.option_5"
+        },
+        {
+          "value": "aubergine",
+          "label": "t:sections.store_locator.map.map_style.options.option_6"
+        }
+      ],
+      "default": "standard"
+    },
+    {
+      "type": "textarea",
+      "id": "map_custom_style",
+      "label": "t:sections.store_locator.map.map_custom_style.label",
+      "info": "t:sections.store_locator.map.map_custom_style.info"
+    },
+    {
+      "type": "range",
+      "id": "map_zoom",
+      "min": 1,
+      "max": 20,
+      "step": 1,
+      "default": 10,
+      "unit": "t:sections.store_locator.map.map_zoom.unit",
+      "label": "t:sections.store_locator.map.map_zoom.label"
+    },
+    {
+      "type": "image_picker",
+      "id": "map_default_image",
+      "label": "t:sections.store_locator.map.map_default_image.label",
+      "info": "t:sections.store_locator.map.map_default_image.info"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.general_section_settings.paddings.header_title"
+    },
+    {
+      "type": "checkbox",
+      "id": "add_side_paddings",
+      "default": true,
+      "label": "t:sections.general_section_settings.paddings.add_side_paddings.label"
+    },
+    {
+      "type": "range",
+      "id": "section_spacing_top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 96,
+      "unit": "t:sections.general_section_settings.paddings.section_spacing_top.unit",
+      "label": "t:sections.general_section_settings.paddings.section_spacing_top.label"
+    },
+    {
+      "type": "range",
+      "id": "section_spacing_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 96,
+      "unit": "t:sections.general_section_settings.paddings.section_spacing_bottom.unit",
+      "label": "t:sections.general_section_settings.paddings.section_spacing_bottom.label"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "store",
+      "name": "t:sections.store_locator.blocks.store.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "store_coordinates",
+          "label": "t:sections.store_locator.blocks.store.settings.store_coordinates.label",
+          "info": "t:sections.store_locator.blocks.store.settings.store_coordinates.info",
+          "default": "48.85846067584112, 2.294469693037938"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.store_locator.blocks.store.settings.store_details.settings_header"
+        },
+        {
+          "type": "text",
+          "id": "store_name",
+          "label": "t:sections.store_locator.blocks.store.settings.store_details.name.label",
+          "default": "Store name"
+        },
+        {
+          "type": "select",
+          "id": "heading_size",
+          "label": "t:sections.general_section_settings.label_for_heading_size_setting",
+          "options": [
+            {
+              "value": "display1",
+              "label": "t:sections.general_section_settings.display_size_1_option"
+            },
+            {
+              "value": "display2",
+              "label": "t:sections.general_section_settings.display_size_2_option"
+            },
+            {
+              "value": "display3",
+              "label": "t:sections.general_section_settings.display_size_3_option"
+            },
+            {
+              "value": "h1",
+              "label": "t:sections.general_section_settings.heading_size_1_option"
+            },
+            {
+              "value": "h2",
+              "label": "t:sections.general_section_settings.heading_size_2_option"
+            },
+            {
+              "value": "h3",
+              "label": "t:sections.general_section_settings.heading_size_3_option"
+            },
+            {
+              "value": "h4",
+              "label": "t:sections.general_section_settings.heading_size_4_option"
+            },
+            {
+              "value": "h5",
+              "label": "t:sections.general_section_settings.heading_size_5_option"
+            },
+            {
+              "value": "h6",
+              "label": "t:sections.general_section_settings.heading_size_6_option"
+            },
+            {
+              "value": "caption1",
+              "label": "t:sections.general_section_settings.caption_size_1_option"
+            },
+            {
+              "value": "caption2",
+              "label": "t:sections.general_section_settings.caption_size_2_option"
+            },
+            {
+              "value": "caption3",
+              "label": "t:sections.general_section_settings.caption_size_3_option"
+            }
+          ],
+          "default": "caption2"
+        },
+        {
+          "type": "richtext",
+          "id": "store_details",
+          "label": "t:sections.store_locator.blocks.store.settings.store_details.details.label",
+          "default": "<p>345 Main Street</br>Your City, ZIP code 345345</br></br><strong>Store hours</strong></br>Sun: Closed</br>Mon-Sat: 10:00 - 16:00</p>"
+        },
+        {
+          "type": "select",
+          "id": "body_size",
+          "label": "t:sections.general_section_settings.label_for_body_size_setting",
+          "info": "t:sections.general_section_settings.info_for_body_size_setting",
+          "options": [
+            {
+              "value": "body0",
+              "label": "t:sections.general_section_settings.body_size_0_option"
+            },
+            {
+              "value": "body1",
+              "label": "t:sections.general_section_settings.body_size_1_option"
+            },
+            {
+              "value": "body2",
+              "label": "t:sections.general_section_settings.body_size_2_option"
+            },
+            {
+              "value": "body3",
+              "label": "t:sections.general_section_settings.body_size_3_option"
+            },
+            {
+              "value": "body4",
+              "label": "t:sections.general_section_settings.body_size_4_option"
+            },
+            {
+              "value": "body5",
+              "label": "t:sections.general_section_settings.body_size_5_option"
+            },
+            {
+              "value": "body6",
+              "label": "t:sections.general_section_settings.body_size_6_option"
+            }
+          ],
+          "default": "body4"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_directions",
+          "default": false,
+          "label": "t:sections.store_locator.blocks.store.settings.store_details.show_directions.label",
+          "info": "t:sections.store_locator.blocks.store.settings.store_details.show_directions.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.store_locator.blocks.store.settings.store_gallery.settings_header"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_1",
+          "label": "t:sections.store_locator.blocks.store.settings.store_gallery.image_1.label"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_2",
+          "label": "t:sections.store_locator.blocks.store.settings.store_gallery.image_2.label"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_3",
+          "label": "t:sections.store_locator.blocks.store.settings.store_gallery.image_3.label"
+        },
+        {
+          "type": "range",
+          "id": "img_ratio",
+          "min": 0.5,
+          "max": 1.5,
+          "step": 0.1,
+          "default": 1,
+          "label": "t:sections.store_locator.blocks.store.settings.store_gallery.image_ratio.label",
+          "unit": "t:sections.store_locator.blocks.store.settings.store_gallery.image_ratio.unit"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.store_locator.name",
+      "blocks": [
+        {
+          "type": "store",
+          "settings": {
+            "store_coordinates": "48.85846067584112, 2.294469693037938"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

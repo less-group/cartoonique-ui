@@ -1,0 +1,89 @@
+<div class='account-menu'>
+  <div class='account-menu__title'>
+    {{ 'customer.menu.store_front.my_account' | t }}
+  </div>
+  <a
+    class='account-menu__item {% if request.page_type == "customers/account" or request.page_type == 'customers/order' %}active{% endif %}'
+    href='{{ routes.account_url }}'
+    aria-label='{{ 'customer.menu.screen_reader.order_history' | t }}'
+  >
+    {% render 'icon', icon_name: 'order', class: 'account-menu__icon' %}
+    {{ 'customer.menu.store_front.order_history' | t }}
+  </a>
+  <a
+    class='account-menu__item {% if request.page_type == "customers/addresses" %}active{% endif %}'
+    href='{{ routes.account_addresses_url }}'
+    aria-label='{{ 'customer.menu.screen_reader.addresses' | t }}'
+  >
+    {% render 'icon', icon_name: 'home', class: 'account-menu__icon' %}
+    {{ 'customer.menu.store_front.addresses' | t }}
+  </a>
+  <a
+    class='account-menu__item'
+    href='{{ routes.account_logout_url }}'
+    aria-label='{{ 'customer.menu.screen_reader.log_out' | t }}'
+    without-prefetch-on-hover
+  >
+    {% render 'icon', icon_name: 'enter', class: 'account-menu__icon' %}
+    {{ 'customer.menu.store_front.log_out' | t }}
+  </a>
+</div>
+
+<div class='dropdown__wrapper account__dropdown-wrapper'>
+  <float-element-btn
+    class='dropdown__toggle'
+    data-aria-expanded='false'
+    data-float-element-id='AccountMenu'
+    data-trigger='click'
+  >
+    <div class='dropdown__toggle-label'>
+      {% render 'icon', icon_name: 'order', class: 'dropdown__icon' %}
+      {% case request.page_type %}
+        {% when 'customers/account' %}
+          {{ 'customer.menu.store_front.order_history' | t }}
+        {% when 'customers/order' %}
+          {{ 'customer.menu.store_front.order_history' | t }}
+        {% when 'customers/addresses' %}
+          {{ 'customer.menu.store_front.addresses' | t }}
+      {% endcase %}
+    </div>
+    {% render 'icon', icon_name: 'chevron', class: 'account-menu__item-chevron' %}
+  </float-element-btn>
+  <float-element
+    class='dropdown'
+    aria-hidden='true'
+    id='AccountMenu'
+    data-placement='bottom-start'
+    data-main-axis-offset='{% if settings.round_level != "0" %} 8{% else %} 0{% endif %}'
+  >
+    <template data-float-element-template='AccountMenu'>
+      <div>
+        <a
+          class='dropdown__item {% if request.page_type == "customers/account" or request.page_type == 'customers/order' %}active{% endif %}'
+          href='{{ routes.account_url }}'
+          aria-label='{{ 'customer.menu.screen_reader.order_history' | t }}'
+        >
+          {% render 'icon', icon_name: 'order', class: 'account-menu__icon' %}
+          {{ 'customer.menu.store_front.order_history' | t }}
+        </a>
+        <a
+          class='dropdown__item {% if request.page_type == "customers/addresses" %}active{% endif %}'
+          href='{{ routes.account_addresses_url }}'
+          aria-label='{{ 'customer.menu.screen_reader.addresses' | t }}'
+        >
+          {% render 'icon', icon_name: 'home', class: 'account-menu__icon' %}
+          {{ 'customer.menu.store_front.addresses' | t }}
+        </a>
+        <a
+          class='dropdown__item'
+          href='{{ routes.account_logout_url }}'
+          aria-label='{{ 'customer.menu.screen_reader.log_out' | t }}'
+          without-prefetch-on-hover
+        >
+          {% render 'icon', icon_name: 'enter', class: 'account-menu__icon' %}
+          {{ 'customer.menu.store_front.log_out' | t }}
+        </a>
+      </div>
+    </template>
+  </float-element>
+</div>

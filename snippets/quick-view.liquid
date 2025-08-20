@@ -1,0 +1,794 @@
+{%- liquid
+  assign color_scheme = section.settings.color_scheme
+  assign block_layout = 'one-column'
+  assign img_ratio = section.settings.img_ratio
+  assign enable_image_zoom = section.settings.enable_image_zoom
+  assign enable_video_autoplay = section.settings.enable_video_autoplay
+  assign enable_video_looping = section.settings.enable_video_looping
+  assign first_3d_model = product.media | where: 'media_type', 'model' | first
+
+  assign show_part_of_next_slide = section.settings.show_part_of_next_slide
+  if product_media.size == 1
+    assign show_part_of_next_slide = false
+  endif
+
+  assign product_media = product.media | default: (1..6)
+  assign featured_media = product.featured_media
+
+  assign drawer_title = 'dialog_elements.quick_view.store_front.header_title' | t
+  if settings.card_buttons_type == 'add_only' and product.variants.size > 1
+    assign drawer_title = 'dialog_elements.choose_options.store_front.header_title' | t
+  endif
+-%}
+
+<div class='quick-view'>
+  <div
+    class='quick-view__body-wrapper color-{{ color_scheme }} set-text-color-from-variable'
+    id='QuickViewProduct'
+    data-product-handle='{{ product.handle }}'
+  >
+    <div>
+      {% capture css %}
+        {% style %}
+          {% for block in section.blocks %}
+            {% case block.type %}
+              {% when 'collapsible_row' %}
+                .block-{{ block.id }} {
+                  --gsc-image-width: {{ block.settings.image_width }}%;
+                }
+              {% when 'information_tag' %}
+                .block-{{ block.id }} {
+                  {% if block.settings.tag_background_gradient != blank %}
+                    --gsc-tag-background-color: {{ block.settings.tag_background_gradient }};
+                  {% else %}
+                    --gsc-tag-background-color: {{ block.settings.tag_background_color }};
+                  {% endif %}
+                  --gsc-tag-text-color: {{ block.settings.tag_text_color }};
+                  --gsc-tag-icon-size: {{ block.settings.icon_size }}px;
+                }
+
+                .block-{{ block.id }}-drawer {
+                  --gsc-image-width: {{ block.settings.drawer_media_size }}%;
+                }
+              {% when 'variant_picker' %}
+                .block-{{ block.id }}-drawer {
+                  --gsc-image-width: {{ block.settings.image_width }}%;
+                }
+              {% when 'price' %}
+                .block-{{ block.id }} {
+                  --gsc-product-price-fz: var(--gsc-product-price-font-size-{{- block.settings.price_size -}});
+                  --gsc-product-price-lh: var(--gsc-product-price-line-height-{{- block.settings.price_size -}});
+                  --gsc-product-price-fw: 700;
+                }
+              {% when 'inventory_status' %}
+                .block-{{ block.id }} {
+                  {% if block.settings.high_inventory_gradient != blank %}
+                    --gsc-product-high-level-inventory-indicator-color: {{ block.settings.high_inventory_gradient }};
+                  {% else %}
+                    --gsc-product-high-level-inventory-indicator-color: {{ block.settings.high_inventory_color }};
+                  {% endif %}
+
+                  {% if block.settings.low_inventory_gradient != blank %}
+                    --gsc-product-low-level-inventory-indicator-color: {{ block.settings.low_inventory_gradient }};
+                  {% else %}
+                    --gsc-product-low-level-inventory-indicator-color: {{ block.settings.low_inventory_color }};
+                  {% endif %}
+              
+                  --gsc-product-high-level-inventory-label-color: {{ block.settings.high_inventory_label_color }};
+                  --gsc-product-low-level-inventory-label-color: {{ block.settings.low_inventory_label_color }};
+
+                  {% if block.settings.show_progress_bar %}
+                    --gsc-free-shipping-bar-size: {{ block.settings.progress_bar_size }}px;
+                    --gsc-free-shipping-bar-bg-high: {{ block.settings.high_inventory_progress_bar_bg.red }},{{ block.settings.high_inventory_progress_bar_bg.green }},{{ block.settings.high_inventory_progress_bar_bg.blue }};
+                    --gsc-free-shipping-bar-bg-low: {{ block.settings.low_inventory_progress_bar_bg.red }},{{ block.settings.low_inventory_progress_bar_bg.green }},{{ block.settings.low_inventory_progress_bar_bg.blue }};
+                  {% endif %}
+                }
+              {% when 'button' %}
+                .block-{{ block.id }} {
+                  {% if block.settings.button_background_gradient != blank %}
+                    --gsc-product-button-block-background-color: {{ block.settings.button_background_gradient }};
+                  {% else %}
+                    --gsc-product-button-block-background-color: {{ block.settings.button_background_color }};
+                  {% endif %}
+                  --gsc-product-button-block-text-color: {{ block.settings.button_text_color }};
+                }
+              {% when 'product_drawer_with_tabs' %}
+                .block-{{ block.id }} {
+                  {% if block.settings.button_background_gradient != blank %}
+                    --gsc-product-drawer-tabs-button-background-color: {{ block.settings.button_background_gradient }};
+                  {% else %}
+                    --gsc-product-drawer-tabs-button-background-color: {{ block.settings.button_background_color }};  
+                  {% endif %}
+                  --gsc-product-drawer-tabs-button-text-color: {{ block.settings.button_text_color }};
+                  --gsc-product-drawer-tabs-icon-size: {{ block.settings.icon_size }}px;
+                }
+            {% endcase %}
+          {% endfor %}
+
+          .quick-view {
+            --gsc-desktop-space-between-media: 12px;
+          }
+        {% endstyle %}
+      {% endcapture %}
+
+      {% render 'inline-css-minifier', css: css %}
+
+      {%- if first_3d_model -%}
+        <link
+          href='https://cdn.shopify.com/shopifycloud/model-viewer-ui/assets/v1.0/model-viewer-ui.css'
+          id='ModelViewerStyle'
+          media='print'
+          onload="this.media='all'"
+          rel='stylesheet'
+        >
+        <script id='ProductJSON-{{ product.id }}' type='application/json'>
+          {{ product.media | where: 'media_type', 'model' | json }}
+        </script>
+      {%- endif -%}
+    </div>
+
+    <div>
+      {%- for block in section.blocks -%}
+        {% case block.type %}
+          {% when 'variant_picker' %}
+            {%- liquid
+              assign block_option_name_downcase = block.settings.option_name | downcase
+              assign page = block.settings.page
+              assign image = block.settings.image
+              assign video = block.settings.video
+              assign text = block.settings.text
+              assign information_drawer_button_label = block.settings.information_drawer_button_label
+            -%}
+
+            {%- for option in product.options_with_values -%}
+              {%- assign option_name_downcase = option.name | downcase -%}
+
+              {%- if block_option_name_downcase == option_name_downcase -%}
+                <product-information-drawer
+                  id='product-variant-picker-popup-{{ product.id }}-{{ sectionId }}'
+                  class='product-information-drawer block-{{ block.id }}-drawer'
+                  data-with-overlay
+                  data-with-close-on-outside
+                  data-with-close-on-escape
+                  data-overlay-important
+                  data-open-direction='right'
+                  tabindex='-1'
+                >
+                  <template data-sidebar-template='product-variant-picker-popup-{{ product.id }}-{{ sectionId }}'>
+                    <div class='product-information-drawer__body' data-sidebar-body>
+                      <div class='product-information-drawer__header'>
+                        <div class='product-information-drawer__header-title'>
+                          {{ information_drawer_button_label | strip_html }}
+                        </div>
+                        <sidebar-button>
+                          <button
+                            data-sidebar-button
+                            class='unstyled-button product-information-drawer__header-close-button-wrapper close-button-with-scale-hover-wrapper'
+                            data-sidebar-id='product-variant-picker-popup-{{ product.id }}-{{ sectionId }}'
+                            type='button'
+                          >
+                            <span
+                              class='close-button-with-scale-hover product-information-drawer__close-button-with-scale-hover'
+                            ></span>
+                          </button>
+                        </sidebar-button>
+                      </div>
+
+                      <div class='product-information-drawer__viewport' data-product-information-drawer-viewport>
+                        <div class='product-information-drawer__content body-color product-information-drawer__content--restrict-top-space'>
+                          {% if text != blank %}
+                            <div class='rte'>
+                              {{ text }}
+                            </div>
+                          {% endif %}
+
+                          {% if page != blank %}
+                            <div class='rte rte--page'>
+                              {{ page.content }}
+                            </div>
+                          {% endif %}
+
+                          {%- if video != blank -%}
+                            {% render 'video-with-alt',
+                              video: video,
+                              class: 'product-information-drawer__image',
+                              autoplay: true,
+                              loop: true,
+                              muted: true,
+                              controls: false,
+                              loading: 'eager'
+                            %}
+                          {%- elsif image != blank -%}
+                            <img
+                              {% render 'image-attributes', image: image, size: 'medium', class: 'product-information-drawer__image' %}
+                            >
+                          {%- endif -%}
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </product-information-drawer>
+              {%- endif -%}
+            {%- endfor -%}
+          {% when 'product_drawer_with_tabs' %}
+              {%- liquid
+                assign options = block.settings
+                assign btn_text = options.popup_link_text
+      
+                assign tab_1_title = options.tab_1_title
+                assign tab_1_text = options.tab_1_text
+                assign tab_1_page = options.tab_1_page
+                assign tab_1_body_size = options.tab_1_body_size
+      
+                assign tab_2_title = options.tab_2_title
+                assign tab_2_text = options.tab_2_text
+                assign tab_2_page = options.tab_2_page
+                assign tab_2_body_size = options.tab_2_body_size
+      
+                assign tab_3_title = options.tab_3_title
+                assign tab_3_text = options.tab_3_text
+                assign tab_3_page = options.tab_3_page
+                assign tab_3_body_size = options.tab_3_body_size
+      
+                assign first_visible_tab_id = ''
+                assign tab_count = 0
+      
+                assign tab_1_id = 'tab1'
+                assign tab_2_id = 'tab2'
+                assign tab_3_id = 'tab3'
+      
+                if tab_1_title != blank
+                  assign first_visible_tab_id = tab_1_id
+                elsif tab_2_title != blank
+                  assign first_visible_tab_id = tab_2_id
+                elsif tab_3_title != blank
+                  assign first_visible_tab_id = tab_3_id
+                endif
+      
+                if tab_1_title != blank
+                  assign tab_count = tab_count | plus: 1
+                endif
+      
+                if tab_2_title != blank
+                  assign tab_count = tab_count | plus: 1
+                endif
+      
+                if tab_3_title != blank
+                  assign tab_count = tab_count | plus: 1
+                endif
+              -%}
+      
+              <product-information-drawer
+                id='product-information-sidebar-{{ block.id }}-{{ product.id }}-{{ sectionId }}'
+                class='product-information-drawer block-{{ block.id }}-drawer'
+                data-with-overlay
+                data-with-close-on-outside
+                data-with-close-on-escape
+                data-overlay-important
+                data-open-direction='right'
+                tabindex='-1'
+              >
+                <template data-sidebar-template='product-information-sidebar-{{ block.id }}-{{ product.id }}-{{ sectionId }}'>
+                  <div class='product-information-drawer__body' data-sidebar-body>
+                    <div class='product-information-drawer__header'>
+                      <div class='product-information-drawer__header-title'>
+                        {% if tab_count == 1 %}
+                          {{ first_tab_title| strip_html }}
+                        {% else %}
+                          {{ btn_text| strip_html }}
+                        {% endif %}
+                      </div>
+                      <sidebar-button>
+                        <button
+                          data-sidebar-button
+                          class='unstyled-button product-information-drawer__header-close-button-wrapper close-button-with-scale-hover-wrapper'
+                          data-sidebar-id='product-information-sidebar-{{ block.id }}-{{ product.id }}-{{ sectionId }}'
+                          type='button'
+                        >
+                          <span
+                            class='close-button-with-scale-hover product-information-drawer__close-button-with-scale-hover'
+                          ></span>
+                        </button>
+                      </sidebar-button>
+                    </div>
+      
+                    <div class='product-information-drawer__viewport' data-product-information-drawer-viewport>
+                      <tabs-component data-selected-tab-id='{{ first_visible_tab_id }}'>
+                        {% if tab_count > 1 %}
+                          <div class='product-information-drawer__tab-names'>
+                            {% if tab_1_title != blank %}
+                              <div
+                                data-tabs-name
+                                class='product-information-drawer__tab-name {% if tab_count == 1 %} product-information-drawer__tab-name--single {% endif %} {% if tab_1_id == first_visible_tab_id %}selected{% endif %}'
+                                data-id='tab1'
+                                tabindex='0'
+                              >
+                                {{ tab_1_title }}
+                              </div>
+                            {% endif %}
+                            {% if tab_2_title != blank %}
+                              <div
+                                data-tabs-name
+                                class='product-information-drawer__tab-name {% if tab_count == 1 %} product-information-drawer__tab-name--single {% endif %} {% if tab_2_id == first_visible_tab_id %}selected{% endif %}'
+                                data-id='tab2'
+                                tabindex='0'
+                              >
+                                {{ tab_2_title }}
+                              </div>
+                            {% endif %}
+                            {% if tab_3_title != blank %}
+                              <div
+                                data-tabs-name
+                                class='product-information-drawer__tab-name {% if tab_count == 1 %} product-information-drawer__tab-name--single {% endif %} {% if tab_3_id == first_visible_tab_id %}selected{% endif %}'
+                                data-id='tab3'
+                                tabindex='0'
+                              >
+                                {{ tab_3_title }}
+                              </div>
+                            {% endif %}
+                          </div>
+                        {% endif %}
+      
+                        <div class='tabs product-details__tabs' data-tabs-container>
+                          <template data-tabs-elements-template>
+                            {% if tab_1_title != blank and tab_1_id != first_visible_tab_id %}
+                              <tab-component
+                                class='product-information-drawer__tab-element'
+                                aria-hidden='true'
+                                data-id='tab1'
+                              >
+                                <div data-tabs-element-content class='product-information-drawer__content body-color'>
+                                  {% if tab_1_text != blank %}
+                                    <div class='rte {{ tab_1_body_size }}'>
+                                      {{ tab_1_text }}
+                                    </div>
+                                  {% endif %}
+      
+                                  {% if tab_1_page != blank %}
+                                    <div class='rte rte--page {{ tab_1_body_size }}'>
+                                      {{ tab_1_page.content }}
+                                    </div>
+                                  {% endif %}
+                                </div>
+                              </tab-component>
+                            {% endif %}
+                            {% if tab_2_title != blank and tab_2_id != first_visible_tab_id %}
+                              <tab-component
+                                class='product-information-drawer__tab-element'
+                                aria-hidden='true'
+                                data-id='tab2'
+                              >
+                                <div data-tabs-element-content class='product-information-drawer__content body-color'>
+                                  {% if tab_2_text != blank %}
+                                    <div class='rte {{ tab_2_body_size }}'>
+                                      {{ tab_2_text }}
+                                    </div>
+                                  {% endif %}
+      
+                                  {% if tab_2_page != blank %}
+                                    <div class='rte rte--page {{ tab_2_body_size }}'>
+                                      {{ tab_2_page.content }}
+                                    </div>
+                                  {% endif %}
+                                </div>
+                              </tab-component>
+                            {% endif %}
+                            {% if tab_3_title != blank and tab_3_id != first_visible_tab_id %}
+                              <tab-component
+                                class='product-information-drawer__tab-element'
+                                aria-hidden='true'
+                                data-id='tab3'
+                              >
+                                <div data-tabs-element-content class='product-information-drawer__content body-color'>
+                                  {% if tab_3_text != blank %}
+                                    <div class='rte {{ tab_3_body_size }}'>
+                                      {{ tab_3_text }}
+                                    </div>
+                                  {% endif %}
+      
+                                  {% if tab_3_page != blank %}
+                                    <div class='rte rte--page {{ tab_3_body_size }}'>
+                                      {{ tab_3_page.content }}
+                                    </div>
+                                  {% endif %}
+                                </div>
+                              </tab-component>
+                            {% endif %}
+                          </template>
+      
+                          {% if tab_1_title != blank and tab_1_id == first_visible_tab_id %}
+                            <tab-component
+                              class='product-information-drawer__tab-element'
+                              aria-hidden='false'
+                              data-id='tab1'
+                            >
+                              <div data-tabs-element-content class='product-information-drawer__content body-color'>
+                                {% if tab_1_text != blank %}
+                                  <div class='rte {{ tab_1_body_size }}'>
+                                    {{ tab_1_text }}
+                                  </div>
+                                {% endif %}
+      
+                                {% if tab_1_page != blank %}
+                                  <div class='rte rte--page {{ tab_1_body_size }}'>
+                                    {{ tab_1_page.content }}
+                                  </div>
+                                {% endif %}
+                              </div>
+                            </tab-component>
+                          {% endif %}
+                          {% if tab_2_title != blank and tab_2_id == first_visible_tab_id %}
+                            <tab-component
+                              class='product-information-drawer__tab-element'
+                              aria-hidden='false'
+                              data-id='tab2'
+                            >
+                              <div data-tabs-element-content class='product-information-drawer__content body-color'>
+                                {% if tab_2_text != blank %}
+                                  <div class='rte {{ tab_2_body_size }}'>
+                                    {{ tab_2_text }}
+                                  </div>
+                                {% endif %}
+      
+                                {% if tab_2_page != blank %}
+                                  <div class='rte rte--page {{ tab_2_body_size }}'>
+                                    {{ tab_2_page.content }}
+                                  </div>
+                                {% endif %}
+                              </div>
+                            </tab-component>
+                          {% endif %}
+                          {% if tab_3_title != blank and tab_3_id == first_visible_tab_id %}
+                            <tab-component
+                              class='product-information-drawer__tab-element'
+                              aria-hidden='false'
+                              data-id='tab3'
+                            >
+                              <div data-tabs-element-content class='product-information-drawer__content body-color'>
+                                {% if tab_3_text != blank %}
+                                  <div class='rte {{ tab_3_body_size }}'>
+                                    {{ tab_3_text }}
+                                  </div>
+                                {% endif %}
+      
+                                {% if tab_3_page != blank %}
+                                  <div class='rte rte--page {{ tab_3_body_size }}'>
+                                    {{ tab_3_page.content }}
+                                  </div>
+                                {% endif %}
+                              </div>
+                            </tab-component>
+                          {% endif %}
+                        </div>
+                      </tabs-component>
+                    </div>
+                  </div>
+                </template>
+              </product-information-drawer>
+      
+          {% when 'information_tag' %}
+            {% if block.settings.enable_drawer %}
+              {%- liquid
+                assign options = block.settings
+                assign drawer_page = options.drawer_page
+                assign drawer_body_size = options.drawer_body_size
+                assign drawer_image = options.drawer_image
+                assign drawer_video = options.drawer_video
+                assign drawer_text = options.drawer_text
+                assign heading = options.heading
+              -%}
+
+              <product-information-drawer
+                id='product-information-sidebar-{{ block.id }}-{{ product.id }}-{{ sectionId }}'
+                class='product-information-drawer block-{{ block.id }}-drawer'
+                data-with-overlay
+                data-with-close-on-outside
+                data-with-close-on-escape
+                data-overlay-important
+                data-open-direction='right'
+                tabindex='-1'
+              >
+                <template data-sidebar-template='product-information-sidebar-{{ block.id }}-{{ product.id }}-{{ sectionId }}'>
+                  <div class='product-information-drawer__body' data-sidebar-body>
+                    <div class='product-information-drawer__header'>
+                      <div class='product-information-drawer__header-title'>
+                        {{ heading | strip_html }}
+                      </div>
+                      <sidebar-button>
+                        <button
+                          data-sidebar-button
+                          class='unstyled-button product-information-drawer__header-close-button-wrapper close-button-with-scale-hover-wrapper'
+                          data-sidebar-id='product-information-sidebar-{{ block.id }}-{{ product.id }}-{{ sectionId }}'
+                          type='button'
+                        >
+                          <span
+                            class='close-button-with-scale-hover product-information-drawer__close-button-with-scale-hover'
+                          ></span>
+                        </button>
+                      </sidebar-button>
+                    </div>
+
+                    <div class='product-information-drawer__viewport' data-product-information-drawer-viewport>
+                      <div class='product-information-drawer__content body-color product-information-drawer__content--restrict-top-space'>
+                        {% if drawer_text != blank %}
+                          <div class='rte'>
+                            {{ drawer_text }}
+                          </div>
+                        {% endif %}
+
+                        {% if drawer_page != blank %}
+                          <div class='rte rte--page {{ drawer_body_size }}'>
+                            {{ drawer_page.content }}
+                          </div>
+                        {% endif %}
+
+                        {%- if drawer_video != blank -%}
+                          {% render 'video-with-alt',
+                            video: drawer_video,
+                            class: 'product-information-drawer__image',
+                            autoplay: true,
+                            loop: true,
+                            muted: true,
+                            controls: false,
+                            loading: 'eager'
+                          %}
+                        {%- elsif drawer_image != blank -%}
+                          <img
+                            {% render 'image-attributes',
+                              image: drawer_image, size: 'medium',
+                              class: 'product-information-drawer__image'
+                            %}
+                          >
+                        {%- endif -%}
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </product-information-drawer>
+            {% endif %}
+        {% endcase %}
+      {%- endfor -%}
+
+      {%- liquid
+        if enable_image_zoom
+          render 'product-modal', product: product, sectionId: sectionId, product_media: product_media, featured_media: featured_media
+        endif
+      -%}
+    </div>
+
+    {% if section.settings.show_only_selected_variants == true %}
+      <product-content
+        data-options='{{ product.options | join: ',' }}'
+        class='quick-view__body'
+      >
+    {% else %}
+      <div class='quick-view__body'>
+    {% endif %}
+
+    <div class='quick-view__header quick-view__header--mobile'>
+      <div class='quick-view__header-title'>{{ drawer_title }}</div>
+      <sidebar-button>
+        <button
+          data-sidebar-button
+          data-sidebar-id='Quick-view'
+          class='unstyled-button quick-view__close-button close-button-with-scale-hover-wrapper'
+          type='button'
+        >
+          <span class='quick-view__close-button-with-scale-hover close-button-with-scale-hover'></span>
+        </button>
+      </sidebar-button>
+    </div>
+    <div class='quick-view__content' data-quick-view-content>
+      <div class='product__content'>
+        <div class='quick-view__media'>
+          <div class='quick-view__desktop-media' data-product-media-container data-product-desktop-media>
+            {%- liquid
+            assign img_ratio = section.settings.img_ratio
+            assign enable_image_zoom = section.settings.enable_image_zoom
+            assign enable_video_autoplay = section.settings.enable_video_autoplay
+            assign enable_video_looping = section.settings.enable_video_looping
+            assign enable_darken_mode = settings.enable_product_darken_background
+          
+            assign primary_option_names = settings.primary_option_name | split: ','
+            assign option = blank
+          
+            for name in primary_option_names
+              assign name_striped = name | strip
+              if product.options_by_name[name_striped] != blank
+                assign option = product.options_by_name[name_striped]
+                break
+              endif
+            endfor
+          
+            assign option = option.values | first
+          -%}
+          
+            <product-media-carousel
+              class='quick-view-desktop-media-carousel'
+              data-section='{{ sectionId }}'
+              id='product-media-{{ product.id }}-{{ sectionId }}'
+            >
+              <carousel-component
+                class='quick-view-desktop-media-carousel__carousel'
+                data-section-id='{{ sectionId }}'
+                data-product-media-carousel-component
+                tabindex='-1'
+                with-hover-pause
+                data-align='start'
+                data-drag-free
+                data-draggable
+                data-contain-scroll='trimSnaps'
+                data-axis='y'
+                data-with-wheel-gestures
+                media-for='carousel'
+              >
+                <div
+                  class=' embla quick-view-desktop-media-carousel__carousel-viewport'
+                  data-carousel-viewport
+                >
+                  <div
+                    class='quick-view-desktop-media-carousel__carousel-container'
+                    data-carousel-container
+                    data-container='carousel'
+                  >
+                    {%- if product.media != blank -%}
+                      {%- if featured_media != null -%}
+                        <div
+                          class='quick-view-desktop-media-carousel__carousel-slide '
+                          {% if featured_media.media_type == 'image' and enable_image_zoom %}
+                            data-zoom-cursor-target
+                          {% endif %}
+                          data-media-id='{{ featured_media.id }}'
+                          data-variant='{{ featured_media.alt | strip_html | escape }}'
+                        >
+                          <div class="shape shape--{{ img_ratio }}">
+                            {% render 'product-media',
+                            product: product,
+                            enable_image_zoom: enable_image_zoom,
+                            enable_video_autoplay: enable_video_autoplay,
+                            media: featured_media,
+                            modal_media_id: featured_media.id,
+                            enable_video_looping: enable_video_looping,
+                            sectionId: sectionId,
+                            class: 'shape__target-image'
+                          %}
+                          </div>
+
+                        </div>
+                      {%- endif -%}
+                      {%- for media in product_media -%}
+                        {%- if media.id != featured_media.id or media.id == blank -%}
+                          <div
+                            class='quick-view-desktop-media-carousel__carousel-slide'
+                            {% if media.media_type == 'image' and enable_image_zoom %}
+                              data-zoom-cursor-target
+                            {% endif %}
+                            data-media-id='{{ media.id }}'
+                            data-variant='{{ media.alt | strip_html | escape }}'
+                          >
+                            <div class=" shape shape--{{ img_ratio }}">
+                              {% render 'product-media',
+                              product: product,
+                              enable_image_zoom: enable_image_zoom,
+                              enable_video_autoplay: enable_video_autoplay,
+                              media: media,
+                              modal_media_id: media.id,
+                              enable_video_looping: enable_video_looping,
+                              sectionId: sectionId,
+                              class: 'shape__target-image'
+                            %}
+                            </div>
+
+                          </div>
+                        {%- endif -%}
+                      {%- endfor -%}
+                    {%- else -%}
+                      {%- for media in product_media -%}
+                        <div
+                          class='quick-view-desktop-media-carousel__carousel-slide'
+                          {% if enable_image_zoom %}
+                            data-zoom-cursor-target
+                          {% endif %}
+                          data-media-id='{{ forloop.index }}'
+                          data-variant='{{ media.alt | strip_html | escape }}'
+                        >
+                        <div class="shape shape--{{ img_ratio }}">
+                          {% render 'product-media',
+                            product: product,
+                            enable_image_zoom: enable_image_zoom,
+                            enable_video_autoplay: enable_video_autoplay,
+                            media: media,
+                            modal_media_id: forloop.index,
+                            enable_video_looping: enable_video_looping,
+                            sectionId: sectionId,
+                            class: 'shape__target-image'
+                          %}
+                        </div>
+
+                        </div>
+                      {%- endfor -%}
+                    {%- endif -%}
+                  </div>
+                </div>
+              </carousel-component>
+            </product-media-carousel>
+          </div>
+          <div
+            class='product-mobile-media {% if show_part_of_next_slide %} product-mobile-media--with-half-next-slide{% endif %} {% if section.settings.add_side_paddings == true %}product-mobile-media--with-aside-paddings{% endif %}'
+            data-product-media-container
+            data-product-mobile-media
+          >
+            {% render 'product-media-carousel-mobile',
+              product: product,
+              product_media: product_media,
+              featured_media: featured_media,
+              block: block,
+              block_layout: section.settings.mobile_layout,
+              section: section,
+              sectionId: sectionId
+            %}
+          </div>
+        </div>
+
+        <div class='product__info-wrapper'>
+          <div class='quick-view__header quick-view__header--desktop'>
+            <div class='quick-view__header-title'>{{ drawer_title }}</div>
+            <sidebar-button>
+              <button
+                data-sidebar-button
+                data-sidebar-id='Quick-view'
+                class='unstyled-button quick-view__close-button close-button-with-scale-hover-wrapper'
+                type='button'
+              >
+                <span class='quick-view__close-button-with-scale-hover close-button-with-scale-hover'></span>
+              </button>
+            </sidebar-button>
+          </div>
+          <div class='product__info'>
+            {%- liquid
+              for block in section.blocks
+                case block.type
+                  when 'vendor'
+                    render 'product-vendor-block', product: product, section: section, block: block, sectionId: sectionId
+                  when 'title'
+                    render 'product-title-block', product: product, section: section, block: block, sectionId: sectionId
+                  when 'sku'
+                    render 'product-sku-block', product: product, section: section, block: block, sectionId: sectionId
+                  when 'price'
+                    render 'product-price-block', product: product, section: section, block: block, sectionId: sectionId
+                  when 'quantity_selector'
+                    render 'product-quantity-block', product: product, section: section, block: block, sectionId: sectionId
+                  when 'variant_picker'
+                    render 'product-variant-picker-block', product: product, section: section, block: block, sectionId: sectionId
+                  when 'buy_buttons'
+                    render 'product-form-block', product: product, section: section, block: block, sectionId: sectionId
+                    render 'product-link-block', product: product, section: section, block: block, sectionId: sectionId
+                  when 'complementary_products'
+                    if block.settings.show_in_quick_view
+                      render 'product-related-products-block', product: product, section: section, block: block, sectionId: sectionId, is_complementary: true
+                    endif
+                  when 'related_products'
+                    if block.settings.show_in_quick_view
+                      render 'product-related-products-block', product: product, section: section, block: block, sectionId: sectionId
+                    endif
+                  when 'badges'
+                    render 'product-badges-block', product: product, section: section, block: block, sectionId: sectionId
+                  when 'countdown'
+                    if block.settings.show_in_quick_view
+                      render 'product-timer-block', product: product, section: section, block: block, sectionId: sectionId
+                    endif
+                endcase
+              endfor
+            -%}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if section.settings.show_only_selected_variants == true %}
+      </product-content>
+    {% else %}
+      </div>
+    {% endif %}
+  </div>
+</div>

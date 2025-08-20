@@ -1,0 +1,68 @@
+{%- liquid
+  assign img_ratio = section.settings.img_ratio
+  assign enable_image_zoom = section.settings.enable_image_zoom
+  assign enable_video_autoplay = section.settings.enable_video_autoplay
+  assign enable_video_looping = section.settings.enable_video_looping
+  assign enable_video_controls = section.settings.enable_video_controls
+
+  assign mobile_layout = section.settings.mobile_layout
+
+  assign layout_with_full_screen = false
+  if mobile_layout contains 'thumbnails'
+    assign layout_with_full_screen = true
+  endif
+
+  assign enable_content_slide_in = settings.enable_content_slide_in
+-%}
+
+<div
+  data-product-media-container
+  class='product-desktop-media {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+  {% if enable_content_slide_in %}
+    style='--gsc-animation-order: 1;'
+  {% endif %}
+  data-product-desktop-media
+>
+  {%- liquid
+    if block_layout contains 'thumbnails'
+      render 'product-media-carousel', product: product, product_media: product_media, featured_media: featured_media, block: block, block_layout: block_layout, section: section, sectionId: sectionId
+    else
+      render 'product-media-grid', product: product, product_media: product_media, featured_media: featured_media, block: block, block_layout: block_layout, img_ratio: img_ratio, enable_image_zoom: enable_image_zoom, enable_video_autoplay: enable_video_autoplay, enable_video_looping: enable_video_looping, sectionId: sectionId, enable_video_controls: enable_video_controls
+    endif
+  -%}
+</div>
+
+<div
+  data-product-media-container
+  data-product-mobile-media
+  class='product-mobile-media {% if product_media.size < 3 and layout_with_full_screen == false %} product-mobile-media--full-screen {% endif %} {% if mobile_layout contains 'carousel' or mobile_layout == 'slideshow-linear' %} product-mobile-media--full-screen {% endif %} {% if enable_content_slide_in %}scroll-trigger animate--slide-in{% endif %}'
+  {% if enable_content_slide_in %}
+    style='--gsc-animation-order: 1;'
+  {% endif %}
+>
+  {% if product_media.size == 1 -%}
+    {% render 'product-media-grid',
+      product: product,
+      product_media: product_media,
+      featured_media: featured_media,
+      block: block,
+      block_layout: mobile_layout,
+      img_ratio: img_ratio,
+      enable_image_zoom: enable_image_zoom,
+      enable_video_autoplay: enable_video_autoplay,
+      enable_video_looping: enable_video_looping,
+      enable_video_controls: enable_video_controls,
+      sectionId: sectionId
+    %}
+  {% else %}
+    {% render 'product-media-carousel-mobile',
+      product: product,
+      product_media: product_media,
+      featured_media: featured_media,
+      block: block,
+      block_layout: mobile_layout,
+      section: section,
+      sectionId: sectionId
+    %}
+  {% endif %}
+</div>

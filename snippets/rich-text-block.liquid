@@ -1,0 +1,95 @@
+{%- liquid
+  assign options = block.settings
+  assign caption = options.caption
+  assign title = options.title
+  assign text = options.text
+  assign btn_text = options.btn_text
+  assign btn_url = options.btn_url
+  assign btn_style = options.btn_style
+  assign extra_btn_url = options.extra_btn_url
+  assign extra_btn_text = options.extra_btn_text
+  assign extra_btn_style = options.extra_btn_style
+  assign heading_size = options.heading_size
+  assign body_size = options.body_size
+  assign content_align = options.content_align
+-%}
+
+<max-lines-component class='rich-text rich-text--block block-{{ block.id }} {{ class }}'>
+  <div class='rich-text__content rich-text__content--with-{{ content_align }}-align'>
+    {% if caption != blank %}
+      <div class='caption rich-text__caption body-color'>
+        {{ caption }}
+      </div>
+    {% endif %}
+    {% if title != blank %}
+      <h5 class='rte {{ heading_size }} rich-text__heading'>
+        {{ title }}
+      </h5>
+    {% endif %}
+    <div class='rich-text__truncate-text-wrapper' data-quote-line-clamp>
+      <div
+        class='rte {{ body_size }} {% if title != blank %} body-color {% endif %} rich-text__text rich-text__text--truncate body-font-weight-from-global-settings'
+        data-quote-line-clamp-target
+      >
+        {{ text | strip_html }}
+      </div>
+    </div>
+
+    {%- if btn_text != blank or extra_btn_text != blank -%}
+      <div class='rich-text__btns '>
+        {%- if btn_text != blank -%}
+          {%- if btn_style == 'link' -%}
+            <a
+              class='link'
+              {% if btn_url != blank %}
+                href='{{ btn_url }}'
+              {% endif %}
+              aria-label='{{ btn_text | strip_html | escape }}'
+            >
+              <span class='link-parent-for-hover'>
+                <span class='link__text'>{{ btn_text }}</span>
+              </span>
+              {%- render 'icon', icon_name: 'link-chevron', class: 'link__chevron' -%}
+            </a>
+          {%- else -%}
+            <a
+              class='btn btn--{{ btn_style }} rich-text__btn'
+              {% if btn_url != blank %}
+                href='{{ btn_url }}'
+              {% endif %}
+              aria-label='{{- btn_text | strip_html | escape -}}'
+            >
+              {{- btn_text -}}
+            </a>
+          {%- endif -%}
+        {%- endif -%}
+        {%- if extra_btn_text != blank -%}
+          {%- if extra_btn_style == 'link' -%}
+            <a
+              class='link'
+              {% if extra_btn_url != blank %}
+                href='{{ extra_btn_url }}'
+              {% endif %}
+              aria-label='{{ extra_btn_text | strip_html | escape }}'
+            >
+              <span class='link-parent-for-hover'>
+                <span class='link__text'>{{ extra_btn_text }}</span>
+              </span>
+              {%- render 'icon', icon_name: 'link-chevron', class: 'link__chevron' -%}
+            </a>
+          {%- else -%}
+            <a
+              class='btn btn--{{ extra_btn_style }} rich-text__btn'
+              {% if extra_btn_url != blank %}
+                href='{{ extra_btn_url }}'
+              {% endif %}
+              aria-label='{{- extra_btn_text | strip_html | escape -}}'
+            >
+              {{- extra_btn_text -}}
+            </a>
+          {%- endif -%}
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  </div>
+</max-lines-component>

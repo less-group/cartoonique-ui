@@ -1,0 +1,128 @@
+{% comment %}theme-check-disable UndefinedObject{% endcomment %}
+
+{%- liquid
+  assign pick_up_locations = product_variant.store_availabilities | where: 'pick_up_enabled', true
+  assign pick_up_availabilities = false
+
+  for location in pick_up_locations
+    if location.available == true
+      assign pick_up_availabilities = true
+    endif
+  endfor
+
+  assign closest_location = pick_up_locations.first
+-%}
+
+<pickup-availability-content class='pickup-availability-info'>
+  {%- if pick_up_availabilities == true -%}
+    <div>
+      <div>
+        {%- if closest_location.available -%}
+          {{
+            'product.store_front.pickup_availability.pick_up_available_at_html'
+            | t: location_name: closest_location.location.name
+          }}
+          <div>{{ closest_location.pick_up_time }}</div>
+        {%- else -%}
+          {{
+            'product.store_front.pickup_availability.pick_up_unavailable_at_html'
+            | t: location_name: closest_location.location.name
+          }}
+        {%- endif -%}
+      </div>
+
+      {%- if pick_up_locations.size == 1 -%}
+        <sidebar-button>
+          <button
+            data-sidebar-button
+            class='unstyled-button pickup-availability-info__btn'
+            data-sidebar-id='pickup-availability-sidebar'
+            aria-label='{{ 'product.screen_reader.pickup_availability.view_store_info' | t }}'
+          >
+            {{ 'product.store_front.pickup_availability.view_store_info' | t }}
+          </button>
+        </sidebar-button>
+      {%- else -%}
+        <sidebar-button>
+          <button
+            data-sidebar-button
+            class='unstyled-button pickup-availability-info__btn'
+            data-sidebar-id='pickup-availability-sidebar'
+            aria-label='{{ 'product.screen_reader.pickup_availability.check_other_stores' | t }}'
+          >
+            {{ 'product.store_front.pickup_availability.check_other_stores' | t }}
+          </button>
+        </sidebar-button>
+      {%- endif -%}
+    </div>
+  {%- endif -%}
+</pickup-availability-content>
+
+<sidebar-component
+  class='sidebar pickup-availability-sidebar'
+  id='pickup-availability-sidebar'
+  data-section-id='{{ section.id }}'
+  data-open-direction='right'
+  tabindex='-1'
+>
+  <template data-sidebar-template='pickup-availability-sidebar'>
+    <div class='sidebar__body pickup-availability-sidebar__body' data-sidebar-body>
+      <div class='pickup-availability-sidebar__header'>
+        <div class='pickup-availability-sidebar__header-title'>pickup availability</div>
+        <sidebar-button>
+          <button
+            data-sidebar-button
+            class='unstyled-button pickup-availability-sidebar__close-button-wrapper close-button-with-scale-hover-wrapper'
+            data-sidebar-id='pickup-availability-sidebar'
+            aria-label='{{ 'product.screen_reader.pickup_availability.aria_label_for_sidebar_close_button' | t }}'
+          >
+            <span class='pickup-availability-sidebar__close-button close-button-with-scale-hover'></span>
+          </button>
+        </sidebar-button>
+      </div>
+
+      <div class='pickup-availability-sidebar__content'>
+        {%- if product_variant.product.has_only_default_variant == false -%}
+          <div class='pickup-availability-sidebar__variant'>
+            <h2 class='h6'>{{ product_variant.product.title | escape }}</h2>
+
+            {%- for product_option in product_variant.product.options_with_values -%}
+              <span class='pickup-availability-sidebar__variant-option'>
+                {{- product_option.name | escape }} - {{ product_option.selected_value -}}
+              </span>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+
+        <div class='pickup-availability-sidebar__list'>
+          {%- for availability in pick_up_locations -%}
+            {%- assign address = availability.location.address -%}
+
+            <div class='pickup-availability-sidebar__list-item'>
+              <div class='pickup-availability-sidebar__list-item-title'>{{ availability.location.name | escape }}</div>
+
+              <div class='pickup-availability-sidebar__list-item-info'>
+                <div>
+                  {{ address | format_address }}
+
+                  {%- if address.phone.size > 0 -%}
+                    <div>{{ address.phone }}</div>
+                  {%- endif -%}
+                </div>
+
+                <div>
+                  {%- if availability.available -%}
+                    {{ 'product.store_front.pickup_availability.pick_up_available' | t }},
+                    {{ availability.pick_up_time | downcase }}
+                  {%- else -%}
+                    {{ 'product.store_front.pickup_availability.pick_up_unavailable' | t }}
+                  {%- endif -%}
+                </div>
+              </div>
+            </div>
+          {%- endfor -%}
+        </div>
+      </div>
+    </div>
+  </template>
+</sidebar-component>

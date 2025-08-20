@@ -1,0 +1,350 @@
+{%- liquid
+  assign options = block.settings
+
+  assign option_label = options.label
+  assign current_product_handle = product.handle
+  assign product_list = options.product_list
+
+  assign swatch_type = options.swatch_type
+  assign swatch_size = options.swatch_size
+  assign swatch_shape = options.swatch_shape
+  assign swatch_patterns = options.swatch_patterns | newline_to_br | split: '<br />'
+
+  assign current_color_scheme = 'default'
+  assign target_color_scheme = section.settings.color_scheme
+
+  if section.settings.color_scheme == 'default'
+    assign target_color_scheme = settings.default_color_scheme
+  endif
+
+  case target_color_scheme
+    when 'primary'
+      assign current_color_scheme = 'primary'
+    when 'secondary'
+      assign current_color_scheme = 'secondary'
+    when 'custom-1'
+      assign current_color_scheme = 'custom_1'
+    when 'custom-2'
+      assign current_color_scheme = 'custom_2'
+    when 'custom-3'
+      assign current_color_scheme = 'custom_3'
+  endcase
+
+  assign key = current_color_scheme | append: '_background_color'
+  assign section_background_color = settings[key] | downcase
+-%}
+
+{%- if product != blank and product_list != blank -%}
+  <div
+    class='product-variant-picker theme-with-size{{ swatch_size }}-swatch-in-product-section {% if swatch_type contains 'dropdown' %} product-variant-picker--with-dropdown-options {% endif %}'
+    {{ block.shopify_attributes }}
+  >
+    <div class='product-variant-picker__list'>
+      {% if swatch_type contains 'dropdown' %}
+        <div>
+          <div class='product-variant-picker__option-label heading-font-family'>
+            {{ option_label }}
+          </div>
+
+          <dropdown-opener
+            class='variant-picker-dropdown__toggle variant-picker-dropdown__toggle--with-color-swatch {% if swatch_type == 'dropdown-underline' %} variant-picker-dropdown__toggle--underline {% elsif swatch_type == 'dropdown-outline' %} variant-picker-dropdown__toggle--outline {% elsif swatch_type == 'dropdown-solid' %} variant-picker-dropdown__toggle--solid {% endif %}'
+            data-aria-expanded='false'
+            data-float-element-id='product-options-block-dropdown-{{ sectionId }}-{{ product.id }}-{{ option.position }}-{{ forloop.index0 }}'
+            tabindex='0'
+          >
+            <div class='variant-picker-dropdown__toggle-label'>
+              {%- liquid
+                assign is_image = false
+
+                assign sibling_value_metafield = options.metafield_sibling_value
+                assign sibling_value_metafield_splitted = sibling_value_metafield | split: '.'
+                assign sibling_value_metafield_namespace = sibling_value_metafield_splitted[0]
+                assign sibling_value_metafield_key = sibling_value_metafield_splitted[1]
+                assign sibling_value = product.metafields[sibling_value_metafield_namespace][sibling_value_metafield_key].value | strip
+                assign sibling_value_downcase = sibling_value | downcase
+                assign sibling_value_for_swatch = sibling_value_downcase
+
+                for pattern in swatch_patterns
+                  assign config = pattern | split: '::'
+                  assign pattern_label_downcase = config[0] | downcase | strip
+                  assign pattern_value = config[1]
+
+                  if pattern_label_downcase == sibling_value_downcase
+                    unless pattern_value contains 'http'
+                      if pattern_value contains '.png' or pattern_value contains '.jp'
+                        assign sibling_value_for_swatch = pattern_value
+                        assign is_image = true
+                      endif
+                    endunless
+                  endif
+                endfor
+              -%}
+
+              <shape-swatch
+                data-color='{{ sibling_value_downcase }}'
+                data-section-background='{{ section_background_color | strip }}'
+                data-colors-patterns='{{ swatch_patterns }}'
+                class='color-swatch variant-picker-dropdown__color-swatch {% if swatch_shape == 'round' %} color-swatch--round {% else %} color-swatch--square {% endif %} '
+                style='{% if is_image %} --gsc-color-swatch-value: url({{ sibling_value_for_swatch | file_img_url: "200x" }}); {% endif %}'
+                {% if is_image %}
+                  is-image
+                {% endif %}
+              ></shape-swatch>
+
+              <span>{{ sibling_value }}</span>
+            </div>
+            {%- render 'icon', icon_name: 'chevron', class: 'variant-picker-dropdown__chevron' -%}
+          </dropdown-opener>
+          <float-element
+            class='variant-picker-dropdown {% if swatch_type == 'dropdown-underline' %} variant-picker-dropdown--underline {% endif %}'
+            aria-hidden='true'
+            id='product-options-block-dropdown-{{ sectionId }}-{{ product.id }}-{{ option.position }}-{{ forloop.index0 }}'
+            data-placement='bottom-start'
+            data-main-axis-offset='{% if settings.round_level != "0" %} 8{% else %} 0{% endif %}'
+          >
+            <template data-float-element-template='product-options-block-dropdown-{{ sectionId }}-{{ product.id }}-{{ option.position }}-{{ forloop.index0 }}'>
+              <div class='variant-picker-dropdown__body'>
+                {% for product in product_list %}
+                  {%- liquid
+                    assign is_image = false
+
+                    assign sibling_value_metafield = options.metafield_sibling_value
+                    assign sibling_value_metafield_splitted = sibling_value_metafield | split: '.'
+                    assign sibling_value_metafield_namespace = sibling_value_metafield_splitted[0]
+                    assign sibling_value_metafield_key = sibling_value_metafield_splitted[1]
+                    assign sibling_value = product.metafields[sibling_value_metafield_namespace][sibling_value_metafield_key].value | strip
+                    assign sibling_value_downcase = sibling_value | downcase
+                    assign sibling_value_for_swatch = sibling_value_downcase
+
+                    for pattern in swatch_patterns
+                      assign config = pattern | split: '::'
+                      assign pattern_label_downcase = config[0] | downcase | strip
+                      assign pattern_value = config[1]
+
+                      if pattern_label_downcase == sibling_value_downcase
+                        unless pattern_value contains 'http'
+                          if pattern_value contains '.png' or pattern_value contains '.jp'
+                            assign sibling_value_for_swatch = pattern_value
+                            assign is_image = true
+                          endif
+                        endunless
+                      endif
+                    endfor
+                  -%}
+
+                  <a
+                    class='variant-picker-dropdown__item variant-picker-dropdown__item--with-color-swatch {% if product.handle == current_product_handle %} selected {% endif %}'
+                    href='{{ product.url }}'
+                    aria-label='{{ sibling_value_downcase | strip_html | escape }}'
+                  >
+                    <shape-swatch
+                      data-color='{{ sibling_value_downcase }}'
+                      data-section-background='{{ section_background_color | strip }}'
+                      data-colors-patterns='{{ swatch_patterns }}'
+                      class='color-swatch variant-picker-dropdown__color-swatch {% if swatch_shape == 'round' %} color-swatch--round {% else %} color-swatch--square {% endif %} '
+                      style='{% if is_image %} --gsc-color-swatch-value: url({{ sibling_value_for_swatch | file_img_url: "200x" }}); {% endif %}'
+                      {% if is_image %}
+                        is-image
+                      {% endif %}
+                    ></shape-swatch>
+                    <span>{{ sibling_value }}</span>
+                  </a>
+                {% endfor %}
+              </div>
+            </template>
+          </float-element>
+        </div>
+      {% elsif swatch_type contains 'variant-images' or swatch_type == 'swatches' %}
+        {%- liquid
+          assign sibling_value_metafield = options.metafield_sibling_value
+          assign sibling_value_metafield_splitted = sibling_value_metafield | split: '.'
+          assign sibling_value_metafield_namespace = sibling_value_metafield_splitted[0]
+          assign sibling_value_metafield_key = sibling_value_metafield_splitted[1]
+          assign selected_sibling_value = product.metafields[sibling_value_metafield_namespace][sibling_value_metafield_key].value | strip
+        -%}
+
+        <color-swatches-picker>
+          <div class='product-variant-picker__option-label'>
+            <span class='heading-font-family'>{{ option_label }}</span>
+
+            <span
+              class='truncate product-variant-picker__option-active-color body-color'
+              data-color-swatches-picker-active-value
+            >
+              {{- selected_sibling_value -}}
+            </span>
+          </div>
+
+          {%- if swatch_type contains 'variant-images' -%}
+            <div class='image-swatches product-variant-picker__image-swatches'>
+              {% for product in product_list %}
+                {%- liquid
+                  assign is_image = false
+
+                  assign sibling_value_metafield = options.metafield_sibling_value
+                  assign sibling_value_metafield_splitted = sibling_value_metafield | split: '.'
+                  assign sibling_value_metafield_namespace = sibling_value_metafield_splitted[0]
+                  assign sibling_value_metafield_key = sibling_value_metafield_splitted[1]
+                  assign sibling_value = product.metafields[sibling_value_metafield_namespace][sibling_value_metafield_key].value | strip
+                  assign sibling_value_downcase = sibling_value | downcase
+                  assign sibling_value_for_swatch = sibling_value_downcase
+
+                  for pattern in swatch_patterns
+                    assign config = pattern | split: '::'
+                    assign pattern_label_downcase = config[0] | downcase | strip
+                    assign pattern_value = config[1]
+
+                    if pattern_label_downcase == sibling_value_downcase
+                      unless pattern_value contains 'http'
+                        if pattern_value contains '.png' or pattern_value contains '.jp'
+                          assign sibling_value_for_swatch = pattern_value
+                          assign is_image = true
+                        endif
+                      endunless
+                    endif
+                  endfor
+                -%}
+
+                <a
+                  class='image-swatches__item  image-swatches__item--{{ swatch_shape }} {% if product.handle == current_product_handle %} selected {% endif %}'
+                  href='{{ product.url }}'
+                  aria-label='{{ sibling_value_downcase | strip_html | escape }}'
+                  data-color-swatches-picker-label
+                  data-value='{{ sibling_value }}'
+                >
+                  {%- if product.featured_image != blank -%}
+                    <div class='image-swatches__item-body-wrapper {% if enable_darken_mode %} multiply-mode {% endif %} image-swatches__item-body-wrapper--{{ swatch_shape }}'>
+                      <img
+                        {% render 'image-attributes',
+                          image: product.featured_image,
+                          size: 'small',
+                          is_multiply_target: enable_darken_mode,
+                          class: 'image-swatches__item-body'
+                        %}
+                      >
+                      <div class='image-swatches__item-line'></div>
+                    </div>
+
+                  {%- else -%}
+                    <div class='image-swatches__item-body-wrapper image-swatches__item-body-wrapper--{{ swatch_shape }}'>
+                      {% render 'icon-color-image-placeholder', class: 'image-swatches__item-body' %}
+                    </div>
+                  {%- endif -%}
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class='product-variant-picker__shape-swatches'>
+              {% for product in product_list %}
+                {%- liquid
+                  assign is_image = false
+
+                  assign sibling_value_metafield = options.metafield_sibling_value
+                  assign sibling_value_metafield_splitted = sibling_value_metafield | split: '.'
+                  assign sibling_value_metafield_namespace = sibling_value_metafield_splitted[0]
+                  assign sibling_value_metafield_key = sibling_value_metafield_splitted[1]
+                  assign sibling_value = product.metafields[sibling_value_metafield_namespace][sibling_value_metafield_key].value | strip
+                  assign sibling_value_downcase = sibling_value | downcase
+                  assign sibling_value_for_swatch = sibling_value_downcase
+
+                  for pattern in swatch_patterns
+                    assign config = pattern | split: '::'
+                    assign pattern_label_downcase = config[0] | downcase | strip
+                    assign pattern_value = config[1]
+
+                    if pattern_label_downcase == sibling_value_downcase
+                      unless pattern_value contains 'http'
+                        if pattern_value contains '.png' or pattern_value contains '.jp'
+                          assign sibling_value_for_swatch = pattern_value
+                          assign is_image = true
+                        endif
+                      endunless
+                    endif
+                  endfor
+                -%}
+
+                <a
+                  class='color-swatch-select-parent {% if product.handle == current_product_handle %} selected {% endif %}'
+                  href='{{ product.url }}'
+                  aria-label='{{ sibling_value_downcase | strip_html | escape }}'
+                  data-color-swatches-picker-label
+                  data-value='{{ sibling_value }}'
+                >
+                  <shape-swatch
+                    data-color='{{ sibling_value_downcase }}'
+                    data-section-background='{{ section_background_color | strip }}'
+                    data-colors-patterns='{{ swatch_patterns }}'
+                    class='color-swatch color-swatch--{{ swatch_shape }}'
+                    style='{% if is_image %} --gsc-color-swatch-value: url({{ sibling_value_for_swatch | file_img_url: "200x" }}); {% endif %}'
+                    {% if is_image %}
+                      is-image
+                    {% endif %}
+                  >
+                    <div class='color-swatch__line'></div>
+                  </shape-swatch>
+                </a>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </color-swatches-picker>
+      {% else %}
+        <div>
+          <div class='product-variant-picker__option-label heading-font-family'>
+            {{ option_label }}
+          </div>
+
+          <div class='product-variant-picker__pill-list'>
+            {% for product in product_list %}
+              {%- liquid
+                assign is_image = false
+
+                assign sibling_value_metafield = options.metafield_sibling_value
+                assign sibling_value_metafield_splitted = sibling_value_metafield | split: '.'
+                assign sibling_value_metafield_namespace = sibling_value_metafield_splitted[0]
+                assign sibling_value_metafield_key = sibling_value_metafield_splitted[1]
+                assign sibling_value = product.metafields[sibling_value_metafield_namespace][sibling_value_metafield_key].value | strip
+                assign sibling_value_downcase = sibling_value | downcase
+                assign sibling_value_for_swatch = sibling_value_downcase
+
+                for pattern in swatch_patterns
+                  assign config = pattern | split: '::'
+                  assign pattern_label_downcase = config[0] | downcase | strip
+                  assign pattern_value = config[1]
+
+                  if pattern_label_downcase == sibling_value_downcase
+                    unless pattern_value contains 'http'
+                      if pattern_value contains '.png' or pattern_value contains '.jp'
+                        assign sibling_value_for_swatch = pattern_value
+                        assign is_image = true
+                      endif
+                    endunless
+                  endif
+                endfor
+              -%}
+
+              <div>
+                <a
+                  class='pill pill--large pill--with-color-swatch-in-product-section {% if swatch_type == 'button-outline' %} pill--outline {% endif %} {% if swatch_type == 'button-solid' %} pill--solid {% endif %} {% if swatch_type == 'button-underline' %} pill--underline {% endif %} {% if product.handle == current_product_handle %} selected {% endif %}'
+                  href='{{ product.url }}'
+                  aria-label='{{ sibling_value_downcase | strip_html | escape }}'
+                >
+                  <shape-swatch
+                    data-color='{{ sibling_value_downcase }}'
+                    data-section-background='{{ section_background_color | strip }}'
+                    data-colors-patterns='{{ swatch_patterns }}'
+                    class='color-swatch pill__color-swatch {% if swatch_shape == 'round' %} color-swatch--round {% else %} color-swatch--square {% endif %}'
+                    style='{% if is_image %} --gsc-color-swatch-value: url({{ sibling_value_for_swatch | file_img_url: "200x" }}); {% endif %}'
+                    {% if is_image %}
+                      is-image
+                    {% endif %}
+                  ></shape-swatch>
+                  <span class='pill__label'>{{ sibling_value }}</span>
+                </a>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{%- endif -%}

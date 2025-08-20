@@ -1,0 +1,277 @@
+{%- liquid
+  assign used_fonts = ''
+
+  unless used_fonts contains settings.body_font_family.family
+    assign body_font_light = settings.body_font_family | font_modify: 'weight', '300'
+    assign body_font_regular = settings.body_font_family | font_modify: 'weight', '400'
+    assign body_font_medium = settings.body_font_family | font_modify: 'weight', '500'
+    assign body_font_semibold = settings.body_font_family | font_modify: 'weight', '600'
+    assign body_font_bold = settings.body_font_family | font_modify: 'weight', '700'
+
+    assign body_font_light_italic = body_font_light | font_modify: 'style', 'italic'
+    assign body_font_regular_italic = body_font_regular | font_modify: 'style', 'italic'
+    assign body_font_medium_italic = body_font_medium | font_modify: 'style', 'italic'
+    assign body_font_semibold_italic = body_font_semibold | font_modify: 'style', 'italic'
+    assign body_font_bold_italic = body_font_bold | font_modify: 'style', 'italic'
+
+    assign used_fonts = used_fonts | append: '|BodyFont: ' | append: settings.body_font_family.family
+  endunless
+
+  unless used_fonts contains settings.heading_font_family.family
+    assign header_font_light = settings.heading_font_family | font_modify: 'weight', '300'
+    assign header_font_regular = settings.heading_font_family | font_modify: 'weight', '400'
+    assign header_font_medium = settings.heading_font_family | font_modify: 'weight', '500'
+    assign header_font_semibold = settings.heading_font_family | font_modify: 'weight', '600'
+    assign header_font_bold = settings.heading_font_family | font_modify: 'weight', '700'
+
+    assign header_font_light_italic = header_font_light | font_modify: 'style', 'italic'
+    assign header_font_regular_italic = header_font_regular | font_modify: 'style', 'italic'
+    assign header_font_medium_italic = header_font_medium | font_modify: 'style', 'italic'
+    assign header_font_semibold_italic = header_font_semibold | font_modify: 'style', 'italic'
+    assign header_font_bold_italic = header_font_bold | font_modify: 'style', 'italic'
+
+    assign used_fonts = used_fonts | append: '|HeadingFont: ' | append: settings.heading_font_family.family
+  endunless
+
+  unless used_fonts contains settings.product_card_font_family.family
+    assign product_card_title_font_light = settings.product_card_font_family | font_modify: 'weight', '300'
+    assign product_card_title_font_regular = settings.product_card_font_family | font_modify: 'weight', '400'
+    assign product_card_title_font_medium = settings.product_card_font_family | font_modify: 'weight', '500'
+    assign product_card_title_font_semibold = settings.product_card_font_family | font_modify: 'weight', '600'
+    assign product_card_title_font_bold = settings.product_card_font_family | font_modify: 'weight', '700'
+
+    assign product_card_title_font_light_italic = product_card_title_font_light | font_modify: 'style', 'italic'
+    assign product_card_title_font_regular_italic = product_card_title_font_regular | font_modify: 'style', 'italic'
+    assign product_card_title_font_medium_italic = product_card_title_font_medium | font_modify: 'style', 'italic'
+    assign product_card_title_font_semibold_italic = product_card_title_font_semibold | font_modify: 'style', 'italic'
+    assign product_card_title_font_bold_italic = product_card_title_font_bold | font_modify: 'style', 'italic'
+
+    assign used_fonts = used_fonts | append: '|ProductCardFont: ' | append: settings.product_card_font_family.family
+  endunless
+
+  unless used_fonts contains settings.product_card_price_font_family.family
+    assign product_card_price_font_light = settings.product_card_price_font_family | font_modify: 'weight', '300'
+    assign product_card_price_font_regular = settings.product_card_price_font_family | font_modify: 'weight', '400'
+    assign product_card_price_font_medium = settings.product_card_price_font_family | font_modify: 'weight', '500'
+    assign product_card_price_font_semibold = settings.product_card_price_font_family | font_modify: 'weight', '600'
+    assign product_card_price_font_bold = settings.product_card_price_font_family | font_modify: 'weight', '700'
+
+    assign product_card_price_font_light_italic = product_card_price_font_light | font_modify: 'style', 'italic'
+    assign product_card_price_font_regular_italic = product_card_price_font_regular | font_modify: 'style', 'italic'
+    assign product_card_price_font_medium_italic = product_card_price_font_medium | font_modify: 'style', 'italic'
+    assign product_card_price_font_semibold_italic = product_card_price_font_semibold | font_modify: 'style', 'italic'
+    assign product_card_price_font_bold_italic = product_card_price_font_bold | font_modify: 'style', 'italic'
+
+    assign used_fonts = used_fonts | append: '|ProductCardPriceFont: ' | append: settings.product_card_price_font_family.family
+  endunless
+
+  unless used_fonts contains settings.menu_font_family.family
+    assign menu_font_light = settings.menu_font_family | font_modify: 'weight', '300'
+    assign menu_font_regular = settings.menu_font_family | font_modify: 'weight', '400'
+    assign menu_font_medium = settings.menu_font_family | font_modify: 'weight', '500'
+    assign menu_font_semibold = settings.menu_font_family | font_modify: 'weight', '600'
+    assign menu_font_bold = settings.menu_font_family | font_modify: 'weight', '700'
+
+    assign menu_font_light_italic = menu_font_light | font_modify: 'style', 'italic'
+    assign menu_font_regular_italic = menu_font_regular | font_modify: 'style', 'italic'
+    assign menu_font_medium_italic = menu_font_medium | font_modify: 'style', 'italic'
+    assign menu_font_semibold_italic = menu_font_semibold | font_modify: 'style', 'italic'
+    assign menu_font_bold_italic = menu_font_bold | font_modify: 'style', 'italic'
+
+    assign used_fonts = used_fonts | append: '|MenuFont: ' | append: settings.menu_font_family.family
+  endunless
+
+  unless used_fonts contains settings.header_icons_font_family.family
+    assign header_icons_font_light = settings.header_icons_font_family | font_modify: 'weight', '300'
+    assign header_icons_font_regular = settings.header_icons_font_family | font_modify: 'weight', '400'
+    assign header_icons_font_medium = settings.header_icons_font_family | font_modify: 'weight', '500'
+    assign header_icons_font_semibold = settings.header_icons_font_family | font_modify: 'weight', '600'
+    assign header_icons_font_bold = settings.header_icons_font_family | font_modify: 'weight', '700'
+
+    assign header_icons_font_light_italic = header_icons_font_light | font_modify: 'style', 'italic'
+    assign header_icons_font_regular_italic = header_icons_font_regular | font_modify: 'style', 'italic'
+    assign header_icons_font_medium_italic = header_icons_font_medium | font_modify: 'style', 'italic'
+    assign header_icons_font_semibold_italic = header_icons_font_semibold | font_modify: 'style', 'italic'
+    assign header_icons_font_bold_italic = header_icons_font_bold | font_modify: 'style', 'italic'
+
+    assign used_fonts = used_fonts | append: '|HeaderIconsFont: ' | append: settings.header_icons_font_family.family
+  endunless
+
+  unless used_fonts contains settings.button_font_family.family
+    assign button_font_light = settings.button_font_family | font_modify: 'weight', '300'
+    assign button_font_regular = settings.button_font_family | font_modify: 'weight', '400'
+    assign button_font_medium = settings.button_font_family | font_modify: 'weight', '500'
+    assign button_font_semibold = settings.button_font_family | font_modify: 'weight', '600'
+    assign button_font_bold = settings.buttin_font_family | font_modify: 'weight', '700'
+
+    assign button_font_light_italic = button_font_light | font_modify: 'style', 'italic'
+    assign button_font_regular_italic = button_font_regular | font_modify: 'style', 'italic'
+    assign button_font_medium_italic = button_font_medium | font_modify: 'style', 'italic'
+    assign button_font_semibold_italic = button_font_semibold | font_modify: 'style', 'italic'
+    assign button_font_bold_italic = button_font_bold | font_modify: 'style', 'italic'
+
+    assign used_fonts = used_fonts | append: '|ButtonFont: ' | append: settings.button_font_family.family
+  endunless
+-%}
+
+{% if used_fonts contains 'BodyFont' %}
+  {%- unless settings.body_font_family.system? -%}
+    <link rel='preload' as='font' href='{{ settings.body_font_family | font_url }}' type='font/woff2' crossorigin>
+  {%- endunless -%}
+
+  {% style %}
+    {{ settings.body_font_family | font_face: font_display: 'swap' }}
+
+    {{ body_font_light | font_face: font_display: 'swap' }}
+    {{ body_font_regular | font_face: font_display: 'swap' }}
+    {{ body_font_medium | font_face: font_display: 'swap' }}
+    {{ body_font_semibold | font_face: font_display: 'swap' }}
+    {{ body_font_bold | font_face: font_display: 'swap' }}
+
+    {{ body_font_light_italic | font_face: font_display: 'swap' }}
+    {{ body_font_regular_italic | font_face: font_display: 'swap' }}
+    {{ body_font_medium_italic | font_face: font_display: 'swap' }}
+    {{ body_font_semibold_italic | font_face: font_display: 'swap' }}
+    {{ body_font_bold_italic | font_face: font_display: 'swap' }}
+  {% endstyle %}
+{% endif %}
+
+{% if used_fonts contains 'HeadingFont' %}
+  {%- unless settings.heading_font_family.system? -%}
+    <link rel='preload' as='font' href='{{ settings.heading_font_family | font_url }}' type='font/woff2' crossorigin>
+  {%- endunless -%}
+
+  {% style %}
+    {{ settings.heading_font_family | font_face: font_display: 'swap' }}
+
+    {{ header_font_light | font_face: font_display: 'swap' }}
+    {{ header_font_regular | font_face: font_display: 'swap' }}
+    {{ header_font_medium | font_face: font_display: 'swap' }}
+    {{ header_font_semibold | font_face: font_display: 'swap' }}
+    {{ header_font_bold | font_face: font_display: 'swap' }}
+
+    {{ header_font_light_italic | font_face: font_display: 'swap' }}
+    {{ header_font_regular_italic | font_face: font_display: 'swap' }}
+    {{ header_font_medium_italic | font_face: font_display: 'swap' }}
+    {{ header_font_semibold_italic | font_face: font_display: 'swap' }}
+    {{ header_font_bold_italic | font_face: font_display: 'swap' }}
+  {% endstyle %}
+{% endif %}
+
+{% if used_fonts contains 'ProductCardFont' %}
+  {%- unless settings.product_card_font_family.system? -%}
+    <link
+      rel='preload'
+      as='font'
+      href='{{ settings.product_card_font_family | font_url }}'
+      type='font/woff2'
+      crossorigin
+    >
+  {%- endunless -%}
+
+  {% style %}
+    {{ product_card_title_font_light | font_face: font_display: 'swap' }}
+    {{ product_card_title_font_regular | font_face: font_display: 'swap' }}
+    {{ product_card_title_font_medium | font_face: font_display: 'swap' }}
+    {{ product_card_title_font_semibold | font_face: font_display: 'swap' }}
+    {{ product_card_title_font_bold | font_face: font_display: 'swap' }}
+
+    {{ product_card_title_font_light_italic | font_face: font_display: 'swap' }}
+    {{ product_card_title_font_regular_italic | font_face: font_display: 'swap' }}
+    {{ product_card_title_font_medium_italic | font_face: font_display: 'swap' }}
+    {{ product_card_title_font_semibold_italic | font_face: font_display: 'swap' }}
+    {{ product_card_title_font_bold_italic | font_face: font_display: 'swap' }}
+  {% endstyle %}
+{% endif %}
+
+{% if used_fonts contains 'ProductCardPriceFont' %}
+  {%- unless settings.product_card_price_font_family.system? -%}
+    <link
+      rel='preload'
+      as='font'
+      href='{{ settings.product_card_price_font_family | font_url }}'
+      type='font/woff2'
+      crossorigin
+    >
+  {%- endunless -%}
+
+  {% style %}
+    {{ product_card_price_font_light | font_face: font_display: 'swap' }}
+    {{ product_card_price_font_regular | font_face: font_display: 'swap' }}
+    {{ product_card_price_font_medium | font_face: font_display: 'swap' }}
+    {{ product_card_price_font_semibold | font_face: font_display: 'swap' }}
+    {{ product_card_price_font_bold | font_face: font_display: 'swap' }}
+
+    {{ product_card_price_font_light_italic | font_face: font_display: 'swap' }}
+    {{ product_card_price_font_regular_italic | font_face: font_display: 'swap' }}
+    {{ product_card_price_font_medium_italic | font_face: font_display: 'swap' }}
+    {{ product_card_price_font_semibold_italic | font_face: font_display: 'swap' }}
+    {{ product_card_price_font_bold_italic | font_face: font_display: 'swap' }}
+  {% endstyle %}
+{% endif %}
+
+{% if used_fonts contains 'MenuFont' %}
+  {%- unless settings.menu_font_family.system? -%}
+    <link rel='preload' as='font' href='{{ settings.menu_font_family | font_url }}' type='font/woff2' crossorigin>
+  {%- endunless -%}
+
+  {% style %}
+    {{ menu_font_light | font_face: font_display: 'swap' }}
+    {{ menu_font_regular | font_face: font_display: 'swap' }}
+    {{ menu_font_medium | font_face: font_display: 'swap' }}
+    {{ menu_font_semibold | font_face: font_display: 'swap' }}
+    {{ menu_font_bold | font_face: font_display: 'swap' }}
+
+    {{ menu_font_light_italic | font_face: font_display: 'swap' }}
+    {{ menu_font_regular_italic | font_face: font_display: 'swap' }}
+    {{ menu_font_medium_italic | font_face: font_display: 'swap' }}
+    {{ menu_font_semibold_italic | font_face: font_display: 'swap' }}
+    {{ menu_font_bold_italic | font_face: font_display: 'swap' }}
+  {% endstyle %}
+{% endif %}
+
+{% if used_fonts contains 'HeaderIconsFont' %}
+  {%- unless settings.header_icons_font_family.system? -%}
+    <link
+      rel='preload'
+      as='font'
+      href='{{ settings.header_icons_font_family | font_url }}'
+      type='font/woff2'
+      crossorigin
+    >
+  {%- endunless -%}
+
+  {% style %}
+    {{ header_icons_font_light | font_face: font_display: 'swap' }}
+    {{ header_icons_font_regular | font_face: font_display: 'swap' }}
+    {{ header_icons_font_medium | font_face: font_display: 'swap' }}
+    {{ header_icons_font_semibold | font_face: font_display: 'swap' }}
+    {{ header_icons_font_bold | font_face: font_display: 'swap' }}
+
+    {{ header_icons_font_light_italic | font_face: font_display: 'swap' }}
+    {{ header_icons_font_regular_italic | font_face: font_display: 'swap' }}
+    {{ header_icons_font_medium_italic | font_face: font_display: 'swap' }}
+    {{ header_icons_font_semibold_italic | font_face: font_display: 'swap' }}
+    {{ header_icons_font_bold_italic | font_face: font_display: 'swap' }}
+  {% endstyle %}
+{% endif %}
+
+{% if used_fonts contains 'ButtonFont' %}
+  {%- unless settings.button_font_family.system? -%}
+    <link rel='preload' as='font' href='{{ settings.button_font_family | font_url }}' type='font/woff2' crossorigin>
+  {%- endunless -%}
+
+  {% style %}
+    {{ button_font_light | font_face: font_display: 'swap' }}
+    {{ button_font_regular | font_face: font_display: 'swap' }}
+    {{ button_font_medium | font_face: font_display: 'swap' }}
+    {{ button_font_semibold | font_face: font_display: 'swap' }}
+    {{ button_font_bold | font_face: font_display: 'swap' }}
+
+    {{ button_font_light_italic | font_face: font_display: 'swap' }}
+    {{ button_font_regular_italic | font_face: font_display: 'swap' }}
+    {{ button_font_medium_italic | font_face: font_display: 'swap' }}
+    {{ button_font_semibold_italic | font_face: font_display: 'swap' }}
+    {{ button_font_bold_italic | font_face: font_display: 'swap' }}
+  {% endstyle %}
+{% endif %}

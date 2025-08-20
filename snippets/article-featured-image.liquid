@@ -1,0 +1,34 @@
+{% liquid
+  assign image = article.image
+  assign img_ratio = block.settings.img_ratio | times: 100
+
+  assign enable_image_zoom_out = settings.enable_image_zoom_out
+
+  assign image_class = 'article__image shape__target'
+  if enable_image_zoom_out
+    assign image_class = image_class | append: ' scroll-trigger animate--zoom-out'
+  endif
+%}
+
+{% capture css %}
+  {% style %}
+    .block-{{ block.id }} {
+        --gsc-img-ratio: {{ img_ratio }}%;
+    }
+  {% endstyle %}
+{% endcapture %}
+
+{% render 'inline-css-minifier', css: css %}
+
+{% if article.image != blank %}
+  <div
+    class='article__image-container container container--{{ block.settings.container_size }} block-{{ block.id }}  {% if section.settings.add_side_paddings == true %} container--with-aside-paddings {% endif %}'
+    {{ block.shopify_attributes }}
+  >
+    <div class='article__image-wrap shape shape--nature'>
+      <img
+        {% render 'image-attributes', image: image, class: image_class %}
+      >
+    </div>
+  </div>
+{% endif %}
