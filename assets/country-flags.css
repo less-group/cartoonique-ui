@@ -1,6 +1,6 @@
 .country-flags {
-  background: -webkit-image-set(url("//cartoonique.com/cdn/shop/t/33/assets/country-flags.png?v=50542320617270684181751309777") 1x, url("//cartoonique.com/cdn/shop/t/33/assets/country-flags-2x.png?v=27699549689552782741751309776") 2x) no-repeat top left;
-  background: image-set(url("//cartoonique.com/cdn/shop/t/33/assets/country-flags.png?v=50542320617270684181751309777") 1x, url("//cartoonique.com/cdn/shop/t/33/assets/country-flags-2x.png?v=27699549689552782741751309776") 2x) no-repeat top left;
+  background: -webkit-image-set(url("//cartoonique.com/cdn/shop/t/28/assets/country-flags.png?v=50542320617270684181746429262") 1x, url("//cartoonique.com/cdn/shop/t/28/assets/country-flags-2x.png?v=27699549689552782741746429262") 2x) no-repeat top left;
+  background: image-set(url("//cartoonique.com/cdn/shop/t/28/assets/country-flags.png?v=50542320617270684181746429262") 1x, url("//cartoonique.com/cdn/shop/t/28/assets/country-flags-2x.png?v=27699549689552782741746429262") 2x) no-repeat top left;
   width: 20px;
   height: 20px;
   flex-shrink: 0;
