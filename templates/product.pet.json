@@ -306,13 +306,13 @@
         "image_thfMBn": {
           "type": "image",
           "settings": {
-            "image": "shopify://shop_images/1_3e89bc0e-ea1d-4f6d-ac62-92d921bd251b.png"
+            "image": "shopify://shop_images/Dog_1.jpg"
           }
         },
         "template--16729789563121__35a80c75-d4b0-4340-9552-75a9f11586de-1681824353e40c4786-0": {
           "type": "image",
           "settings": {
-            "image": "shopify://shop_images/2_159ad383-002a-44cb-aa37-e8e0f9526c01.png"
+            "image": "shopify://shop_images/generation-e58f7467-ef38-4bfe-b014-b6483708463d.png"
           }
         }
       },
@@ -325,7 +325,7 @@
         "container_size": "page-width",
         "content_layout": "left",
         "image_layout": "collage",
-        "img_ratio": 1,
+        "img_ratio": 1.3,
         "rotate_images": false,
         "icon": "none",
         "subheading": "",
