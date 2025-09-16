@@ -9,7 +9,10 @@
   console.log("⭐ Pixar Upload Button Handler initializing...");
 
   // Global state for pet background color selection
-  window.petBackgroundColor = 'pink'; // Default to pink
+  // Only set default if not already set (preserve user selection)
+  if (!window.petBackgroundColor) {
+    window.petBackgroundColor = 'pink'; // Default to pink
+  }
 
   // Function to check for and create instructions popup if needed
   function checkForInstructionsPopup() {
@@ -163,12 +166,12 @@
             <legend style="font-size: 18px; margin-bottom: 15px; color: #333; font-weight: 600;">Choose Background Color:</legend>
             <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;" role="radiogroup" aria-labelledby="background-color-legend">
               <label style="cursor: pointer; display: flex; flex-direction: column; align-items: center;">
-                <input type="radio" name="petBackgroundColor" value="pink" style="position: absolute; opacity: 0;" checked aria-describedby="pink-desc">
+                <input type="radio" name="petBackgroundColor" value="pink" style="position: absolute; opacity: 0;" ${window.petBackgroundColor === 'pink' ? 'checked' : ''} aria-describedby="pink-desc">
                 <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #FF69B4, #FFB6C1); border: 3px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s ease;" aria-hidden="true"></div>
                 <span id="pink-desc" style="font-size: 12px; margin-top: 5px; font-weight: 500;">Pink</span>
               </label>
               <label style="cursor: pointer; display: flex; flex-direction: column; align-items: center;">
-                <input type="radio" name="petBackgroundColor" value="blue" style="position: absolute; opacity: 0;" aria-describedby="blue-desc">
+                <input type="radio" name="petBackgroundColor" value="blue" style="position: absolute; opacity: 0;" ${window.petBackgroundColor === 'blue' ? 'checked' : ''} aria-describedby="blue-desc">
                 <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #4169E1, #87CEEB); border: 3px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s ease;" aria-hidden="true"></div>
                 <span id="blue-desc" style="font-size: 12px; margin-top: 5px; font-weight: 500;">Blue</span>
               </label>

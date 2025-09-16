@@ -1526,6 +1526,13 @@ class ImageProcessingManager {
   handlePetGenerateClick() {
     console.log("🐕 Generate button clicked for pet template");
     
+    // Debug: Log all radio buttons
+    const allColors = document.querySelectorAll('input[name="petBackgroundColor"]');
+    console.log("🐕 All color options found:", allColors.length);
+    allColors.forEach(input => {
+      console.log(`🐕 Color option: ${input.value}, checked: ${input.checked}`);
+    });
+    
     // Validate that a color is selected
     const selectedColor = document.querySelector('input[name="petBackgroundColor"]:checked');
     if (!selectedColor) {
@@ -1536,6 +1543,7 @@ class ImageProcessingManager {
     // Update the global color state
     window.petBackgroundColor = selectedColor.value;
     console.log("🐕 Selected background color:", window.petBackgroundColor);
+    console.log("🐕 Global petBackgroundColor is now:", window.petBackgroundColor);
 
     // Hide the instructions popup
     const instructionsPopup = document.getElementById("pixar-instructions-popup");
@@ -4552,9 +4560,18 @@ class ImageProcessingManager {
         };
         
         // Add background color for pet templates
-        if (window?.isPetTemplate && window?.petBackgroundColor) {
-          payload.backgroundColor = window.petBackgroundColor;
-          console.log("🖼️ Adding background color to payload:", window.petBackgroundColor);
+        if (window?.isPetTemplate) {
+          // Debug logging
+          console.log("🖼️ isPetTemplate:", window.isPetTemplate);
+          console.log("🖼️ Current petBackgroundColor:", window.petBackgroundColor);
+          
+          if (window?.petBackgroundColor) {
+            payload.backgroundColor = window.petBackgroundColor;
+            console.log("🖼️ Adding background color to payload:", window.petBackgroundColor);
+          } else {
+            console.log("🖼️ WARNING: No background color set, using default 'pink'");
+            payload.backgroundColor = 'pink';
+          }
         }
         
         
