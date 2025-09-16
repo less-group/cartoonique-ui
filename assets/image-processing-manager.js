@@ -1422,7 +1422,8 @@ class ImageProcessingManager {
 
     // Create helper text
     const helperText = document.createElement("p");
-    helperText.textContent = "Click on the image to upload a different one";
+    const isMobileView = window.innerWidth < 768;
+    helperText.textContent = isMobileView ? "Click on the image to upload a different one" : "Click on the image to upload a different one";
     helperText.style.cssText = `
       margin: 0 0 15px 0;
       font-size: 12px;
@@ -1480,22 +1481,43 @@ class ImageProcessingManager {
       }
     }
 
+    // Check if we're on mobile
+    const isMobile = window.innerWidth < 768;
+    
     // Update the main title text
     const mainTitle = instructionsPopup.querySelector("h2");
     if (mainTitle) {
       mainTitle.textContent = "CHOOSE YOUR BACKGROUND COLOR";
     }
 
-    // Update instructions text
+    // Update instructions text - simpler on mobile, more detailed on desktop
     const instructionsText = instructionsPopup.querySelector("p");
     if (instructionsText) {
-      instructionsText.textContent = "Your image looks great! You can click on it to change it, or choose a background color and click generate.";
+      if (isMobile) {
+        // Simple text for mobile
+        instructionsText.textContent = "Please upload a clear image containing one dog.";
+      } else {
+        // More detailed for desktop
+        instructionsText.textContent = "Your image looks great! You can click on it to change it, or choose a background color and click generate.";
+      }
     }
 
     // Hide the example images section since we now show the actual uploaded image
     const examplesContainer = instructionsPopup.querySelector("#examples-container");
     if (examplesContainer) {
       examplesContainer.style.display = "none";
+    }
+    
+    // On mobile, also hide the green "GOOD PHOTO EXAMPLES" section if it exists
+    if (isMobile) {
+      const mobileImage = instructionsPopup.querySelector("#mobile-image");
+      if (mobileImage) {
+        // Check if it contains the green examples
+        const greenExamples = mobileImage.querySelector('h3[style*="color: #33CC66"]');
+        if (greenExamples && greenExamples.parentElement) {
+          greenExamples.parentElement.style.display = "none";
+        }
+      }
     }
 
     console.log("🐕 Pet image preview updated successfully");
