@@ -1508,15 +1508,12 @@ class ImageProcessingManager {
       examplesContainer.style.display = "none";
     }
     
-    // On mobile, also hide the green "GOOD PHOTO EXAMPLES" section if it exists
+    // On mobile, hide the entire mobile-image section which contains the green examples
     if (isMobile) {
       const mobileImage = instructionsPopup.querySelector("#mobile-image");
       if (mobileImage) {
-        // Check if it contains the green examples
-        const greenExamples = mobileImage.querySelector('h3[style*="color: #33CC66"]');
-        if (greenExamples && greenExamples.parentElement) {
-          greenExamples.parentElement.style.display = "none";
-        }
+        // Hide the entire mobile-image div which contains the green GOOD PHOTO EXAMPLES
+        mobileImage.style.display = "none";
       }
     }
 
