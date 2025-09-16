@@ -235,6 +235,10 @@ class ImageProcessingManager {
                   "LOADING POPUP: Preventing early hiding of loading popup while processing is active"
                 );
                 loadingPopup.style.display = "block";
+                // Start the animated progress bar
+                if (typeof window.startProgressAnimation === 'function') {
+                  window.startProgressAnimation();
+                }
               }
             }
           });
@@ -569,6 +573,10 @@ class ImageProcessingManager {
             const loadingPopup = document.getElementById("pixar-loading-popup");
             if (loadingPopup) {
               loadingPopup.style.display = "block";
+              // Start the animated progress bar
+              if (typeof window.startProgressAnimation === 'function') {
+                window.startProgressAnimation();
+              }
             }
           }
         }
@@ -990,6 +998,10 @@ class ImageProcessingManager {
               );
               if (loadingPopup) {
                 loadingPopup.style.display = "block";
+                // Start the animated progress bar
+                if (typeof window.startProgressAnimation === 'function') {
+                  window.startProgressAnimation();
+                }
               }
             }
           });
@@ -1008,6 +1020,10 @@ class ImageProcessingManager {
             const loadingPopup = document.getElementById("pixar-loading-popup");
             if (loadingPopup) {
               loadingPopup.style.display = "block";
+              // Start the animated progress bar
+              if (typeof window.startProgressAnimation === 'function') {
+                window.startProgressAnimation();
+              }
             }
           }
         }
@@ -1026,6 +1042,10 @@ class ImageProcessingManager {
         const loadingPopup = document.getElementById("pixar-loading-popup");
         if (loadingPopup) {
           loadingPopup.style.display = "block";
+          // Start the animated progress bar
+          if (typeof window.startProgressAnimation === 'function') {
+            window.startProgressAnimation();
+          }
         }
       }
     }
@@ -1556,6 +1576,10 @@ class ImageProcessingManager {
     if (loadingPopup) {
       loadingPopup.style.display = "block";
       document.body.style.overflow = "hidden";
+      // Start the animated progress bar
+      if (typeof window.startProgressAnimation === 'function') {
+        window.startProgressAnimation();
+      }
     }
 
     // Start the image processing
@@ -2204,6 +2228,10 @@ class ImageProcessingManager {
     const loadingPopup = document.getElementById("pixar-loading-popup");
     if (loadingPopup) {
       loadingPopup.style.display = "block";
+      // Start the animated progress bar
+      if (typeof window.startProgressAnimation === 'function') {
+        window.startProgressAnimation();
+      }
 
       // Update progress text
       const progressText = document.getElementById("pixar-progress-text");
