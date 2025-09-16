@@ -297,13 +297,13 @@ class ResultPopupManager {
             
             </div>
             
-            <div style="text-align: center; margin-top: 10px; margin-bottom: 10px;">
+            <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px; margin-bottom: 10px; flex-wrap: nowrap;">
             ${
               window?.isPetTemplate
-                ? '<button id="pixar-result-revert" style="background-color: #838383; color: white; padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 0 10px; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: background-color 0.2s ease-in-out;">GO BACK</button>'
+                ? '<button id="pixar-result-revert" style="background-color: #838383; color: white; padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: background-color 0.2s ease-in-out; white-space: nowrap;">GO BACK</button>'
                 : ""
             }
-              <button id="pixar-result-continue" style="background-color: #4A7DBD; color: white; padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 0 10px; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: background-color 0.2s ease-in-out;">ADD TO CART</button>
+              <button id="pixar-result-continue" style="background-color: #4A7DBD; color: white; padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: background-color 0.2s ease-in-out; white-space: nowrap;">ADD TO CART</button>
             </div>
           </div>
         </div>
