@@ -230,6 +230,80 @@
       document.body.appendChild(instructionsPopup);
       document.body.appendChild(loadingPopup);
       
+      // Progress animation function - 15 seconds total (10s for 0-90%, 5s for 90-100%)
+      let progressAnimationId = null;
+      let isProgressAnimationActive = false;
+      
+      function startProgressAnimation() {
+        const progressBar = document.getElementById("pixar-progress-bar");
+        const progressText = document.getElementById("pixar-progress-text");
+        
+        if (!progressBar) return;
+        
+        // Reset progress bar
+        progressBar.style.width = "10%";
+        isProgressAnimationActive = true;
+        
+        // Animation parameters
+        const totalDuration = 15000; // 15 seconds total
+        const firstPhaseDuration = 10000; // 10 seconds for 0-90%
+        const secondPhaseDuration = 5000; // 5 seconds for 90-100%
+        const startTime = Date.now();
+        
+        function updateProgress() {
+          // Stop if animation was cancelled
+          if (!isProgressAnimationActive) return;
+          
+          const elapsed = Date.now() - startTime;
+          let progress;
+          
+          if (elapsed < firstPhaseDuration) {
+            // First phase: 0-90% in 10 seconds (linear)
+            progress = (elapsed / firstPhaseDuration) * 90;
+          } else if (elapsed < totalDuration) {
+            // Second phase: 90-100% in 5 seconds (slower)
+            const secondPhaseElapsed = elapsed - firstPhaseDuration;
+            progress = 90 + (secondPhaseElapsed / secondPhaseDuration) * 10;
+          } else {
+            // Complete
+            progress = 100;
+          }
+          
+          // Update progress bar width
+          progressBar.style.width = `${Math.min(progress, 100)}%`;
+          
+          // Update progress text based on progress
+          if (progress < 30) {
+            if (progressText) progressText.textContent = "Preparing your image...";
+          } else if (progress < 60) {
+            if (progressText) progressText.textContent = "Processing your photo...";
+          } else if (progress < 90) {
+            if (progressText) progressText.textContent = "Applying Pixar transformation...";
+          } else if (progress < 100) {
+            if (progressText) progressText.textContent = "Finalizing your portrait...";
+          } else {
+            if (progressText) progressText.textContent = "Complete!";
+          }
+          
+          // Continue animation if not complete
+          if (progress < 100 && isProgressAnimationActive) {
+            progressAnimationId = requestAnimationFrame(updateProgress);
+          }
+        }
+        
+        // Start the animation
+        progressAnimationId = requestAnimationFrame(updateProgress);
+      }
+      
+      // Function to stop the progress animation
+      function stopProgressAnimation() {
+        isProgressAnimationActive = false;
+        if (progressAnimationId) {
+          cancelAnimationFrame(progressAnimationId);
+          progressAnimationId = null;
+        }
+      }
+      
       // Listen for transform complete events
       document.addEventListener('pixar-transform-complete', function(event) {
         console.log('PIXAR-ENHANCED: Transform complete event received', event);
@@ -314,8 +388,8 @@
             
             // Show loading popup immediately
             document.getElementById('pixar-loading-popup').style.display = 'block';
-            document.getElementById('pixar-progress-bar').style.width = '10%';
-            document.getElementById('pixar-progress-text').textContent = 'Preparing your image...';
+            // Start the animated progress bar
+            startProgressAnimation();
             
             // Call original method to do the actual processing
             return originalTransformImage.apply(this, arguments);
@@ -422,8 +496,8 @@
               
               // Show loading popup immediately
               document.getElementById('pixar-loading-popup').style.display = 'block';
-              document.getElementById('pixar-progress-bar').style.width = '10%';
-              document.getElementById('pixar-progress-text').textContent = 'Uploading your image...';
+              // Start the animated progress bar
+              startProgressAnimation();
               
               // Get the selected file
               const selectedFile = event.target.files[0];
