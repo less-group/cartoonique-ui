@@ -101,7 +101,29 @@
         <h2 style="text-align: center; ${window?.isPetTemplate ? 'font-size: 25px;' : 'font-size: 28px;' } margin-bottom: 20px; font-weight: bold;">UPLOAD A PHOTO ${window?.isPetTemplate ? 'OF YOUR DOG' : 'FOR YOUR PIXAR PORTRAIT' }</h2>
 
         <div id="mobile-image">
-            <img  src="https://cdn.shopify.com/s/files/1/0896/3434/1212/files/mobileguideline.png?v=1745400537" alt="Mobile Example" style="width: 100%; height: 100%; object-fit: cover;">
+            ${window?.isPetTemplate ? `
+              <div style="margin-bottom: 20px;">
+                <h3 style="color: #33CC66; text-align: center; font-size: 20px; margin-bottom: 15px; font-weight: bold;">GOOD PHOTO EXAMPLES</h3>
+                <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 10px;">
+                  <div style="text-align: center; width: 45%;">
+                    <div style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 8px; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                      <img src="https://cdn.shopify.com/s/files/1/0896/3434/1212/files/petgood2.jpg?v=1746781545" alt="Clear Example" style="width: 100%; height: 100%; object-fit: cover;">
+                      <div style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">✓</div>
+                    </div>
+                    <p style="font-weight: bold; color: #33CC66; margin: 0; font-size: 14px;">CLEAR</p>
+                  </div>
+                  <div style="text-align: center; width: 45%;">
+                    <div style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 8px; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                      <img src="https://cdn.shopify.com/s/files/1/0896/3434/1212/files/petgood3.jpg?v=1746781545" alt="1 Dog Example" style="width: 100%; height: 100%; object-fit: cover;">
+                      <div style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">✓</div>
+                    </div>
+                    <p style="font-weight: bold; color: #33CC66; margin: 0; font-size: 14px;">1 DOG</p>
+                  </div>
+                </div>
+              </div>
+            ` : `
+              <img src="https://cdn.shopify.com/s/files/1/0896/3434/1212/files/mobileguideline.png?v=1745400537" alt="Mobile Example" style="width: 100%; height: 100%; object-fit: cover;">
+            `}
         </div>
         
         <div id="examples-container" style="margin-bottom: 20px;">
