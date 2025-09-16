@@ -282,6 +282,9 @@
               if (loadingPopup) {
                 loadingPopup.style.display = "block";
                 document.body.style.overflow = "hidden";
+                
+                // Start the 15-second progress animation
+                startProgressAnimation();
               }
 
               // Try to use the centralized method first, if available
@@ -581,6 +584,81 @@
       margin-bottom: 10px;
       height: 50px; /* Match height of Add to cart button */
     `;
+
+    // Global variable to track animation state
+    let progressAnimationId = null;
+    let isProgressAnimationActive = false;
+
+    // Progress animation function - 15 seconds total (10s for 0-90%, 5s for 90-100%)
+    function startProgressAnimation() {
+      const progressBar = document.getElementById("pixar-progress-bar");
+      const progressText = document.getElementById("pixar-progress-text");
+      
+      if (!progressBar) return;
+      
+      // Reset progress bar
+      progressBar.style.width = "10%";
+      isProgressAnimationActive = true;
+      
+      // Animation parameters
+      const totalDuration = 15000; // 15 seconds total
+      const firstPhaseDuration = 10000; // 10 seconds for 0-90%
+      const secondPhaseDuration = 5000; // 5 seconds for 90-100%
+      const startTime = Date.now();
+      
+      function updateProgress() {
+        // Stop if animation was cancelled
+        if (!isProgressAnimationActive) return;
+        
+        const elapsed = Date.now() - startTime;
+        let progress;
+        
+        if (elapsed < firstPhaseDuration) {
+          // First phase: 0-90% in 10 seconds (linear)
+          progress = (elapsed / firstPhaseDuration) * 90;
+        } else if (elapsed < totalDuration) {
+          // Second phase: 90-100% in 5 seconds (slower)
+          const secondPhaseElapsed = elapsed - firstPhaseDuration;
+          progress = 90 + (secondPhaseElapsed / secondPhaseDuration) * 10;
+        } else {
+          // Complete
+          progress = 100;
+        }
+        
+        // Update progress bar width
+        progressBar.style.width = `${Math.min(progress, 100)}%`;
+        
+        // Update progress text based on progress
+        if (progress < 30) {
+          if (progressText) progressText.textContent = "Preparing your image...";
+        } else if (progress < 60) {
+          if (progressText) progressText.textContent = "Processing your photo...";
+        } else if (progress < 90) {
+          if (progressText) progressText.textContent = "Applying Pixar transformation...";
+        } else if (progress < 100) {
+          if (progressText) progressText.textContent = "Finalizing your portrait...";
+        } else {
+          if (progressText) progressText.textContent = "Complete!";
+        }
+        
+        // Continue animation if not complete
+        if (progress < 100 && isProgressAnimationActive) {
+          progressAnimationId = requestAnimationFrame(updateProgress);
+        }
+      }
+      
+      // Start the animation
+      progressAnimationId = requestAnimationFrame(updateProgress);
+    }
+    
+    // Function to stop the progress animation
+    function stopProgressAnimation() {
+      isProgressAnimationActive = false;
+      if (progressAnimationId) {
+        cancelAnimationFrame(progressAnimationId);
+        progressAnimationId = null;
+      }
+    }
 
     // Try to match the current theme's button style
     setTimeout(() => {
@@ -1078,6 +1156,9 @@
         event.detail &&
         event.detail.progress
       ) {
+        // Stop the animation if a real progress event is received
+        stopProgressAnimation();
+        
         // Update progress bar
         progressBar.style.width = `${event.detail.progress}%`;
 
