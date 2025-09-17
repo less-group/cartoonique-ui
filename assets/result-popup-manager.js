@@ -276,21 +276,21 @@ class ResultPopupManager {
                 <!-- Size S -->
                 <div data-size="S" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer; background-color: #f0f5fb;">
                   <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">S</div>
-                  <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$85</div>
+                  <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">£45</div>
                   <div style="font-size: 12px; color: #000000; margin-top: 3px;">20x30"</div>
                 </div>
                 
                 <!-- Size M -->
                 <div data-size="M" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer;">
                   <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">M</div>
-                  <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$130</div>
+                  <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">£55</div>
                   <div style="font-size: 12px; color: #000000; margin-top: 3px;">30x40"</div>
                 </div>
                 
                 <!-- Size L -->
                 <div data-size="L" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer;">
                   <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">L</div>
-                  <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">$190</div>
+                  <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">£70</div>
                   <div style="font-size: 12px; color: #000000; margin-top: 3px;">50x70"</div>
                 </div>
               </div>
