@@ -211,7 +211,7 @@
         
         <p id="pixar-progress-text" style="text-align: center; margin: 20px 0; color: #000000; font-size: 18px; font-weight: 500;">Preparing your image...</p>
         
-        <p id="time-alert" style="text-align: center; margin-top: 15px; color: #000000; font-size: 15px;">Usually takes 2 to 3 minutes.</p>
+        <p id="time-alert" style="text-align: center; margin-top: 15px; color: #000000; font-size: 15px;">Usually takes 10-20 seconds.</p>
       </div>
     `;
 
@@ -589,7 +589,7 @@
     let progressAnimationId = null;
     let isProgressAnimationActive = false;
 
-    // Progress animation function - 15 seconds total (10s for 0-90%, 5s for 90-100%)
+    // Progress animation function - 10 seconds total (7s for 0-90%, 3s for 90-100%)
     function startProgressAnimation() {
       const progressBar = document.getElementById("pixar-progress-bar");
       const progressText = document.getElementById("pixar-progress-text");
@@ -601,9 +601,9 @@
       isProgressAnimationActive = true;
       
       // Animation parameters
-      const totalDuration = 15000; // 15 seconds total
-      const firstPhaseDuration = 10000; // 10 seconds for 0-90%
-      const secondPhaseDuration = 5000; // 5 seconds for 90-100%
+      const totalDuration = 10000; // 10 seconds total
+      const firstPhaseDuration = 7000; // 7 seconds for 0-90%
+      const secondPhaseDuration = 3000; // 3 seconds for 90-100%
       const startTime = Date.now();
       
       function updateProgress() {
@@ -614,10 +614,10 @@
         let progress;
         
         if (elapsed < firstPhaseDuration) {
-          // First phase: 0-90% in 10 seconds (linear)
+          // First phase: 0-90% in 7 seconds (linear)
           progress = (elapsed / firstPhaseDuration) * 90;
         } else if (elapsed < totalDuration) {
-          // Second phase: 90-100% in 5 seconds (slower)
+          // Second phase: 90-100% in 3 seconds (slower)
           const secondPhaseElapsed = elapsed - firstPhaseDuration;
           progress = 90 + (secondPhaseElapsed / secondPhaseDuration) * 10;
         } else {

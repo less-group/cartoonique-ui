@@ -257,7 +257,7 @@
         
         <p id="pixar-progress-text" style="text-align: center; margin: 20px 0; color: #555; font-size: 18px; font-weight: 500;">Preparing your image...</p>
         
-        <p style="text-align: center; margin-top: 15px; color: #777; font-size: 15px;">Usually takes 2 to 3 minutes.</p>
+        <p style="text-align: center; margin-top: 15px; color: #777; font-size: 15px;">Usually takes 10-20 seconds.</p>
       </div>
     `;
     
