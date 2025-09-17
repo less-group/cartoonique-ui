@@ -314,6 +314,99 @@ class ImageProcessingManager {
           // Add the component to the page
           document.body.appendChild(fallbackComponent);
 
+          // Create loading popup for fallback component if it doesn't exist
+          if (!document.getElementById('pixar-loading-popup')) {
+            const loadingPopup = document.createElement('div');
+            loadingPopup.id = 'pixar-loading-popup';
+            loadingPopup.style.cssText = `
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background-color: rgba(255, 255, 255, 0.98);
+              z-index: 99999999;
+              display: none;
+              overflow: auto;
+              padding: 20px;
+              box-sizing: border-box;
+            `;
+            
+            loadingPopup.innerHTML = `
+              <div style="position: relative; max-width: 700px; margin: 100px auto; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.1);">
+                <h3 style="text-align: center; font-size: 26px; margin-bottom: 30px; color: #333; font-weight: bold;">Generating, please wait...</h3>
+                
+                <div style="width: 90%; max-width: 500px; height: 12px; background-color: #f5f5f5; border-radius: 20px; margin: 30px auto; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
+                  <div id="pixar-progress-bar" style="height: 100%; width: 10%; background: linear-gradient(to right, #4a7dbd, #6a9ad0); transition: width 1s ease-in-out; border-radius: 20px;"></div>
+                </div>
+                
+                <p id="pixar-progress-text" style="text-align: center; margin: 20px 0; color: #555; font-size: 18px; font-weight: 500;">Preparing your image...</p>
+                
+                <p style="text-align: center; margin-top: 15px; color: #777; font-size: 15px;">Usually takes 10-20 seconds.</p>
+              </div>
+            `;
+            
+            document.body.appendChild(loadingPopup);
+            
+            // Add progress animation function to window
+            window.startProgressAnimation = function() {
+              const progressBar = document.getElementById('pixar-progress-bar');
+              const progressText = document.getElementById('pixar-progress-text');
+              
+              if (!progressBar) return;
+              
+              progressBar.style.width = '10%';
+              
+              const totalDuration = 10000; // 10 seconds total
+              const firstPhaseDuration = 7000; // 7 seconds for 0-90%
+              const secondPhaseDuration = 3000; // 3 seconds for 90-100%
+              const startTime = Date.now();
+              
+              function updateProgress() {
+                const elapsed = Date.now() - startTime;
+                let progress;
+                
+                if (elapsed < firstPhaseDuration) {
+                  // First phase: 0-90% in 7 seconds (linear)
+                  progress = (elapsed / firstPhaseDuration) * 90;
+                } else if (elapsed < totalDuration) {
+                  // Second phase: 90-100% in 3 seconds (slower)
+                  const secondPhaseElapsed = elapsed - firstPhaseDuration;
+                  progress = 90 + (secondPhaseElapsed / secondPhaseDuration) * 10;
+                } else {
+                  // Complete
+                  progress = 100;
+                }
+                
+                // Update progress bar width
+                progressBar.style.width = Math.min(progress, 100) + '%';
+                
+                // Update progress text based on progress
+                if (progress < 30) {
+                  if (progressText) progressText.textContent = 'Preparing your image...';
+                } else if (progress < 60) {
+                  if (progressText) progressText.textContent = 'Processing your photo...';
+                } else if (progress < 90) {
+                  if (progressText) progressText.textContent = 'Applying Pixar transformation...';
+                } else if (progress < 100) {
+                  if (progressText) progressText.textContent = 'Finalizing your portrait...';
+                } else {
+                  if (progressText) progressText.textContent = 'Complete!';
+                }
+                
+                // Continue animation if not complete
+                if (progress < 100) {
+                  requestAnimationFrame(updateProgress);
+                }
+              }
+              
+              // Start the animation
+              requestAnimationFrame(updateProgress);
+            };
+            
+            console.log('Created loading popup for fallback component');
+          }
+
           // Set this as the pixar component
           this.pixarComponent = fallbackComponent;
           window.pixarComponent = fallbackComponent;
