@@ -25,9 +25,9 @@
     isProgressAnimationActive = true;
     
     // Animation parameters
-    const totalDuration = 15000; // 15 seconds total
-    const firstPhaseDuration = 10000; // 10 seconds for 0-90%
-    const secondPhaseDuration = 5000; // 5 seconds for 90-100%
+    const totalDuration = 10000; // 10 seconds total
+    const firstPhaseDuration = 7000; // 7 seconds for 0-90%
+    const secondPhaseDuration = 3000; // 3 seconds for 90-100%
     const startTime = Date.now();
     
     function updateProgress() {
