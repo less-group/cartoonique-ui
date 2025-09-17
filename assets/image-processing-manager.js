@@ -1672,6 +1672,61 @@ class ImageProcessingManager {
       // Start the animated progress bar
       if (typeof window.startProgressAnimation === 'function') {
         window.startProgressAnimation();
+      } else {
+        // Fallback: Create and start animation if function doesn't exist
+        console.log("🐕 Creating animation function on demand");
+        const progressBar = document.getElementById('pixar-progress-bar');
+        const progressText = document.getElementById('pixar-progress-text');
+        
+        if (progressBar) {
+          progressBar.style.width = '10%';
+          
+          const totalDuration = 10000; // 10 seconds total
+          const firstPhaseDuration = 7000; // 7 seconds for 0-90%
+          const secondPhaseDuration = 3000; // 3 seconds for 90-100%
+          const startTime = Date.now();
+          
+          function updateProgress() {
+            const elapsed = Date.now() - startTime;
+            let progress;
+            
+            if (elapsed < firstPhaseDuration) {
+              // First phase: 0-90% in 7 seconds (linear)
+              progress = (elapsed / firstPhaseDuration) * 90;
+            } else if (elapsed < totalDuration) {
+              // Second phase: 90-100% in 3 seconds (slower)
+              const secondPhaseElapsed = elapsed - firstPhaseDuration;
+              progress = 90 + (secondPhaseElapsed / secondPhaseDuration) * 10;
+            } else {
+              // Complete
+              progress = 100;
+            }
+            
+            // Update progress bar width
+            progressBar.style.width = Math.min(progress, 100) + '%';
+            
+            // Update progress text based on progress
+            if (progress < 30) {
+              if (progressText) progressText.textContent = 'Preparing your image...';
+            } else if (progress < 60) {
+              if (progressText) progressText.textContent = 'Processing your photo...';
+            } else if (progress < 90) {
+              if (progressText) progressText.textContent = 'Applying Pixar transformation...';
+            } else if (progress < 100) {
+              if (progressText) progressText.textContent = 'Finalizing your portrait...';
+            } else {
+              if (progressText) progressText.textContent = 'Complete!';
+            }
+            
+            // Continue animation if not complete
+            if (progress < 100) {
+              requestAnimationFrame(updateProgress);
+            }
+          }
+          
+          // Start the animation
+          requestAnimationFrame(updateProgress);
+        }
       }
     }
 
