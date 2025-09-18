@@ -47,7 +47,7 @@
             "starColor": "",
             "showAllReviews": false,
             "looxOpenFloatingWidget": false,
-            "emptyRatingWidget": false
+            "emptyRatingWidget": true
           }
         },
         "rating_78azpd": {
