@@ -36,7 +36,7 @@
         "show_signup_checkbox": false,
         "signup_checkbox_text": "I agree to the consent rules",
         "add_side_paddings": true,
-        "section_spacing_top": 96,
+        "section_spacing_top": 36,
         "section_spacing_bottom": 96
       }
     }
