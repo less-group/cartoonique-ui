@@ -146,6 +146,7 @@
         },
         "d3d427d0-4e7d-4f81-9057-c64f65a4f183": {
           "type": "variant_picker",
+          "disabled": true,
           "settings": {
             "option_type": "dropdown-underline",
             "show_swatches": false,
