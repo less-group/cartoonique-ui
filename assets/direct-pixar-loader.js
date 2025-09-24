@@ -531,15 +531,36 @@
         console.log('⭐ RunPod processing complete - received response from Railway API:', data);
         
         // Handle successful response
-        // Check for any of the possible image URL fields
-        // Gemini endpoint returns: imageUrl, watermarkedImageUrl, processedImageUrl
-        // Other endpoints return: image, watermarkedImageUrlToShow, processedImageUrl, resultImageUrl
-        const imageUrl = data?.watermarkedImageUrl ||  // Gemini primary watermarked URL
-                        data?.imageUrl ||              // Gemini fallback URL
-                        data?.image || 
-                        data?.watermarkedImageUrlToShow || 
-                        data?.processedImageUrl || 
-                        data?.resultImageUrl;
+        let imageUrl = null;
+        
+        // Check if this is a Gemini response format
+        if (data?.candidates && data.candidates[0]?.content?.parts) {
+          console.log('⭐ Detected Gemini response format');
+          // Look for the image in the parts array
+          const parts = data.candidates[0].content.parts;
+          for (const part of parts) {
+            if (part.inlineData && part.inlineData.data) {
+              // Convert base64 to data URL
+              const mimeType = part.inlineData.mimeType || 'image/png';
+              imageUrl = `data:${mimeType};base64,${part.inlineData.data}`;
+              console.log('⭐ Extracted base64 image from Gemini response, created data URL');
+              break;
+            }
+          }
+        }
+        
+        // Fallback to checking for URL fields in the response
+        if (!imageUrl) {
+          // Check for any of the possible image URL fields
+          // Gemini endpoint returns: imageUrl, watermarkedImageUrl, processedImageUrl
+          // Other endpoints return: image, watermarkedImageUrlToShow, processedImageUrl, resultImageUrl
+          imageUrl = data?.watermarkedImageUrl ||  // Gemini primary watermarked URL
+                          data?.imageUrl ||              // Gemini fallback URL
+                          data?.image || 
+                          data?.watermarkedImageUrlToShow || 
+                          data?.processedImageUrl || 
+                          data?.resultImageUrl;
+        }
                         
         if (data && imageUrl) {
           if (progressBar) progressBar.style.width = '100%';

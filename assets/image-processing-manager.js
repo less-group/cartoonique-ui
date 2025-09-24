@@ -4822,12 +4822,31 @@ class ImageProcessingManager {
           .then((data) => {
             console.log("🖼️ Railway API response:", data);
 
-            // Check if this is a Gemini response (which returns image URLs directly)
-            if (useGeminiEndpoint && data.success && (data.imageUrl || data.watermarkedImageUrl || data.processedImageUrl)) {
+            let imageUrl = null;
+            
+            // Check if this is a Gemini response format with candidates array
+            if (useGeminiEndpoint && data?.candidates && data.candidates[0]?.content?.parts) {
+              console.log("🎨 Gemini Flash 2.5 response with candidates format");
+              // Look for the image in the parts array
+              const parts = data.candidates[0].content.parts;
+              for (const part of parts) {
+                if (part.inlineData && part.inlineData.data) {
+                  // Convert base64 to data URL
+                  const mimeType = part.inlineData.mimeType || 'image/png';
+                  imageUrl = `data:${mimeType};base64,${part.inlineData.data}`;
+                  console.log('🎨 Extracted base64 image from Gemini response, created data URL');
+                  break;
+                }
+              }
+            } else if (useGeminiEndpoint && data.success && (data.imageUrl || data.watermarkedImageUrl || data.processedImageUrl)) {
+              // Fallback to direct URL format if available
               console.log("🎨 Gemini Flash 2.5 response with direct image URLs");
-              
-              // Extract the image URL from Gemini response
-              const imageUrl = data.watermarkedImageUrl || data.processedImageUrl || data.imageUrl;
+              imageUrl = data.watermarkedImageUrl || data.processedImageUrl || data.imageUrl;
+            }
+
+            // Check if this is a Gemini response (which returns image URLs directly)
+            if (useGeminiEndpoint && imageUrl) {
+              console.log("🎨 Gemini Flash 2.5 response processed");
               
               if (imageUrl) {
                 console.log("🎨 Gemini transformation complete, image URL:", imageUrl);
