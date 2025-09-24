@@ -436,48 +436,115 @@ class ResultPopupManager {
       if (revertButton) {
         revertButton.addEventListener("click", (event) => {
           event.preventDefault();
+          console.log("GO BACK button clicked");
+          
+          // Remove body styles
           document.body.removeAttribute("style");
+          
+          // Reset image container styles
           const ParentDivMainImage = document.querySelector(
             ".pixar-image-container"
           );
-
           if (ParentDivMainImage) {
             ParentDivMainImage.removeAttribute("style");
             ParentDivMainImage.classList.remove("pixar-image-container");
           }
 
+          // Restore original main image
           const mainImage = document.querySelector(".pixar-transformed-image");
           if (mainImage) {
-            const srcObj = JSON.parse(mainImage.dataset.originalSrc);
-            const attributeObj = JSON.parse(
-              mainImage.dataset.originalAttributes
-            );
-            const stylesObj = JSON.parse(mainImage.dataset.originalStyles);
+            // Check if we have original data stored
+            if (mainImage.dataset.originalSrc) {
+              const srcObj = JSON.parse(mainImage.dataset.originalSrc);
+              const attributeObj = JSON.parse(
+                mainImage.dataset.originalAttributes
+              );
+              const stylesObj = JSON.parse(mainImage.dataset.originalStyles);
 
-            mainImage.setAttribute("width", attributeObj.width); // or any value you want
-            mainImage.setAttribute("height", attributeObj.height);
+              mainImage.setAttribute("width", attributeObj.width);
+              mainImage.setAttribute("height", attributeObj.height);
 
-            // Set appropriate styling to ensure correct aspect ratio display
-            mainImage.style.objectFit = stylesObj.objectFit;
-            mainImage.style.objectPosition = stylesObj.objectPosition;
-            mainImage.style.width = stylesObj.width;
-            mainImage.style.height = stylesObj.height;
-            mainImage.style.aspectRatio = stylesObj.aspectRatio;
-            mainImage.style.maxWidth = stylesObj.maxWidth;
-            mainImage.style.minWidth = stylesObj.minWidth;
-            mainImage.style.minHeight = stylesObj.minHeight;
-            mainImage.style.maxHeight = stylesObj.maxHeight;
+              // Restore original styling
+              mainImage.style.objectFit = stylesObj.objectFit;
+              mainImage.style.objectPosition = stylesObj.objectPosition;
+              mainImage.style.width = stylesObj.width;
+              mainImage.style.height = stylesObj.height;
+              mainImage.style.aspectRatio = stylesObj.aspectRatio;
+              mainImage.style.maxWidth = stylesObj.maxWidth;
+              mainImage.style.minWidth = stylesObj.minWidth;
+              mainImage.style.minHeight = stylesObj.minHeight;
+              mainImage.style.maxHeight = stylesObj.maxHeight;
 
-            // Update the image source
-            mainImage.setAttribute("src", srcObj.src);
-            mainImage.setAttribute("srcset", srcObj.srcset);
+              // Update the image source
+              mainImage.setAttribute("src", srcObj.src);
+              mainImage.setAttribute("srcset", srcObj.srcset);
+            }
             mainImage.classList.remove("pixar-transformed-image");
           }
 
-          window.imageProcessingManager.showImageCropper();
-          const pixarResultPopup =
-            document.getElementById("pixar-result-popup");
-          pixarResultPopup.remove();
+          // Check if this is a Gemini template (fully processed image)
+          const isGeminiTemplate = window.imageProcessingManager && 
+                                  window.imageProcessingManager.stylizedImageUrl &&
+                                  window.imageProcessingManager.stylizedImageUrl.includes("gemini");
+          
+          if (isGeminiTemplate) {
+            console.log("GO BACK: Gemini template - resetting to upload state");
+            
+            // Reset the image processing manager state
+            if (window.imageProcessingManager) {
+              window.imageProcessingManager.originalImageDataUrl = null;
+              window.imageProcessingManager.croppedImageDataUrl = null;
+              window.imageProcessingManager.transformationComplete = false;
+              window.imageProcessingManager.stylizedImageUrl = null;
+              window.imageProcessingManager.stylizednonImageUrl = null;
+              window.imageProcessingManager.cropComplete = false;
+              window.imageProcessingManager.textProcessingComplete = false;
+              window.imageProcessingManager.isProcessing = false;
+              window.imageProcessingManager.finalProcessingComplete = false;
+              window.imageProcessingManager.jobId = null;
+              window.imageProcessingManager.fileIdentifier = null;
+            }
+            
+            // Reset global Railway tracking variables
+            if (window.railwayJobsStatus) window.railwayJobsStatus = {};
+            if (window.railwayJobsEventDispatched) window.railwayJobsEventDispatched = {};
+            if (window.railwayApiCallsInProgress) window.railwayApiCallsInProgress = {};
+            if (window.railwayApiCallTimestamps) window.railwayApiCallTimestamps = {};
+            
+            // Reset the upload button
+            const uploadContainer = document.getElementById("direct-pixar-loader-container");
+            if (uploadContainer) {
+              const uploadButton = uploadContainer.querySelector("button");
+              if (uploadButton) {
+                // Reset button to initial state
+                uploadButton.textContent = "📸 UPLOAD YOUR PHOTO FIRST";
+                uploadButton.disabled = false;
+                uploadButton.style.backgroundColor = "#4a7dbd";
+              }
+              
+              // Clear the file input
+              const fileInput = uploadContainer.querySelector('input[type="file"]');
+              if (fileInput) {
+                fileInput.value = "";
+              }
+            }
+            
+            // Hide any remaining popups
+            const loadingPopup = document.getElementById("pixar-loading-popup");
+            if (loadingPopup) {
+              loadingPopup.style.display = "none";
+            }
+          } else {
+            // For non-Gemini templates, show the image cropper
+            console.log("GO BACK: Non-Gemini template - showing image cropper");
+            window.imageProcessingManager.showImageCropper();
+          }
+          
+          // Remove the result popup
+          const pixarResultPopup = document.getElementById("pixar-result-popup");
+          if (pixarResultPopup) {
+            pixarResultPopup.remove();
+          }
 
           this.resultPopupShown = false;
         });
