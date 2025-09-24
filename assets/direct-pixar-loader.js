@@ -547,7 +547,11 @@
         
         // Handle successful response
         // Check for any of the possible image URL fields
-        const imageUrl = data?.image || 
+        // Gemini endpoint returns: imageUrl, watermarkedImageUrl, processedImageUrl
+        // Other endpoints return: image, watermarkedImageUrlToShow, processedImageUrl, resultImageUrl
+        const imageUrl = data?.watermarkedImageUrl ||  // Gemini primary watermarked URL
+                        data?.imageUrl ||              // Gemini fallback URL
+                        data?.image || 
                         data?.watermarkedImageUrlToShow || 
                         data?.processedImageUrl || 
                         data?.resultImageUrl;
