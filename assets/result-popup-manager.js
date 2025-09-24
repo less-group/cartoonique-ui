@@ -41,9 +41,12 @@ class ResultPopupManager {
     // Check multiple conditions for pet template
     const isPetTemplate = window.isPetTemplate || 
                          window.template === "product.pet" ||
+                         window.template === "product.pixar-gemini" ||
                          location.href.includes("pet-pixar-portrait") ||
                          location.href.includes("/products/pet") ||
-                         document.querySelector('[data-template="product.pet"]');
+                         location.href.includes("/products/pixar-gemini") ||
+                         document.querySelector('[data-template="product.pet"]') ||
+                         document.querySelector('[data-template="product.pixar-gemini"]');
     
     // Try to get variant IDs from product meta or form data
     const productVariants = this.getProductVariantsFromPage();

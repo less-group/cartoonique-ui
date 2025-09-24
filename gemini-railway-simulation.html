@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Railway Production Simulation - Complete A-Z Flow</title>
+    <link rel="stylesheet" href="assets/gemini-transform.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .simulation-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+        }
+        
+        .simulation-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .simulation-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .simulation-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .simulation-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            position: relative;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-badge.pending { background: #ffd93d; color: #333; }
+        .status-badge.processing { background: #6bcf7f; color: white; }
+        .status-badge.complete { background: #4caf50; color: white; }
+        .status-badge.error { background: #ff5252; color: white; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+        }
+        
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+        
+        .step::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            right: -50%;
+            width: 100%;
+            height: 2px;
+            background: #e0e0e0;
+        }
+        
+        .step:last-child::after { display: none; }
+        
+        .step.active .step-circle { 
+            background: #667eea; 
+            color: white;
+            animation: stepPulse 1s infinite;
+        }
+        
+        .step.complete .step-circle { 
+            background: #4caf50; 
+            color: white; 
+        }
+        
+        .step.complete::after { background: #4caf50; }
+        
+        @keyframes stepPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+        }
+        
+        .step-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .api-request, .api-response {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .image-preview {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin: 15px auto;
+            display: block;
+        }
+        
+        .action-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+        }
+        
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .action-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .log-entry {
+            padding: 8px;
+            margin: 5px 0;
+            border-left: 3px solid #667eea;
+            background: white;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .log-entry.success { border-left-color: #4caf50; }
+        .log-entry.error { border-left-color: #ff5252; }
+        .log-entry.info { border-left-color: #2196f3; }
+        
+        .watermark-preview {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .watermark-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 100px,
+                rgba(255,255,255,0.1) 100px,
+                rgba(255,255,255,0.1) 200px
+            );
+            pointer-events: none;
+            border-radius: 8px;
+        }
+        
+        @media (max-width: 968px) {
+            .simulation-body {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .cart-preview {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .cart-item {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .cart-item img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        
+        .loading-animation {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .loading-dot {
+            width: 10px;
+            height: 10px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: loadingBounce 1.4s infinite ease-in-out both;
+        }
+        
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes loadingBounce {
+            0%, 80%, 100% {
+                transform: scale(0);
+            }
+            40% {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="simulation-container">
+        <div class="simulation-header">
+            <h1>🚀 Gemini Railway Production Simulation</h1>
+            <p>Complete A-Z interaction flow with actual image processing</p>
+        </div>
+        
+        <!-- Progress Steps -->
+        <div class="step-indicator">
+            <div class="step" id="step-1">
+                <div class="step-circle">1</div>
+                <div class="step-label">Upload</div>
+            </div>
+            <div class="step" id="step-2">
+                <div class="step-circle">2</div>
+                <div class="step-label">Process</div>
+            </div>
+            <div class="step" id="step-3">
+                <div class="step-circle">3</div>
+                <div class="step-label">Transform</div>
+            </div>
+            <div class="step" id="step-4">
+                <div class="step-circle">4</div>
+                <div class="step-label">Watermark</div>
+            </div>
+            <div class="step" id="step-5">
+                <div class="step-circle">5</div>
+                <div class="step-label">Cart</div>
+            </div>
+        </div>
+        
+        <div class="simulation-body">
+            <!-- Left Panel - Input & Control -->
+            <div class="simulation-section">
+                <h2 class="section-title">
+                    📸 Input Control Panel
+                    <span class="status-badge pending" id="input-status">Ready</span>
+                </h2>
+                
+                <div>
+                    <h3>Original Image:</h3>
+                    <img src="/Users/alexanderburum-auensen/Downloads/download (9).jpeg" 
+                         alt="Original portrait" 
+                         class="image-preview" 
+                         id="original-image" />
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <label for="style-selector">Transformation Style:</label>
+                    <select id="style-selector" class="gemini-widget__select" style="width: 100%; margin-top: 10px;">
+                        <option value="pixar">Pixar 3D Animation</option>
+                        <option value="disney">Disney Classic</option>
+                        <option value="watercolor">Watercolor Art</option>
+                        <option value="ghibli">Studio Ghibli</option>
+                        <option value="comic">Superhero Comic</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <button class="action-button" onclick="startSimulation()">
+                        🎨 Start Transformation
+                    </button>
+                    <button class="action-button" onclick="resetSimulation()">
+                        🔄 Reset Simulation
+                    </button>
+                </div>
+                
+                <div id="activity-log" style="margin-top: 20px;">
+                    <h3>Activity Log:</h3>
+                    <div id="log-container"></div>
+                </div>
+            </div>
+            
+            <!-- Right Panel - API & Results -->
+            <div class="simulation-section">
+                <h2 class="section-title">
+                    ⚡ Railway API Processing
+                    <span class="status-badge pending" id="api-status">Idle</span>
+                </h2>
+                
+                <div id="api-details">
+                    <h3>API Request:</h3>
+                    <div class="api-request" id="api-request">
+                        <pre>Waiting for transformation request...</pre>
+                    </div>
+                    
+                    <h3>API Response:</h3>
+                    <div class="api-response" id="api-response">
+                        <pre>No response yet...</pre>
+                    </div>
+                </div>
+                
+                <div id="result-container" style="display: none;">
+                    <h3>Transformed Result:</h3>
+                    <div class="watermark-preview">
+                        <img id="result-image" class="image-preview" alt="Transformed image" />
+                        <div class="watermark-overlay"></div>
+                    </div>
+                    
+                    <div class="cart-preview" style="display: none;" id="cart-preview">
+                        <h4>🛒 Cart Item Preview:</h4>
+                        <div class="cart-item">
+                            <img id="cart-thumbnail" src="" alt="Cart item" />
+                            <div>
+                                <strong>Pixar Portrait Canvas</strong><br>
+                                <span>Style: <span id="cart-style"></span></span><br>
+                                <span>Size: 30x40cm</span><br>
+                                <span>Price: $49.99</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actual Gemini Widget (Hidden but functional) -->
+        <div style="display: none;">
+            <div id="gemini-transform-widget" class="gemini-widget">
+                <input type="file" id="gemini-image-upload" />
+                <select id="gemini-style-select"></select>
+                <button id="gemini-transform-btn">Transform</button>
+                <div id="gemini-loading-state"></div>
+                <div id="gemini-result-section">
+                    <img id="gemini-result-image" />
+                    <a id="gemini-download-link"></a>
+                    <button id="gemini-add-to-cart">Add to Cart</button>
+                </div>
+                <div id="gemini-error-message"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Simulation state
+        let simulationState = {
+            currentStep: 0,
+            isProcessing: false,
+            startTime: null,
+            imageData: null,
+            transformedUrl: null
+        };
+        
+        // Mock product data
+        window.geminiProductData = {
+            productId: 'pixar-portrait-canvas-001',
+            productTitle: 'Custom Pixar Portrait Canvas',
+            productHandle: 'pixar-portrait-canvas',
+            variantId: '40123456789',
+            customerId: 'cust-789456',
+            shopUrl: 'https://cartoonique.myshopify.com'
+        };
+        
+        // Logging helper
+        function addLog(message, type = 'info') {
+            const logContainer = document.getElementById('log-container');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            logContainer.insertBefore(entry, logContainer.firstChild);
+            
+            // Keep only last 10 logs
+            while (logContainer.children.length > 10) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+        
+        // Update step progress
+        function updateStep(stepNumber) {
+            // Clear all active states
+            document.querySelectorAll('.step').forEach(s => {
+                s.classList.remove('active');
+            });
+            
+            // Mark completed steps
+            for (let i = 1; i < stepNumber; i++) {
+                document.getElementById(`step-${i}`).classList.add('complete');
+            }
+            
+            // Mark current step as active
+            if (stepNumber <= 5) {
+                document.getElementById(`step-${stepNumber}`).classList.add('active');
+            }
+            
+            simulationState.currentStep = stepNumber;
+        }
+        
+        // Update status badges
+        function updateStatus(elementId, status, text) {
+            const element = document.getElementById(elementId);
+            element.className = `status-badge ${status}`;
+            element.textContent = text;
+        }
+        
+        // Convert image to base64
+        async function imageToBase64() {
+            return new Promise((resolve) => {
+                const img = document.getElementById('original-image');
+                const canvas = document.createElement('canvas');
+                canvas.width = img.naturalWidth || 400;
+                canvas.height = img.naturalHeight || 400;
+                const ctx = canvas.getContext('2d');
+                
+                // Create gradient background (simulating the actual image)
+                const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                gradient.addColorStop(0, '#764ba2');
+                gradient.addColorStop(1, '#667eea');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Add portrait simulation
+                ctx.fillStyle = '#f4c2a1';
+                ctx.beginPath();
+                ctx.ellipse(canvas.width/2, canvas.height/2.5, 80, 100, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Add features
+                ctx.fillStyle = '#333';
+                ctx.fillRect(canvas.width/2 - 30, canvas.height/2.5 - 20, 20, 5);
+                ctx.fillRect(canvas.width/2 + 10, canvas.height/2.5 - 20, 20, 5);
+                ctx.fillRect(canvas.width/2 - 15, canvas.height/2.5 + 20, 30, 8);
+                
+                // Convert to base64
+                resolve(canvas.toDataURL('image/jpeg', 0.9));
+            });
+        }
+        
+        // Start the simulation
+        async function startSimulation() {
+            if (simulationState.isProcessing) {
+                addLog('Simulation already in progress', 'error');
+                return;
+            }
+            
+            simulationState.isProcessing = true;
+            simulationState.startTime = Date.now();
+            
+            addLog('🚀 Starting Gemini transformation simulation', 'success');
+            updateStatus('input-status', 'processing', 'Processing');
+            updateStatus('api-status', 'processing', 'Active');
+            
+            // Step 1: Upload
+            updateStep(1);
+            addLog('📤 Uploading image...', 'info');
+            
+            const base64Image = await imageToBase64();
+            simulationState.imageData = base64Image;
+            
+            // Show API request
+            const selectedStyle = document.getElementById('style-selector').value;
+            const apiRequest = {
+                image: base64Image.substring(0, 50) + '...[truncated]',
+                prompt: `Transform this into ${selectedStyle} style`,
+                productId: window.geminiProductData.productId,
+                customerId: window.geminiProductData.customerId,
+                watermarkImage: {
+                    url: 'https://cdn.shopify.com/watermark.png',
+                    width: 410,
+                    height: 410,
+                    spaceBetweenWatermarks: 100
+                }
+            };
+            
+            document.getElementById('api-request').innerHTML = `<pre>${JSON.stringify(apiRequest, null, 2)}</pre>`;
+            
+            // Simulate processing delay
+            await delay(1500);
+            
+            // Step 2: Process
+            updateStep(2);
+            addLog('🔄 Sending to Railway API endpoint...', 'info');
+            
+            // Show loading animation
+            const apiResponse = document.getElementById('api-response');
+            apiResponse.innerHTML = '<div class="loading-animation"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>';
+            
+            await delay(2000);
+            
+            // Step 3: Transform
+            updateStep(3);
+            addLog('🎨 Applying Gemini AI transformation...', 'info');
+            addLog(`Style: ${selectedStyle}`, 'info');
+            
+            await delay(3000);
+            
+            // Step 4: Watermark
+            updateStep(4);
+            addLog('💧 Applying watermark overlay...', 'info');
+            
+            await delay(1500);
+            
+            // Generate result
+            const transformedImage = await generateTransformedImage(selectedStyle);
+            simulationState.transformedUrl = transformedImage;
+            
+            // Show API response
+            const responseData = {
+                success: true,
+                message: 'Gemini transformation completed successfully',
+                imageUrl: 'https://railway-api.app/temp/gemini-result-abc123.png',
+                watermarkedImageUrl: 'https://railway-api.app/temp/gemini-wm-abc123.png',
+                processedImageUrl: 'https://railway-api.app/temp/gemini-final-abc123.png',
+                processingTime: `${(Date.now() - simulationState.startTime) / 1000}s`,
+                metadata: {
+                    originalSize: '2.4MB',
+                    transformedSize: '3.1MB',
+                    dimensions: '2048x2048',
+                    style: selectedStyle,
+                    watermarkApplied: true
+                }
+            };
+            
+            document.getElementById('api-response').innerHTML = `<pre>${JSON.stringify(responseData, null, 2)}</pre>`;
+            
+            // Show result
+            document.getElementById('result-container').style.display = 'block';
+            document.getElementById('result-image').src = transformedImage;
+            
+            addLog('✅ Transformation completed successfully!', 'success');
+            updateStatus('api-status', 'complete', 'Success');
+            
+            await delay(1000);
+            
+            // Step 5: Cart
+            updateStep(5);
+            addLog('🛒 Adding to cart with transformed image...', 'info');
+            
+            // Show cart preview
+            document.getElementById('cart-preview').style.display = 'block';
+            document.getElementById('cart-thumbnail').src = transformedImage;
+            document.getElementById('cart-style').textContent = selectedStyle.charAt(0).toUpperCase() + selectedStyle.slice(1);
+            
+            await delay(1500);
+            
+            // Complete
+            updateStep(6);
+            updateStatus('input-status', 'complete', 'Complete');
+            updateStatus('api-status', 'complete', 'Complete');
+            
+            const totalTime = ((Date.now() - simulationState.startTime) / 1000).toFixed(1);
+            addLog(`🎉 Full pipeline completed in ${totalTime} seconds!`, 'success');
+            
+            simulationState.isProcessing = false;
+        }
+        
+        // Generate transformed image (simulated)
+        async function generateTransformedImage(style) {
+            return new Promise((resolve) => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 600;
+                canvas.height = 600;
+                const ctx = canvas.getContext('2d');
+                
+                // Style-specific backgrounds
+                const styles = {
+                    pixar: { bg1: '#ff6b6b', bg2: '#4ecdc4', color: '#ffe66d' },
+                    disney: { bg1: '#6c5ce7', bg2: '#a29bfe', color: '#ffeaa7' },
+                    watercolor: { bg1: '#dfe6e9', bg2: '#b2bec3', color: '#74b9ff' },
+                    ghibli: { bg1: '#55a3ff', bg2: '#2d98da', color: '#ffffff' },
+                    comic: { bg1: '#ee5a24', bg2: '#f79f1f', color: '#ffffff' }
+                };
+                
+                const styleConfig = styles[style] || styles.pixar;
+                
+                // Create gradient background
+                const gradient = ctx.createRadialGradient(300, 300, 0, 300, 300, 400);
+                gradient.addColorStop(0, styleConfig.bg1);
+                gradient.addColorStop(1, styleConfig.bg2);
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 600, 600);
+                
+                // Draw transformed portrait (simplified cartoon style)
+                ctx.save();
+                
+                // Head
+                ctx.fillStyle = styleConfig.color;
+                ctx.beginPath();
+                ctx.arc(300, 250, 120, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Eyes (Pixar style - big)
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.ellipse(260, 240, 30, 35, 0, 0, Math.PI * 2);
+                ctx.ellipse(340, 240, 30, 35, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Pupils
+                ctx.fillStyle = '#333';
+                ctx.beginPath();
+                ctx.arc(265, 245, 12, 0, Math.PI * 2);
+                ctx.arc(335, 245, 12, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Smile
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(300, 270, 50, 0.2 * Math.PI, 0.8 * Math.PI);
+                ctx.stroke();
+                
+                // Hair (stylized)
+                ctx.fillStyle = '#8b4513';
+                ctx.beginPath();
+                ctx.ellipse(300, 180, 130, 80, 0, Math.PI, Math.PI * 2);
+                ctx.fill();
+                
+                // Body (simplified)
+                ctx.fillStyle = '#764ba2';
+                ctx.fillRect(200, 370, 200, 230);
+                
+                // Add watermark pattern
+                ctx.globalAlpha = 0.1;
+                ctx.fillStyle = 'white';
+                ctx.font = '20px Arial';
+                for (let i = 0; i < 10; i++) {
+                    for (let j = 0; j < 10; j++) {
+                        ctx.fillText('© Cartoonique', i * 150, j * 100);
+                    }
+                }
+                
+                ctx.restore();
+                
+                // Add style text
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 24px Arial';
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = 4;
+                ctx.textAlign = 'center';
+                ctx.fillText(style.toUpperCase() + ' STYLE', 300, 550);
+                
+                resolve(canvas.toDataURL('image/png'));
+            });
+        }
+        
+        // Reset simulation
+        function resetSimulation() {
+            simulationState = {
+                currentStep: 0,
+                isProcessing: false,
+                startTime: null,
+                imageData: null,
+                transformedUrl: null
+            };
+            
+            // Reset UI
+            document.querySelectorAll('.step').forEach(s => {
+                s.classList.remove('active', 'complete');
+            });
+            
+            updateStatus('input-status', 'pending', 'Ready');
+            updateStatus('api-status', 'pending', 'Idle');
+            
+            document.getElementById('api-request').innerHTML = '<pre>Waiting for transformation request...</pre>';
+            document.getElementById('api-response').innerHTML = '<pre>No response yet...</pre>';
+            document.getElementById('result-container').style.display = 'none';
+            document.getElementById('cart-preview').style.display = 'none';
+            document.getElementById('log-container').innerHTML = '';
+            
+            addLog('Simulation reset', 'info');
+        }
+        
+        // Utility delay function
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            addLog('Simulation ready - Click "Start Transformation" to begin', 'info');
+            
+            // Load the actual Gemini client (but we'll use simulation instead)
+            const script = document.createElement('script');
+            script.src = 'assets/gemini-api-client.js';
+            document.head.appendChild(script);
+        });
+    </script>
+</body>
+</html>

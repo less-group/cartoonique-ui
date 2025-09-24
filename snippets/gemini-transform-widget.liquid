@@ -1,0 +1,102 @@
+<!-- Gemini Transform Widget -->
+<div id="gemini-transform-widget" class="gemini-widget" data-product-id="{{ product.id }}">
+  <div class="gemini-widget__container">
+    <h3 class="gemini-widget__title">Transform Your Photo with AI</h3>
+    
+    <!-- Upload Section -->
+    <div class="gemini-widget__upload-section">
+      <label for="gemini-image-upload" class="gemini-widget__upload-label">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+        </svg>
+        <span>Choose Your Photo</span>
+        <input 
+          type="file" 
+          id="gemini-image-upload" 
+          accept="image/jpeg,image/jpg,image/png,image/webp" 
+          style="display: none;"
+        />
+      </label>
+      <div id="gemini-preview-container" class="gemini-widget__preview"></div>
+    </div>
+    
+    <!-- Style Selection -->
+    <div class="gemini-widget__style-section">
+      <label for="gemini-style-select" class="gemini-widget__label">Choose Style:</label>
+      <select id="gemini-style-select" class="gemini-widget__select">
+        <option value="Transform this into a vibrant Pixar-style 3D cartoon character with big expressive eyes and smooth features">Pixar Animation</option>
+        <option value="Transform this into a Disney animation style with magical and whimsical features">Disney Style</option>
+        <option value="Transform this into a beautiful watercolor painting with soft edges and flowing colors">Watercolor Art</option>
+        <option value="Transform this into a retro 80s cartoon style with bold lines and vibrant colors">Retro 80s</option>
+        <option value="Transform this into a Studio Ghibli anime style with soft features and dreamy atmosphere">Studio Ghibli</option>
+        <option value="Transform this into a comic book superhero style with dramatic poses and bold colors">Superhero Comic</option>
+        <option value="Transform this into a cute chibi anime style with oversized head and tiny body">Chibi Anime</option>
+        <option value="Transform this into a realistic oil painting portrait with rich textures">Oil Painting</option>
+      </select>
+    </div>
+    
+    <!-- Transform Button -->
+    <button 
+      id="gemini-transform-btn" 
+      class="gemini-widget__button gemini-widget__button--primary" 
+      disabled
+    >
+      Transform My Image
+    </button>
+    
+    <!-- Loading State -->
+    <div id="gemini-loading-state" class="gemini-widget__loading" style="display: none;">
+      <div class="gemini-widget__spinner"></div>
+      <p class="gemini-widget__loading-text">Creating your magical transformation...</p>
+      <div class="gemini-widget__progress">
+        <div class="gemini-widget__progress-bar"></div>
+      </div>
+      <p class="gemini-widget__loading-time">This usually takes about 10 seconds</p>
+    </div>
+    
+    <!-- Result Display -->
+    <div id="gemini-result-section" class="gemini-widget__result" style="display: none;">
+      <h4 class="gemini-widget__result-title">Your Transformed Image:</h4>
+      <div class="gemini-widget__result-image-container">
+        <img id="gemini-result-image" alt="Transformed image" />
+      </div>
+      <div class="gemini-widget__result-actions">
+        <a id="gemini-download-link" class="gemini-widget__button gemini-widget__button--secondary" download>
+          Download Image
+        </a>
+        <button id="gemini-add-to-cart" class="gemini-widget__button gemini-widget__button--primary">
+          Add to Cart with This Design
+        </button>
+      </div>
+      <button id="gemini-try-another" class="gemini-widget__button gemini-widget__button--outline">
+        Try Another Style
+      </button>
+    </div>
+    
+    <!-- Error Display -->
+    <div id="gemini-error-message" class="gemini-widget__error" style="display: none;"></div>
+  </div>
+</div>
+
+<!-- Load Gemini API Client -->
+<script src="{{ 'gemini-api-client.js' | asset_url }}" defer></script>
+
+<!-- Load Gemini Styles -->
+{{ 'gemini-transform.css' | asset_url | stylesheet_tag }}
+
+<script>
+  // Initialize widget when DOM is ready
+  document.addEventListener('DOMContentLoaded', function() {
+    // Set product metadata for the widget
+    window.geminiProductData = {
+      productId: '{{ product.id }}',
+      productTitle: {{ product.title | json }},
+      productHandle: '{{ product.handle }}',
+      variantId: '{{ product.selected_or_first_available_variant.id }}',
+      customerId: '{% if customer %}{{ customer.id }}{% endif %}',
+      shopUrl: '{{ shop.url }}'
+    };
+    
+    console.log('[Gemini Widget] Product data initialized:', window.geminiProductData);
+  });
+</script>

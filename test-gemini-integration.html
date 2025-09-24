@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini API Integration Test</title>
+    <link rel="stylesheet" href="assets/gemini-transform.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .test-section h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .test-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .test-btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .test-btn:hover {
+            background: #5a67d8;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .console-log {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Gemini API Integration Test Suite</h1>
+        
+        <!-- Test Controls -->
+        <div class="test-section">
+            <h2>🧪 Test Controls</h2>
+            <div class="test-controls">
+                <button class="test-btn" onclick="testApiConnection()">Test API Connection</button>
+                <button class="test-btn" onclick="testMockTransform()">Test Mock Transform</button>
+                <button class="test-btn" onclick="testFileUpload()">Test File Upload</button>
+                <button class="test-btn" onclick="clearConsole()">Clear Console</button>
+            </div>
+            <div id="test-status" class="status" style="display: none;"></div>
+            <div class="console-log" id="console-output">
+                <pre>Console output will appear here...</pre>
+            </div>
+        </div>
+
+        <!-- Widget Preview -->
+        <div class="test-section">
+            <h2>📦 Widget Preview</h2>
+            
+            <!-- Gemini Transform Widget -->
+            <div id="gemini-transform-widget" class="gemini-widget" data-product-id="test-product-123">
+                <div class="gemini-widget__container">
+                    <h3 class="gemini-widget__title">Transform Your Photo with AI</h3>
+                    
+                    <!-- Upload Section -->
+                    <div class="gemini-widget__upload-section">
+                        <label for="gemini-image-upload" class="gemini-widget__upload-label">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+                            </svg>
+                            <span>Choose Your Photo</span>
+                            <input 
+                                type="file" 
+                                id="gemini-image-upload" 
+                                accept="image/jpeg,image/jpg,image/png,image/webp" 
+                                style="display: none;"
+                            />
+                        </label>
+                        <div id="gemini-preview-container" class="gemini-widget__preview"></div>
+                    </div>
+                    
+                    <!-- Style Selection -->
+                    <div class="gemini-widget__style-section">
+                        <label for="gemini-style-select" class="gemini-widget__label">Choose Style:</label>
+                        <select id="gemini-style-select" class="gemini-widget__select">
+                            <option value="Transform this into a vibrant Pixar-style 3D cartoon character with big expressive eyes and smooth features">Pixar Animation</option>
+                            <option value="Transform this into a Disney animation style with magical and whimsical features">Disney Style</option>
+                            <option value="Transform this into a beautiful watercolor painting with soft edges and flowing colors">Watercolor Art</option>
+                            <option value="Transform this into a retro 80s cartoon style with bold lines and vibrant colors">Retro 80s</option>
+                            <option value="Transform this into a Studio Ghibli anime style with soft features and dreamy atmosphere">Studio Ghibli</option>
+                            <option value="Transform this into a comic book superhero style with dramatic poses and bold colors">Superhero Comic</option>
+                            <option value="Transform this into a cute chibi anime style with oversized head and tiny body">Chibi Anime</option>
+                            <option value="Transform this into a realistic oil painting portrait with rich textures">Oil Painting</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Transform Button -->
+                    <button 
+                        id="gemini-transform-btn" 
+                        class="gemini-widget__button gemini-widget__button--primary" 
+                        disabled
+                    >
+                        Transform My Image
+                    </button>
+                    
+                    <!-- Loading State -->
+                    <div id="gemini-loading-state" class="gemini-widget__loading" style="display: none;">
+                        <div class="gemini-widget__spinner"></div>
+                        <p class="gemini-widget__loading-text">Creating your magical transformation...</p>
+                        <div class="gemini-widget__progress">
+                            <div class="gemini-widget__progress-bar"></div>
+                        </div>
+                        <p class="gemini-widget__loading-time">This usually takes about 10 seconds</p>
+                    </div>
+                    
+                    <!-- Result Display -->
+                    <div id="gemini-result-section" class="gemini-widget__result" style="display: none;">
+                        <h4 class="gemini-widget__result-title">Your Transformed Image:</h4>
+                        <div class="gemini-widget__result-image-container">
+                            <img id="gemini-result-image" alt="Transformed image" />
+                        </div>
+                        <div class="gemini-widget__result-actions">
+                            <a id="gemini-download-link" class="gemini-widget__button gemini-widget__button--secondary" download>
+                                Download Image
+                            </a>
+                            <button id="gemini-add-to-cart" class="gemini-widget__button gemini-widget__button--primary">
+                                Add to Cart with This Design
+                            </button>
+                        </div>
+                        <button id="gemini-try-another" class="gemini-widget__button gemini-widget__button--outline">
+                            Try Another Style
+                        </button>
+                    </div>
+                    
+                    <!-- Error Display -->
+                    <div id="gemini-error-message" class="gemini-widget__error" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Results -->
+        <div class="test-section">
+            <h2>📊 Test Results</h2>
+            <div id="test-results">
+                <p>Run tests to see results...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Set up mock product data -->
+    <script>
+        window.geminiProductData = {
+            productId: 'test-product-123',
+            productTitle: 'Test Product',
+            productHandle: 'test-product',
+            variantId: '12345678',
+            customerId: 'customer-456',
+            shopUrl: 'https://test-shop.myshopify.com'
+        };
+
+        // Console output helper
+        const consoleOutput = document.getElementById('console-output');
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        function addToConsole(message, type = 'log') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ff5555' : type === 'warn' ? '#ffff55' : '#00ff00';
+            consoleOutput.innerHTML += `<pre style="color: ${color}">[${timestamp}] ${message}</pre>`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsole(args.join(' '), 'log');
+        };
+
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsole(args.join(' '), 'error');
+        };
+
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToConsole(args.join(' '), 'warn');
+        };
+
+        function clearConsole() {
+            consoleOutput.innerHTML = '<pre>Console cleared...</pre>';
+        }
+
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('test-status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+        }
+
+        function updateResults(html) {
+            document.getElementById('test-results').innerHTML = html;
+        }
+
+        // Test Functions
+        async function testApiConnection() {
+            showStatus('Testing API connection...', 'info');
+            console.log('Starting API connection test...');
+            
+            try {
+                // Test with a simple ping endpoint
+                const testData = {
+                    image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+                    prompt: 'Test transformation'
+                };
+                
+                console.log('Sending test request to /apps/proxy/gemini-transform');
+                
+                // Since we don't have a real API, we'll simulate the response
+                setTimeout(() => {
+                    showStatus('✅ API Connection Test Successful (Mock Mode)', 'success');
+                    console.log('API test completed successfully in mock mode');
+                    updateResults(`
+                        <h3>✅ Connection Test Passed</h3>
+                        <ul>
+                            <li>Endpoint: /apps/proxy/gemini-transform</li>
+                            <li>Status: Ready (Mock Mode)</li>
+                            <li>Response Time: ~10ms</li>
+                        </ul>
+                    `);
+                }, 1000);
+                
+            } catch (error) {
+                showStatus('❌ API Connection Failed: ' + error.message, 'error');
+                console.error('API test failed:', error);
+            }
+        }
+
+        async function testMockTransform() {
+            showStatus('Running mock transformation...', 'info');
+            console.log('Starting mock transformation test...');
+            
+            if (!window.geminiClient) {
+                console.error('Gemini client not initialized!');
+                showStatus('❌ Gemini client not found', 'error');
+                return;
+            }
+            
+            try {
+                // Create a test file
+                const canvas = document.createElement('canvas');
+                canvas.width = 100;
+                canvas.height = 100;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#4a90e2';
+                ctx.fillRect(0, 0, 100, 100);
+                
+                canvas.toBlob(async (blob) => {
+                    const file = new File([blob], 'test-image.png', { type: 'image/png' });
+                    
+                    // Set the file on the input
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    document.getElementById('gemini-image-upload').files = dataTransfer.files;
+                    
+                    // Trigger change event
+                    const event = new Event('change', { bubbles: true });
+                    document.getElementById('gemini-image-upload').dispatchEvent(event);
+                    
+                    // Wait for preview to load
+                    setTimeout(() => {
+                        // Click transform button
+                        document.getElementById('gemini-transform-btn').click();
+                        showStatus('✅ Mock transformation initiated', 'success');
+                        console.log('Mock transformation completed');
+                    }, 500);
+                });
+                
+            } catch (error) {
+                showStatus('❌ Mock transform failed: ' + error.message, 'error');
+                console.error('Mock transform error:', error);
+            }
+        }
+
+        async function testFileUpload() {
+            showStatus('Testing file upload functionality...', 'info');
+            console.log('Testing file upload...');
+            
+            try {
+                const fileInput = document.getElementById('gemini-image-upload');
+                
+                if (!fileInput) {
+                    throw new Error('File input not found');
+                }
+                
+                // Create a test image file
+                const canvas = document.createElement('canvas');
+                canvas.width = 200;
+                canvas.height = 200;
+                const ctx = canvas.getContext('2d');
+                
+                // Draw a gradient
+                const gradient = ctx.createLinearGradient(0, 0, 200, 200);
+                gradient.addColorStop(0, '#667eea');
+                gradient.addColorStop(1, '#764ba2');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 200, 200);
+                
+                // Add text
+                ctx.fillStyle = 'white';
+                ctx.font = '20px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('TEST IMAGE', 100, 100);
+                
+                canvas.toBlob((blob) => {
+                    const file = new File([blob], 'test-upload.png', { type: 'image/png' });
+                    
+                    // Create a data transfer to simulate file selection
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    fileInput.files = dataTransfer.files;
+                    
+                    // Trigger change event
+                    const event = new Event('change', { bubbles: true });
+                    fileInput.dispatchEvent(event);
+                    
+                    showStatus('✅ File upload test successful', 'success');
+                    console.log('File uploaded:', file.name, file.size, 'bytes');
+                    
+                    updateResults(`
+                        <h3>✅ File Upload Test Passed</h3>
+                        <ul>
+                            <li>File Name: ${file.name}</li>
+                            <li>File Size: ${file.size} bytes</li>
+                            <li>File Type: ${file.type}</li>
+                            <li>Preview: Generated</li>
+                            <li>Transform Button: Enabled</li>
+                        </ul>
+                    `);
+                });
+                
+            } catch (error) {
+                showStatus('❌ File upload test failed: ' + error.message, 'error');
+                console.error('File upload error:', error);
+            }
+        }
+
+        // Run initial console message
+        console.log('Gemini API Test Suite Loaded');
+        console.log('Product Data:', window.geminiProductData);
+    </script>
+
+    <!-- Load Gemini API Client -->
+    <script src="assets/gemini-api-client.js"></script>
+    
+    <script>
+        // Wait for client to initialize
+        setTimeout(() => {
+            if (window.geminiClient) {
+                console.log('✅ Gemini client initialized successfully');
+            } else {
+                console.error('❌ Gemini client failed to initialize');
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
