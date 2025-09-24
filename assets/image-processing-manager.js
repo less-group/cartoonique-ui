@@ -6513,3 +6513,4 @@ if (originalHandleCropComplete) {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = ImageProcessingManager;
 }
+# Force sync at Wed Sep 24 16:24:12 CEST 2025
