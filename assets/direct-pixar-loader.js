@@ -428,17 +428,44 @@
       
       const imageBase64 = e.target.result;
       
-      // Create the payload for the RunPod API
-      const payload = {
-        image: imageBase64,
-        style: 'pixar',
-        watermark: {
-          url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/watermark.png",
-          width: 200,
-          height: 100,
-          spaceBetweenWatermarks: 100
-        }
-      };
+      // Check if this is pixar-gemini template
+      const isPixarGeminiTemplate = window?.template === "product.pixar-gemini" || 
+                                    location.href.includes("/products/pixar-gemini");
+      
+      let payload;
+      let endpoint;
+      
+      if (isPixarGeminiTemplate) {
+        // Gemini-specific payload
+        endpoint = 'gemini-transform';
+        payload = {
+          image: imageBase64,
+          prompt: "Transform this photo into a Pixar-style cartoon character with vibrant colors and expressive features",
+          productId: "pixar-gemini",
+          customerId: "direct-upload",
+          watermarkImage: {
+            url: "https://cdn.shopify.com/s/files/1/0896/3434/1212/files/watermarklogo.png",
+            width: 200,
+            height: 200,
+            spaceBetweenWatermarks: 100
+          },
+          backgroundColor: "pink"
+        };
+        console.log('🎨 Using Gemini Flash 2.5 endpoint for pixar-gemini template');
+      } else {
+        // Standard payload for other templates
+        endpoint = 'transform';
+        payload = {
+          image: imageBase64,
+          style: 'pixar',
+          watermark: {
+            url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/watermark.png",
+            width: 200,
+            height: 100,
+            spaceBetweenWatermarks: 100
+          }
+        };
+      }
       
       if (progressBar) progressBar.style.width = '30%';
       if (progressText) progressText.textContent = 'Uploading to server...';
@@ -452,16 +479,16 @@
         }
       }));
       
-      console.log('⭐ Sending image to Railway API at:', 'https://letzteshemd-faceswap-api-production.up.railway.app/transform');
+      console.log('⭐ Sending image to Railway API at:', `https://letzteshemd-faceswap-api-production.up.railway.app/${endpoint}`);
       console.log('⭐ Payload structure:', { 
         imageLength: imageBase64.length,
-        style: payload.style,
-        watermark: payload.watermark,
+        endpoint: endpoint,
+        isPixarGemini: isPixarGeminiTemplate,
         isOriginal: isOriginalImage
       });
       
       // Call the RunPod API endpoint
-      fetch('https://letzteshemd-faceswap-api-production.up.railway.app/transform', {
+      fetch(`https://letzteshemd-faceswap-api-production.up.railway.app/${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -505,7 +532,11 @@
         
         // Handle successful response
         // Check for any of the possible image URL fields
-        const imageUrl = data?.image || 
+        // Gemini endpoint returns: imageUrl, watermarkedImageUrl, processedImageUrl
+        // Other endpoints return: image, watermarkedImageUrlToShow, processedImageUrl, resultImageUrl
+        const imageUrl = data?.watermarkedImageUrl ||  // Gemini primary watermarked URL
+                        data?.imageUrl ||              // Gemini fallback URL
+                        data?.image || 
                         data?.watermarkedImageUrlToShow || 
                         data?.processedImageUrl || 
                         data?.resultImageUrl;

@@ -4723,30 +4723,62 @@ class ImageProcessingManager {
         //   },
         // };
 
-        // Create payload - image cartoonique
-        const payload = {
-          image: imageBase64,
-          style: "pixar",
-          watermark: {
-            url: "https://cdn.shopify.com/s/files/1/0896/3434/1212/files/watermarklogo.png",
-            width: 200,
-            height: 200,
-            spaceBetweenWatermarks: 100,
-          },
-        };
+        // Check if this is the pixar-gemini template SPECIFICALLY
+        const isPixarGeminiTemplate = window?.template === "product.pixar-gemini" || 
+                                      location.href.includes("/products/pixar-gemini");
         
-        // Add background color for pet templates
-        if (window?.isPetTemplate) {
-          // Debug logging
-          console.log("🖼️ isPetTemplate:", window.isPetTemplate);
-          console.log("🖼️ Current petBackgroundColor:", window.petBackgroundColor);
+        // Create payload - different structure for Gemini vs regular endpoints
+        let payload;
+        let endpoint;
+        let useGeminiEndpoint = false;
+        
+        if (isPixarGeminiTemplate) {
+          // Gemini-specific payload for pixar-gemini template
+          useGeminiEndpoint = true;
+          endpoint = "gemini-transform";
+          payload = {
+            image: imageBase64,
+            prompt: "Transform this photo into a Pixar-style cartoon character with vibrant colors and expressive features",
+            productId: "pixar-gemini",
+            customerId: file.name || "customer",
+            watermarkImage: {
+              url: "https://cdn.shopify.com/s/files/1/0896/3434/1212/files/watermarklogo.png",
+              width: 200,
+              height: 200,
+              spaceBetweenWatermarks: 100
+            },
+            backgroundColor: "pink" // Default background for Gemini
+          };
+          console.log("🎨 Using Gemini Flash 2.5 endpoint for pixar-gemini template");
+        } else {
+          // Standard payload for all other templates
+          payload = {
+            image: imageBase64,
+            style: "pixar",
+            watermark: {
+              url: "https://cdn.shopify.com/s/files/1/0896/3434/1212/files/watermarklogo.png",
+              width: 200,
+              height: 200,
+              spaceBetweenWatermarks: 100,
+            },
+          };
           
-          if (window?.petBackgroundColor) {
-            payload.backgroundColor = window.petBackgroundColor;
-            console.log("🖼️ Adding background color to payload:", window.petBackgroundColor);
+          // Add background color for pet templates
+          if (window?.isPetTemplate) {
+            // Debug logging
+            console.log("🖼️ isPetTemplate:", window.isPetTemplate);
+            console.log("🖼️ Current petBackgroundColor:", window.petBackgroundColor);
+            
+            if (window?.petBackgroundColor) {
+              payload.backgroundColor = window.petBackgroundColor;
+              console.log("🖼️ Adding background color to payload:", window.petBackgroundColor);
+            } else {
+              console.log("🖼️ WARNING: No background color set, using default 'pink'");
+              payload.backgroundColor = 'pink';
+            }
+            endpoint = "transformpet";
           } else {
-            console.log("🖼️ WARNING: No background color set, using default 'pink'");
-            payload.backgroundColor = 'pink';
+            endpoint = "transform";
           }
         }
         
@@ -4766,11 +4798,6 @@ class ImageProcessingManager {
         //     spaceBetweenWatermarks: 100
         //   },
         // };
-        
-        let endpoint = "transform";
-        if (window?.isPetTemplate) {
-          endpoint = "transformpet";
-        }
 
         console.log(`🖼️ Sending image ${file.name} to Railway API`);
 
@@ -4795,7 +4822,46 @@ class ImageProcessingManager {
           .then((data) => {
             console.log("🖼️ Railway API response:", data);
 
-            // Extract jobId
+            // Check if this is a Gemini response (which returns image URLs directly)
+            if (useGeminiEndpoint && data.success && (data.imageUrl || data.watermarkedImageUrl || data.processedImageUrl)) {
+              console.log("🎨 Gemini Flash 2.5 response with direct image URLs");
+              
+              // Extract the image URL from Gemini response
+              const imageUrl = data.watermarkedImageUrl || data.processedImageUrl || data.imageUrl;
+              
+              if (imageUrl) {
+                console.log("🎨 Gemini transformation complete, image URL:", imageUrl);
+                
+                // Store the URL and mark as complete
+                this.stylizedImageUrl = imageUrl;
+                this.stylizednonImageUrl = data.processedImageUrl || data.watermarkedImageUrl;
+                this.transformationComplete = true;
+                
+                // Immediately dispatch the transform complete event for Gemini
+                const customEvent = new CustomEvent("pixar-transform-complete", {
+                  detail: {
+                    imageUrl: imageUrl,
+                    timestamp: Date.now(),
+                    isGemini: true
+                  }
+                });
+                document.dispatchEvent(customEvent);
+                
+                // Clean up tracking
+                delete window.railwayApiCallsInProgress[fileIdentifier];
+                delete window.railwayApiCallTimestamps[fileIdentifier];
+                
+                // Return success
+                resolve({
+                  imageUrl: imageUrl,
+                  fileIdentifier: fileIdentifier,
+                  isGemini: true
+                });
+                return;
+              }
+            }
+
+            // Handle standard response with jobId (for non-Gemini endpoints)
             const jobId = data.jobId || data.id;
             this.jobId = jobId;
 
@@ -4823,7 +4889,7 @@ class ImageProcessingManager {
                 fileIdentifier: fileIdentifier,
               });
             } else {
-              const error = new Error("No job ID returned from Railway API");
+              const error = new Error("No job ID or image URL returned from Railway API");
               console.error("🖼️ " + error.message);
 
               // Clean up tracking
