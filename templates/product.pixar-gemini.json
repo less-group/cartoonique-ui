@@ -156,12 +156,6 @@
           "disabled": true,
           "settings": {}
         },
-        "gemini_transform_widget": {
-          "type": "custom_liquid",
-          "settings": {
-            "custom_liquid": "{% include 'gemini-transform-widget' %}"
-          }
-        },
         "buy_buttons": {
           "type": "buy_buttons",
           "settings": {
@@ -281,7 +275,6 @@
         "collapsible_row_MCiMHt",
         "d3d427d0-4e7d-4f81-9057-c64f65a4f183",
         "quantity_selector",
-        "gemini_transform_widget",
         "buy_buttons",
         "information_tag_7VN8LK",
         "collapsible_row_7hiBKr",
