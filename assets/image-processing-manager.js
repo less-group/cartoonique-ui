@@ -1646,17 +1646,24 @@ class ImageProcessingManager {
       console.log(`🐕 Color option: ${input.value}, checked: ${input.checked}`);
     });
     
-    // Validate that a color is selected
-    const selectedColor = document.querySelector('input[name="petBackgroundColor"]:checked');
-    if (!selectedColor) {
-      alert("Please select a background color before generating your image.");
-      return;
-    }
+    // Skip color validation for pixar-gemini template (uses fixed pink background)
+    if (window?.template === "product.pixar-gemini") {
+      // For pixar-gemini, use fixed pink background
+      window.petBackgroundColor = "pink";
+      console.log("🐕 Pixar-Gemini template: using fixed pink background");
+    } else {
+      // Validate that a color is selected for other pet templates
+      const selectedColor = document.querySelector('input[name="petBackgroundColor"]:checked');
+      if (!selectedColor) {
+        alert("Please select a background color before generating your image.");
+        return;
+      }
 
-    // Update the global color state
-    window.petBackgroundColor = selectedColor.value;
-    console.log("🐕 Selected background color:", window.petBackgroundColor);
-    console.log("🐕 Global petBackgroundColor is now:", window.petBackgroundColor);
+      // Update the global color state
+      window.petBackgroundColor = selectedColor.value;
+      console.log("🐕 Selected background color:", window.petBackgroundColor);
+      console.log("🐕 Global petBackgroundColor is now:", window.petBackgroundColor);
+    }
 
     // Hide the instructions popup
     const instructionsPopup = document.getElementById("pixar-instructions-popup");
