@@ -1,13 +1,3 @@
-/*
- * ------------------------------------------------------------
- * IMPORTANT: The contents of this file are auto-generated.
- *
- * This file may be updated by the Shopify admin theme editor
- * or related systems. Please exercise caution as any changes
- * made to this file may be overwritten.
- * ------------------------------------------------------------
- * Last updated: 2025-09-24 - Pixar Gemini Template
- */
 {
   "sections": {
     "ff03a7f7-70a4-4aa2-8e65-56be8e7dbefc": {
@@ -230,7 +220,7 @@
             "heading_size": "caption3",
             "icon": "none",
             "icon_size": 24,
-            "text": "<p>Our <strong>premium canvas</strong> print gives your custom portrait a rich, vibrant finish that feels just like real art. With its subtle texture and sleek profile, it adds warmth and character to any space.</p><p><strong>Material:</strong> Cotton-polyester blend canvas (300–350gsm) on FSC-certified wood</p><p><strong>Thickness:</strong> Slim profile (2cm/0.78") </p><p><strong>Finish:</strong> Durable, fade-resistant print with a natural canvas texture</p>",
+            "text": "<p>Our <strong>premium canvas</strong> print gives your custom portrait a rich, vibrant finish that feels just like real art. With its subtle texture and sleek profile, it adds warmth and character to any space.</p><p><strong>Material:</strong> Cotton-polyester blend canvas (300–350gsm) on FSC-certified wood</p><p><strong>Thickness:</strong> Slim profile (2cm/0.78\") </p><p><strong>Finish:</strong> Durable, fade-resistant print with a natural canvas texture</p>",
             "page": "",
             "body_size": "body4",
             "image_width": 60
