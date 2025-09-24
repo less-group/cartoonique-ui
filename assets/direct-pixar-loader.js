@@ -533,33 +533,27 @@
         // Handle successful response
         let imageUrl = null;
         
-        // Check if this is a Gemini response format
-        if (data?.candidates && data.candidates[0]?.content?.parts) {
-          console.log('⭐ Detected Gemini response format');
-          // Look for the image in the parts array
-          const parts = data.candidates[0].content.parts;
-          for (const part of parts) {
-            if (part.inlineData && part.inlineData.data) {
-              // Convert base64 to data URL
-              const mimeType = part.inlineData.mimeType || 'image/png';
-              imageUrl = `data:${mimeType};base64,${part.inlineData.data}`;
-              console.log('⭐ Extracted base64 image from Gemini response, created data URL');
-              break;
-            }
-          }
-        }
-        
-        // Fallback to checking for URL fields in the response
-        if (!imageUrl) {
-          // Check for any of the possible image URL fields
-          // Gemini endpoint returns: imageUrl, watermarkedImageUrl, processedImageUrl
-          // Other endpoints return: image, watermarkedImageUrlToShow, processedImageUrl, resultImageUrl
-          imageUrl = data?.watermarkedImageUrl ||  // Gemini primary watermarked URL
-                          data?.imageUrl ||              // Gemini fallback URL
+        // For Gemini endpoint: Check for direct URL fields (as per backend guide)
+        // The backend returns direct URLs that are ready to use immediately
+        if (isPixarGeminiTemplate && data?.success) {
+          // Gemini returns: imageUrl, watermarkedImageUrl, processedImageUrl (all same URL)
+          imageUrl = data?.imageUrl || data?.watermarkedImageUrl || data?.processedImageUrl;
+          console.log('⭐ Gemini response with direct URL:', imageUrl);
+        } else {
+          // For other endpoints: Check all possible URL fields
+          imageUrl = data?.watermarkedImageUrl ||  
+                          data?.imageUrl ||              
+                          data?.processedImageUrl ||
                           data?.image || 
                           data?.watermarkedImageUrlToShow || 
-                          data?.processedImageUrl || 
                           data?.resultImageUrl;
+        }
+        
+        // Fix localhost URLs to use the proper Railway URL (handles both dev and prod)
+        if (imageUrl && (imageUrl.includes('localhost:8080') || imageUrl.includes('http://localhost'))) {
+          const railwayUrl = 'https://letzteshemd-faceswap-api-production.up.railway.app';
+          imageUrl = imageUrl.replace(/https?:\/\/localhost(:\d+)?/g, railwayUrl);
+          console.log('⭐ Fixed localhost URL to Railway URL:', imageUrl);
         }
                         
         if (data && imageUrl) {

@@ -4824,24 +4824,27 @@ class ImageProcessingManager {
 
             let imageUrl = null;
             
-            // Check if this is a Gemini response format with candidates array
-            if (useGeminiEndpoint && data?.candidates && data.candidates[0]?.content?.parts) {
-              console.log("🎨 Gemini Flash 2.5 response with candidates format");
-              // Look for the image in the parts array
-              const parts = data.candidates[0].content.parts;
-              for (const part of parts) {
-                if (part.inlineData && part.inlineData.data) {
-                  // Convert base64 to data URL
-                  const mimeType = part.inlineData.mimeType || 'image/png';
-                  imageUrl = `data:${mimeType};base64,${part.inlineData.data}`;
-                  console.log('🎨 Extracted base64 image from Gemini response, created data URL');
-                  break;
-                }
-              }
-            } else if (useGeminiEndpoint && data.success && (data.imageUrl || data.watermarkedImageUrl || data.processedImageUrl)) {
-              // Fallback to direct URL format if available
+            // Handle Gemini endpoint specifically (per backend guide - returns direct URLs)
+            if (useGeminiEndpoint && data.success) {
               console.log("🎨 Gemini Flash 2.5 response with direct image URLs");
-              imageUrl = data.watermarkedImageUrl || data.processedImageUrl || data.imageUrl;
+              // Gemini returns: imageUrl, watermarkedImageUrl, processedImageUrl (all same URL)
+              imageUrl = data.imageUrl || data.watermarkedImageUrl || data.processedImageUrl;
+              
+              // Fix localhost URLs to use the proper Railway URL
+              if (imageUrl && (imageUrl.includes('localhost:8080') || imageUrl.includes('http://localhost'))) {
+                const railwayUrl = 'https://letzteshemd-faceswap-api-production.up.railway.app';
+                imageUrl = imageUrl.replace(/https?:\/\/localhost(:\d+)?/g, railwayUrl);
+                console.log('🎨 Fixed localhost URL to Railway URL:', imageUrl);
+              }
+            } else if (!useGeminiEndpoint) {
+              // For NON-Gemini endpoints, keep existing logic for other templates
+              // Check for various URL formats that other endpoints might return
+              imageUrl = data?.watermarkedImageUrlToShow || 
+                        data?.processedImageUrl || 
+                        data?.watermarkedOriginalImageUrl || 
+                        data?.resultImageUrl || 
+                        data?.image || 
+                        (data?.image && data.image.url);
             }
 
             // Check if this is a Gemini response (which returns image URLs directly)
