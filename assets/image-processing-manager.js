@@ -4807,7 +4807,7 @@ class ImageProcessingManager {
           endpoint = "gemini-transform";
           payload = {
             image: imageBase64,
-            prompt: "Transform this photo into a Pixar-style cartoon character with vibrant colors and expressive features",
+            prompt: "Make exactly like characters from Encanto or Turning Red - pure Pixar 3D animation. Oversized expressive cartoon eyes, simplified facial features, glossy hair, smooth synthetic skin. Must look CGI animated not photographic. Keep all people.",
             productId: "pixar-gemini",
             customerId: file.name || "customer",
             watermarkImage: {
