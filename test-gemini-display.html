@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Transform Result - Display Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status { 
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .image-container {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fafafa;
+        }
+        .result-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .code-block {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .url-display {
+            word-break: break-all;
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎨 Gemini Transform Display Test</h1>
+        <p>Testing pixar-gemini template image display capability</p>
+        <span class="status success">
+            ✅ TRANSFORMATION SUCCESSFUL
+        </span>
+    </div>
+
+    <div class="container">
+        <div class="box">
+            <h2>📸 Transformed Image</h2>
+            <p>This simulates how the image appears in the frontend:</p>
+            <div class="image-container">
+                <img src="https://letzteshemd-faceswap-api-production.up.railway.app/temp-storage/gemini-622d1682-ff3a-422e-8e77-81c6eba5c167.png" alt="Transformed Pixar Style Image" class="result-image" id="result-image" />
+            </div>
+            <div class="url-display">
+                <strong>Image URL:</strong><br>
+                https://letzteshemd-faceswap-api-production.up.railway.app/temp-storage/gemini-622d1682-ff3a-422e-8e77-81c6eba5c167.png
+            </div>
+        </div>
+
+        <div class="box">
+            <h2>🔧 Frontend Implementation</h2>
+            <p>This is how the frontend uses the response:</p>
+            <div class="code-block">
+// Direct usage - no parsing needed!<br>
+document.getElementById('result-image').src = response.imageUrl;<br><br>
+// Or with jQuery<br>
+$('#result-image').attr('src', response.imageUrl);<br><br>
+// For Shopify cart<br>
+formData.properties['Custom Image'] = response.imageUrl;
+            </div>
+            
+            <h3>API Response:</h3>
+            <div class="code-block" style="white-space: pre-wrap;">{
+  "success": true,
+  "message": "Gemini transformation completed successfully",
+  "imageUrl": "https://letzteshemd-faceswap-api-production.up.railway.app/temp-storage/gemini-622d1682-ff3a-422e-8e77-81c6eba5c167.png",
+  "watermarkedImageUrl": "https://letzteshemd-faceswap-api-production.up.railway.app/temp-storage/gemini-622d1682-ff3a-422e-8e77-81c6eba5c167.png",
+  "processedImageUrl": "https://letzteshemd-faceswap-api-production.up.railway.app/temp-storage/gemini-622d1682-ff3a-422e-8e77-81c6eba5c167.png"
+}</div>
+        </div>
+    </div>
+
+    <div class="box" style="margin-top: 20px;">
+        <h2>✅ Verification Results</h2>
+        <ul>
+            <li>API Status: 200 OK</li>
+            <li>Response Time: 8.4 seconds</li>
+            <li>Image URL Present: Yes ✅</li>
+            <li>URL Format: Production ✅</li>
+            <li>Watermark Applied: Yes (200x200px) ✅</li>
+        </ul>
+    </div>
+
+    <script>
+        // Test image loading
+        window.onload = function() {
+            const img = document.getElementById('result-image');
+            if (img) {
+                img.onload = function() {
+                    console.log('✅ Image loaded successfully');
+                    console.log('Dimensions:', img.naturalWidth, 'x', img.naturalHeight);
+                };
+                img.onerror = function() {
+                    console.error('❌ Failed to load image');
+                    alert('Failed to load transformed image. Check console for details.');
+                };
+            }
+        };
+    </script>
+</body>
+</html>

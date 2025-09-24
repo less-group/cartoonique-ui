@@ -1844,6 +1844,7 @@ class ImageProcessingManager {
 
     const imageUrl = event.detail.imageUrl;
     const isRailwayUrl = imageUrl.includes("railway.app");
+    const isGeminiResponse = event.detail.isGemini === true;
 
     console.log(
       "TRANSFORM COMPLETE: Received " +
@@ -1855,6 +1856,26 @@ class ImageProcessingManager {
     // Store the stylized image URL
     this.stylizedImageUrl = imageUrl;
     this.transformationComplete = true;
+
+    // If this is a Gemini response, the image is already fully processed
+    // Skip cropping and text steps, go directly to final result
+    if (isGeminiResponse) {
+      console.log("TRANSFORM COMPLETE: Gemini response - image is fully processed, showing result");
+      
+      // Hide loading popup
+      const loadingPopup = document.getElementById("pixar-loading-popup");
+      if (loadingPopup) {
+        loadingPopup.style.display = "none";
+      }
+      
+      // Mark as complete and show result
+      this.cropComplete = true;
+      this.textProcessingComplete = true;
+      
+      // Apply final processing to show the result
+      setTimeout(() => this.applyFinalProcessing(), 100);
+      return;
+    }
 
     // IMPORTANT: Do NOT update product gallery image here.
     // We need to wait until cropping and text are applied.
@@ -1962,11 +1983,52 @@ class ImageProcessingManager {
    */
   applyFinalProcessing() {
     console.log(
-      "FINAL PROCESSING: Applying to RAILWAY image:",
+      "FINAL PROCESSING: Applying to image:",
       this.stylizedImageUrl
     );
 
     try {
+      // Check if this is a Gemini response (no cropping needed)
+      const isGeminiImage = this.stylizedImageUrl && 
+                           this.stylizedImageUrl.includes("gemini") && 
+                           this.stylizedImageUrl.includes("railway.app");
+      
+      if (isGeminiImage) {
+        console.log(
+          "FINAL PROCESSING: Gemini response - showing result directly without cropping"
+        );
+        
+        // Update the product gallery image directly
+        const productImage = document.querySelector(".product__image-item img");
+        if (productImage) {
+          productImage.src = this.stylizedImageUrl;
+          console.log("Updated product gallery image with Gemini result");
+        }
+        
+        // Dispatch the final processing complete event
+        const finalEvent = new CustomEvent(
+          "pixar-final-processing-complete",
+          {
+            detail: {
+              imageUrl: this.stylizedImageUrl,
+              timestamp: Date.now(),
+              isGemini: true
+            },
+          }
+        );
+        document.dispatchEvent(finalEvent);
+        
+        // Hide loading popup
+        this.hideLoadingPopup();
+        
+        // Show result popup with the Gemini image
+        if (window.resultPopupManager) {
+          window.resultPopupManager.showResultPopup(this.stylizedImageUrl, this.stylizedImageUrl);
+        }
+        
+        return;
+      }
+
       // Use the crop coordinates relative to original image
       console.log(
         "FINAL PROCESSING: Using crop coordinates:",
