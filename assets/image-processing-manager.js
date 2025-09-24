@@ -4837,46 +4837,7 @@ class ImageProcessingManager {
           .then((data) => {
             console.log("🖼️ Railway API response:", data);
 
-            // Check if this is a Gemini response (which returns image URLs directly)
-            if (useGeminiEndpoint && data.success && (data.imageUrl || data.watermarkedImageUrl || data.processedImageUrl)) {
-              console.log("🖼️ Gemini Flash 2.5 response with direct image URLs");
-              
-              // Extract the image URL from Gemini response
-              const imageUrl = data.watermarkedImageUrl || data.processedImageUrl || data.imageUrl;
-              
-              if (imageUrl) {
-                console.log("🖼️ Gemini transformation complete, image URL:", imageUrl);
-                
-                // Store the URL and mark as complete
-                this.stylizedImageUrl = imageUrl;
-                this.stylizednonImageUrl = data.processedImageUrl || data.watermarkedImageUrl;
-                this.transformationComplete = true;
-                
-                // Immediately dispatch the transform complete event for Gemini
-                const customEvent = new CustomEvent("pixar-transform-complete", {
-                  detail: {
-                    imageUrl: imageUrl,
-                    timestamp: Date.now(),
-                    isGemini: true
-                  }
-                });
-                document.dispatchEvent(customEvent);
-                
-                // Clean up tracking
-                delete window.railwayApiCallsInProgress[fileIdentifier];
-                delete window.railwayApiCallTimestamps[fileIdentifier];
-                
-                // Return success
-                resolve({
-                  imageUrl: imageUrl,
-                  fileIdentifier: fileIdentifier,
-                  isGemini: true
-                });
-                return;
-              }
-            }
-
-            // Extract jobId for non-Gemini endpoints
+            // Extract jobId
             const jobId = data.jobId || data.id;
             this.jobId = jobId;
 
@@ -4904,7 +4865,7 @@ class ImageProcessingManager {
                 fileIdentifier: fileIdentifier,
               });
             } else {
-              const error = new Error("No job ID or image URL returned from Railway API");
+              const error = new Error("No job ID returned from Railway API");
               console.error("🖼️ " + error.message);
 
               // Clean up tracking
