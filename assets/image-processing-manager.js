@@ -4723,30 +4723,61 @@ class ImageProcessingManager {
         //   },
         // };
 
-        // Create payload - image cartoonique
-        const payload = {
-          image: imageBase64,
-          style: "pixar",
-          watermark: {
-            url: "https://cdn.shopify.com/s/files/1/0896/3434/1212/files/watermarklogo.png",
-            width: 200,
-            height: 200,
-            spaceBetweenWatermarks: 100,
-          },
-        };
+        // Check if this is specifically the pixar-gemini template
+        const isPixarGeminiTemplate = window?.template === "product.pixar-gemini" || 
+                                      location.href.includes("/products/pixar-gemini");
         
-        // Add background color for pet templates
-        if (window?.isPetTemplate) {
-          // Debug logging
-          console.log("🖼️ isPetTemplate:", window.isPetTemplate);
-          console.log("🖼️ Current petBackgroundColor:", window.petBackgroundColor);
+        // Create payload based on template type
+        let payload;
+        
+        if (isPixarGeminiTemplate) {
+          // Use Gemini Flash 2.5 specific payload structure for pixar-gemini
+          payload = {
+            image: imageBase64,
+            prompt: "Transform this pet photo into a Pixar-style cartoon character with vibrant colors and expressive features",
+            productId: window.geminiProductData?.productId || 'pixar-gemini',
+            customerId: window.geminiProductData?.customerId || '',
+            watermarkImage: {
+              url: "https://cdn.shopify.com/s/files/1/0896/3434/1212/files/watermarklogo.png",
+              width: 200,
+              height: 200,
+              spaceBetweenWatermarks: 100,
+            },
+          };
           
+          // Add background color if specified
           if (window?.petBackgroundColor) {
             payload.backgroundColor = window.petBackgroundColor;
-            console.log("🖼️ Adding background color to payload:", window.petBackgroundColor);
-          } else {
-            console.log("🖼️ WARNING: No background color set, using default 'pink'");
-            payload.backgroundColor = 'pink';
+            console.log("🖼️ Adding background color to Gemini payload:", window.petBackgroundColor);
+          }
+          
+          console.log("🖼️ Using Gemini Flash 2.5 payload structure");
+        } else {
+          // Standard payload for regular transform
+          payload = {
+            image: imageBase64,
+            style: "pixar",
+            watermark: {
+              url: "https://cdn.shopify.com/s/files/1/0896/3434/1212/files/watermarklogo.png",
+              width: 200,
+              height: 200,
+              spaceBetweenWatermarks: 100,
+            },
+          };
+          
+          // Add background color for pet templates
+          if (window?.isPetTemplate) {
+            // Debug logging
+            console.log("🖼️ isPetTemplate:", window.isPetTemplate);
+            console.log("🖼️ Current petBackgroundColor:", window.petBackgroundColor);
+            
+            if (window?.petBackgroundColor) {
+              payload.backgroundColor = window.petBackgroundColor;
+              console.log("🖼️ Adding background color to payload:", window.petBackgroundColor);
+            } else {
+              console.log("🖼️ WARNING: No background color set, using default 'pink'");
+              payload.backgroundColor = 'pink';
+            }
           }
         }
         
@@ -4767,12 +4798,23 @@ class ImageProcessingManager {
         //   },
         // };
         
+        // Determine the correct endpoint based on template type
         let endpoint = "transform";
-        if (window?.isPetTemplate) {
+        let useGeminiEndpoint = false;
+        
+        // Check if this is specifically the pixar-gemini template
+        if (window?.template === "product.pixar-gemini" || 
+            location.href.includes("/products/pixar-gemini")) {
+          // Use Gemini Flash 2.5 endpoint for pixar-gemini template
+          endpoint = "gemini-transform";
+          useGeminiEndpoint = true;
+          console.log("🖼️ Using Gemini Flash 2.5 endpoint for pixar-gemini template");
+        } else if (window?.isPetTemplate) {
+          // Use regular pet transform for other pet templates
           endpoint = "transformpet";
         }
 
-        console.log(`🖼️ Sending image ${file.name} to Railway API`);
+        console.log(`🖼️ Sending image ${file.name} to Railway API endpoint: ${endpoint}`);
 
         // Call the Railway transform endpoint
         fetch(

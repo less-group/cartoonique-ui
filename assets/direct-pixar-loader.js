@@ -428,17 +428,57 @@
       
       const imageBase64 = e.target.result;
       
-      // Create the payload for the RunPod API
-      const payload = {
-        image: imageBase64,
-        style: 'pixar',
-        watermark: {
-          url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/watermark.png",
-          width: 200,
-          height: 100,
-          spaceBetweenWatermarks: 100
+      // Check if this is the pixar-gemini template
+      const isPixarGeminiTemplate = window?.template === "product.pixar-gemini" || 
+                                    location.href.includes("/products/pixar-gemini");
+      
+      // Create payload based on template type
+      let payload;
+      let endpoint;
+      
+      if (isPixarGeminiTemplate) {
+        // Use Gemini Flash 2.5 specific payload for pixar-gemini
+        endpoint = 'gemini-transform';
+        payload = {
+          image: imageBase64,
+          prompt: "Transform this pet photo into a Pixar-style cartoon character with vibrant colors and expressive features",
+          productId: window.geminiProductData?.productId || 'pixar-gemini',
+          customerId: window.geminiProductData?.customerId || '',
+          watermarkImage: {
+            url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/watermark.png",
+            width: 200,
+            height: 100,
+            spaceBetweenWatermarks: 100
+          }
+        };
+        
+        // Add background color if specified
+        if (window?.petBackgroundColor) {
+          payload.backgroundColor = window.petBackgroundColor;
+          console.log('⭐ Added background color to Gemini payload:', window.petBackgroundColor);
         }
-      };
+        
+        console.log('⭐ Using Gemini Flash 2.5 endpoint for pixar-gemini template');
+      } else {
+        // Standard payload for regular transform
+        endpoint = window?.isPetTemplate ? 'transformpet' : 'transform';
+        payload = {
+          image: imageBase64,
+          style: 'pixar',
+          watermark: {
+            url: "https://cdn.shopify.com/s/files/1/0626/3416/4430/files/watermark.png",
+            width: 200,
+            height: 100,
+            spaceBetweenWatermarks: 100
+          }
+        };
+        
+        // Add background color for pet templates
+        if (window?.isPetTemplate && window?.petBackgroundColor) {
+          payload.backgroundColor = window.petBackgroundColor;
+          console.log('⭐ Added background color to payload:', window.petBackgroundColor);
+        }
+      }
       
       if (progressBar) progressBar.style.width = '30%';
       if (progressText) progressText.textContent = 'Uploading to server...';
@@ -452,16 +492,18 @@
         }
       }));
       
-      console.log('⭐ Sending image to Railway API at:', 'https://letzteshemd-faceswap-api-production.up.railway.app/transform');
+      const apiUrl = `https://letzteshemd-faceswap-api-production.up.railway.app/${endpoint}`;
+      console.log('⭐ Sending image to Railway API at:', apiUrl);
       console.log('⭐ Payload structure:', { 
         imageLength: imageBase64.length,
-        style: payload.style,
-        watermark: payload.watermark,
+        endpoint: endpoint,
+        isPixarGemini: isPixarGeminiTemplate,
+        watermark: payload.watermarkImage || payload.watermark,
         isOriginal: isOriginalImage
       });
       
-      // Call the RunPod API endpoint
-      fetch('https://letzteshemd-faceswap-api-production.up.railway.app/transform', {
+      // Call the Railway API endpoint
+      fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
