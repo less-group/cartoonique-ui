@@ -188,10 +188,11 @@
           // Test 2.3: Check color options
           const pinkOption = colorSelector.querySelector('input[value="pink"]');
           const blueOption = colorSelector.querySelector('input[value="blue"]');
+          const whiteOption = colorSelector.querySelector('input[value="white"]');
           
           results.colorOptionsRendered = TestUtils.assert(
-            pinkOption && blueOption,
-            'Both pink and blue color options should be rendered'
+            pinkOption && blueOption && whiteOption,
+            'Pink, blue, and white color options should be rendered'
           );
 
           // Test 2.4: Check default selection
@@ -246,7 +247,19 @@
             'State should change to blue when blue option is selected'
           );
 
-          // Test 3.3: Test changing back to pink
+          // Test 3.3: Test changing to white
+          const whiteOption = document.querySelector('input[name="petBackgroundColor"][value="white"]');
+          if (whiteOption) {
+            TestUtils.simulateChange(whiteOption, 'white');
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            TestUtils.assert(
+              window.petBackgroundColor === 'white',
+              'State should change to white when white option is selected'
+            );
+          }
+          
+          // Test 3.4: Test changing back to pink
           const pinkOption = document.querySelector('input[name="petBackgroundColor"][value="pink"]');
           if (pinkOption) {
             TestUtils.simulateChange(pinkOption, 'pink');
@@ -340,18 +353,26 @@
           'Should use transformpet endpoint for pet templates'
         );
 
-        // Test 4.4: Test different color values
+        // Test 4.4: Test different color values - blue
         window.petBackgroundColor = 'blue';
         const resultBlue = await mockImageProcessingManager.sendImageToRailway(mockFile);
         TestUtils.assert(
           resultBlue.payload.backgroundColor === 'blue',
           'Payload should reflect current color state (blue)'
         );
+        
+        // Test 4.5: Test different color values - white
+        window.petBackgroundColor = 'white';
+        const resultWhite = await mockImageProcessingManager.sendImageToRailway(mockFile);
+        TestUtils.assert(
+          resultWhite.payload.backgroundColor === 'white',
+          'Payload should reflect current color state (white)'
+        );
 
         // Reset to pink
         window.petBackgroundColor = 'pink';
 
-        // Test 4.5: Conditional logic (non-pet template shouldn't include backgroundColor)
+        // Test 4.6: Conditional logic (non-pet template shouldn't include backgroundColor)
         const originalIsPetTemplate = window.isPetTemplate;
         window.isPetTemplate = false;
         

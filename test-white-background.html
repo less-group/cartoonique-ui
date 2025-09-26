@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>White Background Feature Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+        }
+        .test-section {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            background: #f9f9f9;
+        }
+        .console-output {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        #test-controls {
+            margin: 20px 0;
+        }
+        button {
+            background: #4A7DBD;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #3968a8;
+        }
+    </style>
+</head>
+<body>
+    <h1>🐕 Pet Template - White Background Feature Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Environment Setup</h2>
+        <div id="test-controls">
+            <button onclick="runTests()">Run All Tests</button>
+            <button onclick="clearConsole()">Clear Console</button>
+            <button onclick="resetState()">Reset State</button>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Interactive Color Selector</h2>
+        <div id="pet-template-container">
+            <!-- This will be populated by the pixar-upload-button.js -->
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Console Output</h2>
+        <div id="console-output" class="console-output"></div>
+    </div>
+    
+    <script>
+        // Setup test environment
+        window.isPetTemplate = true;
+        window.template = "product.pet";
+        window.petBackgroundColor = 'pink'; // Default
+        
+        // Mock console.log to display in our UI
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
+        const consoleOutput = document.getElementById('console-output');
+        
+        function addToConsole(message, type = 'log') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ff6b6b' : type === 'warn' ? '#ffd93d' : '#6bcf7f';
+            const line = document.createElement('div');
+            line.style.color = color;
+            line.innerHTML = `[${timestamp}] ${message}`;
+            consoleOutput.appendChild(line);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            
+            // Also log to real console
+            if (type === 'error') {
+                originalConsoleError.call(console, message);
+            } else if (type === 'warn') {
+                originalConsoleWarn.call(console, message);
+            } else {
+                originalConsoleLog.call(console, message);
+            }
+        }
+        
+        console.log = (message) => addToConsole(message, 'log');
+        console.error = (message) => addToConsole(message, 'error');
+        console.warn = (message) => addToConsole(message, 'warn');
+        
+        // Create mock image processing manager
+        window.imageProcessingManager = {
+            sendImageToRailway: function(file, options = {}) {
+                return new Promise((resolve) => {
+                    const payload = {
+                        image: 'base64-test-data',
+                        style: 'pixar',
+                        backgroundColor: window.petBackgroundColor
+                    };
+                    console.log(`📤 Mock API Call - backgroundColor: ${payload.backgroundColor}`);
+                    resolve({ success: true, payload });
+                });
+            }
+        };
+    </script>
+    
+    <!-- Load the actual pixar-upload-button.js to get the UI -->
+    <script>
+        // Simulate the popup HTML that would normally be created
+        const container = document.getElementById('pet-template-container');
+        container.innerHTML = `
+            <fieldset id="pet-background-color-selector" style="border: none; margin: 20px auto; text-align: center; max-width: 400px;">
+                <legend style="font-size: 18px; margin-bottom: 15px; color: #333; font-weight: 600;">Choose Background Color:</legend>
+                <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: nowrap;" role="radiogroup" aria-labelledby="background-color-legend">
+                    <label style="cursor: pointer; display: flex; flex-direction: column; align-items: center;">
+                        <input type="radio" name="petBackgroundColor" value="pink" style="position: absolute; opacity: 0;" checked aria-describedby="pink-desc">
+                        <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #FF69B4, #FFB6C1); border: 3px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s ease;" aria-hidden="true"></div>
+                        <span id="pink-desc" style="font-size: 12px; margin-top: 5px; font-weight: 500;">Pink</span>
+                    </label>
+                    <label style="cursor: pointer; display: flex; flex-direction: column; align-items: center;">
+                        <input type="radio" name="petBackgroundColor" value="blue" style="position: absolute; opacity: 0;" aria-describedby="blue-desc">
+                        <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #4169E1, #87CEEB); border: 3px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s ease;" aria-hidden="true"></div>
+                        <span id="blue-desc" style="font-size: 12px; margin-top: 5px; font-weight: 500;">Blue</span>
+                    </label>
+                    <label style="cursor: pointer; display: flex; flex-direction: column; align-items: center;">
+                        <input type="radio" name="petBackgroundColor" value="white" style="position: absolute; opacity: 0;" aria-describedby="white-desc">
+                        <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #FFFFFF, #F5F5F5); border: 3px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s ease;" aria-hidden="true"></div>
+                        <span id="white-desc" style="font-size: 12px; margin-top: 5px; font-weight: 500;">White</span>
+                    </label>
+                </div>
+            </fieldset>
+            <div style="margin: 20px; padding: 15px; background: #e8f4ff; border-radius: 8px;">
+                <p><strong>Current Selection:</strong> <span id="current-color">pink</span></p>
+                <p><strong>Global State (window.petBackgroundColor):</strong> <span id="global-state">pink</span></p>
+            </div>
+        `;
+        
+        // Add event listeners for color selection
+        document.querySelectorAll('input[name="petBackgroundColor"]').forEach(input => {
+            input.addEventListener('change', (e) => {
+                window.petBackgroundColor = e.target.value;
+                console.log(`🎨 Color changed to: ${e.target.value}`);
+                document.getElementById('current-color').textContent = e.target.value;
+                document.getElementById('global-state').textContent = window.petBackgroundColor;
+                
+                // Visual feedback - highlight selected option
+                document.querySelectorAll('label').forEach(label => {
+                    const circle = label.querySelector('div[style*="border-radius"]');
+                    if (circle) {
+                        if (label.querySelector('input:checked')) {
+                            circle.style.border = '3px solid #4A7DBD';
+                            circle.style.transform = 'scale(1.1)';
+                        } else {
+                            circle.style.border = '3px solid #ddd';
+                            circle.style.transform = 'scale(1)';
+                        }
+                    }
+                });
+            });
+        });
+        
+        // Functions for test controls
+        function runTests() {
+            console.log('🚀 Starting comprehensive white background feature tests...');
+            
+            // Load and run the test script
+            const script = document.createElement('script');
+            script.src = 'test-white-background-feature.js';
+            script.onload = () => {
+                console.log('✅ Test script loaded and executed');
+            };
+            script.onerror = () => {
+                console.error('❌ Failed to load test script');
+            };
+            document.body.appendChild(script);
+        }
+        
+        function clearConsole() {
+            consoleOutput.innerHTML = '';
+            console.log('🧹 Console cleared');
+        }
+        
+        function resetState() {
+            window.petBackgroundColor = 'pink';
+            document.querySelector('input[value="pink"]').checked = true;
+            document.querySelector('input[value="pink"]').dispatchEvent(new Event('change'));
+            console.log('🔄 State reset to default (pink)');
+        }
+        
+        // Initial state display
+        console.log('🐕 Pet Template White Background Test Environment Ready');
+        console.log('📋 Current Configuration:');
+        console.log(`   - isPetTemplate: ${window.isPetTemplate}`);
+        console.log(`   - template: ${window.template}`);
+        console.log(`   - petBackgroundColor: ${window.petBackgroundColor}`);
+        console.log('');
+        console.log('💡 Instructions:');
+        console.log('   1. Click on color options above to test selection');
+        console.log('   2. Click "Run All Tests" to execute comprehensive tests');
+        console.log('   3. Watch the console output for results');
+    </script>
+</body>
+</html>

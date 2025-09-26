@@ -175,6 +175,11 @@
                 <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #4169E1, #87CEEB); border: 3px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s ease;" aria-hidden="true"></div>
                 <span id="blue-desc" style="font-size: 12px; margin-top: 5px; font-weight: 500;">Blue</span>
               </label>
+              <label style="cursor: pointer; display: flex; flex-direction: column; align-items: center;">
+                <input type="radio" name="petBackgroundColor" value="white" style="position: absolute; opacity: 0;" ${window.petBackgroundColor === 'white' ? 'checked' : ''} aria-describedby="white-desc">
+                <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #FFFFFF, #F5F5F5); border: 3px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s ease;" aria-hidden="true"></div>
+                <span id="white-desc" style="font-size: 12px; margin-top: 5px; font-weight: 500;">White</span>
+              </label>
             </div>
           </fieldset>
         ` : ''}
