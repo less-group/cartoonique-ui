@@ -97,10 +97,24 @@
          window.isPetTemplate = true;
       }
       window.template = "{{template}}";
+      
+      // Currency and market data for dynamic pricing
+      window.shopifyData = {
+        currency: {
+          code: "{{ cart.currency.iso_code | default: shop.currency }}",
+          symbol: "{{ cart.currency.symbol | default: shop.money_format | remove: '{{amount}}' | remove: '{{amount_no_decimals}}' | strip }}"
+        },
+        market: "{{ localization.market.handle | default: 'primary' }}",
+        country: "{{ localization.country.iso_code | default: shop.address.country_code }}"
+      };
+      
       window.lazySizesConfig = window.lazySizesConfig || {}
       window.lazySizesConfig.loadMode = 1
     </script>
 
+    {% if template == 'product.pet' or template == 'product.pixar-gemini' %}
+      <script src="{{ 'pet-prices-config.js' | asset_url }}" defer="defer"></script>
+    {% endif %}
     <script src="{{ 'bundle.js' | asset_url }}" defer="defer"></script>
   </body>
 </html>

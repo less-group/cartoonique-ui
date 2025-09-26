@@ -206,6 +206,17 @@ class ResultPopupManager {
       return;
     }
 
+    // Get dynamic pricing based on current currency
+    let prices = { S: { formattedPrice: '£45', size: '20x30"' },
+                   M: { formattedPrice: '£55', size: '30x40"' },
+                   L: { formattedPrice: '£70', size: '50x70"' } };
+    
+    if (window.isPetTemplate && window.PetPricing && window.shopifyData) {
+      const currencyCode = window.shopifyData.currency.code || 'GBP';
+      console.log("RESULT POPUP: Using currency:", currencyCode);
+      prices = window.PetPricing.getAllPetPrices(currencyCode);
+    }
+
     // Add custom styles to document
     const styleElement = document.createElement("style");
     styleElement.id = "final-popup-styles";
@@ -279,22 +290,22 @@ class ResultPopupManager {
                 <!-- Size S -->
                 <div data-size="S" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer; background-color: #f0f5fb;">
                   <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">S</div>
-                  <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">£45</div>
-                  <div style="font-size: 12px; color: #000000; margin-top: 3px;">20x30"</div>
+                  <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">${prices.S.formattedPrice}</div>
+                  <div style="font-size: 12px; color: #000000; margin-top: 3px;">${prices.S.size}</div>
                 </div>
                 
                 <!-- Size M -->
                 <div data-size="M" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer;">
                   <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">M</div>
-                  <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">£55</div>
-                  <div style="font-size: 12px; color: #000000; margin-top: 3px;">30x40"</div>
+                  <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">${prices.M.formattedPrice}</div>
+                  <div style="font-size: 12px; color: #000000; margin-top: 3px;">${prices.M.size}</div>
                 </div>
                 
                 <!-- Size L -->
                 <div data-size="L" style="flex: 1; margin: 0 5px; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer;">
                   <div style="width: 40px; height: 40px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 18px;">L</div>
-                  <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">£70</div>
-                  <div style="font-size: 12px; color: #000000; margin-top: 3px;">50x70"</div>
+                  <div style="font-weight: bold; margin-top: 5px; font-size: 16px;">${prices.L.formattedPrice}</div>
+                  <div style="font-size: 12px; color: #000000; margin-top: 3px;">${prices.L.size}</div>
                 </div>
               </div>
             
