@@ -93,7 +93,7 @@
     {%- render 'inject-routes' -%}
     {%- render 'save-global-data-in-global-scope' -%}
     <script>
-      if ("{{template}}" === "product.pet" || "{{template}}" === "product.pixar-gemini"){
+      if ("{{template}}" === "product.pet" || "{{template}}" === "product.pixar-gemini" || "{{template}}" === "product.superhero-gemini"){
          window.isPetTemplate = true;
       }
       window.template = "{{template}}";

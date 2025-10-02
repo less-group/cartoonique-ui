@@ -1646,11 +1646,15 @@ class ImageProcessingManager {
       console.log(`🐕 Color option: ${input.value}, checked: ${input.checked}`);
     });
     
-    // Skip color validation for pixar-gemini template (uses fixed pink background)
+    // Skip color validation for pixar-gemini and superhero-gemini templates (use fixed backgrounds)
     if (window?.template === "product.pixar-gemini") {
       // For pixar-gemini, use fixed pink background
       window.petBackgroundColor = "pink";
       console.log("🐕 Pixar-Gemini template: using fixed pink background");
+    } else if (window?.template === "product.superhero-gemini") {
+      // For superhero-gemini, use fixed pink background
+      window.petBackgroundColor = "pink";
+      console.log("🦸 Superhero-Gemini template: using fixed pink background");
     } else {
       // Validate that a color is selected for other pet templates
       const selectedColor = document.querySelector('input[name="petBackgroundColor"]:checked');
