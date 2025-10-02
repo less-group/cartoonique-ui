@@ -530,10 +530,17 @@ class ResultPopupManager {
             if (uploadContainer) {
               const uploadButton = uploadContainer.querySelector("button");
               if (uploadButton) {
-                // Reset button to initial state
-                uploadButton.textContent = "📸 UPLOAD YOUR PHOTO FIRST";
+                // Reset button to initial state with clearer retry text
+                uploadButton.textContent = "📸 UPLOAD PHOTO - TRY AGAIN";
                 uploadButton.disabled = false;
                 uploadButton.style.backgroundColor = "#4a7dbd";
+                
+                // Reset to original text after a delay
+                setTimeout(() => {
+                  if (uploadButton) {
+                    uploadButton.textContent = "📸 UPLOAD YOUR PHOTO FIRST";
+                  }
+                }, 3000);
               }
               
               // Clear the file input
@@ -547,6 +554,27 @@ class ResultPopupManager {
             const loadingPopup = document.getElementById("pixar-loading-popup");
             if (loadingPopup) {
               loadingPopup.style.display = "none";
+            }
+            
+            // Show the instructions popup with retry message
+            const instructionsPopup = document.getElementById("pixar-instructions-popup");
+            if (instructionsPopup) {
+              instructionsPopup.style.display = "block";
+              document.body.style.overflow = "hidden";
+              
+              // Show retry message if it exists
+              const retryMessage = document.getElementById("retry-message");
+              if (retryMessage) {
+                retryMessage.style.display = "block";
+                // Hide the message after 5 seconds
+                setTimeout(() => {
+                  if (retryMessage) {
+                    retryMessage.style.display = "none";
+                  }
+                }, 5000);
+              }
+              
+              console.log("GO BACK: Reopened upload popup with retry message");
             }
           } else {
             // For non-Gemini templates, show the image cropper

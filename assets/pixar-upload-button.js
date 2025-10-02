@@ -102,6 +102,12 @@
         <button id="pixar-close-button" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 30px; cursor: pointer; padding: 5px; color: #555;">&times;</button>
         
         <h2 style="text-align: center; ${window?.isPetTemplate ? 'font-size: 25px;' : 'font-size: 28px;' } margin-bottom: 20px; font-weight: bold;">UPLOAD A PHOTO ${window?.isPetTemplate ? 'OF YOUR DOG' : 'FOR YOUR PIXAR PORTRAIT' }</h2>
+        
+        <div id="retry-message" style="display: none; background-color: #e8f4fd; border: 2px solid #4A7DBD; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center;">
+          <p style="color: #2c5282; font-size: 16px; margin: 0; font-weight: 600;">
+            🔄 Ready to try again! You can upload the same photo or try a different one.
+          </p>
+        </div>
 
         <div id="mobile-image">
             ${window?.isPetTemplate ? `
