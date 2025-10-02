@@ -1,0 +1,46 @@
+# Test and verification files
+test-*.html
+test-*.js
+verify-*.js
+*-test-output.*
+*-test-results/
+
+# Documentation and verification files
+POPUP-CONSISTENCY-VERIFICATION.md
+IMPLEMENTATION_SUMMARY.md
+FINAL_WHITE_BG_PROMPTS.md
+SUPERHERO-GEMINI-IMPLEMENTATION-COMPLETE.md
+GEMINI-PIXAR-TEMPLATE-DUPLICATION-GUIDE.md
+
+# Test result directories
+complete-white-bg-results/
+gemini-direct-results/
+gemini-test-results/
+nano-banana-results/
+scene-preserved-results/
+white-background-results/
+
+# Temporary and preview files
+gemini-prompt-preview.html
+nano-banana-response.json
+*.test.sh
+test-liquid-syntax.sh
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Node modules (if any)
+node_modules/
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
