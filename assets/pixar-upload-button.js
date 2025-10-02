@@ -101,7 +101,7 @@
       <div style="position: relative; ${window?.isPetTemplate ? 'max-width: 600px; margin: 15px auto;' : 'max-width: 900px; margin: 30px auto;' }  padding: 30px; background: white; border-radius: 8px; box-shadow: 0 0 30px rgba(0,0,0,0.2);">
         <button id="pixar-close-button" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 30px; cursor: pointer; padding: 5px; color: #555;">&times;</button>
         
-        <h2 style="text-align: center; ${window?.isPetTemplate ? 'font-size: 25px;' : 'font-size: 28px;' } margin-bottom: 20px; font-weight: bold;">UPLOAD A PHOTO ${window?.isPetTemplate ? 'OF YOUR DOG' : 'FOR YOUR PIXAR PORTRAIT' }</h2>
+        <h2 style="text-align: center; ${window?.isPetTemplate ? 'font-size: 25px;' : 'font-size: 28px;' } margin-bottom: 20px; font-weight: bold;">${window?.template === "product.superhero-gemini" ? 'UPLOAD A PHOTO' : (window?.isPetTemplate ? 'UPLOAD A PHOTO OF YOUR DOG' : 'UPLOAD A PHOTO FOR YOUR PIXAR PORTRAIT')}</h2>
         
         <div id="retry-message" style="display: none; background-color: #e8f4fd; border: 2px solid #4A7DBD; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center;">
           <p style="color: #2c5282; font-size: 16px; margin: 0; font-weight: 600;">
@@ -110,7 +110,27 @@
         </div>
 
         <div id="mobile-image">
-            ${window?.isPetTemplate ? `
+            ${window?.template === "product.superhero-gemini" ? `
+              <div style="margin-bottom: 20px;">
+                <h3 style="color: #33CC66; text-align: center; font-size: 20px; margin-bottom: 15px; font-weight: bold;">GOOD PHOTO EXAMPLES</h3>
+                <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 10px;">
+                  <div style="text-align: center; width: 45%;">
+                    <div style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 8px; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                      <img src="{{ 'superhero-example-1.jpg' | asset_url }}" alt="Clear Example" style="width: 100%; height: 100%; object-fit: cover;">
+                      <div style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">✓</div>
+                    </div>
+                    <p style="font-weight: bold; color: #33CC66; margin: 0; font-size: 14px;">CLEAR</p>
+                  </div>
+                  <div style="text-align: center; width: 45%;">
+                    <div style="position: relative; border: 2px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 8px; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                      <img src="{{ 'superhero-example-2.jpg' | asset_url }}" alt="1 Person Example" style="width: 100%; height: 100%; object-fit: cover;">
+                      <div style="position: absolute; top: 5px; right: 5px; background-color: #33CC66; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">✓</div>
+                    </div>
+                    <p style="font-weight: bold; color: #33CC66; margin: 0; font-size: 14px;">1 PERSON</p>
+                  </div>
+                </div>
+              </div>
+            ` : window?.isPetTemplate ? `
               <div style="margin-bottom: 20px;">
                 <h3 style="color: #33CC66; text-align: center; font-size: 20px; margin-bottom: 15px; font-weight: bold;">GOOD PHOTO EXAMPLES</h3>
                 <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 10px;">
@@ -142,7 +162,7 @@
             <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 15px;">
               <div style="text-align: center; width: 200px;">
                 <div style="position: relative; border: 3px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                  <img src="${window?.isPetTemplate ? 'https://cdn.shopify.com/s/files/1/0896/3434/1212/files/petgood2.jpg?v=1746781545': 'https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_clear.jpg?v=1683712345'}" alt="Clear Example" style="width: 100%; height: 100%; object-fit: cover;">
+                  <img src="${window?.template === "product.superhero-gemini" ? "{{ 'superhero-example-1.jpg' | asset_url }}" : (window?.isPetTemplate ? 'https://cdn.shopify.com/s/files/1/0896/3434/1212/files/petgood2.jpg?v=1746781545': 'https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_clear.jpg?v=1683712345')}" alt="Clear Example" style="width: 100%; height: 100%; object-fit: cover;">
                   <div style="position: absolute; top: 8px; right: 8px; background-color: #33CC66; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px;">✓</div>
                 </div>
                 <p style="font-weight: bold; color: #33CC66; margin: 0; font-size: 16px;">CLEAR</p>
@@ -150,17 +170,17 @@
           
               <div style="text-align: center; width: 200px;">
                 <div style="position: relative; border: 3px solid #33CC66; width: 100%; aspect-ratio: 1; margin-bottom: 10px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                  <img src="${window?.isPetTemplate ? 'https://cdn.shopify.com/s/files/1/0896/3434/1212/files/petgood3.jpg?v=1746781545': 'https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_oneperson.jpg?v=1683712345'}" alt="One Person Example" style="width: 100%; height: 100%; object-fit: cover;">
+                  <img src="${window?.template === "product.superhero-gemini" ? "{{ 'superhero-example-2.jpg' | asset_url }}" : (window?.isPetTemplate ? 'https://cdn.shopify.com/s/files/1/0896/3434/1212/files/petgood3.jpg?v=1746781545': 'https://cdn.shopify.com/s/files/1/0626/3416/4430/files/good_photo_oneperson.jpg?v=1683712345')}" alt="One Person Example" style="width: 100%; height: 100%; object-fit: cover;">
                   <div style="position: absolute; top: 8px; right: 8px; background-color: #33CC66; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px;">✓</div>
                 </div>
-                <p style="font-weight: bold; color: #33CC66; margin: 0; font-size: 16px;">${window?.isPetTemplate ? '1 DOG' : '1 PERSON' }</p>
+                <p style="font-weight: bold; color: #33CC66; margin: 0; font-size: 16px;">${window?.template === "product.superhero-gemini" ? '1 PERSON' : (window?.isPetTemplate ? '1 DOG' : '1 PERSON')}</p>
               </div>
             </div>
           </div>
         </div>
 
         <p style="text-align: center; font-size: 18px; margin-bottom: 30px; font-weight: bold;">
-          ${window?.isPetTemplate ? 'Please upload a clear image containing <b>one</b> dog' : 'Please make sure to upload a clear, close-up photo of one person without glasses'}.
+          ${window?.template === "product.superhero-gemini" ? 'Please upload a photo' : (window?.isPetTemplate ? 'Please upload a clear image containing <b>one</b> dog' : 'Please make sure to upload a clear, close-up photo of one person without glasses')}.
         </p>
 
         <div id="pixar-upload-buttons" style="text-align: center;">
