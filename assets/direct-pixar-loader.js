@@ -428,9 +428,11 @@
       
       const imageBase64 = e.target.result;
       
-      // Check if this is pixar-gemini template
+      // Check if this is pixar-gemini or superhero-gemini template
       const isPixarGeminiTemplate = window?.template === "product.pixar-gemini" || 
-                                    location.href.includes("/products/pixar-gemini");
+                                    window?.template === "product.superhero-gemini" ||
+                                    location.href.includes("/products/pixar-gemini") ||
+                                    location.href.includes("/products/superhero-gemini");
       
       let payload;
       let endpoint;
@@ -438,10 +440,21 @@
       if (isPixarGeminiTemplate) {
         // Gemini-specific payload
         endpoint = 'gemini-transform';
+        
+        // Determine which prompt and productId to use
+        const isSuperheroTemplate = window?.template === "product.superhero-gemini" || 
+                                   location.href.includes("/products/superhero-gemini");
+        
+        const prompt = isSuperheroTemplate ? 
+          "Create a Pixar/DreamWorks-style 3D animated character portrait based on the provided photo. The character should have stylized proportions: large expressive eyes, smooth rounded facial features, softly glowing skin, and glossy textured hair with natural flow. The style must look like polished CGI from a Disney or DreamWorks movie — not photorealistic, but highly detailed and cinematic. The character should be shown in a centered, heroic pose, wearing a simple but striking superhero outfit with a cape. Add soft, diffuse lighting that highlights the face and hair with a gentle glow. The background should suggest a bright, slightly cinematic cityscape skyline blurred for focus. At the bottom, include bold cinematic title text SUPERMUM, with a smaller tagline like \"Based on a True Story\". The entire composition should resemble a polished animated movie poster." :
+          "Make exactly like characters from Encanto or Turning Red - pure Pixar 3D animation. Oversized expressive cartoon eyes, simplified facial features, glossy hair, smooth synthetic skin. Must look CGI animated not photographic. Keep all people.";
+        
+        const productId = isSuperheroTemplate ? "superhero-gemini" : "pixar-gemini";
+        
         payload = {
           image: imageBase64,
-          prompt: "Make exactly like characters from Encanto or Turning Red - pure Pixar 3D animation. Oversized expressive cartoon eyes, simplified facial features, glossy hair, smooth synthetic skin. Must look CGI animated not photographic. Keep all people.",
-          productId: "pixar-gemini",
+          prompt: prompt,
+          productId: productId,
           customerId: "direct-upload",
           watermarkImage: {
             url: "https://cdn.shopify.com/s/files/1/0896/3434/1212/files/watermarklogo.png",
@@ -451,7 +464,7 @@
           },
           backgroundColor: "pink"
         };
-        console.log('🎨 Using Gemini Flash 2.5 endpoint for pixar-gemini template');
+        console.log(`🎨 Using Gemini Flash 2.5 endpoint for ${productId} template`);
       } else {
         // Standard payload for other templates
         endpoint = 'transform';

@@ -67,7 +67,7 @@
     // Add content to the instructions popup
     instructionsPopup.innerHTML = `
       <style>
-        ${window?.isPetTemplate && window?.template !== "product.pixar-gemini" ? `
+        ${window?.isPetTemplate && window?.template !== "product.pixar-gemini" && window?.template !== "product.superhero-gemini" ? `
           #pet-background-color-selector input[type="radio"]:checked + div {
             border-color: #4A7DBD !important;
             box-shadow: 0 0 0 3px rgba(74, 125, 189, 0.3) !important;
@@ -161,7 +161,7 @@
           <button id="pixar-upload-button" style="background-color: #4A7DBD; color: white; padding: 18px 40px; font-size: 20px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 10px auto; display: block; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">UPLOAD PHOTO</button>
         </div>
         
-        ${window?.isPetTemplate && window?.template !== "product.pixar-gemini" ? `
+        ${window?.isPetTemplate && window?.template !== "product.pixar-gemini" && window?.template !== "product.superhero-gemini" ? `
           <fieldset id="pet-background-color-selector" style="border: none; margin: 20px auto; text-align: center; max-width: 300px;">
             <legend style="font-size: 18px; margin-bottom: 15px; color: #333; font-weight: 600;">Choose Background Color:</legend>
             <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: nowrap;" role="radiogroup" aria-labelledby="background-color-legend">

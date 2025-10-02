@@ -42,11 +42,14 @@ class ResultPopupManager {
     const isPetTemplate = window.isPetTemplate || 
                          window.template === "product.pet" ||
                          window.template === "product.pixar-gemini" ||
+                         window.template === "product.superhero-gemini" ||
                          location.href.includes("pet-pixar-portrait") ||
                          location.href.includes("/products/pet") ||
                          location.href.includes("/products/pixar-gemini") ||
+                         location.href.includes("/products/superhero-gemini") ||
                          document.querySelector('[data-template="product.pet"]') ||
-                         document.querySelector('[data-template="product.pixar-gemini"]');
+                         document.querySelector('[data-template="product.pixar-gemini"]') ||
+                         document.querySelector('[data-template="product.superhero-gemini"]');
     
     // Try to get variant IDs from product meta or form data
     const productVariants = this.getProductVariantsFromPage();
