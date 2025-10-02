@@ -179,9 +179,11 @@
           </div>
         </div>
 
-        <p style="text-align: center; font-size: 18px; margin-bottom: 30px; font-weight: bold;">
-          ${window?.template === "product.superhero-gemini" ? 'Please upload a photo' : (window?.isPetTemplate ? 'Please upload a clear image containing <b>one</b> dog' : 'Please make sure to upload a clear, close-up photo of one person without glasses')}.
-        </p>
+        ${window?.template === "product.superhero-gemini" ? '' : `
+          <p style="text-align: center; font-size: 18px; margin-bottom: 30px; font-weight: bold;">
+            ${window?.isPetTemplate ? 'Please upload a clear image containing <b>one</b> dog' : 'Please make sure to upload a clear, close-up photo of one person without glasses'}.
+          </p>
+        `}
 
         <div id="pixar-upload-buttons" style="text-align: center;">
           <button id="pixar-upload-button" style="background-color: #4A7DBD; color: white; padding: 18px 40px; font-size: 20px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 10px auto; display: block; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">UPLOAD PHOTO</button>
