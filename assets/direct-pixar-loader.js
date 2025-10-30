@@ -447,7 +447,7 @@
         
         const prompt = isSuperheroTemplate ? 
           "Create a Pixar/DreamWorks-style 3D animated character portrait based on the provided photo. The character should have stylized proportions: large expressive eyes, smooth rounded facial features, softly glowing skin, and glossy textured hair with natural flow. The style must look like polished CGI from a Disney or DreamWorks movie — not photorealistic, but highly detailed and cinematic. The character should be shown in a centered, heroic pose, wearing a simple but striking superhero outfit with a cape. Add soft, diffuse lighting that highlights the face and hair with a gentle glow. The background should suggest a bright, slightly cinematic cityscape skyline blurred for focus. At the bottom, include bold cinematic title text SUPERMUM, with a smaller tagline like \"Based on a True Story\". The entire composition should resemble a polished animated movie poster." :
-          "Make exactly like characters from Encanto or Turning Red - pure Pixar 3D animation. Oversized expressive cartoon eyes, simplified facial features, glossy hair, smooth synthetic skin. Must look CGI animated not photographic. Keep all people.";
+          "Turn this photo into a photo of a joyful, warm and cute 3D Pixar style cartoon dog with white angelic wings and a glowing halo above its head. It is sitting on soft, fluffy white clouds in a bright blue sky, emanating a warm, ethereal glow. The overall look is one of 3d pixar disney animation.";
         
         const productId = isSuperheroTemplate ? "superhero-gemini" : "pixar-gemini";
         
