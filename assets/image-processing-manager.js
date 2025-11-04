@@ -623,6 +623,13 @@ class ImageProcessingManager {
       // Set flag to prevent multiple dialogs
       this.petTextDialogOpen = true;
 
+      // Hide loading popup now that text overlay is about to show
+      const loadingPopup = document.getElementById("pixar-loading-popup");
+      if (loadingPopup) {
+        loadingPopup.style.display = "none";
+        console.log("Hidden loading popup - text overlay dialog is now showing");
+      }
+
       // Show the text dialog with cropped image
       textManager.showTextDialog(file).then((completed) => {
         // Clear the flag when dialog closes
@@ -1904,12 +1911,6 @@ class ImageProcessingManager {
     if (isGeminiResponse) {
       console.log("TRANSFORM COMPLETE: Gemini response - image is fully processed");
       
-      // Hide loading popup
-      const loadingPopup = document.getElementById("pixar-loading-popup");
-      if (loadingPopup) {
-        loadingPopup.style.display = "none";
-      }
-      
       // Mark cropping as complete for all Gemini responses (they don't need cropping)
       this.cropComplete = true;
       
@@ -1921,6 +1922,9 @@ class ImageProcessingManager {
         // The text overlay will use the stylizedImageUrl we just set
         this.textProcessingComplete = false;
         
+        // DON'T hide loading popup yet - let text overlay manager handle it
+        console.log("TRANSFORM COMPLETE: Keeping loading popup visible until text overlay shows");
+        
         // Show the text overlay with the Gemini-processed image
         setTimeout(() => {
           this.showImageCropper(); // This will detect cropComplete=true and go to text overlay
@@ -1931,6 +1935,12 @@ class ImageProcessingManager {
         
         // For other Gemini templates, skip text processing entirely
         this.textProcessingComplete = true;
+        
+        // Hide loading popup for non-pet Gemini templates
+        const loadingPopup = document.getElementById("pixar-loading-popup");
+        if (loadingPopup) {
+          loadingPopup.style.display = "none";
+        }
         
         // Apply final processing to show the result
         setTimeout(() => this.applyFinalProcessing(), 100);
