@@ -591,11 +591,25 @@ class ImageProcessingManager {
       textManager = window.pixarTextManager = new window.PixarTextManager();
       // }
 
-      // Convert data URL to Blob/File for text manager
-      const blob = this.dataURLToBlob(this.croppedImageDataUrl);
-      const file = new File([blob], "cropped-image.png", {
-        type: "image/png",
-      });
+      // For pet templates, check if we have stylizedImageUrl from Gemini
+      let file;
+      if (this.stylizedImageUrl && !this.croppedImageDataUrl) {
+        console.log("Using stylizedImageUrl for pet text overlay (Gemini flow)");
+        // Create a dummy file - text manager will use stylizedImageUrl instead
+        file = new File([new Blob()], "gemini-processed-image.png", {
+          type: "image/png",
+        });
+      } else if (this.croppedImageDataUrl) {
+        console.log("Using croppedImageDataUrl for pet text overlay (standard flow)");
+        // Convert data URL to Blob/File for text manager
+        const blob = this.dataURLToBlob(this.croppedImageDataUrl);
+        file = new File([blob], "cropped-image.png", {
+          type: "image/png",
+        });
+      } else {
+        console.error("No image data available for pet text overlay");
+        return;
+      }
 
       this.cropComplete = true;
 
