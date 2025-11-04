@@ -31,6 +31,7 @@ class ImageProcessingManager {
     this.finalProcessingComplete = false;
     this.resultPopupShown = false;
     this.isRailwayUrlNeeded = true;
+    this.petTextDialogOpen = false;
 
     this.processnonwaterimgstatus = false;
     this.processwaterimgbase64 = null;
@@ -584,12 +585,18 @@ class ImageProcessingManager {
     console.log("Showing image cropper");
 
     if (window?.isPetTemplate) {
+      // Prevent multiple text dialogs from opening
+      if (this.petTextDialogOpen) {
+        console.log("Pet text dialog already open, skipping showImageCropper");
+        return;
+      }
+
       // Access the text manager, create it if needed
       let textManager = window.pixarTextManager;
-      // if (!textManager && window.PixarTextManager) {
-      console.log("Creating new PixarTextManager instance");
-      textManager = window.pixarTextManager = new window.PixarTextManager();
-      // }
+      if (!textManager && window.PixarTextManager) {
+        console.log("Creating new PixarTextManager instance");
+        textManager = window.pixarTextManager = new window.PixarTextManager();
+      }
 
       // For pet templates, check if we have stylizedImageUrl from Gemini
       let file;
@@ -613,8 +620,13 @@ class ImageProcessingManager {
 
       this.cropComplete = true;
 
+      // Set flag to prevent multiple dialogs
+      this.petTextDialogOpen = true;
+
       // Show the text dialog with cropped image
       textManager.showTextDialog(file).then((completed) => {
+        // Clear the flag when dialog closes
+        this.petTextDialogOpen = false;
         textManager.isEditing = false;
 
         if (completed) {
@@ -687,6 +699,10 @@ class ImageProcessingManager {
             }
           }
         }
+      }).catch((error) => {
+        // Clear the flag if dialog fails or is cancelled
+        this.petTextDialogOpen = false;
+        console.error("Pet text dialog error:", error);
       });
 
       return;
