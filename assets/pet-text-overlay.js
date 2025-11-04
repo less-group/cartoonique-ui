@@ -463,19 +463,86 @@ class PetTextOverlay extends HTMLElement {
       const useCache = this.cachedImage && this.cachedImage.src === imageUrl;
 
       const renderWithImage = (img) => {
-        // Set canvas dimensions to match the full image (no cropping in display)
-        const canvasWidth = img.width;
-        const canvasHeight = img.height;
+        // Set canvas dimensions to match the image
+        // Check if we need to use 50x70 aspect ratio based on crop selection
+        const imageManager = window.imageProcessingManager;
+        const is5070Selected =
+          imageManager &&
+          imageManager.currentCropRatio &&
+          Math.abs(imageManager.currentCropRatio - 5 / 7) < 0.01;
+
+        // Determine the target aspect ratio based on user's crop choice
+        const targetRatio = is5070Selected ? 5 / 7 : 3 / 4; // Either 50x70 or 30x40 aspect ratio
+
+        // Calculate dimensions that maintain aspect ratio
+        let canvasWidth, canvasHeight;
+        const imgRatio = img.width / img.height;
+        
+        // Check if image is already close to target aspect ratio (within 2% tolerance)
+        // This prevents unnecessary cropping of Gemini images that are already in correct ratio
+        const tolerance = 0.02;
+        const ratiosDiff = Math.abs(imgRatio - targetRatio);
+        const isCloseToTargetRatio = ratiosDiff <= tolerance;
+        
+        if (isCloseToTargetRatio) {
+          // Image is already close to target ratio - use full image without cropping
+          canvasWidth = img.width;
+          canvasHeight = img.height;
+          console.log(`📐 Image aspect ratio (${imgRatio.toFixed(3)}) is close to target (${targetRatio.toFixed(3)}) - using full image`);
+        } else {
+          // Image needs cropping to match target ratio
+          console.log(`📐 Image aspect ratio (${imgRatio.toFixed(3)}) differs from target (${targetRatio.toFixed(3)}) - applying crop`);
+          
+          if (imgRatio > targetRatio) {
+            // Image is wider than target ratio
+            canvasHeight = img.height;
+            canvasWidth = canvasHeight * targetRatio;
+          } else {
+            // Image is taller than target ratio
+            canvasWidth = img.width;
+            canvasHeight = canvasWidth / targetRatio;
+          }
+        }
 
         // Set canvas dimensions
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
 
+        // Calculate draw parameters based on whether we're cropping or not
+        let sourceX, sourceY, sourceWidth, sourceHeight;
+        let destX = 0, destY = 0, destWidth = canvasWidth, destHeight = canvasHeight;
+        
+        if (isCloseToTargetRatio) {
+          // Use full image
+          sourceX = 0;
+          sourceY = 0;
+          sourceWidth = img.width;
+          sourceHeight = img.height;
+        } else {
+          // Center crop the image
+          const offsetX = (img.width - canvasWidth) / 2;
+          const offsetY = (img.height - canvasHeight) / 2;
+          sourceX = offsetX;
+          sourceY = offsetY;
+          sourceWidth = canvasWidth;
+          sourceHeight = canvasHeight;
+        }
+
         // Clear the canvas
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-        // Draw the full image without any cropping
-        ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvasWidth, canvasHeight);
+        // Draw the image
+        ctx.drawImage(
+          img,
+          sourceX,
+          sourceY,
+          sourceWidth,
+          sourceHeight,
+          destX,
+          destY,
+          destWidth,
+          destHeight
+        );
 
         // updated code
         let width = canvasWidth;
