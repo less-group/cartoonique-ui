@@ -684,7 +684,12 @@ class PetTextOverlay extends HTMLElement {
       await this.updatePreview();
     }
 
-    window.imageProcessingManager.hideLoadingPopup();
+    // Hide loading popup now that text overlay is actually showing
+    const loadingPopup = document.getElementById("pixar-loading-popup");
+    if (loadingPopup) {
+      loadingPopup.style.display = "none";
+      console.log("✅ Loading popup hidden - PetTextOverlay is now visible");
+    }
 
     // Show dialog with animation
     this.classList.add("active");

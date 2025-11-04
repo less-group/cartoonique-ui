@@ -623,12 +623,7 @@ class ImageProcessingManager {
       // Set flag to prevent multiple dialogs
       this.petTextDialogOpen = true;
 
-      // Hide loading popup now that text overlay is about to show
-      const loadingPopup = document.getElementById("pixar-loading-popup");
-      if (loadingPopup) {
-        loadingPopup.style.display = "none";
-        console.log("Hidden loading popup - text overlay dialog is now showing");
-      }
+      // Loading popup will be hidden by PetTextOverlay when it's actually visible
 
       // Show the text dialog with cropped image
       textManager.showTextDialog(file).then((completed) => {
@@ -1929,6 +1924,15 @@ class ImageProcessingManager {
         setTimeout(() => {
           this.showImageCropper(); // This will detect cropComplete=true and go to text overlay
         }, 300);
+        
+        // Fallback: Hide loading popup after 5 seconds if text overlay fails to show
+        setTimeout(() => {
+          const loadingPopup = document.getElementById("pixar-loading-popup");
+          if (loadingPopup && loadingPopup.style.display !== "none") {
+            loadingPopup.style.display = "none";
+            console.log("⚠️ FALLBACK: Loading popup hidden after timeout (text overlay may have failed)");
+          }
+        }, 5000);
         return;
       } else {
         console.log("TRANSFORM COMPLETE: Non-pet Gemini template - skipping text overlay, showing result");
