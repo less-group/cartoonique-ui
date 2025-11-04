@@ -477,39 +477,71 @@ class PetTextOverlay extends HTMLElement {
         // Calculate dimensions that maintain aspect ratio
         let canvasWidth, canvasHeight;
         const imgRatio = img.width / img.height;
-
-        if (imgRatio > targetRatio) {
-          // Image is wider than target ratio
-          canvasHeight = img.height;
-          canvasWidth = canvasHeight * targetRatio;
-        } else {
-          // Image is taller than target ratio
+        
+        // Check if image is already close to target aspect ratio (within 2% tolerance)
+        // This prevents unnecessary cropping of Gemini images that are already in correct ratio
+        const tolerance = 0.02;
+        const ratiosDiff = Math.abs(imgRatio - targetRatio);
+        const isCloseToTargetRatio = ratiosDiff <= tolerance;
+        
+        if (isCloseToTargetRatio) {
+          // Image is already close to target ratio - use full image without cropping
           canvasWidth = img.width;
-          canvasHeight = canvasWidth / targetRatio;
+          canvasHeight = img.height;
+          console.log(`📐 Image aspect ratio (${imgRatio.toFixed(3)}) is close to target (${targetRatio.toFixed(3)}) - using full image`);
+        } else {
+          // Image needs cropping to match target ratio
+          console.log(`📐 Image aspect ratio (${imgRatio.toFixed(3)}) differs from target (${targetRatio.toFixed(3)}) - applying crop`);
+          
+          if (imgRatio > targetRatio) {
+            // Image is wider than target ratio
+            canvasHeight = img.height;
+            canvasWidth = canvasHeight * targetRatio;
+          } else {
+            // Image is taller than target ratio
+            canvasWidth = img.width;
+            canvasHeight = canvasWidth / targetRatio;
+          }
         }
 
         // Set canvas dimensions
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
 
-        // Draw the original image centered in the canvas
-        const offsetX = (img.width - canvasWidth) / 2;
-        const offsetY = (img.height - canvasHeight) / 2;
+        // Calculate draw parameters based on whether we're cropping or not
+        let sourceX, sourceY, sourceWidth, sourceHeight;
+        let destX = 0, destY = 0, destWidth = canvasWidth, destHeight = canvasHeight;
+        
+        if (isCloseToTargetRatio) {
+          // Use full image
+          sourceX = 0;
+          sourceY = 0;
+          sourceWidth = img.width;
+          sourceHeight = img.height;
+        } else {
+          // Center crop the image
+          const offsetX = (img.width - canvasWidth) / 2;
+          const offsetY = (img.height - canvasHeight) / 2;
+          sourceX = offsetX;
+          sourceY = offsetY;
+          sourceWidth = canvasWidth;
+          sourceHeight = canvasHeight;
+        }
 
         // Clear the canvas
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-        // Draw the image, centered if needed
+        // Draw the image
         ctx.drawImage(
           img,
-          offsetX,
-          offsetY,
-          canvasWidth,
-          canvasHeight,
-          0,
-          0,
-          canvasWidth,
-          canvasHeight
+          sourceX,
+          sourceY,
+          sourceWidth,
+          sourceHeight,
+          destX,
+          destY,
+          destWidth,
+          destHeight
         );
 
         // updated code
