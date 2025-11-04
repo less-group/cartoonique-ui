@@ -1869,9 +1869,10 @@ class ImageProcessingManager {
     this.transformationComplete = true;
 
     // If this is a Gemini response, the image is already fully processed
-    // Skip cropping and text steps, go directly to final result
+    // For pet templates, we still need the text overlay step
+    // For other Gemini templates (Pixar Gemini, Superhero Gemini), skip both cropping and text steps
     if (isGeminiResponse) {
-      console.log("TRANSFORM COMPLETE: Gemini response - image is fully processed, showing result");
+      console.log("TRANSFORM COMPLETE: Gemini response - image is fully processed");
       
       // Hide loading popup
       const loadingPopup = document.getElementById("pixar-loading-popup");
@@ -1879,13 +1880,32 @@ class ImageProcessingManager {
         loadingPopup.style.display = "none";
       }
       
-      // Mark as complete and show result
+      // Mark cropping as complete for all Gemini responses (they don't need cropping)
       this.cropComplete = true;
-      this.textProcessingComplete = true;
       
-      // Apply final processing to show the result
-      setTimeout(() => this.applyFinalProcessing(), 100);
-      return;
+      // Check if this is a pet template - they need text overlay even with Gemini
+      if (window?.isPetTemplate) {
+        console.log("TRANSFORM COMPLETE: Pet template detected - proceeding to text overlay step");
+        
+        // For pet templates, don't skip text processing - show the text overlay
+        // The text overlay will use the stylizedImageUrl we just set
+        this.textProcessingComplete = false;
+        
+        // Show the text overlay with the Gemini-processed image
+        setTimeout(() => {
+          this.showImageCropper(); // This will detect cropComplete=true and go to text overlay
+        }, 300);
+        return;
+      } else {
+        console.log("TRANSFORM COMPLETE: Non-pet Gemini template - skipping text overlay, showing result");
+        
+        // For other Gemini templates, skip text processing entirely
+        this.textProcessingComplete = true;
+        
+        // Apply final processing to show the result
+        setTimeout(() => this.applyFinalProcessing(), 100);
+        return;
+      }
     }
 
     // IMPORTANT: Do NOT update product gallery image here.
