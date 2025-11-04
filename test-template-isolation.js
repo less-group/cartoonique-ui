@@ -28,7 +28,7 @@ if (isPixarGeminiTemplate) {
   console.log('Expected payload: Gemini format with prompt');
 } else if (window?.isPetTemplate) {
   console.log('%c✅ This page WILL use Pet Transform endpoint', 'color: orange; font-weight: bold');
-  console.log('Expected endpoint: transformpet');
+  console.log('Expected endpoint: gemini-transform');
   console.log('Expected payload: Standard format with background color');
 } else {
   console.log('%c✅ This page WILL use Standard Transform endpoint', 'color: purple; font-weight: bold');
@@ -67,7 +67,7 @@ if (isPixarGeminiTemplate) {
   };
   
   if (window?.isPetTemplate) {
-    testEndpoint = 'transformpet';
+    testEndpoint = 'gemini-transform';
     testPayload.backgroundColor = window?.petBackgroundColor || 'pink';
   } else {
     testEndpoint = 'transform';
@@ -82,7 +82,7 @@ console.groupEnd();
 console.group('🛡️ Template Isolation Verification');
 const tests = {
   'Gemini only on pixar-gemini': isPixarGeminiTemplate ? testEndpoint === 'gemini-transform' : testEndpoint !== 'gemini-transform',
-  'Pet templates use transformpet': window?.isPetTemplate ? testEndpoint === 'transformpet' : true,
+  'Pet templates use gemini-transform': window?.isPetTemplate ? testEndpoint === 'gemini-transform' : true,
   'Regular templates use transform': !window?.isPetTemplate && !isPixarGeminiTemplate ? testEndpoint === 'transform' : true,
   'No Gemini prompt in non-Gemini': !isPixarGeminiTemplate ? !testPayload.prompt : true,
   'Background color in pet templates': window?.isPetTemplate ? testPayload.hasOwnProperty('backgroundColor') : true
@@ -113,7 +113,7 @@ console.log('Isolation status:', allTestsPassed ? '✅ PROTECTED' : '❌ COMPROM
 
 console.log('\n%cRecommended Testing:', 'font-weight: bold');
 console.log('1. Test on a pixar-gemini product page - should use gemini-transform');
-console.log('2. Test on a pet-background-selector page - should use transformpet');
+console.log('2. Test on a pet-background-selector page - should use gemini-transform');
 console.log('3. Test on a regular pixar product - should use transform');
 console.log('4. Upload an image on each and verify correct endpoint in Network tab');
 console.groupEnd();

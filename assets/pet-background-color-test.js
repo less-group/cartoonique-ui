@@ -323,7 +323,7 @@
               resolve({
                 success: true,
                 payload: payload,
-                endpoint: window?.isPetTemplate ? 'transformpet' : 'transform'
+                endpoint: window?.isPetTemplate ? 'gemini-transform' : 'transform'
               });
             });
           }
@@ -349,8 +349,8 @@
 
         // Test 4.3: Correct endpoint selection
         TestUtils.assert(
-          result.endpoint === 'transformpet',
-          'Should use transformpet endpoint for pet templates'
+          result.endpoint === 'gemini-transform',
+          'Should use gemini-transform endpoint for pet templates'
         );
 
         // Test 4.4: Test different color values - blue

@@ -4796,11 +4796,12 @@ class ImageProcessingManager {
         //   },
         // };
 
-        // Check if this is the pixar-gemini or superhero-gemini template SPECIFICALLY
+        // Check if this is the pixar-gemini, superhero-gemini template, or any pet template
         const isPixarGeminiTemplate = window?.template === "product.pixar-gemini" || 
                                       window?.template === "product.superhero-gemini" ||
                                       location.href.includes("/products/pixar-gemini") ||
-                                      location.href.includes("/products/superhero-gemini");
+                                      location.href.includes("/products/superhero-gemini") ||
+                                      window?.isPetTemplate;
         
         // Create payload - different structure for Gemini vs regular endpoints
         let payload;
@@ -4815,12 +4816,22 @@ class ImageProcessingManager {
           // Determine which prompt to use based on template
           const isSuperheroTemplate = window?.template === "product.superhero-gemini" || 
                                      location.href.includes("/products/superhero-gemini");
+          const isPetTemplate = window?.isPetTemplate;
           
-          const prompt = isSuperheroTemplate ? 
-            "Create a Pixar/DreamWorks-style 3D animated character portrait based on the provided photo. The character should have stylized proportions: large expressive eyes, smooth rounded facial features, softly glowing skin, and glossy textured hair with natural flow. The style must look like polished CGI from a Disney or DreamWorks movie — not photorealistic, but highly detailed and cinematic. The character should be shown in a centered, heroic pose, wearing a simple but striking superhero outfit with a cape. Add soft, diffuse lighting that highlights the face and hair with a gentle glow. The background should suggest a bright, slightly cinematic cityscape skyline blurred for focus. At the bottom, include bold cinematic title text SUPERMUM, with a smaller tagline like \"Based on a True Story\". The entire composition should resemble a polished animated movie poster." :
-            "Turn this photo into a photo of a joyful, warm and cute 3D Pixar style cartoon dog with white angelic wings and a glowing halo above its head. It is sitting on soft, fluffy white clouds in a bright blue sky, emanating a warm, ethereal glow. The overall look is one of 3d pixar disney animation.";
+          let prompt, productId;
           
-          const productId = isSuperheroTemplate ? "superhero-gemini" : "pixar-gemini";
+          if (isSuperheroTemplate) {
+            prompt = "Create a Pixar/DreamWorks-style 3D animated character portrait based on the provided photo. The character should have stylized proportions: large expressive eyes, smooth rounded facial features, softly glowing skin, and glossy textured hair with natural flow. The style must look like polished CGI from a Disney or DreamWorks movie — not photorealistic, but highly detailed and cinematic. The character should be shown in a centered, heroic pose, wearing a simple but striking superhero outfit with a cape. Add soft, diffuse lighting that highlights the face and hair with a gentle glow. The background should suggest a bright, slightly cinematic cityscape skyline blurred for focus. At the bottom, include bold cinematic title text SUPERMUM, with a smaller tagline like \"Based on a True Story\". The entire composition should resemble a polished animated movie poster.";
+            productId = "superhero-gemini";
+          } else if (isPetTemplate) {
+            const basePrompt = "Create a cute 3D animated-style dog in Pixar/Disney photo based on this dog — animated features and fur. The dog sits centered and symmetrical at the bottom, full body visible, facing forward with a gentle upward gaze and a happy and friendly expression. Use soft, diffuse lighting on a solid {color} background with no shadows or props. Keep the upper fourth of the image completely empty for negative space while the dog remains large and in full focus. The style must be fully stylized, not photorealistic.";
+            const selectedColor = window?.petBackgroundColor || "pink";
+            prompt = basePrompt.replace("{color}", selectedColor);
+            productId = "pet-gemini";
+          } else {
+            prompt = "Turn this photo into a photo of a joyful, warm and cute 3D Pixar style cartoon dog with white angelic wings and a glowing halo above its head. It is sitting on soft, fluffy white clouds in a bright blue sky, emanating a warm, ethereal glow. The overall look is one of 3d pixar disney animation.";
+            productId = "pixar-gemini";
+          }
           
           payload = {
             image: imageBase64,
@@ -4833,7 +4844,7 @@ class ImageProcessingManager {
               height: 200,
               spaceBetweenWatermarks: 100
             },
-            backgroundColor: "pink" // Default background for Gemini
+            backgroundColor: isPetTemplate ? (window?.petBackgroundColor || "pink") : "pink"
           };
           console.log(`🎨 Using Gemini Flash 2.5 endpoint for ${productId} template`);
         } else {
@@ -4849,23 +4860,8 @@ class ImageProcessingManager {
             },
           };
           
-          // Add background color for pet templates
-          if (window?.isPetTemplate) {
-            // Debug logging
-            console.log("🖼️ isPetTemplate:", window.isPetTemplate);
-            console.log("🖼️ Current petBackgroundColor:", window.petBackgroundColor);
-            
-            if (window?.petBackgroundColor) {
-              payload.backgroundColor = window.petBackgroundColor;
-              console.log("🖼️ Adding background color to payload:", window.petBackgroundColor);
-            } else {
-              console.log("🖼️ WARNING: No background color set, using default 'pink'");
-              payload.backgroundColor = 'pink';
-            }
-            endpoint = "transformpet";
-          } else {
-            endpoint = "transform";
-          }
+          // For all other non-Gemini templates (regular pixar, etc.)
+          endpoint = "transform";
         }
         
         

@@ -11,11 +11,11 @@ This branch implements Gemini Flash 2.5 support **ONLY** for the `pixar-gemini` 
 - **Payload Format**: Gemini-specific with prompt
 - **Response**: Direct image URLs (no polling)
 
-### 2. Pet Templates (UNCHANGED)
+### 2. Pet Templates (NOW USING GEMINI)
 - **Detection**: `window?.isPetTemplate === true`
-- **Endpoint**: `/transformpet`
-- **Payload Format**: Standard with background color support
-- **Response**: JobId with polling
+- **Endpoint**: `/gemini-transform`
+- **Payload Format**: Gemini-specific with background color support
+- **Response**: Direct image URLs (no polling)
 
 ### 3. Regular Templates (UNCHANGED)
 - **Detection**: All other templates
@@ -36,9 +36,9 @@ if (isPixarGeminiTemplate) {
   endpoint = "gemini-transform";
   payload = { /* Gemini format */ };
 } else if (window?.isPetTemplate) {
-  // Pet endpoint (UNCHANGED)
-  endpoint = "transformpet";
-  payload = { /* Pet format with backgroundColor */ };
+  // Pet endpoint (NOW USING GEMINI)
+  endpoint = "gemini-transform";
+  payload = { /* Gemini format with backgroundColor */ };
 } else {
   // Standard endpoint (UNCHANGED)
   endpoint = "transform";
@@ -84,7 +84,7 @@ window?.template === "product.pixar-gemini" // Should be true
 window?.isPetTemplate === true // Should be true
 window?.template !== "product.pixar-gemini" // Should be true
 // Upload an image
-// Check Network tab: should call /transformpet
+// Check Network tab: should call /gemini-transform
 // Background color selector should work
 ```
 
@@ -180,7 +180,7 @@ git push
 
 ## Verification Checklist
 - [ ] Pixar-gemini uses `/gemini-transform` endpoint
-- [ ] Pet templates still use `/transformpet` endpoint
+- [ ] Pet templates now use `/gemini-transform` endpoint
 - [ ] Regular templates still use `/transform` endpoint
 - [ ] Background color selector works on pet templates
 - [ ] No polling occurs for pixar-gemini

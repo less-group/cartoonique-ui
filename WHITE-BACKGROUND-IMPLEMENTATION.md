@@ -64,14 +64,16 @@ console.log(window.petBackgroundColor); // Should output: "white"
 
 ## 🔍 What Gets Sent to Backend
 
-When white is selected, the API payload to the `/transformpet` endpoint includes:
+When white is selected, the API payload to the `/gemini-transform` endpoint includes:
 ```json
 {
   "image": "base64-encoded-image-data",
-  "style": "pixar",
+  "prompt": "Create a cute 3D animated-style dog in Pixar/Disney photo based on this dog — animated features and fur. The dog sits centered and symmetrical at the bottom, full body visible, facing forward with a gentle upward gaze and a happy and friendly expression. Use soft, diffuse lighting on a solid {color} background with no shadows or props. Keep the upper fourth of the image completely empty for negative space while the dog remains large and in full focus. The style must be fully stylized, not photorealistic.",
+  "productId": "pet-gemini",
+  "customerId": "customer",
   "backgroundColor": "white",
-  "watermark": {
-    "url": "...",
+  "watermarkImage": {
+    "url": "https://cdn.shopify.com/s/files/1/0896/3434/1212/files/watermarklogo.png",
     "width": 200,
     "height": 200,
     "spaceBetweenWatermarks": 100
@@ -81,7 +83,7 @@ When white is selected, the API payload to the `/transformpet` endpoint includes
 
 ## ⚠️ Backend Requirements
 
-Ensure your backend API (`transformpet` endpoint) can handle:
+Ensure your backend API (`gemini-transform` endpoint) can handle:
 - `backgroundColor: "pink"` (existing)
 - `backgroundColor: "blue"` (existing)  
 - `backgroundColor: "white"` (new)

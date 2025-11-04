@@ -62,7 +62,7 @@ window.petBackgroundColorTests.runAllTests()
 - [ ] **Payload Structure**: Base payload contains image, style, watermark
 - [ ] **Background Color Inclusion**: `backgroundColor` field added for pet templates
 - [ ] **Color Value Sync**: Payload reflects current color selection
-- [ ] **Endpoint Selection**: Uses `/transformpet` for pet templates
+- [ ] **Endpoint Selection**: Uses `/gemini-transform` for pet templates
 - [ ] **Conditional Logic**: Non-pet templates don't include backgroundColor
 - [ ] **API Logging**: Payload construction is logged
 

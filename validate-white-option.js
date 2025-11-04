@@ -116,7 +116,7 @@
     console.log('1. Upload a pet photo');
     console.log('2. Select the white background option');
     console.log('3. Check browser DevTools Network tab');
-    console.log('4. Look for API request to /transformpet endpoint');
+    console.log('4. Look for API request to /gemini-transform endpoint');
     console.log('5. Verify payload includes: backgroundColor: "white"');
   }
 })();

@@ -33,7 +33,7 @@
 ### Core Scripts (All use `window.isPetTemplate`)
 1. ✅ **image-processing-manager.js**
    - Handles pet template detection via `window.isPetTemplate`
-   - Uses "transformpet" API endpoint for pet templates
+   - Uses "gemini-transform" API endpoint for pet templates
    - Includes background color in payload when `isPetTemplate` is true
 
 2. ✅ **pixar-upload-button.js**
@@ -70,8 +70,8 @@
 - ✅ Preview functionality
 
 ### 3. API Integration
-- ✅ Endpoint selection: `transformpet` for pet templates
-- ✅ Status endpoint: `statuspet` for pet templates
+- ✅ Endpoint selection: `gemini-transform` for pet templates
+- ✅ Direct response handling (no polling required)
 - ✅ Background color included in payload
 - ✅ Watermark configuration preserved
 
@@ -133,7 +133,7 @@ console.log('Pet Background Color:', window.petBackgroundColor); // Should be 'p
 console.log('Pet Text Overlay:', document.querySelector('pet-text-overlay')); // Should exist after upload
 
 // Test 4: API Endpoint
-// Monitor network tab - should use /transformpet endpoint
+// Monitor network tab - should use /gemini-transform endpoint
 ```
 
 ## ✅ Summary

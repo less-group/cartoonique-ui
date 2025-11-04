@@ -117,7 +117,7 @@ let expectedEndpoint;
 if (isPixarGemini) {
   expectedEndpoint = 'gemini-transform';
 } else if (isPetTemplate) {
-  expectedEndpoint = 'transformpet';
+  expectedEndpoint = 'gemini-transform';
 } else {
   expectedEndpoint = 'transform';
 }
