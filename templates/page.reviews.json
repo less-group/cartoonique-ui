@@ -1,0 +1,65 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "page": {
+      "type": "page",
+      "settings": {
+        "color_scheme": "default",
+        "container_size": "page-width",
+        "show_heading": false,
+        "add_side_paddings": true,
+        "section_spacing_top": 20,
+        "section_spacing_bottom": 0
+      }
+    },
+    "rich_text_ngBmrR": {
+      "type": "rich-text",
+      "blocks": {
+        "heading_LFEVfQ": {
+          "type": "heading",
+          "settings": {
+            "title": "Ready to create your custom cartoon portrait?",
+            "heading_size": "h3"
+          }
+        },
+        "buttons_anzwAH": {
+          "type": "buttons",
+          "settings": {
+            "btn_text": "CREATE NOW",
+            "btn_url": "shopify://products/custom-cartoon-dog-portrait",
+            "btn_style": "solid",
+            "extra_btn_text": "",
+            "extra_btn_url": "",
+            "extra_btn_style": "solid"
+          }
+        }
+      },
+      "block_order": [
+        "heading_LFEVfQ",
+        "buttons_anzwAH"
+      ],
+      "name": "t:sections.rich_text.name",
+      "settings": {
+        "color_scheme": "default",
+        "enable_background_around_container": false,
+        "container_size": "page-width",
+        "content_align": "left",
+        "add_side_paddings": true,
+        "section_spacing_top": 0,
+        "section_spacing_bottom": 0
+      }
+    }
+  },
+  "order": [
+    "page",
+    "rich_text_ngBmrR"
+  ]
+}
