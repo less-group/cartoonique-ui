@@ -32,7 +32,7 @@
             "aggregated": true,
             "data-limit": 20,
             "maxwidth": 1080,
-            "is_sample": true
+            "is_sample": false
           }
         }
       },
