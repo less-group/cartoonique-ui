@@ -1218,59 +1218,74 @@ class ResultPopupManager {
       window.location.href = "/cart?nocache=" + Date.now();
     };
     let cartproperties = {};
-    // if(window.imageProcessingManager?.processwaterimgbase64){
-    //   cartproperties.watermarkimg = 'window.imageProcessingManager.processwaterimgbase64';
-    // }
 
-    if (window.imageProcessingManager?.processnonwaterimgbase64) {
-      // cartproperties.nonwatermarkimg = 'window.imageProcessingManager.processnonwaterimgbase64';
-
-      // upload to S3 function
-      async function uploadImageToS3(base64Image, fileName) {
-        const apiUrl =
-          "https://letzteshemd-faceswap-api-production.up.railway.app/upload";
-
-        try {
-          const response = await fetch(apiUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              name: fileName,
-              base64Image: base64Image,
-            }),
-          });
-
-          const result = await response.json();
-
-          if (!response.ok) {
-            throw new Error(result.error || "Failed to upload image");
-          }
-
-          console.log("Image uploaded successfully:", result.url);
-          return result.url; // Returns the S3 URL of the uploaded image
-        } catch (error) {
-          console.error("Error uploading image:", error.message);
-          return null;
-        }
-      }
-
-      const nonwaterimgBase64 =
-        window.imageProcessingManager.processnonwaterimgbase64;
-      const fileName = variantId + "_" + Date.now();
-
-      // call image upload to S3 function sd 11
+    // Get URLs from status response instead of uploading new images
+    if (window.imageProcessingManager?.jobId) {
+      console.log("Using URLs from status endpoint instead of uploading to S3");
+      
       try {
-        console.log("call uploadImageToS3");
-        const imageUrl = await uploadImageToS3(nonwaterimgBase64, fileName);
-        console.log("Uploaded image URL: 11 ", imageUrl);
-        if (imageUrl) {
-          console.log("Uploaded image URL: 22", imageUrl);
-          cartproperties["_nonwatermarkimg"] = imageUrl;
+        // Get the status response with the processed URLs
+        const statusResponse = await fetch(
+          `https://letzteshemd-faceswap-api-production.up.railway.app/status/${window.imageProcessingManager.jobId}`
+        );
+        
+        if (statusResponse.ok) {
+          const statusData = await statusResponse.json();
+          console.log("Status response data:", statusData);
+          
+          // Use URLs from status response for order properties
+          if (statusData.watermarkedImageUrlToShow) {
+            cartproperties["_uploadedimg"] = statusData.watermarkedImageUrlToShow; // Watermarked for display
+            console.log("Set _uploadedimg from status response:", statusData.watermarkedImageUrlToShow);
+          }
+          
+          if (statusData.processedPrintImageUrl) {
+            cartproperties["_printimg"] = statusData.processedPrintImageUrl; // Non-watermarked with canvas bleed
+            console.log("Set _printimg from status response:", statusData.processedPrintImageUrl);
+          }
+        } else {
+          console.warn("Failed to fetch status response, falling back to upload method");
+          
+          // Fallback to original upload method if status endpoint fails
+          if (window.imageProcessingManager?.processnonwaterimgbase64) {
+            async function uploadImageToS3(base64Image, fileName) {
+              const apiUrl = "https://letzteshemd-faceswap-api-production.up.railway.app/upload";
+              
+              try {
+                const response = await fetch(apiUrl, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    name: fileName,
+                    base64Image: base64Image,
+                  }),
+                });
+                
+                const result = await response.json();
+                if (!response.ok) {
+                  throw new Error(result.error || "Failed to upload image");
+                }
+                
+                console.log("Fallback: Image uploaded successfully:", result.url);
+                return result.url;
+              } catch (error) {
+                console.error("Fallback: Error uploading image:", error.message);
+                return null;
+              }
+            }
+
+            const nonwaterimgBase64 = window.imageProcessingManager.processnonwaterimgbase64;
+            const fileName = variantId + "_" + Date.now();
+            
+            const uploadedUrl = await uploadImageToS3(nonwaterimgBase64, fileName);
+            if (uploadedUrl) {
+              cartproperties["_nonwatermarkimg"] = uploadedUrl;
+              console.log("Fallback: Set _nonwatermarkimg to uploaded URL:", uploadedUrl);
+            }
+          }
         }
       } catch (error) {
-        console.error("Image upload failed:", error);
+        console.error("Error getting status or uploading image:", error);
       }
     }
 

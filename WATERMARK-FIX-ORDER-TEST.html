@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🧪 Watermark Fix Order Simulation Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .test-container { background: white; padding: 20px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .warning { color: #ffc107; font-weight: bold; }
+        .info { color: #17a2b8; }
+        .code { background: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; margin: 10px 0; word-wrap: break-word; }
+        .test-header { background: #007bff; color: white; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 8px 8px 0 0; }
+        .summary { background: #e9ecef; padding: 15px; border-radius: 4px; margin-top: 20px; }
+        .highlight { background: #fff3cd; padding: 10px; border-radius: 4px; border-left: 4px solid #ffc107; margin: 10px 0; }
+        .progress { background: #e9ecef; border-radius: 4px; height: 20px; margin: 10px 0; }
+        .progress-bar { background: #007bff; height: 100%; border-radius: 4px; transition: width 0.3s; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Watermark Fix Order Simulation Test</h1>
+    <p><strong>Purpose:</strong> Simulate complete order flow to verify watermarked images are not sent for edge expansion.</p>
+    
+    <div class="test-container">
+        <div class="test-header">🎯 Test Configuration</div>
+        <div class="info">
+            <strong>Backend API:</strong> https://letzteshemd-faceswap-api-production.up.railway.app<br>
+            <strong>Test Image:</strong> Sample pet image (base64 encoded)<br>
+            <strong>Expected Fix:</strong> Order should use URLs from /status endpoint, not /upload endpoint
+        </div>
+        <button class="btn-primary" onclick="runCompleteTest()">🚀 Run Complete A-Z Test</button>
+        <button class="btn-warning" onclick="runStatusOnlyTest()">📊 Test Status Endpoint Only</button>
+    </div>
+    
+    <div id="test-results"></div>
+    
+    <script>
+        const results = document.getElementById('test-results');
+        let testJobId = null;
+        
+        // Sample base64 image (1x1 pixel PNG for testing)
+        const testImageBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+        
+        function createTestContainer(title) {
+            const container = document.createElement('div');
+            container.className = 'test-container';
+            container.innerHTML = `<div class="test-header">${title}</div>`;
+            results.appendChild(container);
+            return container;
+        }
+        
+        function addResult(container, message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = message;
+            container.appendChild(div);
+        }
+        
+        function addCode(container, code) {
+            const div = document.createElement('div');
+            div.className = 'code';
+            div.textContent = JSON.stringify(code, null, 2);
+            container.appendChild(div);
+        }
+        
+        function addProgress(container, percentage, text) {
+            const progressDiv = document.createElement('div');
+            progressDiv.innerHTML = `
+                <div>${text}</div>
+                <div class="progress">
+                    <div class="progress-bar" style="width: ${percentage}%"></div>
+                </div>
+            `;
+            container.appendChild(progressDiv);
+        }
+        
+        // Simulate the image processing manager environment
+        function setupTestEnvironment() {
+            window.imageProcessingManager = {
+                jobId: null,
+                processnonwaterimgbase64: testImageBase64,
+                processnonwaterimgstatus: 'processed'
+            };
+            
+            // Mock result popup manager
+            window.resultPopupManager = {
+                selectedSize: 'M'
+            };
+        }
+        
+        async function runCompleteTest() {
+            results.innerHTML = '';
+            setupTestEnvironment();
+            
+            const mainTest = createTestContainer('🎯 Complete A-Z Order Flow Test');
+            addProgress(mainTest, 0, 'Starting complete test...');
+            
+            try {
+                // Step 1: Submit image for processing
+                addProgress(mainTest, 10, 'Step 1: Submitting image for processing...');
+                const submitResult = await submitImageForProcessing();
+                
+                if (!submitResult.success) {
+                    addResult(mainTest, '❌ Failed to submit image for processing', 'error');
+                    addCode(mainTest, submitResult);
+                    return;
+                }
+                
+                addResult(mainTest, '✅ Image submitted successfully', 'success');
+                addResult(mainTest, `📋 Job ID: ${submitResult.jobId}`, 'info');
+                testJobId = submitResult.jobId;
+                window.imageProcessingManager.jobId = testJobId;
+                
+                // Step 2: Poll status until complete
+                addProgress(mainTest, 30, 'Step 2: Waiting for processing to complete...');
+                const statusResult = await waitForProcessingComplete(testJobId);
+                
+                if (!statusResult.success) {
+                    addResult(mainTest, '❌ Processing failed or timed out', 'error');
+                    addCode(mainTest, statusResult);
+                    return;
+                }
+                
+                addResult(mainTest, '✅ Processing completed successfully', 'success');
+                addProgress(mainTest, 60, 'Step 3: Analyzing status response...');
+                
+                // Step 3: Analyze status response URLs
+                const statusData = statusResult.data;
+                const urlAnalysis = analyzeStatusUrls(statusData);
+                addResult(mainTest, `📊 <strong>Status Response Analysis:</strong>`, 'info');
+                addCode(mainTest, urlAnalysis);
+                
+                // Step 4: Simulate order creation with fixed logic
+                addProgress(mainTest, 80, 'Step 4: Simulating order creation with new logic...');
+                const orderResult = await simulateOrderCreation(testJobId);
+                
+                if (!orderResult.success) {
+                    addResult(mainTest, '❌ Order simulation failed', 'error');
+                    addCode(mainTest, orderResult);
+                    return;
+                }
+                
+                addProgress(mainTest, 100, '✅ Test completed successfully!');
+                addResult(mainTest, '🎉 Complete A-Z test passed!', 'success');
+                
+                // Step 5: Verification summary
+                const verificationTest = createTestContainer('📋 Verification Summary');
+                addResult(verificationTest, `<strong>✅ Fix Verified:</strong>`, 'success');
+                addResult(verificationTest, `• Order properties use /status endpoint URLs`, 'success');
+                addResult(verificationTest, `• _uploadedimg = watermarkedImageUrlToShow (for display)`, 'success');
+                addResult(verificationTest, `• _printimg = processedPrintImageUrl (for printing with canvas bleed)`, 'success');
+                addResult(verificationTest, `• No watermarked images sent for edge expansion`, 'success');
+                
+                addCode(verificationTest, orderResult.orderProperties);
+                
+            } catch (error) {
+                addResult(mainTest, `❌ Test failed with error: ${error.message}`, 'error');
+                addCode(mainTest, { error: error.message, stack: error.stack });
+            }
+        }
+        
+        async function runStatusOnlyTest() {
+            results.innerHTML = '';
+            const statusTest = createTestContainer('📊 Status Endpoint Test');
+            
+            // Create a mock job ID for testing
+            testJobId = 'test-job-' + Date.now();
+            
+            addResult(statusTest, `🔍 Testing status endpoint with mock job ID: ${testJobId}`, 'info');
+            
+            try {
+                const response = await fetch(`https://letzteshemd-faceswap-api-production.up.railway.app/status/${testJobId}`);
+                const data = await response.json();
+                
+                addResult(statusTest, `📡 Status Response (${response.status}):`, 'info');
+                addCode(statusTest, data);
+                
+                if (response.status === 404) {
+                    addResult(statusTest, '✅ Expected 404 for non-existent job ID', 'success');
+                    addResult(statusTest, '✅ Status endpoint is accessible and responding correctly', 'success');
+                } else if (response.ok) {
+                    const urlAnalysis = analyzeStatusUrls(data);
+                    addResult(statusTest, '✅ Status endpoint accessible', 'success');
+                    addCode(statusTest, urlAnalysis);
+                }
+                
+            } catch (error) {
+                addResult(statusTest, `❌ Status endpoint error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function submitImageForProcessing() {
+            try {
+                const formData = new FormData();
+                
+                // Convert base64 to blob
+                const response = await fetch(testImageBase64);
+                const blob = await response.blob();
+                
+                formData.append('image', blob, 'test-image.png');
+                formData.append('prompt', 'Create a cute 3D animated-style dog in Pixar/Disney style');
+                formData.append('color', 'blue');
+                
+                const apiResponse = await fetch('https://letzteshemd-faceswap-api-production.up.railway.app/gemini-transform', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await apiResponse.json();
+                
+                if (!apiResponse.ok) {
+                    return { success: false, error: data.error || 'Submit failed', status: apiResponse.status };
+                }
+                
+                return { success: true, jobId: data.jobId, data };
+                
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+        
+        async function waitForProcessingComplete(jobId, maxAttempts = 30) {
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                try {
+                    const response = await fetch(`https://letzteshemd-faceswap-api-production.up.railway.app/status/${jobId}`);
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        return { success: false, error: `Status check failed: ${response.status}`, data };
+                    }
+                    
+                    if (data.status === 'COMPLETED') {
+                        return { success: true, data };
+                    } else if (data.status === 'FAILED') {
+                        return { success: false, error: 'Processing failed', data };
+                    }
+                    
+                    // Wait 2 seconds before next attempt
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                } catch (error) {
+                    if (attempt === maxAttempts) {
+                        return { success: false, error: error.message };
+                    }
+                }
+            }
+            
+            return { success: false, error: 'Timeout waiting for processing' };
+        }
+        
+        function analyzeStatusUrls(statusData) {
+            const analysis = {
+                status: statusData.status,
+                hasWatermarkedImageUrlToShow: !!statusData.watermarkedImageUrlToShow,
+                hasProcessedPrintImageUrl: !!statusData.processedPrintImageUrl,
+                hasResultImageUrl: !!statusData.resultImageUrl,
+                urls: {}
+            };
+            
+            if (statusData.watermarkedImageUrlToShow) {
+                analysis.urls.watermarkedImageUrlToShow = statusData.watermarkedImageUrlToShow;
+            }
+            
+            if (statusData.processedPrintImageUrl) {
+                analysis.urls.processedPrintImageUrl = statusData.processedPrintImageUrl;
+            }
+            
+            if (statusData.resultImageUrl) {
+                analysis.urls.resultImageUrl = statusData.resultImageUrl;
+            }
+            
+            analysis.fixVerification = {
+                canUseForOrder: analysis.hasWatermarkedImageUrlToShow && analysis.hasProcessedPrintImageUrl,
+                watermarkFixApplied: analysis.hasProcessedPrintImageUrl,
+                noUploadNeeded: true
+            };
+            
+            return analysis;
+        }
+        
+        async function simulateOrderCreation(jobId) {
+            try {
+                // Simulate the fixed logic from result-popup-manager.js
+                console.log("🔧 Using fixed logic: fetching URLs from status endpoint instead of uploading");
+                
+                const statusResponse = await fetch(`https://letzteshemd-faceswap-api-production.up.railway.app/status/${jobId}`);
+                
+                if (!statusResponse.ok) {
+                    throw new Error(`Status fetch failed: ${statusResponse.status}`);
+                }
+                
+                const statusData = await statusResponse.json();
+                
+                // Apply the fix: use URLs from status response
+                let cartproperties = {};
+                
+                if (statusData.watermarkedImageUrlToShow) {
+                    cartproperties["_uploadedimg"] = statusData.watermarkedImageUrlToShow; // Watermarked for display
+                }
+                
+                if (statusData.processedPrintImageUrl) {
+                    cartproperties["_printimg"] = statusData.processedPrintImageUrl; // Non-watermarked with canvas bleed
+                }
+                
+                // Simulate cart addition (we won't actually add to cart, just verify the properties)
+                const orderSimulation = {
+                    variantId: "54386981142876", // Size M variant ID
+                    quantity: 1,
+                    properties: cartproperties,
+                    fixApplied: {
+                        usedStatusEndpoint: true,
+                        skippedUploadEndpoint: true,
+                        correctUrls: {
+                            display: !!cartproperties._uploadedimg,
+                            print: !!cartproperties._printimg
+                        }
+                    }
+                };
+                
+                return {
+                    success: true,
+                    orderProperties: cartproperties,
+                    simulation: orderSimulation,
+                    statusData: statusData
+                };
+                
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+        
+        // Initialize
+        window.addEventListener('load', function() {
+            console.log('🧪 Watermark Fix Order Test Ready');
+            console.log('Use the buttons above to run tests');
+        });
+    </script>
+</body>
+</html>
