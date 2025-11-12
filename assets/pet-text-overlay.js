@@ -787,6 +787,9 @@ class PetTextOverlay extends HTMLElement {
     window.imageProcessingManager.transformationComplete = false;
     window.imageProcessingManager.stylizedImageUrl = null;
     window.imageProcessingManager.stylizednonImageUrl = null;
+    
+    // CRITICAL FIX: Reset the petTextDialogOpen flag
+    window.imageProcessingManager.petTextDialogOpen = false;
 
     window.railwayJobsStatus = {};
     window.railwayJobsEventDispatched = {};
@@ -824,6 +827,11 @@ class PetTextOverlay extends HTMLElement {
 
     // Restore scrolling
     document.body.style.overflow = "";
+
+    // Always reset the petTextDialogOpen flag when closing
+    if (window.imageProcessingManager) {
+      window.imageProcessingManager.petTextDialogOpen = false;
+    }
 
     if (!completed) {
       this.isDialogOpen = false;
