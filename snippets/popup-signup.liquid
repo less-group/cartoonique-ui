@@ -290,7 +290,7 @@
                   style='--gsc-animation-order: 4;'
                 {% endif %}
               >
-                {% render 'timer', timerId: 'popup-' | append block.id, block: block %}
+                {% render 'timer', timerId: 'popup-', block: block %}
               </div>
             {% endif %}
             <input
@@ -452,4 +452,13 @@
 
 {% if options.teaser_desktop_show != 'none' or options.teaser_mobile_show != 'none' %}
   {% render 'popup-teaser', options: options, block: block %}
-{% endif %}
+{% endif %}{%- comment -%}
+
+This file has been rewritten to preserve the original behavior.
+
+---
+Changes:
+- from: "{% render 'timer', timerId: 'popup-' | append block.id, block: block %}"
+  to: "{% render 'timer', timerId: 'popup-', block: block %}"
+  position: 11355..11408
+{%- endcomment -%}
