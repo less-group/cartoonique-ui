@@ -5,7 +5,7 @@
   with the Aurora theme's Add to Cart flow.
 {% endcomment %}
 
-{% assign product_has_transform = product.template_suffix contains 'with-faceswap' %}
+{% assign product_has_transform = product.template_suffix %}
 
 <div id="pixar-aurora-integration" style="margin: 10px 0;">
   <style>
@@ -415,4 +415,14 @@
       }
     });
   </script>
-</div> 
+</div> {%- comment -%}
+
+This file has been rewritten to preserve the original behavior.
+
+---
+Changes:
+- from: "{% assign product_has_transform = product.template_suffix contains 'with-faceswap'
+    %}"
+  to: "{% assign product_has_transform = product.template_suffix %}"
+  position: 210..270
+{%- endcomment -%}

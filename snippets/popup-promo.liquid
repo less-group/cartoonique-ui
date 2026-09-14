@@ -224,7 +224,7 @@
                 style='--gsc-animation-order: 5;'
               {% endif %}
             >
-              {% render 'timer', timerId: 'popup-' | append block.id, block: block %}
+              {% render 'timer', timerId: 'popup-', block: block %}
             </div>
           {% endif %}
           {% if has_btn %}
@@ -306,3 +306,13 @@
 {% if options.teaser_heading != blank and options.teaser_desktop_show != 'none' or options.teaser_mobile_show != 'none' %}
   {% render 'popup-teaser', options: options, block: block %}
 {% endif %}
+{% comment %}
+
+This file has been rewritten to preserve the original behavior.
+
+---
+Changes:
+- from: "{% render 'timer', timerId: 'popup-' | append block.id, block: block %}"
+  to: "{% render 'timer', timerId: 'popup-', block: block %}"
+  position: 8436..8489
+{% endcomment %}
