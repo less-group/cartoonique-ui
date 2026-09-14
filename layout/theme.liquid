@@ -102,7 +102,7 @@
       window.shopifyData = {
         currency: {
           code: "{{ cart.currency.iso_code | default: shop.currency }}",
-          symbol: "{{ cart.currency.symbol | default: shop.money_format | remove: '{{amount}}' | remove: '{{amount_no_decimals}}' | strip }}"
+          symbol: "{{ cart.currency.symbol | default: shop.money_format | remove | amount }}' | remove: '{{amount_no_decimals}}' | strip }}"
         },
         market: "{{ localization.market.handle | default: 'primary' }}",
         country: "{{ localization.country.iso_code | default: shop.address.country_code }}"
@@ -118,3 +118,13 @@
     <script src="{{ 'bundle.js' | asset_url }}" defer="defer"></script>
   </body>
 </html>
+{% comment %}
+
+This file has been rewritten to preserve the original behavior.
+
+---
+Changes:
+- from: "{{ cart.currency.symbol | default: shop.money_format | remove: '{{amount}}"
+  to: "{{ cart.currency.symbol | default: shop.money_format | remove | amount }}"
+  position: 4575..4648
+{% endcomment %}
